@@ -1,0 +1,59 @@
+{
+  "name": "redstone-smartweave",
+  "version": "0.0.1",
+  "description": "An implementation of the SmartWeave SDK.",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "build": "yarn run clean && tsc",
+    "format": "prettier --write 'src/**/*.ts'",
+    "clean": "rimraf ./lib",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "prettier:format": "prettier --config .prettierrc 'src/**/*.ts' --write",
+    "prepublishOnly": "yarn run lint",
+    "preversion": "yarn run lint && yarn run build",
+    "version": "yarn run format && git add -A src",
+    "postversion": "git push && git push --tags",
+    "test": "jest"
+  },
+  "license": "MIT",
+  "author": "Redstone Team <dev@redstone.finance>",
+  "contributors": [
+    "Jakub Wojciechowski <jakub@redstone.finance>",
+    "Alex Suvorov <alex@redstone.finance>",
+    "Piotr Pedziwiatr <peter@redstone.finance>"
+  ],
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node"
+  },
+  "files": [
+    "dist/**/*"
+  ],
+  "dependencies": {
+    "@weavery/clarity": "^0.1.5",
+    "arweave": "^1.10.16",
+    "arweave-multihost": "^0.1.0",
+    "bignumber.js": "^9.0.1",
+    "bson": "^4.5.0",
+    "json-beautify": "^1.1.1"
+  },
+  "devDependencies": {
+    "@textury/arlocal": "^1.0.27",
+    "@types/jest": "^27.0.1",
+    "@types/node": "^16.7.1",
+    "@typescript-eslint/eslint-plugin": "^4.29.2",
+    "@typescript-eslint/parser": "^4.29.2",
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^3.4.1",
+    "jest": "^27.0.4",
+    "prettier": "^2.3.2",
+    "rimraf": "^3.0.2",
+    "smartweave": "^0.4.41",
+    "ts-jest": "^27.0.5",
+    "ts-node": "^10.2.1",
+    "typescript": "^4.3.5"
+  }
+}

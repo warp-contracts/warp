@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "es2015",
+    "module": "commonjs",
+    "declaration": true,
+    "outDir": "./lib",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "baseUrl": "src",
+    "paths": {
+      "@cache": ["cache/index"],
+      "@client": ["client/index"],
+      "@core": ["core/index"],
+      "@legacy": ["legacy/index"],
+      "@plugins": ["plugins/index"],
+      "@smartweave": ["index"],
+    }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "**/__tests__/*"]
+}
