@@ -2,7 +2,6 @@ import fs from 'fs';
 import path from 'path';
 import BSON from 'bson';
 import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@cache';
-
 /**
  * An implementation of {@link BlockHeightSwCache} that stores its data in BSON files.
  * Data is flushed to disk every 10 new cache entries.
@@ -57,7 +56,7 @@ export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V
       if (this.storage[directory] == null) {
         this.storage[directory] = {};
       }
-      console.time(`loading cache for ${directory}`);
+      //logger.info(`loading cache for ${directory}`);
 
       const files = fs.readdirSync(cacheDirPath);
       files.forEach((file) => {

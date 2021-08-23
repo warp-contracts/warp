@@ -13,7 +13,7 @@ export class MemCache<V = any> implements SwCache<string, V> {
   }
 
   contains(key: string): boolean {
-    return this.storage.hasOwnProperty(key);
+    return Object.prototype.hasOwnProperty.call(this.storage, key);
   }
 
   get(key: string): V {

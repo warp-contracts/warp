@@ -53,7 +53,7 @@ export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
   }
 
   contains(key: string) {
-    return this.storage.hasOwnProperty(key);
+    return Object.prototype.hasOwnProperty.call(this.storage, key);
   }
 
   get(key: string, blockHeight: number): BlockHeightCacheResult<V> | null {

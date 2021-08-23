@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "target": "es2015",
+    "sourceMap": true,
+    "target": "es2019",
     "module": "commonjs",
     "declaration": true,
     "outDir": "./lib",
@@ -14,9 +15,10 @@
       "@core": ["core/index"],
       "@legacy": ["legacy/index"],
       "@plugins": ["plugins/index"],
+      "@logging": ["logging/index"],
       "@smartweave": ["index"],
     }
   },
   "include": ["src"],
-  "exclude": ["node_modules", "**/__tests__/*"]
+  "exclude": ["node_modules", "**/__tests__/*", "src/_scripts"]
 }

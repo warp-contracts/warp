@@ -13,9 +13,12 @@ import {
   InteractionsLoader,
   InteractionsSorter,
   InteractionTx,
+  LoggerFactory,
   StateEvaluator,
   SwcClient
 } from '@smartweave';
+
+const logger = LoggerFactory.INST.create(__filename);
 
 /**
  * An implementation of {@link SwcClient} that is backwards compatible with current style
@@ -39,14 +42,15 @@ export class HandlerBasedSwcClient implements SwcClient {
     currentTx?: { interactionTxId: string; contractTxId: string }[],
     evaluationOptions?: EvaluationOptions
   ): Promise<EvalStateResult<State>> {
-    console.time('Creating execution context');
+    logger.info('Read state for %s', contractTxId);
+    logger.profile('Creating execution context');
     const executionContext = await this.createExecutionContext(contractTxId, blockHeight, evaluationOptions);
-    console.timeEnd('Creating execution context');
+    logger.profile('Creating execution context');
 
     const now = Date.now();
-    console.time(`\nEvaluating ${contractTxId} state ${now}`);
+    logger.profile(`\nEvaluating ${contractTxId} state ${now}`);
     const result = await this.stateEvaluator.eval(executionContext, currentTx || []);
-    console.timeEnd(`\nEvaluating ${contractTxId} state ${now}`);
+    logger.profile(`\nEvaluating ${contractTxId} state ${now}`);
 
     return result;
   }
@@ -58,9 +62,10 @@ export class HandlerBasedSwcClient implements SwcClient {
     blockHeight?: number,
     evaluationOptions?: EvaluationOptions
   ): Promise<InteractionResult<any, View>> {
-    console.time('Creating execution context');
+    logger.info('View state for %s', contractTxId);
+    logger.profile('Creating execution context');
     let executionContext = await this.createExecutionContext(contractTxId, blockHeight, evaluationOptions);
-    console.timeEnd('Creating execution context');
+    logger.profile('Creating execution context');
 
     if (!executionContext.currentBlockData) {
       const currentBlockData = executionContext.currentNetworkInfo
@@ -81,9 +86,9 @@ export class HandlerBasedSwcClient implements SwcClient {
     };
 
     const now = Date.now();
-    console.time(`\nEvaluating ${contractTxId} state ${now}`);
+    logger.profile(`\nEvaluating ${contractTxId} state ${now}`);
     const evalStateResult = await this.stateEvaluator.eval(executionContext, []);
-    console.timeEnd(`\nEvaluating ${contractTxId} state ${now}`);
+    logger.profile(`\nEvaluating ${contractTxId} state ${now}`);
 
     const interaction: ContractInteraction = {
       input,
@@ -116,14 +121,15 @@ export class HandlerBasedSwcClient implements SwcClient {
     transaction: InteractionTx,
     evaluationOptions?: EvaluationOptions
   ): Promise<InteractionResult<any, View>> {
-    console.time('Creating execution context');
+    logger.info('Vies state for %s %o', contractTxId, transaction);
+    logger.profile('Creating execution context');
     const executionContext = await this.createExecutionContextFromTx(contractTxId, transaction);
-    console.timeEnd('Creating execution context');
+    logger.profile('Creating execution context');
 
     const now = Date.now();
-    console.time(`\nEvaluating ${contractTxId} state ${now}`);
+    logger.profile(`\nEvaluating ${contractTxId} state ${now}`);
     const evalStateResult = await this.stateEvaluator.eval(executionContext, []);
-    console.timeEnd(`\nEvaluating ${contractTxId} state ${now}`);
+    logger.profile(`\nEvaluating ${contractTxId} state ${now}`);
 
     const interaction: ContractInteraction = {
       input,

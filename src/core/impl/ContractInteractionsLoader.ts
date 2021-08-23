@@ -3,6 +3,7 @@ import {
   GQLResultInterface,
   GQLTransactionsResultInterface,
   InteractionsLoader,
+  LoggerFactory,
   SmartWeaveTags
 } from '@smartweave';
 import Arweave from 'arweave';
@@ -24,6 +25,8 @@ interface ReqVariables {
   first: number;
   after?: string;
 }
+
+const logger = LoggerFactory.INST.create(__filename);
 
 export class ContractInteractionsLoader implements InteractionsLoader {
   private static readonly query = `query Transactions($tags: [TagFilter!]!, $blockFilter: BlockFilter!, $first: Int!, $after: String) {
@@ -91,7 +94,7 @@ export class ContractInteractionsLoader implements InteractionsLoader {
       txInfos.push(...transactions.edges.filter((tx) => !tx.node.parent || !tx.node.parent.id));
     }
 
-    console.log('All interactions:', txInfos.length);
+    logger.verbose('All interactions: $s', txInfos.length);
 
     return txInfos;
   }
@@ -107,7 +110,7 @@ export class ContractInteractionsLoader implements InteractionsLoader {
     }
 
     if (response.data.errors) {
-      console.error(response.data.errors);
+      logger.error(response.data.errors);
       throw new Error('Error while loading interaction transactions');
     }
 

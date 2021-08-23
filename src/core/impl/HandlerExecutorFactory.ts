@@ -1,7 +1,14 @@
 import Arweave from 'arweave';
 import BigNumber from 'bignumber.js';
 import * as clarity from '@weavery/clarity';
-import { ContractDefinition, ExecutionContext, ExecutorFactory, InteractionTx, SmartWeaveGlobal } from '@smartweave';
+import {
+  ContractDefinition,
+  ExecutionContext,
+  ExecutorFactory,
+  InteractionTx,
+  LoggerFactory,
+  SmartWeaveGlobal
+} from '@smartweave';
 
 /**
  * A handle that effectively runs contract's code.
@@ -15,6 +22,8 @@ export interface HandlerApi<State> {
     currentTx: { interactionTxId: string; contractTxId: string }[]
   ): Promise<InteractionResult<State, Result>>;
 }
+
+const logger = LoggerFactory.INST.create(__filename);
 
 /**
  * A factory that produces handlers that are compatible with the "current" style of
@@ -33,6 +42,7 @@ export class HandlerExecutorFactory<State = any> implements ExecutorFactory<Stat
     const contractFunction = new Function(normalizedSource);
     const handler = contractFunction(swGlobal, BigNumber, clarity) as HandlerFunction<State>;
 
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
 
     return {
@@ -46,7 +56,7 @@ export class HandlerExecutorFactory<State = any> implements ExecutorFactory<Stat
         try {
           const stateCopy = JSON.parse(JSON.stringify(state));
           swGlobal._activeTx = interactionTx;
-          console.log('SmartWeave.contract.id -', swGlobal.contract.id);
+          logger.debug('SmartWeave.contract.id: %s', swGlobal.contract.id);
 
           self.assignReadContractState(swGlobal, contractDefinition, interaction, executionContext, currentTx);
           self.assignViewContractState(swGlobal, contractDefinition, executionContext);
@@ -89,7 +99,7 @@ export class HandlerExecutorFactory<State = any> implements ExecutorFactory<Stat
     executionContext: ExecutionContext<State, HandlerApi<State>>
   ) {
     swGlobal.contracts.viewContractState = async <View>(contractTxId: string, input: any) => {
-      console.log('swGlobal.viewContractState call: ', {
+      logger.verbose('swGlobal.viewContractState call: %o', {
         from: contractDefinition.txId,
         to: contractTxId,
         input
@@ -106,7 +116,7 @@ export class HandlerExecutorFactory<State = any> implements ExecutorFactory<Stat
     currentTx: { interactionTxId: string; contractTxId: string }[]
   ) {
     swGlobal.contracts.readContractState = async (contractTxId: string, height?: number, returnValidity?: boolean) => {
-      console.log('swGlobal.readContractState call: ', {
+      logger.verbose('swGlobal.readContractState call: ', {
         from: contractDefinition.txId,
         to: contractTxId,
         interaction
@@ -145,7 +155,7 @@ export class HandlerExecutorFactory<State = any> implements ExecutorFactory<Stat
     return `
     const [SmartWeave, BigNumber, clarity] = arguments;
     clarity.SmartWeave = SmartWeave;
-    class ContractError extends Error { constructor(message) { super(message); this.name = \'ContractError\' } };
+    class ContractError extends Error { constructor(message) { super(message); this.name = 'ContractError' } };
     function ContractAssert(cond, message) { if (!cond) throw new ContractError(message) };
     ${contractSrc};
     return handle;

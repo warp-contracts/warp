@@ -2,6 +2,9 @@ import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@cac
 import { DefaultStateEvaluator, EvalStateResult, ExecutionContext, ExecutionContextModifier, HandlerApi } from '@core';
 import Arweave from 'arweave';
 import { GQLNodeInterface } from '@legacy';
+import { LoggerFactory } from '@logging';
+
+const logger = LoggerFactory.INST.create(__filename);
 
 /**
  * An implementation of DefaultStateEvaluator that adds caching capabilities
@@ -20,7 +23,7 @@ export class CacheableStateEvaluator<State> extends DefaultStateEvaluator<State>
     currentTx: { interactionTxId: string; contractTxId: string }[]
   ): Promise<EvalStateResult<State>> {
     const requestedBlockHeight = executionContext.blockHeight;
-    console.log(`Requested state block height: ${requestedBlockHeight}`);
+    logger.verbose(`Requested state block height: ${requestedBlockHeight}`);
 
     let cachedState: BlockHeightCacheResult<EvalStateResult<State>> | null = null;
 
@@ -36,7 +39,7 @@ export class CacheableStateEvaluator<State> extends DefaultStateEvaluator<State>
       cachedState = this.cache.getLessOrEqual(executionContext.contractDefinition.txId, requestedBlockHeight);
 
       if (cachedState != null) {
-        console.log(`Cached state for ${executionContext.contractDefinition.txId}`, {
+        logger.verbose(`Cached state for ${executionContext.contractDefinition.txId} %o`, {
           block: cachedState.cachedHeight,
           requestedBlockHeight
         });
@@ -48,7 +51,7 @@ export class CacheableStateEvaluator<State> extends DefaultStateEvaluator<State>
         );
       }
 
-      console.log(`Interactions until [${requestedBlockHeight}]`, {
+      logger.verbose(`Interactions until [${requestedBlockHeight}] %o`, {
         total: sortedInteractionsUpToBlock.length,
         cached: sortedInteractionsUpToBlock.length - missingInteractions.length
       });
@@ -63,7 +66,7 @@ export class CacheableStateEvaluator<State> extends DefaultStateEvaluator<State>
         if (entry.contractTxId === executionContext.contractDefinition.txId) {
           const index = missingInteractions.findIndex((tx) => tx.node.id === entry.interactionTxId);
           if (index !== -1) {
-            console.log('Inf. Loop fix - removing interaction', {
+            logger.verbose('Inf. Loop fix - removing interaction %o', {
               contractTxId: entry.contractTxId,
               interactionTxId: entry.interactionTxId
             });
@@ -74,7 +77,7 @@ export class CacheableStateEvaluator<State> extends DefaultStateEvaluator<State>
 
       // if cache is up-to date - return immediately to speed-up the whole process
       if (missingInteractions.length === 0 && cachedState) {
-        console.log(`State up to requested  height [${requestedBlockHeight}]  fully cached!`);
+        logger.verbose(`State up to requested  height [${requestedBlockHeight}]  fully cached!`);
         return cachedState.cachedValue;
       }
     }

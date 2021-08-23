@@ -8,10 +8,13 @@ import {
   GQLTagInterface,
   HandlerApi,
   HandlerResult,
+  LoggerFactory,
   SmartWeaveTags,
   StateEvaluator
 } from '@smartweave';
 import Arweave from 'arweave';
+
+const logger = LoggerFactory.INST.create(__filename);
 
 // FIXME: currently this is tightly coupled with the HandlerApi
 export class DefaultStateEvaluator<State = any> implements StateEvaluator<State, HandlerApi<State>> {
@@ -43,22 +46,31 @@ export class DefaultStateEvaluator<State = any> implements StateEvaluator<State,
     let currentState = baseState.state;
     const validity = JSON.parse(JSON.stringify(baseState.validity));
 
+    logger.info(
+      'Evaluating state for %s [%s non-cached of %s all]',
+      executionContext.contractDefinition.txId,
+      missingInteractions.length,
+      executionContext.sortedInteractions.length
+    );
+
     for (const missingInteraction of missingInteractions) {
-      /* console.log(`Evaluating [${missingInteraction.node.id}] ${missingInteractions.indexOf(missingInteraction) + 1}/${missingInteractions.length}
-       [of all:${executionContext.sortedInteractions.length}] interactions of ${executionContext.contractDefinition.txId}`);
-*/
-      console.time(`${missingInteraction.node.id} evaluation`);
+      logger.verbose(
+        `${missingInteraction.node.id}: ${missingInteractions.indexOf(missingInteraction) + 1}/${
+          missingInteractions.length
+        } [of all:${executionContext.sortedInteractions.length}]`
+      );
+      logger.profile(`${missingInteraction.node.id} evaluation`);
       const currentInteraction: GQLNodeInterface = missingInteraction.node;
 
       const inputTag = this.findInputTag(missingInteraction, executionContext);
       if (!inputTag || inputTag.name !== SmartWeaveTags.INPUT) {
-        console.error(`Skipping tx with missing or invalid Input tag - ${currentInteraction.id}`);
+        logger.error(`Skipping tx with missing or invalid Input tag - ${currentInteraction.id}`);
         continue;
       }
 
       const input = this.parseInput(inputTag);
       if (!input) {
-        console.error(`Skipping tx with missing or invalid Input tag - ${currentInteraction.id}`);
+        logger.error(`Skipping tx with missing or invalid Input tag - ${currentInteraction.id}`);
         continue;
       }
 
@@ -83,7 +95,7 @@ export class DefaultStateEvaluator<State = any> implements StateEvaluator<State,
 
       validity[currentInteraction.id] = result.type === 'ok';
       currentState = result.state;
-      console.timeEnd(`${missingInteraction.node.id} evaluation`);
+      logger.profile(`${missingInteraction.node.id} evaluation`);
 
       // I'm really NOT a fan of this "modify" feature, but I don't have idea how to better
       // implement the "evolve" feature
@@ -102,12 +114,12 @@ export class DefaultStateEvaluator<State = any> implements StateEvaluator<State,
     currentTx: GQLNodeInterface
   ) {
     if (result.type === 'exception') {
-      //console.error(`${result.result}`);
-      //console.error(`Executing of interaction: ${currentTx.id} threw exception.`);
+      logger.error(`${result.result}`);
+      logger.error(`Executing of interaction: ${currentTx.id} threw exception.`);
     }
     if (result.type === 'error') {
-      //console.error(`${result.result}`);
-      //console.error(`Executing of interaction: ${currentTx.id} returned error.`);
+      logger.error(`${result.result}`);
+      logger.error(`Executing of interaction: ${currentTx.id} returned error.`);
     }
   }
 
@@ -115,7 +127,7 @@ export class DefaultStateEvaluator<State = any> implements StateEvaluator<State,
     try {
       return JSON.parse(inputTag.value);
     } catch (e) {
-      console.error(e);
+      logger.error(e);
       return null;
     }
   }

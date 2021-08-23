@@ -1,4 +1,6 @@
-import { BlockHeightKey, BlockHeightSwCache, GQLEdgeInterface, InteractionsLoader } from '@smartweave';
+import { BlockHeightKey, BlockHeightSwCache, GQLEdgeInterface, InteractionsLoader, LoggerFactory } from '@smartweave';
+
+const logger = LoggerFactory.INST.create(__filename);
 
 /**
  * Very simple and naive implementation of cache for InteractionsLoader layer.
@@ -14,7 +16,7 @@ export class CacheableContractInteractionsLoader implements InteractionsLoader {
   ) {}
 
   async load(contractId: string, blockHeight: number): Promise<GQLEdgeInterface[]> {
-    console.log('Loading interactions:', {
+    logger.debug('Loading interactions %o', {
       contractId,
       blockHeight
     });
@@ -22,7 +24,7 @@ export class CacheableContractInteractionsLoader implements InteractionsLoader {
     const cached = this.cache.get(contractId, blockHeight);
 
     if (cached !== null) {
-      console.log('InteractionsLoader - hit from cache!');
+      logger.verbose('InteractionsLoader - hit from cache!');
       return cached.cachedValue;
     } else {
       const result = await this.baseImplementation.load(contractId, blockHeight);

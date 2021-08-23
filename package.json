@@ -11,9 +11,9 @@
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "prettier:format": "prettier --config .prettierrc 'src/**/*.ts' --write",
-    "prepublishOnly": "yarn run lint",
-    "preversion": "yarn run lint && yarn run build",
-    "version": "yarn run format && git add -A src",
+    "prepublishOnly": "yarn lint",
+    "preversion": "yarn lint && yarn build",
+    "version": "yarn format && git add -A src",
     "postversion": "git push && git push --tags",
     "test": "jest"
   },
@@ -29,15 +29,27 @@
     "testEnvironment": "node"
   },
   "files": [
-    "dist/**/*"
+    "lib/",
+    "docs/",
+    "LICENSE",
+    "README.md"
   ],
+  "keywords": [
+    "smartweave",
+    "arweave"
+  ],
+  "bugs": {
+    "url": "https://github.com/redstone-finance/redstone-smartweave/issues"
+  },
+  "homepage": "https://github.com/redstone-finance/redstone-smartweave#readme",
   "dependencies": {
     "@weavery/clarity": "^0.1.5",
     "arweave": "^1.10.16",
     "arweave-multihost": "^0.1.0",
     "bignumber.js": "^9.0.1",
     "bson": "^4.5.0",
-    "json-beautify": "^1.1.1"
+    "json-beautify": "^1.1.1",
+    "winston": "^3.3.3"
   },
   "devDependencies": {
     "@textury/arlocal": "^1.0.27",
@@ -54,6 +66,7 @@
     "smartweave": "^0.4.41",
     "ts-jest": "^27.0.5",
     "ts-node": "^10.2.1",
+    "tsconfig-paths": "^3.10.1",
     "typescript": "^4.3.5"
   }
 }

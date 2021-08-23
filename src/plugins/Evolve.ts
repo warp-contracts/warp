@@ -3,6 +3,7 @@ import {
   ExecutionContext,
   ExecutionContextModifier,
   ExecutorFactory,
+  LoggerFactory,
   SmartWeaveError,
   SmartWeaveErrorType
 } from '@smartweave';
@@ -12,6 +13,8 @@ export interface EvolveCompatibleState {
   canEvolve: boolean; // whether contract is allowed to evolve. seems to default to true..
   evolve: string; // the transaction id of the Arweave transaction with the updated source code. odd naming convention..
 }
+
+const logger = LoggerFactory.INST.create(__filename);
 
 /*
 ...I'm still not fully convinced to the whole "evolve" idea.
@@ -41,7 +44,7 @@ export class Evolve<State extends EvolveCompatibleState, Api> implements Executi
 
   async modify(state: State, executionContext: ExecutionContext<State, Api>): Promise<ExecutionContext<State, Api>> {
     const contractTxId = executionContext.contractDefinition.txId;
-    console.log('trying to evolve for:', contractTxId);
+    logger.verbose(`trying to evolve for: ${contractTxId}`);
     const currentSrcTxId = executionContext.contractDefinition.srcTxId;
 
     const settings =
@@ -57,7 +60,7 @@ export class Evolve<State extends EvolveCompatibleState, Api> implements Executi
       canEvolve = true;
     }
     if (evolve && /[a-z0-9_-]{43}/i.test(evolve) && canEvolve) {
-      console.log('Checking evolve: ', {
+      logger.debug('Checking evolve: %o', {
         current: currentSrcTxId,
         evolve
       });
@@ -65,7 +68,7 @@ export class Evolve<State extends EvolveCompatibleState, Api> implements Executi
       if (currentSrcTxId !== evolve) {
         try {
           // note: that's really nasty IMO - loading original contract definition, but forcing different sourceTxId...
-          console.log('Evolving to:', evolve);
+          logger.info('Evolving to: %s', evolve);
           const newContractDefinition = await this.definitionLoader.load(contractTxId, evolve);
           const newHandler = await this.executorFactory.create(newContractDefinition);
 
@@ -74,7 +77,7 @@ export class Evolve<State extends EvolveCompatibleState, Api> implements Executi
             contractDefinition: newContractDefinition,
             handler: newHandler
           };
-          console.log('evolved to: ', {
+          logger.verbose('evolved to: %o', {
             txId: modifiedContext.contractDefinition.txId,
             srcTxId: modifiedContext.contractDefinition.srcTxId
           });

@@ -1,6 +1,9 @@
 import Arweave from 'arweave';
 import { ContractDefinition, ExecutorFactory } from '@core';
 import { SwCache } from '@cache';
+import { LoggerFactory } from '@logging';
+
+const logger = LoggerFactory.INST.create(__filename);
 
 /**
  * An implementation of ExecutorFactory that adds caching capabilities
@@ -18,10 +21,9 @@ export class CacheableExecutorFactory<State, Api> implements ExecutorFactory<Sta
     // with the same SwGlobal object being cached for all contracts with the same source code
     // (eg. SwGlobal.contract.id field - which of course should have different value for contracts
     // with the same source).
-
     const cacheKey = contractDefinition.txId;
     if (!this.cache.contains(cacheKey)) {
-      console.log('Updating executor factory cache');
+      logger.verbose('Updating executor factory cache');
       const handler = await this.baseImplementation.create(contractDefinition);
       this.cache.put(cacheKey, handler);
     }

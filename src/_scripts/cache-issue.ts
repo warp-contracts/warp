@@ -1,4 +1,5 @@
 import Arweave from 'arweave';
+import { LoggerFactory } from '../logging';
 import { SwClientFactory } from '@client';
 
 const contracts = [
@@ -23,6 +24,7 @@ async function main() {
   });
 
   const swcClient = SwClientFactory.memCacheClient(arweave);
+  LoggerFactory.INST.logLevel('debug');
 
   const contractTxId = 'W_njBtwDRyltjVU1RizJtZfF0S_4X3aSrrrA0HUEhUs';
   const contractTxId2 = 'TMkCZKYO3GwcTLEKGgWSJegIlYCHi_UArtG0unCi2xA';

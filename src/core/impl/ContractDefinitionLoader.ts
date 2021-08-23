@@ -1,6 +1,8 @@
-import { ContractDefinition, DefinitionLoader, getTag, SmartWeaveTags, SwCache } from '@smartweave';
+import { ContractDefinition, DefinitionLoader, getTag, LoggerFactory, SmartWeaveTags, SwCache } from '@smartweave';
 import Arweave from 'arweave';
 import Transaction from 'arweave/web/lib/transaction';
+
+const logger = LoggerFactory.INST.create(__filename);
 
 export class ContractDefinitionLoader<State = any> implements DefinitionLoader<State> {
   constructor(
@@ -11,7 +13,7 @@ export class ContractDefinitionLoader<State = any> implements DefinitionLoader<S
 
   async load(contractTxId: string, forcedSrcTxId?: string): Promise<ContractDefinition<State>> {
     if (!forcedSrcTxId && this.cache?.contains(contractTxId)) {
-      console.log('ContractDefinitionLoader: Hit from cache!');
+      logger.verbose('ContractDefinitionLoader: Hit from cache!');
       return Promise.resolve(this.cache?.get(contractTxId));
     }
 
