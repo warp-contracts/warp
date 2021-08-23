@@ -1,3 +1,3 @@
 export * from './HandlerBasedSwcClient';
-export * from './SwcClient';
+export * from './Contract';
 export * from './SwClientFactory';

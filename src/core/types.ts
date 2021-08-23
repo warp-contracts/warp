@@ -1,4 +1,4 @@
-import { EvaluationOptions, GQLEdgeInterface, SwcClient } from '@smartweave';
+import { EvaluationOptions, GQLEdgeInterface, Contract } from '@smartweave';
 import { BlockData } from 'arweave/node/blocks';
 import { NetworkInfoInterface } from 'arweave/node/network';
 
@@ -15,7 +15,7 @@ export type ExecutionContext<State = any, Api = any> = {
   blockHeight: number;
   interactions: GQLEdgeInterface[];
   sortedInteractions: GQLEdgeInterface[];
-  client: SwcClient;
+  client: Contract;
   evaluationOptions: EvaluationOptions;
   currentNetworkInfo?: NetworkInfoInterface;
   currentBlockData?: BlockData;

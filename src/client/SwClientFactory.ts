@@ -1,5 +1,5 @@
 import Arweave from 'arweave';
-import { HandlerBasedSwcClient, SwcClient } from './index';
+import { HandlerBasedSwcClient, Contract } from './index';
 import {
   CacheableContractInteractionsLoader,
   CacheableExecutorFactory,
@@ -17,7 +17,7 @@ import {
 import { BsonFileBlockHeightSwCache, MemBlockHeightSwCache, MemCache } from '@smartweave/cache';
 
 /**
- * A factory that simplifies the process of creating different versions of {@link SwcClient}.
+ * A factory that simplifies the process of creating different versions of {@link Contract}.
  * All versions have the {@link Evolve} plugin...erm, plugged in ;-).
  *
  * TODO: add builders (or BUIDLers ;-)) that would simplify the process of customizing SwcClient behaviour
@@ -27,9 +27,9 @@ import { BsonFileBlockHeightSwCache, MemBlockHeightSwCache, MemCache } from '@sm
  */
 export class SwClientFactory {
   /**
-   * Returns a {@link SwcClient} that is using mem cache for all layers.
+   * Returns a {@link Contract} that is using mem cache for all layers.
    */
-  static memCacheClient(arweave: Arweave): SwcClient {
+  static memCacheClient(arweave: Arweave): Contract {
     const definitionLoader = new ContractDefinitionLoader<any>(arweave, new MemCache());
 
     const interactionsLoader = new CacheableContractInteractionsLoader(
@@ -56,10 +56,10 @@ export class SwClientFactory {
   }
 
   /**
-   * Returns a {@link SwcClient} that is using file-based cache for {@link StateEvaluator} layer
+   * Returns a {@link Contract} that is using file-based cache for {@link StateEvaluator} layer
    * and mem cache for the rest.
    */
-  static fileCacheClient(arweave: Arweave, cacheBasePath?: string): SwcClient {
+  static fileCacheClient(arweave: Arweave, cacheBasePath?: string): Contract {
     const definitionLoader = new ContractDefinitionLoader<any>(arweave, new MemCache());
 
     const interactionsLoader = new CacheableContractInteractionsLoader(
@@ -88,10 +88,10 @@ export class SwClientFactory {
   }
 
   /**
-   * Returns a {@link SwcClient} that (yup, you've guessed it!) does not use any caches.
+   * Returns a {@link Contract} that (yup, you've guessed it!) does not use any caches.
    * This one is gonna be slooow...
    */
-  static noCacheClient(arweave: Arweave): SwcClient {
+  static noCacheClient(arweave: Arweave): Contract {
     const definitionLoader = new ContractDefinitionLoader(arweave);
     const interactionsLoader = new ContractInteractionsLoader(arweave);
     const executorFactory = new HandlerExecutorFactory(arweave);

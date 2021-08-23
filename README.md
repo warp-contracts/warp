@@ -43,14 +43,14 @@ The new SDK is currently a part of the current SDK.
 All the new source code is kept in the `src/v2` directory.
 
 #### Client package
-Code located in `client` package contains base client interface - `SwcClient` and its
+Code located in `client` package contains base client interface - `Contract` and its
 "reference" implementation - `HandlerBasedSwcClient` - that allows to interact with contracts.
 It also contains `SwClientFactory` that supplies some most common `HandlerBasedSwcClient` configurations (e.g. cached or non-cached).  
 Refer the TSDocs for more information.
 
 #### Cache package
 Code located in `cache` package contains base interfaces - `SwCache` and `BlockHeightSwCache`
-and some example implementations. These caches can be used while configuring [`SwcClient`](#swcclient-interface)
+and some example implementations. These caches can be used while configuring [`Contract`](#swcclient-interface)
 implementation - to greatly improve processing speed (i.e. contract's state evaluation)  
 Refer the TSDocs for more information.
 

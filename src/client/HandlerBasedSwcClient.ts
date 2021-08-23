@@ -16,18 +16,18 @@ import {
   InteractionTx,
   LoggerFactory,
   StateEvaluator,
-  SwcClient
+  Contract
 } from '@smartweave';
 
 const logger = LoggerFactory.INST.create(__filename);
 
 /**
- * An implementation of {@link SwcClient} that is backwards compatible with current style
+ * An implementation of {@link Contract} that is backwards compatible with current style
  * of writing SW contracts (ie. using the "handle" function).
  *
  * It requires {@link ExecutorFactory} that is using {@link HandlerApi} generic type.
  */
-export class HandlerBasedSwcClient implements SwcClient {
+export class HandlerBasedSwcClient implements Contract {
   constructor(
     private readonly arweave: Arweave,
     private readonly definitionLoader: DefinitionLoader,

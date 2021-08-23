@@ -10,7 +10,7 @@ import { JWKInterface } from 'arweave/node/lib/wallet';
  * keep it as is (one instance of client can be used for interaction with multiple contracts
  * - this introduces some issues with generic types - as we cannot declare `State` and `Api' types at interface level).
  */
-export interface SwcClient {
+export interface Contract {
   /**
    * Returns state of the contract at required blockHeight.
    * Similar to {@link readContract} from the current version.
