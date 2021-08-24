@@ -8,3 +8,5 @@ lib/
 
 # WebStorm Local files
 .idea/
+
+.DS_Store
