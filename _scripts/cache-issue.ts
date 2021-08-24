@@ -1,7 +1,6 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import { LoggerFactory } from '../logging';
-import { SwClientFactory } from '@client';
+import { SwClientFactory, LoggerFactory } from '@smartweave';
 
 const contracts = [
   'gepLlre8wG8K3C15rNjpdKZZv_9pWsurRoEB6ir_EC4',

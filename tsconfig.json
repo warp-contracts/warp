@@ -8,17 +8,21 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "baseUrl": "src",
+    "baseUrl": "./src",
     "paths": {
-      "@cache": ["cache/index"],
-      "@client": ["client/index"],
-      "@core": ["core/index"],
-      "@legacy": ["legacy/index"],
-      "@plugins": ["plugins/index"],
-      "@logging": ["logging/index"],
+      "@smartweave/cache": ["cache/index"],
+      "@smartweave/client": ["client/index"],
+      "@smartweave/core": ["core/index"],
+      "@smartweave/legacy": ["legacy/index"],
+      "@smartweave/plugins": ["plugins/index"],
+      "@smartweave/logging": ["logging/index"],
       "@smartweave": ["index"],
     }
   },
   "include": ["src"],
-  "exclude": ["node_modules", "**/__tests__/*", "src/_scripts"]
+  "exclude": [
+    "node_modules",
+    "**/__tests__/*",
+    "_scripts"
+  ]
 }

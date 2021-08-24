@@ -5,7 +5,7 @@ import {
   CacheableExecutorFactory,
   CacheableStateEvaluator,
   Evolve
-} from '@plugins';
+} from '@smartweave/plugins';
 import {
   ContractDefinitionLoader,
   ContractInteractionsLoader,
@@ -13,8 +13,8 @@ import {
   EvalStateResult,
   HandlerExecutorFactory,
   LexicographicalInteractionsSorter
-} from '@core';
-import { BsonFileBlockHeightSwCache, MemBlockHeightSwCache, MemCache } from '@cache';
+} from '@smartweave/core';
+import { BsonFileBlockHeightSwCache, MemBlockHeightSwCache, MemCache } from '@smartweave/cache';
 
 /**
  * A factory that simplifies the process of creating different versions of {@link SwcClient}.

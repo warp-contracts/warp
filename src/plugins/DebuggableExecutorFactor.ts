@@ -1,4 +1,4 @@
-import { ContractDefinition, ExecutorFactory } from '@core';
+import { ContractDefinition, ExecutorFactory } from '@smartweave/core';
 
 /**
  * An ExecutorFactory that allows to substitute original contract's source code.

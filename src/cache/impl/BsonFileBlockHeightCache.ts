@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import BSON from 'bson';
-import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@cache';
-import { LoggerFactory } from '@logging';
+import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@smartweave/cache';
+import { LoggerFactory } from '@smartweave/logging';
 
 const logger = LoggerFactory.INST.create(__filename);
 /**

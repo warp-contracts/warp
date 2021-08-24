@@ -1,6 +1,8 @@
-export * from '@logging'; // this needs to be the first exported element.
-export * from '@core';
-export * from '@client';
-export * from '@cache';
-export * from '@plugins';
-export * from '@legacy';
+// note: all of the aliases are replaced by relative paths after compilation
+// - using https://www.npmjs.com/package/tsc-alias plugin
+export * from '@smartweave/logging'; // this needs to be the first exported element.
+export * from '@smartweave/core';
+export * from '@smartweave/client';
+export * from '@smartweave/cache';
+export * from '@smartweave/plugins';
+export * from '@smartweave/legacy';

@@ -1,8 +1,14 @@
-import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@cache';
-import { DefaultStateEvaluator, EvalStateResult, ExecutionContext, ExecutionContextModifier, HandlerApi } from '@core';
+import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@smartweave/cache';
+import {
+  DefaultStateEvaluator,
+  EvalStateResult,
+  ExecutionContext,
+  ExecutionContextModifier,
+  HandlerApi
+} from '@smartweave/core';
 import Arweave from 'arweave';
-import { GQLNodeInterface } from '@legacy';
-import { LoggerFactory } from '@logging';
+import { GQLNodeInterface } from '@smartweave/legacy';
+import { LoggerFactory } from '@smartweave/logging';
 
 const logger = LoggerFactory.INST.create(__filename);
 

@@ -1,7 +1,7 @@
 import Arweave from 'arweave';
-import { ContractDefinition, ExecutorFactory } from '@core';
-import { SwCache } from '@cache';
-import { LoggerFactory } from '@logging';
+import { ContractDefinition, ExecutorFactory } from '@smartweave/core';
+import { SwCache } from '@smartweave/cache';
+import { LoggerFactory } from '@smartweave/logging';
 
 const logger = LoggerFactory.INST.create(__filename);
 

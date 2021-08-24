@@ -1,4 +1,4 @@
-import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@cache';
+import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@smartweave/cache';
 
 /**
  * A simple, in-memory cache implementation of the BlockHeightSwCache
