@@ -42,7 +42,7 @@ export class HandlerBasedSwcClient implements SwcClient {
     currentTx?: { interactionTxId: string; contractTxId: string }[],
     evaluationOptions?: EvaluationOptions
   ): Promise<EvalStateResult<State>> {
-    logger.info('Read state for %s', contractTxId);
+    logger.info(`Read state for ${contractTxId}`);
     logger.profile('Creating execution context');
     const executionContext = await this.createExecutionContext(contractTxId, blockHeight, evaluationOptions);
     logger.profile('Creating execution context');
@@ -62,7 +62,7 @@ export class HandlerBasedSwcClient implements SwcClient {
     blockHeight?: number,
     evaluationOptions?: EvaluationOptions
   ): Promise<InteractionResult<any, View>> {
-    logger.info('View state for %s', contractTxId);
+    logger.info(`View state for ${contractTxId}`);
     logger.profile('Creating execution context');
     let executionContext = await this.createExecutionContext(contractTxId, blockHeight, evaluationOptions);
     logger.profile('Creating execution context');
@@ -121,7 +121,7 @@ export class HandlerBasedSwcClient implements SwcClient {
     transaction: InteractionTx,
     evaluationOptions?: EvaluationOptions
   ): Promise<InteractionResult<any, View>> {
-    logger.info('Vies state for %s %o', contractTxId, transaction);
+    logger.info(`Vies state for ${contractTxId}`, transaction);
     logger.profile('Creating execution context');
     const executionContext = await this.createExecutionContextFromTx(contractTxId, transaction);
     logger.profile('Creating execution context');

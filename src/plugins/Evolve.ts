@@ -44,7 +44,7 @@ export class Evolve<State extends EvolveCompatibleState, Api> implements Executi
 
   async modify(state: State, executionContext: ExecutionContext<State, Api>): Promise<ExecutionContext<State, Api>> {
     const contractTxId = executionContext.contractDefinition.txId;
-    logger.verbose(`trying to evolve for: ${contractTxId}`);
+    logger.debug(`trying to evolve for: ${contractTxId}`);
     const currentSrcTxId = executionContext.contractDefinition.srcTxId;
 
     const settings =
@@ -60,7 +60,7 @@ export class Evolve<State extends EvolveCompatibleState, Api> implements Executi
       canEvolve = true;
     }
     if (evolve && /[a-z0-9_-]{43}/i.test(evolve) && canEvolve) {
-      logger.debug('Checking evolve: %o', {
+      logger.debug('Checking evolve:', {
         current: currentSrcTxId,
         evolve
       });
@@ -68,7 +68,7 @@ export class Evolve<State extends EvolveCompatibleState, Api> implements Executi
       if (currentSrcTxId !== evolve) {
         try {
           // note: that's really nasty IMO - loading original contract definition, but forcing different sourceTxId...
-          logger.info('Evolving to: %s', evolve);
+          logger.info(`Evolving to: ${evolve}`);
           const newContractDefinition = await this.definitionLoader.load(contractTxId, evolve);
           const newHandler = await this.executorFactory.create(newContractDefinition);
 
@@ -77,7 +77,7 @@ export class Evolve<State extends EvolveCompatibleState, Api> implements Executi
             contractDefinition: newContractDefinition,
             handler: newHandler
           };
-          logger.verbose('evolved to: %o', {
+          logger.debug('evolved to:', {
             txId: modifiedContext.contractDefinition.txId,
             srcTxId: modifiedContext.contractDefinition.srcTxId
           });

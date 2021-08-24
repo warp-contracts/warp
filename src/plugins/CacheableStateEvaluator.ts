@@ -29,7 +29,7 @@ export class CacheableStateEvaluator<State> extends DefaultStateEvaluator<State>
     currentTx: { interactionTxId: string; contractTxId: string }[]
   ): Promise<EvalStateResult<State>> {
     const requestedBlockHeight = executionContext.blockHeight;
-    logger.verbose(`Requested state block height: ${requestedBlockHeight}`);
+    logger.debug(`Requested state block height: ${requestedBlockHeight}`);
 
     let cachedState: BlockHeightCacheResult<EvalStateResult<State>> | null = null;
 
@@ -45,7 +45,7 @@ export class CacheableStateEvaluator<State> extends DefaultStateEvaluator<State>
       cachedState = this.cache.getLessOrEqual(executionContext.contractDefinition.txId, requestedBlockHeight);
 
       if (cachedState != null) {
-        logger.verbose(`Cached state for ${executionContext.contractDefinition.txId} %o`, {
+        logger.debug(`Cached state for ${executionContext.contractDefinition.txId}`, {
           block: cachedState.cachedHeight,
           requestedBlockHeight
         });
@@ -57,7 +57,7 @@ export class CacheableStateEvaluator<State> extends DefaultStateEvaluator<State>
         );
       }
 
-      logger.verbose(`Interactions until [${requestedBlockHeight}] %o`, {
+      logger.debug(`Interactions until [${requestedBlockHeight}]`, {
         total: sortedInteractionsUpToBlock.length,
         cached: sortedInteractionsUpToBlock.length - missingInteractions.length
       });
@@ -72,7 +72,7 @@ export class CacheableStateEvaluator<State> extends DefaultStateEvaluator<State>
         if (entry.contractTxId === executionContext.contractDefinition.txId) {
           const index = missingInteractions.findIndex((tx) => tx.node.id === entry.interactionTxId);
           if (index !== -1) {
-            logger.verbose('Inf. Loop fix - removing interaction %o', {
+            logger.debug('Inf. Loop fix - removing interaction', {
               contractTxId: entry.contractTxId,
               interactionTxId: entry.interactionTxId
             });
@@ -83,7 +83,7 @@ export class CacheableStateEvaluator<State> extends DefaultStateEvaluator<State>
 
       // if cache is up-to date - return immediately to speed-up the whole process
       if (missingInteractions.length === 0 && cachedState) {
-        logger.verbose(`State up to requested  height [${requestedBlockHeight}]  fully cached!`);
+        logger.debug(`State up to requested  height [${requestedBlockHeight}]  fully cached!`);
         return cachedState.cachedValue;
       }
     }

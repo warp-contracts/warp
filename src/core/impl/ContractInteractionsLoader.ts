@@ -94,7 +94,7 @@ export class ContractInteractionsLoader implements InteractionsLoader {
       txInfos.push(...transactions.edges.filter((tx) => !tx.node.parent || !tx.node.parent.id));
     }
 
-    logger.verbose('All interactions: %s', txInfos.length);
+    logger.debug('All interactions:', txInfos.length);
 
     return txInfos;
   }

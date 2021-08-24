@@ -24,7 +24,7 @@ async function main() {
   });
 
   const swcClient = SwClientFactory.memCacheClient(arweave);
-  LoggerFactory.INST.logLevel('debug');
+  LoggerFactory.INST.logLevel('trace');
 
   const contractTxId = 'W_njBtwDRyltjVU1RizJtZfF0S_4X3aSrrrA0HUEhUs';
   const contractTxId2 = 'TMkCZKYO3GwcTLEKGgWSJegIlYCHi_UArtG0unCi2xA';

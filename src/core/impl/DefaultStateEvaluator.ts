@@ -47,14 +47,11 @@ export class DefaultStateEvaluator<State = unknown> implements StateEvaluator<St
     const validity = JSON.parse(JSON.stringify(baseState.validity));
 
     logger.info(
-      'Evaluating state for %s [%s non-cached of %s all]',
-      executionContext.contractDefinition.txId,
-      missingInteractions.length,
-      executionContext.sortedInteractions.length
+      `Evaluating state for ${executionContext.contractDefinition.txId} [${missingInteractions.length} non-cached of ${executionContext.sortedInteractions.length} all]`
     );
 
     for (const missingInteraction of missingInteractions) {
-      logger.verbose(
+      logger.debug(
         `${missingInteraction.node.id}: ${missingInteractions.indexOf(missingInteraction) + 1}/${
           missingInteractions.length
         } [of all:${executionContext.sortedInteractions.length}]`
