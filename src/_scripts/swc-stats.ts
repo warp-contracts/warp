@@ -1,4 +1,5 @@
-import { GQLEdgeInterface, GQLResultInterface, GQLTransactionsResultInterface } from '@smartweave';
+/* eslint-disable */
+import { GQLEdgeInterface, GQLResultInterface, GQLTransactionsResultInterface, LoggerFactory } from '@smartweave';
 import Arweave from 'arweave';
 import fs from 'fs';
 import path from 'path';
@@ -30,6 +31,9 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+const logger = LoggerFactory.INST.create(__filename);
+LoggerFactory.INST.logLevel('silly', 'swc-stats');
+
 async function main() {
   const arweave = Arweave.init({
     host: 'arweave.net', // Hostname or IP address for a Arweave host
@@ -57,7 +61,7 @@ async function main() {
     transactionsQuery
   );
 
-  console.log(`Checking ${contractTxs.length} contracts`);
+  logger.info(`Checking ${contractTxs.length} contracts`);
 
   const result = {};
 
@@ -65,7 +69,7 @@ async function main() {
   for (const contractTx of contractTxs) {
     const contractTxId = contractTx.node.id;
 
-    console.log(
+    logger.debug(
       `\n[${contractTxs.indexOf(contractTx) + 1} / ${contractTxs.length}] loading interactions of the ${contractTxId}`
     );
     const interactions = await sendQuery(
@@ -85,18 +89,18 @@ async function main() {
       transactionsQuery
     );
 
-    console.log(`${contractTxId}: ${interactions.length}`);
+    logger.debug(`${contractTxId}: ${interactions.length}`);
 
     result[contractTxId] = interactions.length;
 
-    console.log('Waiting...');
+    logger.silly('Waiting...');
     await sleep(2000);
   }
 
   fs.writeFileSync(path.join(__dirname, `swc-stats.json`), JSON.stringify(result));
 
   // sorting
-  console.log('Sorting...');
+  logger.silly('Sorting...');
 
   const contracts = JSON.parse(fs.readFileSync(path.join(__dirname, `swc-stats.json`), 'utf-8'));
 
@@ -109,13 +113,13 @@ async function main() {
   const sortedContracts = {};
   sortable.forEach((item) => (sortedContracts[item[0]] = item[1]));
 
-  console.log(sortedContracts);
+  logger.debug('%o', sortedContracts);
 
   fs.writeFileSync(path.join(__dirname, `swc-sorted-stats.json`), JSON.stringify(sortedContracts));
 }
 
 main().then(() => {
-  console.log('done');
+  logger.info('done');
 });
 
 async function sendQuery(arweave: Arweave, variables: any, query: string) {
@@ -145,12 +149,12 @@ async function getNextPage(arweave, variables, query: string): Promise<GQLTransa
   });
 
   if (response.status !== 200) {
-    console.error(response);
+    logger.error(response);
     throw new Error(`Wrong response status from Arweave: ${response.status}`);
   }
 
   if (response.data.errors) {
-    console.error(response.data.errors);
+    logger.error(response.data.errors);
     throw new Error('Error while loading transactions');
   }
 

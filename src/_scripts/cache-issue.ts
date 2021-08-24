@@ -1,3 +1,4 @@
+/* eslint-disable */
 import Arweave from 'arweave';
 import { LoggerFactory } from '../logging';
 import { SwClientFactory } from '@client';
@@ -29,10 +30,8 @@ async function main() {
   const contractTxId = 'W_njBtwDRyltjVU1RizJtZfF0S_4X3aSrrrA0HUEhUs';
   const contractTxId2 = 'TMkCZKYO3GwcTLEKGgWSJegIlYCHi_UArtG0unCi2xA';
 
-  console.log('====== Evaluating', contractTxId);
   await swcClient.readState(contractTxId);
 
-  console.log('\n\n====== Evaluating', contractTxId2);
   await swcClient.readState(contractTxId2);
 }
 

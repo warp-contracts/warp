@@ -1,3 +1,4 @@
+/* eslint-disable */
 import Arweave from 'arweave';
 import { InteractionTx } from './interaction-tx';
 import { GQLTagInterface } from './gqlResult';

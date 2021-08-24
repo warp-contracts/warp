@@ -9,7 +9,7 @@ import {
 } from '@smartweave';
 
 export interface EvolveCompatibleState {
-  settings: any[]; // some..erm..settings?
+  settings: never[]; // some..erm..settings?
   canEvolve: boolean; // whether contract is allowed to evolve. seems to default to true..
   evolve: string; // the transaction id of the Arweave transaction with the updated source code. odd naming convention..
 }
@@ -48,7 +48,7 @@ export class Evolve<State extends EvolveCompatibleState, Api> implements Executi
     const currentSrcTxId = executionContext.contractDefinition.srcTxId;
 
     const settings =
-      state.settings && isIterable(state.settings) ? new Map<any, any>(state.settings) : new Map<any, any>();
+      state.settings && isIterable(state.settings) ? new Map<string, never>(state.settings) : new Map<string, never>();
 
     // note: from my understanding - this variable holds the id of the transaction with updated source code.
     const evolve: string = state.evolve || settings.get('evolve');
@@ -96,7 +96,7 @@ export class Evolve<State extends EvolveCompatibleState, Api> implements Executi
   }
 }
 
-function isIterable(obj: any): boolean {
+function isIterable(obj: unknown): boolean {
   // checks for null and undefined
   if (obj == null) {
     return false;

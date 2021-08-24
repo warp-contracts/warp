@@ -1,8 +1,9 @@
+/* eslint-disable */
 import Arweave from 'arweave';
 import * as fs from 'fs';
 import path from 'path';
 import Transaction from 'arweave/node/lib/transaction';
-import { GQLEdgeInterface, GQLResultInterface, SwClientFactory } from '@smartweave';
+import { GQLEdgeInterface, GQLResultInterface, LoggerFactory, SwClientFactory } from '@smartweave';
 import { readContract } from 'smartweave';
 
 const diffStateToVerify = [
@@ -30,6 +31,9 @@ query Transactions($tags: [TagFilter!]!, $after: String) {
     }
   }`;
 
+const logger = LoggerFactory.INST.create(__filename);
+LoggerFactory.INST.logLevel('silly', 'state-comparator');
+
 async function main() {
   const arweave = Arweave.init({
     host: 'dh48zl0solow5.cloudfront.net', // Hostname or IP address for a Arweave host
@@ -41,7 +45,7 @@ async function main() {
 
   const txs = loadTxFromFile();
 
-  console.log(`Checking ${txs.length} contracts`);
+  logger.silly(`Checking ${txs.length} contracts`);
 
   const differentStatesContractTxIds = [];
 
@@ -164,18 +168,16 @@ async function main() {
   for (const contractTxId of txs) {
     const tx: Transaction = await arweave.transactions.get(contractTxId);
     counter++;
-    console.group(`\n${contractTxId}: [${counter}/${txs.length}]`);
+    logger.silly(`\n${contractTxId}: [${counter}/${txs.length}]`);
 
     if (resumeFrom && contractTxId.localeCompare(resumeFromContractTxId) !== 0) {
-      console.groupEnd();
       continue;
     } else {
       resumeFrom = false;
     }
 
     if (contractsBlacklist.includes(contractTxId)) {
-      console.log('Skipping blacklisted contract: ', contractTxId);
-      console.groupEnd();
+      logger.warn('Skipping blacklisted contract: ', contractTxId);
       continue;
     }
 
@@ -187,18 +189,17 @@ async function main() {
         return key.localeCompare('Contract-Src') === 0 && sourcesBlacklist.includes(value);
       })
     ) {
-      console.log("Skipping blacklisted contract's source");
-      console.groupEnd();
+      logger.warn("Skipping blacklisted contract's source");
       continue;
     }
 
     try {
-      console.log('readContract');
+      logger.info('readContract');
       const result = await readContract(arweave, contractTxId);
       const resultString = JSON.stringify(result);
       // console.log(resultString);
 
-      console.log('readState');
+      logger.info('readState');
       const result2 = await swcClient.readState(contractTxId, null, null, {
         ignoreExceptions: true
       });
@@ -206,17 +207,16 @@ async function main() {
       // console.log(result2String);
 
       if (resultString.localeCompare(result2String) !== 0) {
-        console.error('States differ!');
+        logger.error('States differ!');
         differentStatesContractTxIds.push(contractTxId);
       }
     } catch (e) {
-      console.log(e);
-      console.log('skipping ', contractTxId);
+      logger.error(e);
+      logger.info('skipping ', contractTxId);
       errorContractTxIds.push(contractTxId);
     } finally {
-      console.groupEnd();
-      console.log('Contracts with different states: ', differentStatesContractTxIds);
-      console.log('\n\n');
+      logger.debug('Contracts with different states: %o', differentStatesContractTxIds);
+      logger.info('\n\n ==== END');
     }
   }
 }
@@ -268,13 +268,13 @@ async function getNextPage(arweave, variables) {
     variables
   });
 
-  console.log('Status:', response.status);
+  logger.verbose('Status:', response.status);
   if (response.status !== 200) {
     throw new Error('Wrong response from Ar GQL');
   }
 
   if (response.data.errors) {
-    console.error(response.data.errors);
+    logger.error(response.data.errors);
     throw new Error('Error while loading transactions');
   }
 

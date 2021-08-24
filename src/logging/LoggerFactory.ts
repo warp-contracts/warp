@@ -51,6 +51,8 @@ export type LogLevel = 'error' | 'warn' | 'info' | 'http' | 'verbose' | 'debug' 
 export class LoggerFactory {
   static readonly INST: LoggerFactory = new LoggerFactory();
 
+  private logger = LoggerFactory.INST.create(__filename);
+
   private readonly registeredLoggers: { [moduleName: string]: Logger } = {};
   private readonly registeredOptions: { [moduleName: string]: LoggerOptions } = {};
 
@@ -60,8 +62,8 @@ export class LoggerFactory {
     // noop
   }
 
-  setOptions(newOptions: LoggerOptions, moduleName: string) {
-    console.log('setOptions', { newOptions, moduleName });
+  setOptions(newOptions: LoggerOptions, moduleName?: string): void {
+    this.logger.verbose('setOptions', { newOptions, moduleName });
     // if moduleName not specified
     if (!moduleName) {
       // update default options
@@ -100,11 +102,13 @@ export class LoggerFactory {
   }
 
   logLevel(level: LogLevel, moduleName?: string) {
+    this.logger.debug('Overwriting %s to log level %s', moduleName, level);
     this.setOptions({ level }, moduleName);
   }
 
   create(moduleName = 'SWC'): Logger {
     // in case of passing '__dirname' as moduleName - leaves only the file name without extension.
+    this.logger.debug('Creating new logging module %s', moduleName);
     const normalizedModuleName = path.basename(moduleName, path.extname(moduleName));
     if (!this.registeredLoggers[normalizedModuleName]) {
       const logger = createLogger({

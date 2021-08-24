@@ -4,7 +4,7 @@ import { ExecutionContext, GQLNodeInterface, HandlerApi } from '@smartweave';
  * Implementors of this class are responsible for evaluating contract's state
  * - based on the execution context.
  */
-export interface StateEvaluator<State = any, Api = any> {
+export interface StateEvaluator<State = unknown, Api = unknown> {
   eval(
     executionContext: ExecutionContext<State, Api>,
     currentTx: { interactionTxId: string; contractTxId: string }[]
@@ -17,7 +17,7 @@ export interface StateEvaluator<State = any, Api = any> {
   );
 }
 
-export class EvalStateResult<State = any> {
+export class EvalStateResult<State = unknown> {
   constructor(readonly state: State, readonly validity: Record<string, boolean>) {}
 }
 
@@ -27,7 +27,7 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   // not even notice that there was an exception in state evaluation.
   // Current SDK version simply moves to next interaction in this case and ignores exception
   // - I believe this is not a proper behaviour.
-  ignoreExceptions: boolean = false;
+  ignoreExceptions = false;
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some of the features.

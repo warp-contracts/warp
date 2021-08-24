@@ -1,3 +1,4 @@
+/* eslint-disable */
 import Arweave from 'arweave';
 import * as fs from 'fs';
 import {
@@ -11,6 +12,7 @@ import {
   HandlerBasedSwcClient,
   HandlerExecutorFactory,
   LexicographicalInteractionsSorter,
+  LoggerFactory,
   MemBlockHeightSwCache,
   MemCache
 } from '@smartweave';
@@ -24,6 +26,9 @@ export function timeout(ms: number): Promise<any> {
   return new Promise((resolve) => setTimeout(() => resolve('timeout'), ms));
 }
 
+const logger = LoggerFactory.INST.create(__filename);
+LoggerFactory.INST.logLevel('silly', 'example-usage');
+
 async function readContractState() {
   const arweave = Arweave.init({
     host: 'arweave.net', // Hostname or IP address for a Arweave host
@@ -33,7 +38,7 @@ async function readContractState() {
     logging: false // Enable network request logging
   });
 
-  console.log('arweave created');
+  logger.debug('arweave created');
 
   const changedSrc = `function handle(state, action) {
    console.log("hello world from the new source:", SmartWeave.transaction.id);
@@ -59,12 +64,12 @@ async function readContractState() {
     new LexicographicalInteractionsSorter(arweave)
   );
 
-  console.log('swcClient created');
+  logger.debug('swcClient created');
 
   const jwk = readJSON('../../redstone-node/.secrets/redstone-dev-jwk.json');
   const jwkAddress = await arweave.wallets.jwkToAddress(jwk);
 
-  console.log('jwkAddress:', jwkAddress);
+  logger.debug('jwkAddress:', jwkAddress);
 
   const { state, validity } = await swcClient.readState('OrO8n453N6bx921wtsEs-0OCImBLCItNU5oSbFKlFuU');
 
@@ -79,5 +84,5 @@ async function readContractState() {
 }
 
 readContractState().catch((e) => {
-  console.log(e);
+  logger.error(e);
 });

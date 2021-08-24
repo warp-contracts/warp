@@ -2,6 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import BSON from 'bson';
 import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@cache';
+import { LoggerFactory } from '@logging';
+
+const logger = LoggerFactory.INST.create(__filename);
 /**
  * An implementation of {@link BlockHeightSwCache} that stores its data in BSON files.
  * Data is flushed to disk every 10 new cache entries.
@@ -56,8 +59,7 @@ export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V
       if (this.storage[directory] == null) {
         this.storage[directory] = {};
       }
-      //logger.info(`loading cache for ${directory}`);
-
+      logger.profile(`loading cache for ${directory}`);
       const files = fs.readdirSync(cacheDirPath);
       files.forEach((file) => {
         const cacheFilePath = path.join(cacheDirPath, file);
@@ -67,9 +69,9 @@ export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V
 
         this.storage[directory][height] = cache as V;
       });
-      console.timeEnd(`loading cache for ${directory}`);
+      logger.profile(`loading cache for ${directory}`);
     });
-    console.log('Storage keys', Object.keys(this.storage));
+    logger.debug('Storage keys', Object.keys(this.storage));
 
     process.on('exit', () => {
       this.saveCache();
@@ -89,7 +91,7 @@ export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V
 
     // TODO: switch to async, as currently writing cache files may slow down contract execution.
     try {
-      console.log(`==== Storing cache update [${Object.keys(this.updatedStorage).length}] ====`);
+      logger.verbose(`==== Storing cache update [${Object.keys(this.updatedStorage).length}] ====`);
       const directoryPath = this.basePath;
       Object.keys(this.updatedStorage).forEach((key) => {
         const directory = key;
@@ -162,7 +164,7 @@ export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V
       this.storage[cacheKey] = {};
     }
 
-    if (!this.updatedStorage.hasOwnProperty(cacheKey)) {
+    if (!Object.prototype.hasOwnProperty.call(this.updatedStorage, cacheKey)) {
       this.updatedStorage[cacheKey] = {};
     }
 
@@ -178,7 +180,7 @@ export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V
   }
 
   contains(key: string) {
-    return this.storage.hasOwnProperty(key);
+    return Object.prototype.hasOwnProperty.call(this.storage, key);
   }
 
   get(key: string, blockHeight: number): BlockHeightCacheResult<V> | null {

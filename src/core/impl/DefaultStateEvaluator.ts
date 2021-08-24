@@ -17,7 +17,7 @@ import Arweave from 'arweave';
 const logger = LoggerFactory.INST.create(__filename);
 
 // FIXME: currently this is tightly coupled with the HandlerApi
-export class DefaultStateEvaluator<State = any> implements StateEvaluator<State, HandlerApi<State>> {
+export class DefaultStateEvaluator<State = unknown> implements StateEvaluator<State, HandlerApi<State>> {
   constructor(
     private readonly arweave: Arweave,
     private readonly executionContextModifiers: ExecutionContextModifier<State>[] = []
@@ -123,7 +123,7 @@ export class DefaultStateEvaluator<State = any> implements StateEvaluator<State,
     }
   }
 
-  private parseInput(inputTag: GQLTagInterface): any | null {
+  private parseInput(inputTag: GQLTagInterface): unknown | null {
     try {
       return JSON.parse(inputTag.value);
     } catch (e) {

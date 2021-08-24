@@ -16,7 +16,7 @@ export class DebuggableExecutorFactory<State, Api> implements ExecutorFactory<St
   }
 
   async create(contractDefinition: ContractDefinition<State>): Promise<Api> {
-    if (this.sourceCode.hasOwnProperty(contractDefinition.txId)) {
+    if (Object.prototype.hasOwnProperty.call(this.sourceCode, contractDefinition.txId)) {
       contractDefinition = {
         ...contractDefinition,
         src: this.sourceCode[contractDefinition.txId]

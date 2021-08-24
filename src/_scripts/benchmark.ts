@@ -1,4 +1,5 @@
-import { SwClientFactory } from '@smartweave';
+/* eslint-disable */
+import { LoggerFactory, SwClientFactory } from '@smartweave';
 import Arweave from 'arweave';
 import fs from 'fs';
 import path from 'path';
@@ -11,7 +12,8 @@ async function main() {
     timeout: 60000, // Network request timeouts in milliseconds
     logging: false // Enable network request logging
   });
-
+  const logger = LoggerFactory.INST.create(__filename);
+  LoggerFactory.INST.logLevel('silly', 'benchmark');
   const swcClient = SwClientFactory.fileCacheClient(arweave);
 
   const contractTxId = 'OrO8n453N6bx921wtsEs-0OCImBLCItNU5oSbFKlFuU';
@@ -30,7 +32,7 @@ async function main() {
 */
     const result2 = await swcClient.readState(contractTxId);
     const result2String = JSON.stringify(result2.state);
-    console.log(result2String);
+    logger.silly(result2String);
 
     /*  if (resultString.localeCompare(result2String) !== 0) {
         console.error('\n\n ====== States differ ======\n\n');
@@ -48,12 +50,10 @@ async function main() {
       fs.mkdirSync(targetPath);
     }
     fs.writeFileSync(path.join(targetPath, 'new.json'), result2String);
-    console.log('Contracts with diff state:', resultDiffs);
+    logger.silly('Contracts with diff state:', resultDiffs);
   } catch (e) {
-    console.log(e);
-    console.log('skipping ', contractTxId);
-  } finally {
-    console.groupEnd();
+    logger.error(e);
+    logger.log('skipping ', contractTxId);
   }
 }
 
