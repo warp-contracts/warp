@@ -1,5 +1,7 @@
 # SmartWeave SDK v2
 
+### Warning: WIP - do not use (yet;-))
+
 SmartWeave SDK v2 is the new, rewritten from scratch, SDK implementation proposal for interaction with SmartWeave Contracts.
 It has been built with performance (e.g. caching at multiple layers, Arweave calls optimization)
 and modularity (e.g. ability to use different types of caches, imported from external libraries) in mind.
