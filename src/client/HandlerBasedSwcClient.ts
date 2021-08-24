@@ -52,7 +52,7 @@ export class HandlerBasedSwcClient implements SwcClient {
     const result = await this.stateEvaluator.eval(executionContext, currentTx || []);
     logger.profile(`\nEvaluating ${contractTxId} state ${now}`);
 
-    return result;
+    return result as EvalStateResult<State>;
   }
 
   async viewState<Input, View>(
