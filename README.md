@@ -31,11 +31,11 @@ To quickly update to the latest version, run:
 You can import the full API or individual modules.
 
 ```typescript
-import * as SmartWeaveSdk2 from '@smartweave'
+import * as SmartWeaveSdk from 'redstone-smartweave'
 ```
 
 ```typescript
-import { swcClient, HandlerBasedSwcClient, ... } from '@smartweave'
+import { swcClient, HandlerBasedSwcClient, ... } from 'redstone-smartweave'
 ```
 
 ### Source code structure
