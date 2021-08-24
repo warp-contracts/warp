@@ -113,7 +113,7 @@ async function main() {
   const sortedContracts = {};
   sortable.forEach((item) => (sortedContracts[item[0]] = item[1]));
 
-  logger.debug('%o', sortedContracts);
+  logger.debug(sortedContracts);
 
   fs.writeFileSync(path.join(__dirname, `swc-sorted-stats.json`), JSON.stringify(sortedContracts));
 }

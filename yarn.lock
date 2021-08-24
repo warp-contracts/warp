@@ -5252,7 +5252,7 @@ smartweave@^0.4.41:
     sentencer "^0.2.1"
     yargs "^16.2.0"
 
-source-map-support@^0.5.6:
+source-map-support@^0.5.19, source-map-support@^0.5.6:
   version "0.5.19"
   resolved "https://registry.yarnpkg.com/source-map-support/-/source-map-support-0.5.19.tgz#a98b62f86dcaf4f67399648c085291ab9e8fed61"
   integrity sha512-Wonm7zOCIJzBGQdB+thsPar0kYuCIzYvxZwlBa87yi/Mdjv7Tip2cyVbLj5o0cFPN4EVkuTwb3GDDyUx2DGnGw==
@@ -5747,6 +5747,13 @@ tslib@^2.1.0:
   version "2.3.1"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.3.1.tgz#e8a335add5ceae51aa261d32a490158ef042ef01"
   integrity sha512-77EbyPPpMz+FRFRuAFlWMtmgUWGe9UOG2Z25NqCwiIjRhOf5iKGuzSe5P2w1laq+FkRy4p+PCuVkJSGkzTEKVw==
+
+tslog@^3.2.1:
+  version "3.2.1"
+  resolved "https://registry.yarnpkg.com/tslog/-/tslog-3.2.1.tgz#37df1301211901eb65fd61b9ad7c8554264a7699"
+  integrity sha512-m8wAtox9wt+h6UDcN1WAQnYwRDOGhMIOp+GAuuufo8T8qKuu726i2W3r47BrA69goVOwgUkp5YwDTvAxTktvPg==
+  dependencies:
+    source-map-support "^0.5.19"
 
 tsscmp@1.0.6:
   version "1.0.6"

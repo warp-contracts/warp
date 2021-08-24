@@ -6,6 +6,7 @@
     "declaration": true,
     "outDir": "./lib",
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "baseUrl": "./src",
@@ -20,5 +21,7 @@
     }
   },
   "include": ["src"],
-  "exclude": ["node_modules", "**/__tests__/*", "src/_scripts"]
+  "exclude": ["node_modules", "**/__tests__/*",
+    "_scripts"
+  ]
 }

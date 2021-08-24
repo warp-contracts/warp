@@ -13,7 +13,7 @@ export class ContractDefinitionLoader<State = any> implements DefinitionLoader<S
 
   async load(contractTxId: string, forcedSrcTxId?: string): Promise<ContractDefinition<State>> {
     if (!forcedSrcTxId && this.cache?.contains(contractTxId)) {
-      logger.verbose('ContractDefinitionLoader: Hit from cache!');
+      logger.debug('ContractDefinitionLoader: Hit from cache!');
       return Promise.resolve(this.cache?.get(contractTxId));
     }
 

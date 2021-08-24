@@ -16,7 +16,7 @@ export class CacheableContractInteractionsLoader implements InteractionsLoader {
   ) {}
 
   async load(contractId: string, blockHeight: number): Promise<GQLEdgeInterface[]> {
-    logger.debug('Loading interactions %o', {
+    logger.debug('Loading interactions', {
       contractId,
       blockHeight
     });
@@ -24,7 +24,7 @@ export class CacheableContractInteractionsLoader implements InteractionsLoader {
     const cached = this.cache.get(contractId, blockHeight);
 
     if (cached !== null) {
-      logger.verbose('InteractionsLoader - hit from cache!');
+      logger.debug('InteractionsLoader - hit from cache!');
       return cached.cachedValue;
     } else {
       const result = await this.baseImplementation.load(contractId, blockHeight);

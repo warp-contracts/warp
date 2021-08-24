@@ -56,7 +56,7 @@ export class HandlerExecutorFactory<State = any> implements ExecutorFactory<Stat
         try {
           const stateCopy = JSON.parse(JSON.stringify(state));
           swGlobal._activeTx = interactionTx;
-          logger.debug('SmartWeave.contract.id: %s', swGlobal.contract.id);
+          logger.debug(`SmartWeave.contract.id: ${swGlobal.contract.id}`, swGlobal.contract.id);
 
           self.assignReadContractState(swGlobal, contractDefinition, interaction, executionContext, currentTx);
           self.assignViewContractState(swGlobal, contractDefinition, executionContext);
@@ -99,7 +99,7 @@ export class HandlerExecutorFactory<State = any> implements ExecutorFactory<Stat
     executionContext: ExecutionContext<State, HandlerApi<State>>
   ) {
     swGlobal.contracts.viewContractState = async <View>(contractTxId: string, input: any) => {
-      logger.verbose('swGlobal.viewContractState call: %o', {
+      logger.debug('swGlobal.viewContractState call:', {
         from: contractDefinition.txId,
         to: contractTxId,
         input
@@ -116,7 +116,7 @@ export class HandlerExecutorFactory<State = any> implements ExecutorFactory<Stat
     currentTx: { interactionTxId: string; contractTxId: string }[]
   ) {
     swGlobal.contracts.readContractState = async (contractTxId: string, height?: number, returnValidity?: boolean) => {
-      logger.verbose('swGlobal.readContractState call: ', {
+      logger.debug('swGlobal.readContractState call: ', {
         from: contractDefinition.txId,
         to: contractTxId,
         interaction

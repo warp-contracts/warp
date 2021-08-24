@@ -91,7 +91,7 @@ export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V
 
     // TODO: switch to async, as currently writing cache files may slow down contract execution.
     try {
-      logger.verbose(`==== Storing cache update [${Object.keys(this.updatedStorage).length}] ====`);
+      logger.debug(`==== Storing cache update [${Object.keys(this.updatedStorage).length}] ====`);
       const directoryPath = this.basePath;
       Object.keys(this.updatedStorage).forEach((key) => {
         const directory = key;

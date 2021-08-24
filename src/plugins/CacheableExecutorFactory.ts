@@ -23,7 +23,7 @@ export class CacheableExecutorFactory<State, Api> implements ExecutorFactory<Sta
     // with the same source).
     const cacheKey = contractDefinition.txId;
     if (!this.cache.contains(cacheKey)) {
-      logger.verbose('Updating executor factory cache');
+      logger.debug('Updating executor factory cache');
       const handler = await this.baseImplementation.create(contractDefinition);
       this.cache.put(cacheKey, handler);
     }
