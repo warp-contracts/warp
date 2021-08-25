@@ -18,7 +18,7 @@ export class ConsoleLogger implements Logger {
   }
 
   silly(message?: any, ...optionalParams: any[]) {
-    console.debug();
+    console.debug(message, optionalParams);
   }
 
   verbose(message?: any, ...optionalParams: any[]) {

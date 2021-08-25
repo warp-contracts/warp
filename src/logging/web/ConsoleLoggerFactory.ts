@@ -1,6 +1,6 @@
 import { Logger, LogLevel } from '@smartweave';
 import { LoggerOptions } from 'winston';
-import { ConsoleLogger } from './web/ConsoleLogger';
+import { ConsoleLogger } from './ConsoleLogger';
 
 export class ConsoleLoggerFactory {
   constructor() {
