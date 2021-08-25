@@ -1,7 +1,7 @@
-import { Logger } from '@smartweave';
+import { RedStoneLogger } from '@smartweave';
 
-export class ConsoleLogger implements Logger {
-  debug(message?: any, ...optionalParams: any[]) {
+export class ConsoleLogger implements RedStoneLogger {
+  trace(message?: any, ...optionalParams: any[]) {
     console.debug(message, optionalParams);
   }
 
@@ -13,15 +13,11 @@ export class ConsoleLogger implements Logger {
     console.info(message, optionalParams);
   }
 
-  profile(id: any) {
-    console.warn('Profile not implemented for this logger!');
-  }
-
   silly(message?: any, ...optionalParams: any[]) {
     console.debug(message, optionalParams);
   }
 
-  verbose(message?: any, ...optionalParams: any[]) {
+  debug(message?: any, ...optionalParams: any[]) {
     console.debug(message, optionalParams);
   }
 
@@ -31,5 +27,9 @@ export class ConsoleLogger implements Logger {
 
   log(message?: any, ...optionalParams: any[]) {
     console.info(message, optionalParams);
+  }
+
+  fatal(message?: any, ...optionalParams: any[]) {
+    console.error(message, optionalParams);
   }
 }

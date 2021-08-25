@@ -1,6 +1,6 @@
-import { Logger, LogLevel } from '@smartweave';
-import { LoggerOptions } from 'winston';
+import { RedStoneLogger, LogLevel } from '@smartweave';
 import { ConsoleLogger } from './ConsoleLogger';
+import { ISettingsParam } from 'tslog';
 
 export class ConsoleLoggerFactory {
   constructor() {
@@ -10,11 +10,11 @@ export class ConsoleLoggerFactory {
     this.logLevel = this.logLevel.bind(this);
   }
 
-  setOptions(newOptions: LoggerOptions, moduleName?: string): void {
+  setOptions(newOptions: ISettingsParam, moduleName?: string): void {
     // noop
   }
 
-  getOptions(moduleName?: string): LoggerOptions {
+  getOptions(moduleName?: string): ISettingsParam {
     return {};
   }
 
@@ -22,7 +22,7 @@ export class ConsoleLoggerFactory {
     // noop
   }
 
-  create(moduleName = 'SWC'): Logger {
+  create(moduleName = 'SWC'): RedStoneLogger {
     return new ConsoleLogger();
   }
 }

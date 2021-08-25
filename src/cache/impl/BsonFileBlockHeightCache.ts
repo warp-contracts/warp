@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import BSON from 'bson';
 import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@smartweave/cache';
-import { LoggerFactory } from '@smartweave/logging';
+import { Benchmark, LoggerFactory } from '@smartweave/logging';
 
 const logger = LoggerFactory.INST.create(__filename);
 /**
@@ -59,7 +59,7 @@ export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V
       if (this.storage[directory] == null) {
         this.storage[directory] = {};
       }
-      logger.profile(`loading cache for ${directory}`);
+      const benchmark = Benchmark.measure();
       const files = fs.readdirSync(cacheDirPath);
       files.forEach((file) => {
         const cacheFilePath = path.join(cacheDirPath, file);
@@ -69,7 +69,7 @@ export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V
 
         this.storage[directory][height] = cache as V;
       });
-      logger.profile(`loading cache for ${directory}`);
+      logger.debug(`loading cache for ${directory}`, benchmark.elapsed());
     });
     logger.debug('Storage keys', Object.keys(this.storage));
 

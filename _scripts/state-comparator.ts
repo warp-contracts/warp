@@ -215,7 +215,7 @@ async function main() {
       logger.info('skipping ', contractTxId);
       errorContractTxIds.push(contractTxId);
     } finally {
-      logger.debug('Contracts with different states:', differentStatesContractTxIds);
+      logger.trace('Contracts with different states:', differentStatesContractTxIds);
       logger.info('\n\n ==== END');
     }
   }
@@ -268,7 +268,7 @@ async function getNextPage(arweave, variables) {
     variables
   });
 
-  logger.debug('Status:', response.status);
+  logger.trace('Status:', response.status);
   if (response.status !== 200) {
     throw new Error('Wrong response from Ar GQL');
   }

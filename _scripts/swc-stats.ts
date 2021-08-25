@@ -69,7 +69,7 @@ async function main() {
   for (const contractTx of contractTxs) {
     const contractTxId = contractTx.node.id;
 
-    logger.debug(
+    logger.trace(
       `\n[${contractTxs.indexOf(contractTx) + 1} / ${contractTxs.length}] loading interactions of the ${contractTxId}`
     );
     const interactions = await sendQuery(
@@ -89,7 +89,7 @@ async function main() {
       transactionsQuery
     );
 
-    logger.debug(`${contractTxId}: ${interactions.length}`);
+    logger.trace(`${contractTxId}: ${interactions.length}`);
 
     result[contractTxId] = interactions.length;
 
@@ -113,7 +113,7 @@ async function main() {
   const sortedContracts = {};
   sortable.forEach((item) => (sortedContracts[item[0]] = item[1]));
 
-  logger.debug(sortedContracts);
+  logger.trace(sortedContracts);
 
   fs.writeFileSync(path.join(__dirname, `swc-sorted-stats.json`), JSON.stringify(sortedContracts));
 }

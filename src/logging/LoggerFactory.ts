@@ -1,17 +1,16 @@
-import { Logger, LogLevel } from '@smartweave';
-import { LoggerOptions } from 'winston';
+import { RedStoneLogger, LogLevel } from '@smartweave';
 import { ConsoleLoggerFactory } from './web/ConsoleLoggerFactory';
-import { WinstonLoggerFactory } from './node/WinstonLoggerFactory';
+import { TsLogFactory } from './node/TsLogFactory';
+import { ISettingsParam } from 'tslog';
 
 export class LoggerFactory {
-  static readonly INST: LoggerFactory =
-    typeof window === 'undefined' ? new WinstonLoggerFactory() : new ConsoleLoggerFactory();
+  static readonly INST: LoggerFactory = typeof window === 'undefined' ? new TsLogFactory() : new ConsoleLoggerFactory();
 
-  setOptions(newOptions: LoggerOptions, moduleName: string): void {
+  setOptions(newOptions: ISettingsParam, moduleName: string): void {
     LoggerFactory.INST.setOptions(newOptions, moduleName);
   }
 
-  getOptions(moduleName?: string): LoggerOptions {
+  getOptions(moduleName?: string): ISettingsParam {
     return LoggerFactory.INST.getOptions(moduleName);
   }
 
@@ -19,7 +18,7 @@ export class LoggerFactory {
     LoggerFactory.INST.logLevel(level, moduleName);
   }
 
-  create(moduleName?: string): Logger {
+  create(moduleName?: string): RedStoneLogger {
     return LoggerFactory.INST.create(moduleName);
   }
 }

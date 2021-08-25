@@ -38,7 +38,7 @@ async function readContractState() {
     logging: false // Enable network request logging
   });
 
-  logger.debug('arweave created');
+  logger.trace('arweave created');
 
   const changedSrc = `function handle(state, action) {
    console.log("hello world from the new source:", SmartWeave.transaction.id);
@@ -64,12 +64,12 @@ async function readContractState() {
     new LexicographicalInteractionsSorter(arweave)
   );
 
-  logger.debug('swcClient created');
+  logger.trace('swcClient created');
 
   const jwk = readJSON('../../redstone-node/.secrets/redstone-dev-jwk.json');
   const jwkAddress = await arweave.wallets.jwkToAddress(jwk);
 
-  logger.debug('jwkAddress:', jwkAddress);
+  logger.trace('jwkAddress:', jwkAddress);
 
   const { state, validity } = await swcClient.readState('OrO8n453N6bx921wtsEs-0OCImBLCItNU5oSbFKlFuU');
 

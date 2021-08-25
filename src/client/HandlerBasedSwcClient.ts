@@ -1,6 +1,7 @@
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import {
+  Benchmark,
   ContractInteraction,
   DefaultEvaluationOptions,
   DefinitionLoader,
@@ -43,14 +44,13 @@ export class HandlerBasedSwcClient implements SwcClient {
     evaluationOptions?: EvaluationOptions
   ): Promise<EvalStateResult<State>> {
     logger.info(`Read state for ${contractTxId}`);
-    logger.profile('Creating execution context');
+    const benchmark = Benchmark.measure();
     const executionContext = await this.createExecutionContext(contractTxId, blockHeight, evaluationOptions);
-    logger.profile('Creating execution context');
+    logger.debug('Creating execution context', benchmark.elapsed());
 
-    const now = Date.now();
-    logger.profile(`\nEvaluating ${contractTxId} state ${now}`);
+    benchmark.reset();
     const result = await this.stateEvaluator.eval(executionContext, currentTx || []);
-    logger.profile(`\nEvaluating ${contractTxId} state ${now}`);
+    logger.debug(`Evaluating ${contractTxId} state`, benchmark.elapsed());
 
     return result as EvalStateResult<State>;
   }
@@ -63,9 +63,9 @@ export class HandlerBasedSwcClient implements SwcClient {
     evaluationOptions?: EvaluationOptions
   ): Promise<InteractionResult<any, View>> {
     logger.info(`View state for ${contractTxId}`);
-    logger.profile('Creating execution context');
+    const benchmark = Benchmark.measure();
     let executionContext = await this.createExecutionContext(contractTxId, blockHeight, evaluationOptions);
-    logger.profile('Creating execution context');
+    logger.debug('Creating execution context', benchmark.elapsed());
 
     if (!executionContext.currentBlockData) {
       const currentBlockData = executionContext.currentNetworkInfo
@@ -85,10 +85,9 @@ export class HandlerBasedSwcClient implements SwcClient {
       caller
     };
 
-    const now = Date.now();
-    logger.profile(`\nEvaluating ${contractTxId} state ${now}`);
+    benchmark.reset();
     const evalStateResult = await this.stateEvaluator.eval(executionContext, []);
-    logger.profile(`\nEvaluating ${contractTxId} state ${now}`);
+    logger.debug(`Evaluating ${contractTxId} state`, benchmark.elapsed());
 
     const interaction: ContractInteraction = {
       input,
@@ -122,14 +121,13 @@ export class HandlerBasedSwcClient implements SwcClient {
     evaluationOptions?: EvaluationOptions
   ): Promise<InteractionResult<any, View>> {
     logger.info(`Vies state for ${contractTxId}`, transaction);
-    logger.profile('Creating execution context');
+    const benchmark = Benchmark.measure();
     const executionContext = await this.createExecutionContextFromTx(contractTxId, transaction);
-    logger.profile('Creating execution context');
+    logger.debug('Creating execution context', benchmark.elapsed());
 
-    const now = Date.now();
-    logger.profile(`\nEvaluating ${contractTxId} state ${now}`);
+    benchmark.reset();
     const evalStateResult = await this.stateEvaluator.eval(executionContext, []);
-    logger.profile(`\nEvaluating ${contractTxId} state ${now}`);
+    logger.debug(`Evaluating ${contractTxId} state`, benchmark.elapsed());
 
     const interaction: ContractInteraction = {
       input,

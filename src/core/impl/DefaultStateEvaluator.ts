@@ -1,4 +1,5 @@
 import {
+  Benchmark,
   ContractInteraction,
   EvalStateResult,
   ExecutionContext,
@@ -56,7 +57,7 @@ export class DefaultStateEvaluator<State = unknown> implements StateEvaluator<St
           missingInteractions.length
         } [of all:${executionContext.sortedInteractions.length}]`
       );
-      logger.profile(`${missingInteraction.node.id} evaluation`);
+      const benchmark = Benchmark.measure();
       const currentInteraction: GQLNodeInterface = missingInteraction.node;
 
       const inputTag = this.findInputTag(missingInteraction, executionContext);
@@ -92,7 +93,7 @@ export class DefaultStateEvaluator<State = unknown> implements StateEvaluator<St
 
       validity[currentInteraction.id] = result.type === 'ok';
       currentState = result.state;
-      logger.profile(`${missingInteraction.node.id} evaluation`);
+      logger.debug(`${missingInteraction.node.id} evaluation`, benchmark.elapsed());
 
       // I'm really NOT a fan of this "modify" feature, but I don't have idea how to better
       // implement the "evolve" feature

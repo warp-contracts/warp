@@ -49,8 +49,7 @@
     "bignumber.js": "^9.0.1",
     "bson": "^4.5.0",
     "json-beautify": "^1.1.1",
-    "tslog": "^3.2.1",
-    "winston": "^3.3.3"
+    "tslog": "^3.2.1"
   },
   "devDependencies": {
     "@textury/arlocal": "^1.0.27",

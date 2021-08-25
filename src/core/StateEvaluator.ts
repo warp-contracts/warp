@@ -27,7 +27,7 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   // not even notice that there was an exception in state evaluation.
   // Current SDK version simply moves to next interaction in this case and ignores exception
   // - I believe this is not a proper behaviour.
-  ignoreExceptions = false;
+  ignoreExceptions = true;
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some of the features.
