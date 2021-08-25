@@ -100,12 +100,14 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
   ) {
     swGlobal.contracts.viewContractState = async <View>(contractTxId: string, input: any) => {
       throw new Error('TODO implement');
-      /*logger.debug('swGlobal.viewContractState call: %o', {
+      logger.debug('swGlobal.viewContractState call: %o', {
         from: contractDefinition.txId,
         to: contractTxId,
         input
       });
-      return await executionContext.contract.viewStateForTx(contractTxId, input, swGlobal._activeTx);*/
+      const childContract = executionContext.smartweave.contract(contractTxId);
+
+      return await childContract.viewStateForTx(input, swGlobal._activeTx);
     };
   }
 
@@ -175,7 +177,7 @@ export type HandlerFunction<State, Input, Result> = (
 
 // TODO: change to XOR between result and state?
 export type HandlerResult<State, Result> = {
-  result: string | Result;
+  result: string | Result; // this really sucks, but has to be declared this way to be backwards compatbile
   state: State;
 };
 

@@ -1,5 +1,5 @@
 import Arweave from 'arweave';
-import { HandlerBasedContract, Contract, SmartWeave } from './index';
+import { HandlerBasedContract, Contract, SmartWeave } from '@smartweave/contract';
 import {
   CacheableContractInteractionsLoader,
   CacheableExecutorFactory,
@@ -18,17 +18,12 @@ import {
 import { BsonFileBlockHeightSwCache, MemBlockHeightSwCache, MemCache } from '@smartweave/cache';
 
 /**
- * A factory that simplifies the process of creating different versions of {@link Contract}.
- * All versions have the {@link Evolve} plugin...erm, plugged in ;-).
- *
- * TODO: add builders (or BUIDLers ;-)) that would simplify the process of customizing SwcClient behaviour
- * TODO: consider introducing some IoC container (like `inversify`),
- * but without forcing to use it (as some developers may be allergic to IoC/DI concepts ;-))
- * - this would probably require some consultations within the community.
+ * A factory that simplifies the process of creating different versions of {@link SmartWeave}.
+ * All versions use the {@link Evolve} plugin.
  */
-export class SmartWeaveFactory {
+export class SmartWeaveWebFactory {
   /**
-   * Returns a {@link Contract} that is using mem cache for all layers.
+   * Returns a {@link SmartWeave} that is using mem cache for all layers.
    */
   static memCached(arweave: Arweave): SmartWeave {
     const definitionLoader = new ContractDefinitionLoader(arweave, new MemCache());
@@ -44,6 +39,26 @@ export class SmartWeaveFactory {
       new Evolve(definitionLoader, executorFactory)
     ]);
 
+    const interactionsSorter = new LexicographicalInteractionsSorter(arweave);
+
+    return SmartWeave.builder(arweave)
+      .setDefinitionLoader(definitionLoader)
+      .setInteractionsLoader(interactionsLoader)
+      .setInteractionsSorter(interactionsSorter)
+      .setExecutorFactory(executorFactory)
+      .setStateEvaluator(stateEvaluator)
+      .build();
+  }
+
+  /**
+   * Returns a {@link SmartWeave} that (yup, you've guessed it!) does not use any caches.
+   * This one is gonna be slooow...
+   */
+  static noCacheClient(arweave: Arweave): SmartWeave {
+    const definitionLoader = new ContractDefinitionLoader(arweave);
+    const interactionsLoader = new ContractInteractionsLoader(arweave);
+    const executorFactory = new HandlerExecutorFactory(arweave);
+    const stateEvaluator = new DefaultStateEvaluator(arweave, [new Evolve(definitionLoader, executorFactory)]);
     const interactionsSorter = new LexicographicalInteractionsSorter(arweave);
 
     return SmartWeave.builder(arweave)

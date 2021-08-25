@@ -20,7 +20,7 @@ export interface Contract<State = unknown> {
    * Returns the view of the state, computed by the SWC.
    * Similar to the {@link interactRead} from the current SDK version.
    */
-  viewState<Input, View>(
+  viewState<Input = unknown, View = unknown>(
     input: Input,
     blockHeight?: number,
     evaluationOptions?: EvaluationOptions
@@ -33,7 +33,7 @@ export interface Contract<State = unknown> {
    * note: calling "interactRead" from withing contract's source code was not previously possible -
    * this is a new feature.
    */
-  viewStateForTx<Input, View>(
+  viewStateForTx<Input = unknown, View = unknown>(
     input: Input,
     transaction: InteractionTx,
     evaluationOptions?: EvaluationOptions
@@ -42,5 +42,5 @@ export interface Contract<State = unknown> {
   /**
    * Writes a new "interaction" transaction - ie. such transaction that stores input for the contract.
    */
-  writeInteraction<Input>(input: Input);
+  writeInteraction<Input = unknown>(input: Input);
 }
