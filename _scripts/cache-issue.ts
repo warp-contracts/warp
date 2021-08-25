@@ -1,6 +1,6 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import { SwClientFactory, LoggerFactory } from '@smartweave';
+import { SmartWeaveFactory, LoggerFactory } from '@smartweave';
 
 const contracts = [
   'gepLlre8wG8K3C15rNjpdKZZv_9pWsurRoEB6ir_EC4',
@@ -23,15 +23,14 @@ async function main() {
     logging: false // Enable network request logging
   });
 
-  const swcClient = SwClientFactory.memCacheClient(arweave);
-  LoggerFactory.INST.logLevel('trace');
+  const smartWeave = SmartWeaveFactory.memCached(arweave);
+  const contract1 = smartWeave.contract('W_njBtwDRyltjVU1RizJtZfF0S_4X3aSrrrA0HUEhUs');
+  const contract2 = smartWeave.contract('TMkCZKYO3GwcTLEKGgWSJegIlYCHi_UArtG0unCi2xA');
+  LoggerFactory.INST.logLevel('debug');
 
-  const contractTxId = 'W_njBtwDRyltjVU1RizJtZfF0S_4X3aSrrrA0HUEhUs';
-  const contractTxId2 = 'TMkCZKYO3GwcTLEKGgWSJegIlYCHi_UArtG0unCi2xA';
+  await contract1.readState();
 
-  await swcClient.readState(contractTxId);
-
-  await swcClient.readState(contractTxId2);
+  await contract2.readState();
 }
 
 main();

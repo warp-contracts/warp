@@ -3,7 +3,7 @@ import Arweave from 'arweave';
 import * as fs from 'fs';
 import path from 'path';
 import Transaction from 'arweave/node/lib/transaction';
-import { GQLEdgeInterface, GQLResultInterface, LoggerFactory, SwClientFactory } from '@smartweave';
+import { GQLEdgeInterface, GQLResultInterface, LoggerFactory, SmartWeaveFactory } from '@smartweave';
 import { readContract } from 'smartweave';
 
 const diffStateToVerify = [
@@ -51,7 +51,7 @@ async function main() {
 
   const errorContractTxIds = [];
 
-  const swcClient = SwClientFactory.fileCacheClient(arweave, 'cache');
+  const swcClient = SmartWeaveFactory.fileCacheClient(arweave, 'cache');
 
   const contractsBlacklist = [
     'jFInOjLc_FFt802OmUObIIOlY1xNKvomzUTkoUpyP9U', // readContract very long evaluation

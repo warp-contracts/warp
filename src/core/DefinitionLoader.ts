@@ -5,6 +5,6 @@ import { ContractDefinition } from '@smartweave';
  * its source code, info about owner, initial state, etc.
  * See ContractDefinition type for more details regarding what data is being loaded.
  */
-export interface DefinitionLoader<State = any> {
-  load(contractTxId: string, forcedSrcTxId?: string): Promise<ContractDefinition<State>>;
+export interface DefinitionLoader {
+  load<State>(contractTxId: string, forcedSrcTxId?: string): Promise<ContractDefinition<State>>;
 }

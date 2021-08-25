@@ -5,7 +5,8 @@ export * from './InteractionsLoader';
 export * from './InteractionsSorter';
 export * from './StateEvaluator';
 export * from './SmartWeaveTags';
-export * from './types';
+export * from './ExecutionContext';
+export * from './ContractDefinition';
 
 export * from './impl/BlockHeightInteractionsSorter';
 export * from './impl/ContractDefinitionLoader';

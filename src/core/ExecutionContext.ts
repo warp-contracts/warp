@@ -1,6 +1,6 @@
-import { EvaluationOptions, GQLEdgeInterface, Contract } from '@smartweave';
-import { BlockData } from 'arweave/node/blocks';
+import { Contract, ContractDefinition, EvaluationOptions, GQLEdgeInterface, SmartWeave } from '@smartweave';
 import { NetworkInfoInterface } from 'arweave/node/network';
+import { BlockData } from 'arweave/node/blocks';
 
 /**
  * current execution context of the contract - contains all elements
@@ -9,27 +9,15 @@ import { NetworkInfoInterface } from 'arweave/node/network';
  * contract's definition - which is very time consuming) multiple times
  * (eg. multiple calls to "loadContract" in "interactRead" in the current version of the SW SDK).
  */
-export type ExecutionContext<State = any, Api = any> = {
+export type ExecutionContext<State> = {
+  smartweave: SmartWeave;
+  contract: Contract<State>;
   contractDefinition: ContractDefinition<State>;
-  handler: Api;
   blockHeight: number;
   interactions: GQLEdgeInterface[];
   sortedInteractions: GQLEdgeInterface[];
-  client: Contract;
   evaluationOptions: EvaluationOptions;
   currentNetworkInfo?: NetworkInfoInterface;
   currentBlockData?: BlockData;
   caller?: string; // note: this is only set for "viewState" operations
-};
-
-/**
- * contains all data and meta-data of the given contact.
- */
-export type ContractDefinition<State = any> = {
-  txId: string;
-  srcTxId: string;
-  src: string;
-  initState: State;
-  minFee: string;
-  owner: string;
 };

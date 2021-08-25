@@ -15,17 +15,17 @@ const logger = LoggerFactory.INST.create(__filename);
 /**
  * An implementation of DefaultStateEvaluator that adds caching capabilities
  */
-export class CacheableStateEvaluator<State> extends DefaultStateEvaluator<State> {
+export class CacheableStateEvaluator extends DefaultStateEvaluator {
   constructor(
     arweave: Arweave,
-    private readonly cache: BlockHeightSwCache<EvalStateResult<State>>,
-    executionContextModifiers: ExecutionContextModifier<State>[] = []
+    private readonly cache: BlockHeightSwCache<EvalStateResult<unknown>>,
+    executionContextModifiers: ExecutionContextModifier[] = []
   ) {
     super(arweave, executionContextModifiers);
   }
 
-  async eval(
-    executionContext: ExecutionContext<State, any>,
+  async eval<State, Api>(
+    executionContext: ExecutionContext<State>,
     currentTx: { interactionTxId: string; contractTxId: string }[]
   ): Promise<EvalStateResult<State>> {
     const requestedBlockHeight = executionContext.blockHeight;
@@ -42,7 +42,10 @@ export class CacheableStateEvaluator<State> extends DefaultStateEvaluator<State>
     // if there was anything to cache...
     if (sortedInteractionsUpToBlock.length > 0) {
       // get latest available cache for the requested block height
-      cachedState = this.cache.getLessOrEqual(executionContext.contractDefinition.txId, requestedBlockHeight);
+      cachedState = this.cache.getLessOrEqual(
+        executionContext.contractDefinition.txId,
+        requestedBlockHeight
+      ) as BlockHeightCacheResult<EvalStateResult<State>>;
 
       if (cachedState != null) {
         logger.debug(`Cached state for ${executionContext.contractDefinition.txId}`, {
@@ -101,9 +104,9 @@ export class CacheableStateEvaluator<State> extends DefaultStateEvaluator<State>
     );
   }
 
-  onStateUpdate(
+  onStateUpdate<State>(
     currentInteraction: GQLNodeInterface,
-    executionContext: ExecutionContext<State, HandlerApi<State>>,
+    executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>
   ) {
     this.cache.put(

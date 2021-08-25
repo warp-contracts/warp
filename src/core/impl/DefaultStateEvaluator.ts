@@ -2,13 +2,14 @@ import {
   Benchmark,
   ContractInteraction,
   EvalStateResult,
+  EvolveCompatibleState,
   ExecutionContext,
   ExecutionContextModifier,
   GQLEdgeInterface,
   GQLNodeInterface,
   GQLTagInterface,
   HandlerApi,
-  HandlerResult,
+  InteractionResult,
   LoggerFactory,
   SmartWeaveTags,
   StateEvaluator
@@ -18,14 +19,14 @@ import Arweave from 'arweave';
 const logger = LoggerFactory.INST.create(__filename);
 
 // FIXME: currently this is tightly coupled with the HandlerApi
-export class DefaultStateEvaluator<State = unknown> implements StateEvaluator<State, HandlerApi<State>> {
+export class DefaultStateEvaluator implements StateEvaluator {
   constructor(
     private readonly arweave: Arweave,
-    private readonly executionContextModifiers: ExecutionContextModifier<State>[] = []
+    private readonly executionContextModifiers: ExecutionContextModifier[] = []
   ) {}
 
-  async eval(
-    executionContext: ExecutionContext<State, HandlerApi<State>>,
+  async eval<State, Api>(
+    executionContext: ExecutionContext<State>,
     currentTx: { interactionTxId: string; contractTxId: string }[]
   ): Promise<EvalStateResult<State>> {
     return this.doReadState(
@@ -36,10 +37,10 @@ export class DefaultStateEvaluator<State = unknown> implements StateEvaluator<St
     );
   }
 
-  protected async doReadState(
+  protected async doReadState<State, Api>(
     missingInteractions: GQLEdgeInterface[],
     baseState: EvalStateResult<State>,
-    executionContext: ExecutionContext<State, HandlerApi<State>>,
+    executionContext: ExecutionContext<State>,
     currentTx: { interactionTxId: string; contractTxId: string }[]
   ): Promise<EvalStateResult<State>> {
     const evaluationOptions = executionContext.evaluationOptions;
@@ -50,6 +51,10 @@ export class DefaultStateEvaluator<State = unknown> implements StateEvaluator<St
     logger.info(
       `Evaluating state for ${executionContext.contractDefinition.txId} [${missingInteractions.length} non-cached of ${executionContext.sortedInteractions.length} all]`
     );
+
+    const handler: HandlerApi<State> = (await executionContext.smartweave.executorFactory.create<State>(
+      executionContext.contractDefinition
+    )) as HandlerApi<State>;
 
     for (const missingInteraction of missingInteractions) {
       logger.debug(
@@ -72,20 +77,14 @@ export class DefaultStateEvaluator<State = unknown> implements StateEvaluator<St
         continue;
       }
 
-      const interaction: ContractInteraction = {
+      const interaction: ContractInteraction<unknown> = {
         input,
         caller: currentInteraction.owner.address
       };
 
-      const result = await executionContext.handler.handle(
-        executionContext,
-        currentState,
-        interaction,
-        currentInteraction,
-        currentTx
-      );
+      const result = await handler.handle(executionContext, currentState, interaction, currentInteraction, currentTx);
 
-      this.logResult(result, currentInteraction);
+      this.logResult<State>(result, currentInteraction);
 
       if (result.type === 'exception' && evaluationOptions.ignoreExceptions !== true) {
         throw new Error(`Exception while processing ${JSON.stringify(interaction)}:\n${result.result}`);
@@ -101,16 +100,13 @@ export class DefaultStateEvaluator<State = unknown> implements StateEvaluator<St
         executionContext = await modify(currentState, executionContext);
       }
 
-      this.onStateUpdate(currentInteraction, executionContext, new EvalStateResult(currentState, validity));
+      this.onStateUpdate<State>(currentInteraction, executionContext, new EvalStateResult(currentState, validity));
     }
 
     return new EvalStateResult<State>(currentState, validity);
   }
 
-  private logResult(
-    result: HandlerResult<State> & { type: 'ok' | 'error' | 'exception' },
-    currentTx: GQLNodeInterface
-  ) {
+  private logResult<State>(result: InteractionResult<State, unknown>, currentTx: GQLNodeInterface) {
     if (result.type === 'exception') {
       logger.error(`${result.result}`);
       logger.error(`Executing of interaction: ${currentTx.id} threw exception.`);
@@ -130,9 +126,9 @@ export class DefaultStateEvaluator<State = unknown> implements StateEvaluator<St
     }
   }
 
-  private findInputTag(
+  private findInputTag<State>(
     missingInteraction: GQLEdgeInterface,
-    executionContext: ExecutionContext<State, HandlerApi<State>>
+    executionContext: ExecutionContext<State>
   ): GQLTagInterface {
     const contractIndex = missingInteraction.node.tags.findIndex(
       (tag) => tag.name === SmartWeaveTags.CONTRACT_TX_ID && tag.value === executionContext.contractDefinition.txId
@@ -141,9 +137,9 @@ export class DefaultStateEvaluator<State = unknown> implements StateEvaluator<St
     return missingInteraction.node.tags[contractIndex + 1];
   }
 
-  onStateUpdate(
+  onStateUpdate<State>(
     currentInteraction: GQLNodeInterface,
-    executionContext: ExecutionContext<State, HandlerApi<State>>,
+    executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>
   ) {
     // noop

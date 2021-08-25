@@ -11,7 +11,7 @@
     "baseUrl": "./src",
     "paths": {
       "@smartweave/cache": ["cache/index"],
-      "@smartweave/client": ["client/index"],
+      "@smartweave/contract": ["contract/index"],
       "@smartweave/core": ["core/index"],
       "@smartweave/legacy": ["legacy/index"],
       "@smartweave/plugins": ["plugins/index"],

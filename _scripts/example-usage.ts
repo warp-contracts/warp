@@ -9,7 +9,7 @@ import {
   DebuggableExecutorFactory,
   EvalStateResult,
   EvolveCompatibleState,
-  HandlerBasedSwcClient,
+  HandlerBasedContract,
   HandlerExecutorFactory,
   LexicographicalInteractionsSorter,
   LoggerFactory,
@@ -55,7 +55,7 @@ async function readContractState() {
     'OrO8n453N6bx921wtsEs-0OCImBLCItNU5oSbFKlFuU': changedSrc
   });
 
-  const swcClient = new HandlerBasedSwcClient(
+  const swcClient = new HandlerBasedContract(
     arweave,
     new ContractDefinitionLoader<ProvidersRegistryState>(arweave, new MemCache()),
     new ContractInteractionsLoader(arweave),

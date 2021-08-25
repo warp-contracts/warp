@@ -1,22 +1,16 @@
-import { EvalStateResult, EvaluationOptions, InteractionResult, InteractionTx } from '@smartweave';
+import { EvalStateResult, EvaluationOptions, HandlerApi, InteractionResult, InteractionTx } from '@smartweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 
 /**
  * A base interface to be implemented by SmartWeave Contracts clients.
- *
- * TODO: still to decide - whether create separate SwcClient for each contract (i.e. each contractTxId)
- * - and stop passing `contractTxId` param in the interface methods
- * OR
- * keep it as is (one instance of client can be used for interaction with multiple contracts
- * - this introduces some issues with generic types - as we cannot declare `State` and `Api' types at interface level).
  */
-export interface Contract {
+export interface Contract<State = unknown> {
+  connect(wallet: JWKInterface): Contract<State>;
   /**
    * Returns state of the contract at required blockHeight.
    * Similar to {@link readContract} from the current version.
    */
-  readState<State = any>(
-    contractTxId: string,
+  readState(
     blockHeight?: number,
     currentTx?: { interactionTxId: string; contractTxId: string }[],
     evaluationOptions?: EvaluationOptions
@@ -26,13 +20,11 @@ export interface Contract {
    * Returns the view of the state, computed by the SWC.
    * Similar to the {@link interactRead} from the current SDK version.
    */
-  viewState<Input = any, View = any>(
-    contractTxId: string,
+  viewState<Input, View>(
     input: Input,
-    wallet: JWKInterface,
     blockHeight?: number,
     evaluationOptions?: EvaluationOptions
-  ): Promise<InteractionResult<any, View>>;
+  ): Promise<InteractionResult<State, View>>;
 
   /**
    * A version of the viewState method to be used from within the contract's source code.
@@ -41,15 +33,14 @@ export interface Contract {
    * note: calling "interactRead" from withing contract's source code was not previously possible -
    * this is a new feature.
    */
-  viewStateForTx<Input = any, View = any>(
-    contractTxId: string,
+  viewStateForTx<Input, View>(
     input: Input,
     transaction: InteractionTx,
     evaluationOptions?: EvaluationOptions
-  ): Promise<InteractionResult<any, View>>;
+  ): Promise<InteractionResult<State, View>>;
 
   /**
    * Writes a new "interaction" transaction - ie. such transaction that stores input for the contract.
    */
-  writeInteraction<Input = any>(contractTxId: string, wallet: JWKInterface, input: Input);
+  writeInteraction<Input>(input: Input);
 }

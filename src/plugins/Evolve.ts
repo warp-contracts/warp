@@ -3,13 +3,14 @@ import {
   ExecutionContext,
   ExecutionContextModifier,
   ExecutorFactory,
+  HandlerApi,
   LoggerFactory,
   SmartWeaveError,
   SmartWeaveErrorType
 } from '@smartweave';
 
 export interface EvolveCompatibleState {
-  settings: never[]; // some..erm..settings?
+  settings: any[]; // some..erm..settings?
   canEvolve: boolean; // whether contract is allowed to evolve. seems to default to true..
   evolve: string; // the transaction id of the Arweave transaction with the updated source code. odd naming convention..
 }
@@ -34,21 +35,32 @@ without the need of hard-coding contract's txId in the client's source code.
 This also makes it easier to audit given contract - as you keep all its versions in one place.
 */
 
-export class Evolve<State extends EvolveCompatibleState, Api> implements ExecutionContextModifier<State> {
+function isEvolveCompatible(state: any): state is EvolveCompatibleState {
+  const settings =
+    state.settings && isIterable(state.settings) ? new Map<string, any>(state.settings) : new Map<string, any>();
+
+  return state.evolve !== undefined || settings.has('evolve');
+}
+
+export class Evolve implements ExecutionContextModifier {
   constructor(
-    private readonly definitionLoader: DefinitionLoader<State>,
-    private readonly executorFactory: ExecutorFactory<State, Api>
+    private readonly definitionLoader: DefinitionLoader,
+    private readonly executorFactory: ExecutorFactory<HandlerApi<unknown>>
   ) {
     this.modify = this.modify.bind(this);
   }
 
-  async modify(state: State, executionContext: ExecutionContext<State, Api>): Promise<ExecutionContext<State, Api>> {
+  async modify<State>(state: State, executionContext: ExecutionContext<State>): Promise<ExecutionContext<State>> {
     const contractTxId = executionContext.contractDefinition.txId;
     logger.debug(`trying to evolve for: ${contractTxId}`);
+    if (!isEvolveCompatible(state)) {
+      logger.verbose('State is not evolve compatible');
+      return executionContext;
+    }
     const currentSrcTxId = executionContext.contractDefinition.srcTxId;
 
     const settings =
-      state.settings && isIterable(state.settings) ? new Map<string, never>(state.settings) : new Map<string, never>();
+      state.settings && isIterable(state.settings) ? new Map<string, any>(state.settings) : new Map<string, any>();
 
     // note: from my understanding - this variable holds the id of the transaction with updated source code.
     const evolve: string = state.evolve || settings.get('evolve');
@@ -68,9 +80,9 @@ export class Evolve<State extends EvolveCompatibleState, Api> implements Executi
       if (currentSrcTxId !== evolve) {
         try {
           // note: that's really nasty IMO - loading original contract definition, but forcing different sourceTxId...
-          logger.info(`Evolving to: ${evolve}`);
-          const newContractDefinition = await this.definitionLoader.load(contractTxId, evolve);
-          const newHandler = await this.executorFactory.create(newContractDefinition);
+          logger.info('Evolving to: ', evolve);
+          const newContractDefinition = await this.definitionLoader.load<State>(contractTxId, evolve);
+          const newHandler = await this.executorFactory.create<State>(newContractDefinition);
 
           const modifiedContext = {
             ...executionContext,

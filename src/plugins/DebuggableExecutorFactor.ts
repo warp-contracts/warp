@@ -7,15 +7,15 @@ import { ContractDefinition, ExecutorFactory } from '@smartweave/core';
  *
  * Not meant to be used in production env! ;-)
  */
-export class DebuggableExecutorFactory<State, Api> implements ExecutorFactory<State, Api> {
+export class DebuggableExecutorFactory<Api> implements ExecutorFactory<Api> {
   constructor(
-    private readonly baseImplementation: ExecutorFactory<State, Api>,
+    private readonly baseImplementation: ExecutorFactory<Api>,
     private readonly sourceCode: { [key: string]: string }
   ) {
     // contract source code before default "normalization"
   }
 
-  async create(contractDefinition: ContractDefinition<State>): Promise<Api> {
+  async create<State>(contractDefinition: ContractDefinition<State>): Promise<Api> {
     if (Object.prototype.hasOwnProperty.call(this.sourceCode, contractDefinition.txId)) {
       contractDefinition = {
         ...contractDefinition,

@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { LoggerFactory, SwClientFactory } from '@smartweave';
+import { LoggerFactory, SmartWeaveFactory } from '@smartweave';
 import Arweave from 'arweave';
 import fs from 'fs';
 import path from 'path';
@@ -14,7 +14,7 @@ async function main() {
   });
   const logger = LoggerFactory.INST.create(__filename);
   LoggerFactory.INST.logLevel('silly', 'benchmark');
-  const swcClient = SwClientFactory.fileCacheClient(arweave);
+  const swcClient = SmartWeaveFactory.fileCacheClient(arweave);
 
   const contractTxId = 'OrO8n453N6bx921wtsEs-0OCImBLCItNU5oSbFKlFuU';
   // Kyve:

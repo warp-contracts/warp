@@ -4,26 +4,26 @@ import Transaction from 'arweave/web/lib/transaction';
 
 const logger = LoggerFactory.INST.create(__filename);
 
-export class ContractDefinitionLoader<State = any> implements DefinitionLoader<State> {
+export class ContractDefinitionLoader implements DefinitionLoader {
   constructor(
     private readonly arweave: Arweave,
     // TODO: cache should be removed from the core layer and implemented in a wrapper of the core implementation
-    private readonly cache?: SwCache<string, ContractDefinition<State>>
+    private readonly cache?: SwCache<string, ContractDefinition<unknown>>
   ) {}
 
-  async load(contractTxId: string, forcedSrcTxId?: string): Promise<ContractDefinition<State>> {
+  async load<State>(contractTxId: string, forcedSrcTxId?: string): Promise<ContractDefinition<State>> {
     if (!forcedSrcTxId && this.cache?.contains(contractTxId)) {
       logger.debug('ContractDefinitionLoader: Hit from cache!');
-      return Promise.resolve(this.cache?.get(contractTxId));
+      return Promise.resolve(this.cache?.get(contractTxId) as ContractDefinition<State>);
     }
 
-    const contract = await this.doLoad(contractTxId, forcedSrcTxId);
+    const contract = await this.doLoad<State>(contractTxId, forcedSrcTxId);
     this.cache?.put(contractTxId, contract);
 
     return contract;
   }
 
-  async doLoad(contractTxId: string, forcedSrcTxId?: string): Promise<ContractDefinition<State>> {
+  async doLoad<State>(contractTxId: string, forcedSrcTxId?: string): Promise<ContractDefinition<State>> {
     const contractTx = await this.arweave.transactions.get(contractTxId);
     const owner = await this.arweave.wallets.ownerToAddress(contractTx.owner);
 

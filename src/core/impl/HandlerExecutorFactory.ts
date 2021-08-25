@@ -15,7 +15,7 @@ import {
  */
 export interface HandlerApi<State> {
   handle<Input, Result>(
-    executionContext: ExecutionContext<State, HandlerApi<State>>,
+    executionContext: ExecutionContext<State>,
     state: State,
     interaction: ContractInteraction<Input>,
     interactionTx: InteractionTx,
@@ -29,10 +29,10 @@ const logger = LoggerFactory.INST.create(__filename);
  * A factory that produces handlers that are compatible with the "current" style of
  * writing SW contracts (ie. using "handle" function).
  */
-export class HandlerExecutorFactory<State = any> implements ExecutorFactory<State, HandlerApi<State>> {
+export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknown>> {
   constructor(private readonly arweave: Arweave) {}
 
-  async create(contractDefinition: ContractDefinition<State>): Promise<HandlerApi<State>> {
+  async create<State>(contractDefinition: ContractDefinition<State>): Promise<HandlerApi<State>> {
     const normalizedSource = HandlerExecutorFactory.normalizeContractSource(contractDefinition.src);
 
     const swGlobal = new SmartWeaveGlobal(this.arweave, {
@@ -40,26 +40,26 @@ export class HandlerExecutorFactory<State = any> implements ExecutorFactory<Stat
       owner: contractDefinition.owner
     });
     const contractFunction = new Function(normalizedSource);
-    const handler = contractFunction(swGlobal, BigNumber, clarity) as HandlerFunction<State>;
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
 
     return {
-      async handle<Input>(
-        executionContext: ExecutionContext<State, HandlerApi<State>>,
+      async handle<Input, Result>(
+        executionContext: ExecutionContext<State>,
         state: State,
         interaction: ContractInteraction<Input>,
         interactionTx: InteractionTx,
         currentTx: { interactionTxId: string; contractTxId: string }[]
-      ): Promise<InteractionResult<State>> {
+      ): Promise<InteractionResult<State, Result>> {
         try {
+          const handler = contractFunction(swGlobal, BigNumber, clarity) as HandlerFunction<State, Input, Result>;
           const stateCopy = JSON.parse(JSON.stringify(state));
           swGlobal._activeTx = interactionTx;
           logger.debug(`SmartWeave.contract.id: ${swGlobal.contract.id}`, swGlobal.contract.id);
 
-          self.assignReadContractState(swGlobal, contractDefinition, interaction, executionContext, currentTx);
-          self.assignViewContractState(swGlobal, contractDefinition, executionContext);
+          self.assignReadContractState<Input, State>(swGlobal, contractDefinition, executionContext, currentTx);
+          self.assignViewContractState<Input, State>(swGlobal, contractDefinition, executionContext);
 
           const handlerResult = await handler(stateCopy, interaction);
 
@@ -93,37 +93,42 @@ export class HandlerExecutorFactory<State = any> implements ExecutorFactory<Stat
     };
   }
 
-  private assignViewContractState<Input>(
+  private assignViewContractState<Input, State>(
     swGlobal: SmartWeaveGlobal,
     contractDefinition: ContractDefinition<State>,
-    executionContext: ExecutionContext<State, HandlerApi<State>>
+    executionContext: ExecutionContext<State>
   ) {
     swGlobal.contracts.viewContractState = async <View>(contractTxId: string, input: any) => {
-      logger.debug('swGlobal.viewContractState call:', {
+      throw new Error('TODO implement');
+      /*logger.debug('swGlobal.viewContractState call: %o', {
         from: contractDefinition.txId,
         to: contractTxId,
         input
       });
-      return await executionContext.client.viewStateForTx(contractTxId, input, swGlobal._activeTx);
+      return await executionContext.contract.viewStateForTx(contractTxId, input, swGlobal._activeTx);*/
     };
   }
 
-  private assignReadContractState<Input>(
+  private assignReadContractState<Input, State>(
     swGlobal: SmartWeaveGlobal,
     contractDefinition: ContractDefinition<State>,
-    interaction: ContractInteraction<Input>,
-    executionContext: ExecutionContext<State, HandlerApi<State>>,
+    executionContext: ExecutionContext<State>,
     currentTx: { interactionTxId: string; contractTxId: string }[]
   ) {
     swGlobal.contracts.readContractState = async (contractTxId: string, height?: number, returnValidity?: boolean) => {
       logger.debug('swGlobal.readContractState call: ', {
         from: contractDefinition.txId,
-        to: contractTxId,
-        interaction
+        to: contractTxId
       });
-      const stateWithValidity = await executionContext.client.readState(contractTxId, height || swGlobal.block.height, [
+      const requestedHeight = height || swGlobal.block.height;
+      const childContract = executionContext.smartweave.contract(contractTxId);
+
+      const stateWithValidity = await childContract.readState(requestedHeight, [
         ...(currentTx || []),
-        { contractTxId: contractDefinition.txId, interactionTxId: swGlobal.transaction.id }
+        {
+          contractTxId: contractDefinition.txId,
+          interactionTxId: swGlobal.transaction.id
+        }
       ]);
 
       // TODO: it should be up to the client's code to decide which part of the result to use
@@ -163,19 +168,22 @@ export class HandlerExecutorFactory<State = any> implements ExecutorFactory<Stat
   }
 }
 
-export type HandlerFunction<State, Input = any, Result = any> = (
+export type HandlerFunction<State, Input, Result> = (
   state: State,
   interaction: ContractInteraction<Input>
 ) => Promise<HandlerResult<State, Result>>;
 
 // TODO: change to XOR between result and state?
-export type HandlerResult<State = any, Result = any> = { result: Result; state: State };
+export type HandlerResult<State, Result> = {
+  result: string | Result;
+  state: State;
+};
 
-export type InteractionResult<State = any, Result = any> = HandlerResult<State, Result> & {
+export type InteractionResult<State, Result> = HandlerResult<State, Result> & {
   type: 'ok' | 'error' | 'exception';
 };
 
-export type ContractInteraction<Input = any> = {
+export type ContractInteraction<Input> = {
   input: Input;
   caller: string;
 };
