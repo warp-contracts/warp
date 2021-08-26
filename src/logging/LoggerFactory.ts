@@ -10,7 +10,7 @@ export class LoggerFactory {
     // not instantiable from outside
   }
 
-  setOptions(newOptions: ISettingsParam, moduleName: string): void {
+  setOptions(newOptions: ISettingsParam, moduleName?: string): void {
     LoggerFactory.INST.setOptions(newOptions, moduleName);
   }
 
