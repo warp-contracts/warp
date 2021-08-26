@@ -6,6 +6,10 @@ import { ISettingsParam } from 'tslog';
 export class LoggerFactory {
   static readonly INST: LoggerFactory = typeof window === 'undefined' ? new TsLogFactory() : new ConsoleLoggerFactory();
 
+  private constructor() {
+    // not instantiable from outside
+  }
+
   setOptions(newOptions: ISettingsParam, moduleName: string): void {
     LoggerFactory.INST.setOptions(newOptions, moduleName);
   }

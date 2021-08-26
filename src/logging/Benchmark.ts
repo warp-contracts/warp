@@ -1,18 +1,16 @@
-import { performance } from 'perf_hooks';
-
 export class Benchmark {
   public static measure(): Benchmark {
     return new Benchmark();
   }
 
-  private start = performance.now();
+  private start = Date.now();
 
   public reset() {
-    this.start = performance.now();
+    this.start = Date.now();
   }
 
   public elapsed(): string {
-    const end = performance.now();
+    const end = Date.now();
     return `${(end - this.start).toFixed(0)}ms`;
   }
 }
