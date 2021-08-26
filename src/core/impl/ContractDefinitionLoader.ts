@@ -1,4 +1,12 @@
-import { ContractDefinition, DefinitionLoader, getTag, LoggerFactory, SmartWeaveTags, SwCache } from '@smartweave';
+import {
+  Benchmark,
+  ContractDefinition,
+  DefinitionLoader,
+  getTag,
+  LoggerFactory,
+  SmartWeaveTags,
+  SwCache
+} from '@smartweave';
 import Arweave from 'arweave';
 import Transaction from 'arweave/web/lib/transaction';
 
@@ -32,7 +40,6 @@ export class ContractDefinitionLoader implements DefinitionLoader {
     const minFee = getTag(contractTx, SmartWeaveTags.MIN_FEE);
     const contractSrcTx = await this.arweave.transactions.get(contractSrcTxId);
     const src = contractSrcTx.get('data', { decode: true, string: true });
-
     const initState = JSON.parse(await this.evalInitialState(contractTx));
 
     return {

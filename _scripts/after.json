@@ -1,0 +1,78 @@
+{
+  "accounts": {
+    "regulator": {
+      "balance": 999.999,
+      "vaults": []
+    },
+    "Pq6OBljxlpypNuE0O1eL92Kr9U1Ok4USfcc0aJcUAzs": {
+      "balance": 69.0005,
+      "vaults": [
+        {
+          "amount": 0.005,
+          "start": 649390,
+          "end": 650390
+        }
+      ],
+      "stake": 69
+    },
+    "DfCXDjdxcTIg1-FQDZ5jDclk1shKIpMlshe0IXodApc": {
+      "balance": 69.0005,
+      "vaults": [],
+      "stake": 69
+    }
+  },
+  "executables": {
+    "Ms6RRl0eh96F_lcKYyiJhWRdRIiB6z0VaThCvBZDOAc": {
+      "_discriminator": "validated",
+      "bids": [
+        {
+          "bidder": "Pq6OBljxlpypNuE0O1eL92Kr9U1Ok4USfcc0aJcUAzs",
+          "quantity": 0.01
+        }
+      ],
+      "caller": "Pq6OBljxlpypNuE0O1eL92Kr9U1Ok4USfcc0aJcUAzs",
+      "executable": {
+        "birth_height": 649382,
+        "executable_address": "is9cDN3ZKPun0F2KmEHnhiRuUcYOO3Dzfef-B5ZAQeQ",
+        "executable_kind": "wasm"
+      },
+      "accepted_bid": {
+        "bidder": "Pq6OBljxlpypNuE0O1eL92Kr9U1Ok4USfcc0aJcUAzs",
+        "quantity": 0.01
+      },
+      "validation_linked_list": {
+        "value": [
+          {
+            "_discriminator": "release",
+            "validator": "Pq6OBljxlpypNuE0O1eL92Kr9U1Ok4USfcc0aJcUAzs",
+            "encrypted_hash": "af8e9c76fc012934cd3009c0cb7cac697da634350aa7dd6a063ccc3fdbc533f815799ed08d72d06a84961e468cd2af3fec5549350ce582c74eea7c29e020acf052c3e619cc69aa98e6e5b43bd10574dce88bb204289891c97a535d1da69f32e0e42dd906159b47acb3d435679b9c61dc",
+            "symm_key": "sokka"
+          },
+          {
+            "_discriminator": "release",
+            "validator": "DfCXDjdxcTIg1-FQDZ5jDclk1shKIpMlshe0IXodApc",
+            "encrypted_hash": "af8e9c76fc012934cd3009c0cb7cac697da634350aa7dd6a063ccc3fdbc533f815799ed08d72d06a84961e468cd2af3fec5549350ce582c74eea7c29e020acf052c3e619cc69aa98e6e5b43bd10574dce88bb204289891c97a535d1da69f32e0e42dd906159b47acb3d435679b9c61dc",
+            "symm_key": "sokka"
+          }
+        ]
+      },
+      "result": {
+        "address": "OTWNmd9aSARYg1X4ds8CwSVmx_dNYHb_ka-W2VAJ7NQ",
+        "giver": "Pq6OBljxlpypNuE0O1eL92Kr9U1Ok4USfcc0aJcUAzs",
+        "height": 649390
+      },
+      "is_correct": true
+    },
+    "Xstw2Ss9TMCkV92ozHTsvIDPsPXnMDZVzfKPTPxgAq0": {
+      "_discriminator": "proposed",
+      "bids": [],
+      "caller": "Pq6OBljxlpypNuE0O1eL92Kr9U1Ok4USfcc0aJcUAzs",
+      "executable": {
+        "birth_height": 649387,
+        "executable_address": "is9cDN3ZKPun0F2KmEHnhiRuUcYOO3Dzfef-B5ZAQeQ",
+        "executable_kind": "wasm"
+      }
+    }
+  },
+  "ticker": "FEA"
+}

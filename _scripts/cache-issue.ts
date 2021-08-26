@@ -2,6 +2,7 @@
 import Arweave from 'arweave';
 import { SmartWeaveNodeFactory, LoggerFactory } from '@smartweave';
 import fs from 'fs';
+import { readContract } from 'smartweave';
 
 const contracts = [
   'gepLlre8wG8K3C15rNjpdKZZv_9pWsurRoEB6ir_EC4',
@@ -24,30 +25,13 @@ async function main() {
     logging: false // Enable network request logging
   });
 
-  LoggerFactory.INST.logLevel('debug');
-
   const smartWeave = SmartWeaveNodeFactory.memCached(arweave);
-  const contract1 = smartWeave.contract('W_njBtwDRyltjVU1RizJtZfF0S_4X3aSrrrA0HUEhUs');
-  const contract2 = smartWeave.contract('TMkCZKYO3GwcTLEKGgWSJegIlYCHi_UArtG0unCi2xA');
-  await contract1.readState();
-  await contract2.readState();
-
-  const jwk = readJSON('../../redstone-node/.secrets/redstone-dev-jwk.json');
-  contract1.connect(jwk);
-
-  type Contract1Input = {
-    function: string;
-  };
-  type Contract1View = {
-    foo: string;
-    bar: number;
-  };
-  const { type, result } = await contract1.viewState<Contract1Input, Contract1View>({
-    function: 'currentManifest'
-  });
-  if (type === 'ok') {
-    console.log((result as Contract1View).foo);
-  }
+  const contract1 = smartWeave.contract('YLVpmhSq5JmLltfg6R-5fL04rIRPrlSU22f6RQ6VyYE');
+  //const contract2 = smartWeave.contract('TMkCZKYO3GwcTLEKGgWSJegIlYCHi_UArtG0unCi2xA');
+  const { state } = await contract1.readState();
+  //await contract2.readState();
+  const state2 = await readContract(arweave, 'YLVpmhSq5JmLltfg6R-5fL04rIRPrlSU22f6RQ6VyYE');
+  console.log;
 }
 
 function readJSON(path) {

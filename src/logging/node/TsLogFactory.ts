@@ -6,7 +6,8 @@ export const defaultLoggerOptions: ISettingsParam = {
   displayFunctionName: false,
   displayFilePath: 'hideNodeModulesOnly',
   displayLoggerName: false,
-  dateTimeTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+  dateTimeTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  minLevel: 'debug'
 };
 
 /**

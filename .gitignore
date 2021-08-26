@@ -10,3 +10,7 @@ lib/
 .idea/
 
 .DS_Store
+
+yarn-error.log
+cache/
+_scripts/**/*.json

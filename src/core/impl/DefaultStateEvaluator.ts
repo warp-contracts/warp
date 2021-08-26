@@ -15,6 +15,8 @@ import {
   StateEvaluator
 } from '@smartweave';
 import Arweave from 'arweave';
+import fs from 'fs';
+import path from 'path';
 
 const logger = LoggerFactory.INST.create(__filename);
 
@@ -43,6 +45,7 @@ export class DefaultStateEvaluator implements StateEvaluator {
     executionContext: ExecutionContext<State>,
     currentTx: { interactionTxId: string; contractTxId: string }[]
   ): Promise<EvalStateResult<State>> {
+    const stateEvaluationBenchmark = Benchmark.measure();
     const evaluationOptions = executionContext.evaluationOptions;
 
     let currentState = baseState.state;
@@ -56,13 +59,22 @@ export class DefaultStateEvaluator implements StateEvaluator {
       executionContext.contractDefinition
     )) as HandlerApi<State>;
 
+    logger.debug(
+      'missingInteractions',
+      missingInteractions.map((int) => {
+        return int.node.id;
+      })
+    );
+
+    logger.debug('Init state', JSON.stringify(baseState.state));
+
     for (const missingInteraction of missingInteractions) {
       logger.debug(
         `${missingInteraction.node.id}: ${missingInteractions.indexOf(missingInteraction) + 1}/${
           missingInteractions.length
         } [of all:${executionContext.sortedInteractions.length}]`
       );
-      const benchmark = Benchmark.measure();
+      const singleInteractionBenchmark = Benchmark.measure();
       const currentInteraction: GQLNodeInterface = missingInteraction.node;
 
       const inputTag = this.findInputTag(missingInteraction, executionContext);
@@ -91,18 +103,23 @@ export class DefaultStateEvaluator implements StateEvaluator {
       }
 
       validity[currentInteraction.id] = result.type === 'ok';
+
       currentState = result.state;
-      logger.debug(`${missingInteraction.node.id} evaluation`, benchmark.elapsed());
 
       // I'm really NOT a fan of this "modify" feature, but I don't have idea how to better
       // implement the "evolve" feature
       for (const { modify } of this.executionContextModifiers) {
+        // strangely - state is for some reason modified for some contracts (eg. YLVpmhSq5JmLltfg6R-5fL04rIRPrlSU22f6RQ6VyYE)
+        // when calling any async (even simple timeout) function here...
+        // that's a dumb workaround for this issue
+        const stateCopy = JSON.parse(JSON.stringify(currentState));
         executionContext = await modify(currentState, executionContext);
+        currentState = stateCopy;
       }
 
       this.onStateUpdate<State>(currentInteraction, executionContext, new EvalStateResult(currentState, validity));
     }
-
+    console.debug('State evaluation total:', stateEvaluationBenchmark.elapsed());
     return new EvalStateResult<State>(currentState, validity);
   }
 

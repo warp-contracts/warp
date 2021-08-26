@@ -54,7 +54,7 @@ export class Evolve implements ExecutionContextModifier {
     const contractTxId = executionContext.contractDefinition.txId;
     logger.debug(`trying to evolve for: ${contractTxId}`);
     if (!isEvolveCompatible(state)) {
-      logger.verbose('State is not evolve compatible');
+      logger.debug('State is not evolve compatible');
       return executionContext;
     }
     const currentSrcTxId = executionContext.contractDefinition.srcTxId;

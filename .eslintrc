@@ -13,6 +13,9 @@
   ],
   "rules": {
     "no-console": 1,       // warning
+    "multiline-ternary": "off",
+    "no-nested-ternary": "error",
+    "no-multiple-empty-lines": "off",
     "prettier/prettier": 2 // error
   }
 }

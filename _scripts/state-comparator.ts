@@ -32,7 +32,8 @@ query Transactions($tags: [TagFilter!]!, $after: String) {
   }`;
 
 const logger = LoggerFactory.INST.create(__filename);
-LoggerFactory.INST.logLevel('silly', 'state-comparator');
+
+// LoggerFactory.INST.logLevel('debug');
 
 async function main() {
   const arweave = Arweave.init({
@@ -45,13 +46,16 @@ async function main() {
 
   const txs = loadTxFromFile();
 
-  logger.silly(`Checking ${txs.length} contracts`);
+  const resumeFromContractTxId = 'YLVpmhSq5JmLltfg6R-5fL04rIRPrlSU22f6RQ6VyYE';
+  let resumeFrom = true;
+
+  logger.info(`Checking ${txs.length} contracts`);
 
   const differentStatesContractTxIds = [];
 
   const errorContractTxIds = [];
 
-  const swcClient = SmartWeaveNodeFactory.fileCacheClient(arweave, 'cache');
+  const smartWeave = SmartWeaveNodeFactory.memCached(arweave);
 
   const contractsBlacklist = [
     'jFInOjLc_FFt802OmUObIIOlY1xNKvomzUTkoUpyP9U', // readContract very long evaluation
@@ -162,15 +166,13 @@ async function main() {
 
   let counter = 0;
 
-  const resumeFromContractTxId = 'jFInOjLc_FFt802OmUObIIOlY1xNKvomzUTkoUpyP9U';
-  let resumeFrom = false;
-
   for (const contractTxId of txs) {
     const tx: Transaction = await arweave.transactions.get(contractTxId);
     counter++;
-    logger.silly(`\n${contractTxId}: [${counter}/${txs.length}]`);
+    logger.info(`\n${contractTxId}: [${counter}/${txs.length}]`);
 
     if (resumeFrom && contractTxId.localeCompare(resumeFromContractTxId) !== 0) {
+      console.info('Skipping...');
       continue;
     } else {
       resumeFrom = false;
@@ -200,14 +202,14 @@ async function main() {
       // console.log(resultString);
 
       logger.info('readState');
-      const result2 = await swcClient.readState(contractTxId, null, null, {
-        ignoreExceptions: true
-      });
+      const result2 = await smartWeave.contract(contractTxId).readState();
       const result2String = JSON.stringify(result2.state);
       // console.log(result2String);
 
       if (resultString.localeCompare(result2String) !== 0) {
         logger.error('States differ!');
+        fs.writeFileSync(path.join(__dirname, 'diffs', `${contractTxId}_old.json`), resultString);
+        fs.writeFileSync(path.join(__dirname, 'diffs', `${contractTxId}_new.json`), result2String);
         differentStatesContractTxIds.push(contractTxId);
       }
     } catch (e) {
@@ -215,7 +217,7 @@ async function main() {
       logger.info('skipping ', contractTxId);
       errorContractTxIds.push(contractTxId);
     } finally {
-      logger.trace('Contracts with different states:', differentStatesContractTxIds);
+      logger.debug('Contracts with different states:', differentStatesContractTxIds);
       logger.info('\n\n ==== END');
     }
   }
@@ -224,7 +226,7 @@ async function main() {
 main().catch();
 
 function loadTxFromFile(): string[] {
-  const transactions = JSON.parse(fs.readFileSync(path.join(__dirname, 'swc-sorted-stats.json'), 'utf-8'));
+  const transactions = JSON.parse(fs.readFileSync(path.join(__dirname, 'test-cases.json'), 'utf-8'));
   return Object.keys(transactions);
 }
 

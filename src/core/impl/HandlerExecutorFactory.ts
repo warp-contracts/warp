@@ -28,6 +28,8 @@ const logger = LoggerFactory.INST.create(__filename);
 /**
  * A factory that produces handlers that are compatible with the "current" style of
  * writing SW contracts (ie. using "handle" function).
+ * Note: this code is mostly ported from the previous version of the SDK and is somewhat messy...
+ * First candidate for the refactor!
  */
 export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknown>> {
   constructor(private readonly arweave: Arweave) {}
@@ -105,7 +107,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
         to: contractTxId,
         input
       });
-      const childContract = executionContext.smartweave.contract(contractTxId);
+      const childContract = executionContext.smartweave.contract(contractTxId, executionContext.contract);
 
       return await childContract.viewStateForTx(input, swGlobal._activeTx);
     };
@@ -123,7 +125,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
         to: contractTxId
       });
       const requestedHeight = height || swGlobal.block.height;
-      const childContract = executionContext.smartweave.contract(contractTxId);
+      const childContract = executionContext.smartweave.contract(contractTxId, executionContext.contract);
 
       const stateWithValidity = await childContract.readState(requestedHeight, [
         ...(currentTx || []),
@@ -137,6 +139,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
       // (by simply using destructuring operator)...
       // but this (i.e. returning always stateWithValidity from here) would break backwards compatibility
       // in current contract's source code..:/
+
       return returnValidity ? stateWithValidity : stateWithValidity.state;
     };
   }

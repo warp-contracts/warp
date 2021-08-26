@@ -10,7 +10,12 @@ import Arweave from 'arweave';
 import { Contract, HandlerBasedContract, SmartWeaveBuilder } from '@smartweave/contract';
 
 /**
- * The "motherboard" ;-)
+ * The SmartWeave "motherboard" ;-).
+ * This is the base class that supplies the implementation of the SmartWeave SDK.
+ * Allows to plug-in different implementation of all parts defined in its constructors.
+ *
+ * After being fully configured, it allows to "connect" to
+ * contract and perform operations on them (see {@link Contract})
  */
 export class SmartWeave {
   constructor(
@@ -18,7 +23,7 @@ export class SmartWeave {
     readonly definitionLoader: DefinitionLoader,
     readonly interactionsLoader: InteractionsLoader,
     readonly interactionsSorter: InteractionsSorter,
-    readonly executorFactory: ExecutorFactory<HandlerApi<unknown>>,
+    readonly executorFactory: ExecutorFactory<HandlerApi<unknown>>, // TODO: really struggling with TS generics here...
     readonly stateEvaluator: StateEvaluator
   ) {}
 
@@ -26,7 +31,7 @@ export class SmartWeave {
     return new SmartWeaveBuilder(arweave);
   }
 
-  contract<State>(contractTxId: string, parent?: Contract): Contract<State> {
-    return new HandlerBasedContract<State>(contractTxId, this, parent);
+  contract<State>(contractTxId: string, callingContract?: Contract): Contract<State> {
+    return new HandlerBasedContract<State>(contractTxId, this, callingContract);
   }
 }

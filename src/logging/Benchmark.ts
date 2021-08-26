@@ -3,6 +3,10 @@ export class Benchmark {
     return new Benchmark();
   }
 
+  private constructor() {
+    // noop
+  }
+
   private start = Date.now();
 
   public reset() {

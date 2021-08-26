@@ -1,5 +1,6 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import {
+  Benchmark,
   Contract,
   ContractInteraction,
   DefaultEvaluationOptions,
@@ -28,7 +29,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
   constructor(
     private readonly contractTxId: string,
     private readonly smartweave: SmartWeave,
-    private readonly parentContract: Contract = null
+    // note: this will be probably used for creating contract's
+    // call hierarchy and generating some sort of "stack trace"
+    private readonly callingContract: Contract = null
   ) {}
 
   async readState(
@@ -36,11 +39,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
     currentTx?: { interactionTxId: string; contractTxId: string }[],
     evaluationOptions?: EvaluationOptions
   ): Promise<EvalStateResult<State>> {
-    logger.info('Read state for %s', this.contractTxId);
+    logger.info('Read state for', this.contractTxId);
     const { stateEvaluator } = this.smartweave;
     const executionContext = await this.createExecutionContext(this.contractTxId, blockHeight, evaluationOptions);
-    const result = await stateEvaluator.eval(executionContext, currentTx || []);
 
+    const result = await stateEvaluator.eval(executionContext, currentTx || []);
     return result as EvalStateResult<State>;
   }
 
@@ -53,7 +56,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       throw new Error("Wallet not connected. Use 'connect' method first.");
     }
 
-    logger.info('View state for %s', this.contractTxId);
+    logger.info('View state for', this.contractTxId);
     const { arweave, stateEvaluator } = this.smartweave;
     let executionContext = await this.createExecutionContext(this.contractTxId, blockHeight, evaluationOptions);
 
@@ -111,7 +114,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     transaction: InteractionTx,
     evaluationOptions?: EvaluationOptions
   ): Promise<InteractionResult<State, View>> {
-    logger.info('Vies state for %s %o', this.contractTxId, transaction);
+    logger.info(`Vies state for ${this.contractTxId}`, transaction);
     const { stateEvaluator } = this.smartweave;
 
     const executionContext = await this.createExecutionContextFromTx(this.contractTxId, transaction);
@@ -139,6 +142,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     blockHeight?: number,
     evaluationOptions?: EvaluationOptions
   ): Promise<ExecutionContext<State>> {
+    const benchmark = Benchmark.measure();
     const { arweave, definitionLoader, interactionsLoader, interactionsSorter } = this.smartweave;
 
     let currentNetworkInfo;
@@ -158,6 +162,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const interactions = await interactionsLoader.load(contractTxId, blockHeight);
     const sortedInteractions = await interactionsSorter.sort(interactions);
 
+    logger.debug('Creating execution context:', benchmark.elapsed());
+
     return {
       contractDefinition,
       blockHeight,
@@ -175,7 +181,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     transaction: InteractionTx,
     evaluationOptions?: EvaluationOptions
   ): Promise<ExecutionContext<State>> {
-    const { definitionLoader, executorFactory, interactionsLoader, interactionsSorter } = this.smartweave;
+    const benchmark = Benchmark.measure();
+    const { definitionLoader, interactionsLoader, interactionsSorter } = this.smartweave;
     const blockHeight = transaction.block.height;
     const caller = transaction.owner.address;
     const contractDefinition = await definitionLoader.load<State>(contractTxId);
@@ -185,6 +192,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     if (evaluationOptions == null) {
       evaluationOptions = new DefaultEvaluationOptions();
     }
+    logger.debug('Creating execution context from tx:', benchmark.elapsed());
 
     return {
       contractDefinition,
