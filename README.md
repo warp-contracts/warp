@@ -1,6 +1,7 @@
 # SmartWeave SDK v2
 
-### Warning: WIP - do not use (yet;-))
+#### Warning: SDK is currently in alpha version.
+#### We do not recommend using it in a production env.
 
 SmartWeave SDK v2 is the new, rewritten from scratch, SDK implementation proposal for interaction with SmartWeave Contracts.
 It has been built with performance (e.g. caching at multiple layers, Arweave calls optimization)
@@ -12,21 +13,18 @@ The base motivation behind rewriting SmartWeave SDK (and roadmap proposal) has b
 To further improve contract state evaluation time, one can additionally use AWS CloudFront based Arweave cache described in [AWS CloudFront Cache](https://github.com/redstone-finance/redstone-smartweave-contracts/blob/main/docs/CACHE.md).
 
 - [Installation and import](#installation-and-import)
+- [Examples](#examples)
 - [Source code structure](#source-code-structure)
+    - [contract package](#contract-package)
     - [cache package](#cache-package)
-    - [client package](#client-package)
     - [core package](#core-package)
     - [plugins package](#plugins-package)
-- [Example usages](#example-usages).
-
 
 ### Installation and import
 V2 of the SDK is not currently available on npm.
 The SmartWeave SDK v2 can be installed directly from the gitHub repository.
 
 `yarn add redstone-smartweave`
-
-To quickly update to the latest version, run:
 
 You can import the full API or individual modules.
 
@@ -35,28 +33,33 @@ import * as SmartWeaveSdk from 'redstone-smartweave'
 ```
 
 ```typescript
-import { swcClient, HandlerBasedSwcClient, ... } from 'redstone-smartweave'
+import { SmartWeave, Contract, ... } from 'redstone-smartweave'
 ```
 
-### Source code structure
-The new SDK is currently a part of the current SDK.
-All the new source code is kept in the `src/v2` directory.
+### Examples
+Usage examples can be found in
+a dedicated [repository](#https://github.com/redstone-finance/redstone-smartweave-examples).
+Please follow instructions in its README.md (and detail-ish comments in the examples files) to learn more.
 
-#### Client package
-Code located in `client` package contains base client interface - `Contract` and its
-"reference" implementation - `HandlerBasedSwcClient` - that allows to interact with contracts.
-It also contains `SwClientFactory` that supplies some most common `HandlerBasedSwcClient` configurations (e.g. cached or non-cached).  
+### Source code structure
+SDK's source code is divided into few main modules.
+
+#### Contract package
+Code located in the `contract` package contains base contract interface - `Contract` and its
+"reference" implementation - `HandlerBasedContract` - that allows to interact with contracts.
+To connect to a contract, first an instance of the `SmartWeave` must be created.
+This package contains `SmartWeave` factories that supply some most common configurations (e.g. cached or non-cached).  
 Refer the TSDocs for more information.
 
 #### Cache package
-Code located in `cache` package contains base interfaces - `SwCache` and `BlockHeightSwCache`
-and some example implementations. These caches can be used while configuring [`Contract`](#swcclient-interface)
-implementation - to greatly improve processing speed (i.e. contract's state evaluation)  
+Code located in the `cache` package contains base interfaces - `SwCache` and `BlockHeightSwCache`
+and some example implementations. These caches can be used while configuring `SmartWeave`
+instance - to greatly improve processing speed (i.e. contract's state evaluation)  .
 Refer the TSDocs for more information.
 
 #### Core package
-Code located in the `core` package contains all the main building blocks of the reference SDK v2 implementation.
-These building blocks are then used to create instances of `HandlerBasedSwcClient`.
+Code located in the `core` package contains all the main modules of the reference SDK v2 implementation.
+These modules are used to create instances of `SmartWeave`.
 There are currently 5 core interfaces:
 1. `DefinitionLoader` - it is responsible for loading contract's definition (i.e. its source code, initial state, etc.)
    Its reference implementation is `ContractDefinitionLoader`.
@@ -69,8 +72,8 @@ There are currently 5 core interfaces:
 4. `InteractionsSorter` - self-explanatory ;-) Two implementations - `LexicographicalInteractionsSorter` - same, as in
    current SDK, and `LexicographicalInteractionsSorter` - based on a PR [https://github.com/ArweaveTeam/SmartWeave/pull/82](https://github.com/ArweaveTeam/SmartWeave/pull/82)
 5. `StateEvaluator` - responsible for evaluating the state for a given set of transactions, with reference `DefaultStateEvaluator`.  
-   Please **note** that `DefaultStateEvaluator` currently by default **stops** processing in case of any `exception` result type from state evaluation (as opposed to
-   current SDK version, which simply skips the exception and moves to next interaction transaction).
+   Please **note** that `DefaultStateEvaluator` currently by default doest **not stop** processing in case of any `exception` result type from state evaluation (to be backwards compatible
+   with current SDK version) - though we still can't decide whether it is a proper behaviour.
    You can change this behaviour by modifying `EvaluationOptions`.
 
 Additionally, the core package contains the definition of all the tags used by the protocol - `SmartWeaveTags`.
@@ -85,7 +88,3 @@ One cool plugin is the `DebuggableExecutorFactor` - it's a wrapper over `Executo
 of changing the contract's code "on the fly" (while evaluating the state) - without the need of deploying anything on Arweave.  
 This is really useful while debugging contracts (e.g. quickly adding some console.logs in contract's source code)
 or quickly testing new features.
-
-### Example usages
-A separate repo with examples is available at [https://github.com/redstone-finance/redstone-smartweave-examples](https://github.com/redstone-finance/redstone-smartweave-examples).
-Follow instructions in its README.md to learn more.
