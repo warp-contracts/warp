@@ -47,7 +47,7 @@ async function main() {
   const txs = loadTxFromFile();
 
   const resumeFromContractTxId = 'YLVpmhSq5JmLltfg6R-5fL04rIRPrlSU22f6RQ6VyYE';
-  let resumeFrom = true;
+  let resumeFrom = false;
 
   logger.info(`Checking ${txs.length} contracts`);
 

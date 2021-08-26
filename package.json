@@ -1,6 +1,6 @@
 {
   "name": "redstone-smartweave",
-  "version": "0.1.0-alpha.1",
+  "version": "0.2.0-alpha.1",
   "description": "An implementation of the SmartWeave SDK.",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -15,6 +15,7 @@
     "preversion": "yarn lint && yarn build",
     "version": "yarn format && git add -A src",
     "postversion": "git push && git push --tags",
+    "yalc:publish": "yarn build && yalc publish --push",
     "test": "jest"
   },
   "license": "MIT",

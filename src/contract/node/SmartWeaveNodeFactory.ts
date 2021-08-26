@@ -23,7 +23,7 @@ export class SmartWeaveNodeFactory extends SmartWeaveWebFactory {
    * Returns a {@link SmartWeave} that is using file-based cache for {@link StateEvaluator} layer
    * and mem cache for the rest.
    */
-  static fileCacheClient(arweave: Arweave, cacheBasePath?: string): SmartWeave {
+  static fileCached(arweave: Arweave, cacheBasePath?: string): SmartWeave {
     const definitionLoader = new ContractDefinitionLoader(arweave, new MemCache());
 
     const interactionsLoader = new CacheableContractInteractionsLoader(

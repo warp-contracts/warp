@@ -20,6 +20,7 @@ import { BsonFileBlockHeightSwCache, MemBlockHeightSwCache, MemCache } from '@sm
 /**
  * A factory that simplifies the process of creating different versions of {@link SmartWeave}.
  * All versions use the {@link Evolve} plugin.
+ * SmartWeave instances created by this factory can be safely used in a web environment.
  */
 export class SmartWeaveWebFactory {
   /**
@@ -52,9 +53,9 @@ export class SmartWeaveWebFactory {
 
   /**
    * Returns a {@link SmartWeave} that (yup, you've guessed it!) does not use any caches.
-   * This one is gonna be slooow...
+   * This one is gonna be slooow!
    */
-  static noCacheClient(arweave: Arweave): SmartWeave {
+  static nonCached(arweave: Arweave): SmartWeave {
     const definitionLoader = new ContractDefinitionLoader(arweave);
     const interactionsLoader = new ContractInteractionsLoader(arweave);
     const executorFactory = new HandlerExecutorFactory(arweave);

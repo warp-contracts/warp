@@ -4,8 +4,8 @@ import { LogLevel, RedStoneLogger } from '../RedStoneLogger';
 
 export const defaultLoggerOptions: ISettingsParam = {
   displayFunctionName: false,
-  displayFilePath: 'hideNodeModulesOnly',
-  displayLoggerName: false,
+  displayFilePath: 'hidden',
+  displayLoggerName: true,
   dateTimeTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   minLevel: 'debug'
 };

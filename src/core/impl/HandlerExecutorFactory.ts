@@ -58,7 +58,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
           const handler = contractFunction(swGlobal, BigNumber, clarity) as HandlerFunction<State, Input, Result>;
           const stateCopy = JSON.parse(JSON.stringify(state));
           swGlobal._activeTx = interactionTx;
-          logger.debug(`SmartWeave.contract.id: ${swGlobal.contract.id}`, swGlobal.contract.id);
+          logger.debug(`SmartWeave.contract.id:`, swGlobal.contract.id);
 
           self.assignReadContractState<Input, State>(swGlobal, contractDefinition, executionContext, currentTx);
           self.assignViewContractState<Input, State>(swGlobal, contractDefinition, executionContext);
@@ -80,14 +80,20 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
             case 'ContractError':
               return {
                 type: 'error',
-                result: err.message,
-                state
+                errorMessage: err.message,
+                state,
+                // note: previous version was writing error message to a "result" field,
+                // which fucks-up the HandlerResult type definition -
+                // HandlerResult.result had to be declared as 'Result | string' - and that led to a poor dev exp.
+                // TODO: this might be breaking change!
+                result: null
               };
             default:
               return {
                 type: 'exception',
-                result: `${(err && err.stack) || (err && err.message)}`,
-                state
+                errorMessage: `${(err && err.stack) || (err && err.message)}`,
+                state,
+                result: null
               };
           }
         }
@@ -180,12 +186,13 @@ export type HandlerFunction<State, Input, Result> = (
 
 // TODO: change to XOR between result and state?
 export type HandlerResult<State, Result> = {
-  result: string | Result; // this really sucks, but has to be declared this way to be backwards compatbile
+  result: Result;
   state: State;
 };
 
 export type InteractionResult<State, Result> = HandlerResult<State, Result> & {
   type: 'ok' | 'error' | 'exception';
+  errorMessage?: string;
 };
 
 export type ContractInteraction<Input> = {

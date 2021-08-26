@@ -59,14 +59,14 @@ export class DefaultStateEvaluator implements StateEvaluator {
       executionContext.contractDefinition
     )) as HandlerApi<State>;
 
-    logger.debug(
+    logger.trace(
       'missingInteractions',
       missingInteractions.map((int) => {
         return int.node.id;
       })
     );
 
-    logger.debug('Init state', JSON.stringify(baseState.state));
+    logger.trace('Init state', JSON.stringify(baseState.state));
 
     for (const missingInteraction of missingInteractions) {
       logger.debug(
@@ -125,11 +125,11 @@ export class DefaultStateEvaluator implements StateEvaluator {
 
   private logResult<State>(result: InteractionResult<State, unknown>, currentTx: GQLNodeInterface) {
     if (result.type === 'exception') {
-      logger.error(`${result.result}`);
+      logger.error(`${result.errorMessage}`);
       logger.error(`Executing of interaction: ${currentTx.id} threw exception.`);
     }
     if (result.type === 'error') {
-      logger.error(`${result.result}`);
+      logger.error(`${result.errorMessage}`);
       logger.error(`Executing of interaction: ${currentTx.id} returned error.`);
     }
   }

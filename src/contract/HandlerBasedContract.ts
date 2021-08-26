@@ -80,17 +80,21 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     const evalStateResult = await stateEvaluator.eval(executionContext, []);
 
+    logger.debug('Creating new intraction for view state');
+
     const interaction: ContractInteraction<Input> = {
       input,
       caller: executionContext.caller
     };
+
+    logger.trace('interaction', interaction);
 
     const handler = (await this.smartweave.executorFactory.create(
       executionContext.contractDefinition
     )) as HandlerApi<State>;
 
     // TODO: what is the best way to create a transaction in this case?
-    return await handler.handle<Input, View>(
+    const handleResult = await handler.handle<Input, View>(
       executionContext,
       evalStateResult.state,
       interaction,
@@ -107,6 +111,15 @@ export class HandlerBasedContract<State> implements Contract<State> {
       },
       []
     );
+
+    if (handleResult.type !== 'ok') {
+      logger.fatal('Error while interacting with contract', {
+        type: handleResult.type,
+        error: handleResult.errorMessage
+      });
+    }
+
+    return handleResult;
   }
 
   async viewStateForTx<Input, View>(
