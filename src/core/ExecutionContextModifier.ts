@@ -1,4 +1,4 @@
-import { EvolveCompatibleState, ExecutionContext } from '@smartweave';
+import { ExecutionContext, HandlerApi } from '@smartweave';
 
 /**
  * really not a fan of this feature...
@@ -7,5 +7,8 @@ import { EvolveCompatibleState, ExecutionContext } from '@smartweave';
  * on state - example (and currently only) use case is the "evolve" feature...
  */
 export interface ExecutionContextModifier {
-  modify<State>(state: State, executionContext: ExecutionContext<State>): Promise<ExecutionContext<State>>;
+  modify<State>(
+    state: State,
+    executionContext: ExecutionContext<State, HandlerApi<State>>
+  ): Promise<ExecutionContext<State, HandlerApi<State>>>;
 }

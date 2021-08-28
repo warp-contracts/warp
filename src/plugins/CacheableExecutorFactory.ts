@@ -21,7 +21,9 @@ export class CacheableExecutorFactory<Api> implements ExecutorFactory<Api> {
     // with the same SwGlobal object being cached for all contracts with the same source code
     // (eg. SwGlobal.contract.id field - which of course should have different value for different contracts
     // that share the same source).
-    const cacheKey = contractDefinition.txId;
+    // warn#2: cache key MUST be a combination of both txId and srcTxId -
+    // as "evolve" feature changes the srcTxId for the given txId...
+    const cacheKey = `${contractDefinition.txId}_${contractDefinition.srcTxId}`;
     if (!this.cache.contains(cacheKey)) {
       logger.debug('Updating executor factory cache');
       const handler = await this.baseImplementation.create(contractDefinition);

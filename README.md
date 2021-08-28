@@ -19,6 +19,8 @@ To further improve contract state evaluation time, one can additionally use AWS 
     - [cache package](#cache-package)
     - [core package](#core-package)
     - [plugins package](#plugins-package)
+    - [legacy package](#legacy-package)
+    - [logger package](#logger-package)
 
 ### Installation and import
 V2 of the SDK is not currently available on npm.
@@ -88,3 +90,10 @@ One cool plugin is the `DebuggableExecutorFactor` - it's a wrapper over `Executo
 of changing the contract's code "on the fly" (while evaluating the state) - without the need of deploying anything on Arweave.  
 This is really useful while debugging contracts (e.g. quickly adding some console.logs in contract's source code)
 or quickly testing new features.
+
+#### Legacy package
+This package contains some code from the current SDK implementation - most of 
+this code will be probably remove with the future releases of the new SDK implementation.
+
+#### Logger package
+TODO: add description

@@ -2,7 +2,6 @@ import {
   Benchmark,
   ContractInteraction,
   EvalStateResult,
-  EvolveCompatibleState,
   ExecutionContext,
   ExecutionContextModifier,
   GQLEdgeInterface,
@@ -15,8 +14,6 @@ import {
   StateEvaluator
 } from '@smartweave';
 import Arweave from 'arweave';
-import fs from 'fs';
-import path from 'path';
 
 const logger = LoggerFactory.INST.create(__filename);
 
@@ -27,8 +24,8 @@ export class DefaultStateEvaluator implements StateEvaluator {
     private readonly executionContextModifiers: ExecutionContextModifier[] = []
   ) {}
 
-  async eval<State, Api>(
-    executionContext: ExecutionContext<State>,
+  async eval<State>(
+    executionContext: ExecutionContext<State, HandlerApi<State>>,
     currentTx: { interactionTxId: string; contractTxId: string }[]
   ): Promise<EvalStateResult<State>> {
     return this.doReadState(
@@ -39,10 +36,10 @@ export class DefaultStateEvaluator implements StateEvaluator {
     );
   }
 
-  protected async doReadState<State, Api>(
+  protected async doReadState<State>(
     missingInteractions: GQLEdgeInterface[],
     baseState: EvalStateResult<State>,
-    executionContext: ExecutionContext<State>,
+    executionContext: ExecutionContext<State, HandlerApi<State>>,
     currentTx: { interactionTxId: string; contractTxId: string }[]
   ): Promise<EvalStateResult<State>> {
     const stateEvaluationBenchmark = Benchmark.measure();
@@ -54,10 +51,6 @@ export class DefaultStateEvaluator implements StateEvaluator {
     logger.info(
       `Evaluating state for ${executionContext.contractDefinition.txId} [${missingInteractions.length} non-cached of ${executionContext.sortedInteractions.length} all]`
     );
-
-    const handler: HandlerApi<State> = (await executionContext.smartweave.executorFactory.create<State>(
-      executionContext.contractDefinition
-    )) as HandlerApi<State>;
 
     logger.trace(
       'missingInteractions',
@@ -94,7 +87,13 @@ export class DefaultStateEvaluator implements StateEvaluator {
         caller: currentInteraction.owner.address
       };
 
-      const result = await handler.handle(executionContext, currentState, interaction, currentInteraction, currentTx);
+      const result = await executionContext.handler.handle(
+        executionContext,
+        currentState,
+        interaction,
+        currentInteraction,
+        currentTx
+      );
 
       this.logResult<State>(result, currentInteraction);
 
@@ -113,9 +112,10 @@ export class DefaultStateEvaluator implements StateEvaluator {
         // when calling any async (even simple timeout) function here...
         // that's a dumb workaround for this issue
         const stateCopy = JSON.parse(JSON.stringify(currentState));
-        executionContext = await modify(currentState, executionContext);
+        executionContext = await modify<State>(currentState, executionContext);
         currentState = stateCopy;
       }
+      logger.debug('Interaction evaluation', singleInteractionBenchmark.elapsed());
 
       this.onStateUpdate<State>(currentInteraction, executionContext, new EvalStateResult(currentState, validity));
     }
@@ -145,7 +145,7 @@ export class DefaultStateEvaluator implements StateEvaluator {
 
   private findInputTag<State>(
     missingInteraction: GQLEdgeInterface,
-    executionContext: ExecutionContext<State>
+    executionContext: ExecutionContext<State, unknown>
   ): GQLTagInterface {
     const contractIndex = missingInteraction.node.tags.findIndex(
       (tag) => tag.name === SmartWeaveTags.CONTRACT_TX_ID && tag.value === executionContext.contractDefinition.txId
@@ -156,7 +156,7 @@ export class DefaultStateEvaluator implements StateEvaluator {
 
   onStateUpdate<State>(
     currentInteraction: GQLNodeInterface,
-    executionContext: ExecutionContext<State>,
+    executionContext: ExecutionContext<State, unknown>,
     state: EvalStateResult<State>
   ) {
     // noop

@@ -24,8 +24,8 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     super(arweave, executionContextModifiers);
   }
 
-  async eval<State, Api>(
-    executionContext: ExecutionContext<State>,
+  async eval<State>(
+    executionContext: ExecutionContext<State, HandlerApi<State>>,
     currentTx: { interactionTxId: string; contractTxId: string }[]
   ): Promise<EvalStateResult<State>> {
     const requestedBlockHeight = executionContext.blockHeight;

@@ -16,7 +16,7 @@ async function main() {
   const logger = LoggerFactory.INST.create(__filename);
   const smartWeave = SmartWeaveNodeFactory.memCached(arweave);
 
-  const contractTxId = 'YLVpmhSq5JmLltfg6R-5fL04rIRPrlSU22f6RQ6VyYE';
+  const contractTxId = 'mzvUgNc8YFk0w5K5H7c8pyT-FC5Y_ba0r7_8766Kx74';
   // Kyve:
   // C_1uo08qRuQAeDi9Y1I8fkaWYUC9IWkOrKDNe9EphJo
   // OFD4GqQcqp-Y_Iqh8DN_0s3a_68oMvvnekeOEu_a45I

@@ -50,7 +50,10 @@ export class Evolve implements ExecutionContextModifier {
     this.modify = this.modify.bind(this);
   }
 
-  async modify<State>(state: State, executionContext: ExecutionContext<State>): Promise<ExecutionContext<State>> {
+  async modify<State>(
+    state: State,
+    executionContext: ExecutionContext<State, HandlerApi<State>>
+  ): Promise<ExecutionContext<State, HandlerApi<State>>> {
     const contractTxId = executionContext.contractDefinition.txId;
     logger.debug(`trying to evolve for: ${contractTxId}`);
     if (!isEvolveCompatible(state)) {
@@ -79,10 +82,11 @@ export class Evolve implements ExecutionContextModifier {
 
       if (currentSrcTxId !== evolve) {
         try {
-          // note: that's really nasty IMO - loading original contract definition, but forcing different sourceTxId...
+          // note: that's really nasty IMO - loading original contract definition,
+          // but forcing different sourceTxId...
           logger.info('Evolving to: ', evolve);
           const newContractDefinition = await this.definitionLoader.load<State>(contractTxId, evolve);
-          const newHandler = await this.executorFactory.create<State>(newContractDefinition);
+          const newHandler = (await this.executorFactory.create<State>(newContractDefinition)) as HandlerApi<State>;
 
           const modifiedContext = {
             ...executionContext,

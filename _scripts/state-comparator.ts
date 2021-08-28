@@ -195,28 +195,30 @@ async function main() {
       continue;
     }
 
+    let resultString = '';
+    let result2String = '';
     try {
       logger.info('readContract');
       const result = await readContract(arweave, contractTxId);
-      const resultString = JSON.stringify(result);
+      resultString = JSON.stringify(result);
       // console.log(resultString);
 
       logger.info('readState');
       const result2 = await smartWeave.contract(contractTxId).readState();
-      const result2String = JSON.stringify(result2.state);
+      result2String = JSON.stringify(result2.state);
       // console.log(result2String);
 
-      if (resultString.localeCompare(result2String) !== 0) {
-        logger.error('States differ!');
-        fs.writeFileSync(path.join(__dirname, 'diffs', `${contractTxId}_old.json`), resultString);
-        fs.writeFileSync(path.join(__dirname, 'diffs', `${contractTxId}_new.json`), result2String);
-        differentStatesContractTxIds.push(contractTxId);
-      }
     } catch (e) {
       logger.error(e);
       logger.info('skipping ', contractTxId);
       errorContractTxIds.push(contractTxId);
     } finally {
+      if (resultString.localeCompare(result2String) !== 0) {
+        logger.error('States differ!');
+        differentStatesContractTxIds.push(contractTxId);
+        fs.writeFileSync(path.join(__dirname, 'diffs', `${contractTxId}_old.json`), resultString);
+        fs.writeFileSync(path.join(__dirname, 'diffs', `${contractTxId}_new.json`), result2String);
+      }
       logger.debug('Contracts with different states:', differentStatesContractTxIds);
       logger.info('\n\n ==== END');
     }
