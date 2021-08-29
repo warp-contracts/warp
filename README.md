@@ -3,6 +3,12 @@
 #### Warning: SDK is currently in alpha version.
 #### We do not recommend using it in a production env.
 
+#### Features not yet implemented
+- deploying contracts
+- arTransfer and tags handling for "viewState" ("interactRead")
+- CLI (though not sure if that is a necessary - even if, should be 
+probably a separate lib built on top base SDK).
+
 SmartWeave SDK v2 is the new, rewritten from scratch, SDK implementation proposal for interaction with SmartWeave Contracts.
 It has been built with performance (e.g. caching at multiple layers, Arweave calls optimization)
 and modularity (e.g. ability to use different types of caches, imported from external libraries) in mind.
