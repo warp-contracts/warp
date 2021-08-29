@@ -166,6 +166,8 @@ async function main() {
 
   let counter = 0;
 
+  const properContractTxIds = [];
+
   for (const contractTxId of txs) {
     const tx: Transaction = await arweave.transactions.get(contractTxId);
     counter++;
@@ -195,7 +197,9 @@ async function main() {
       continue;
     }
 
-    let resultString = '';
+    properContractTxIds.push(contractTxId);
+
+   /* let resultString = '';
     let result2String = '';
     try {
       logger.info('readContract');
@@ -221,8 +225,10 @@ async function main() {
       }
       logger.debug('Contracts with different states:', differentStatesContractTxIds);
       logger.info('\n\n ==== END');
-    }
+    }*/
   }
+
+  fs.writeFileSync('proper-test-cases.json', JSON.stringify(properContractTxIds));
 }
 
 main().catch();
