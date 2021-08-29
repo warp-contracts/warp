@@ -3,7 +3,6 @@ import path from 'path';
 import { readContract } from 'smartweave';
 import Arweave from 'arweave';
 import { LoggerFactory, SmartWeaveNodeFactory } from '@smartweave';
-// FIXME: stupid ts-jest does not honor module aliases
 
 function* chunks(arr, n) {
   for (let i = 0; i < arr.length; i += n) {
