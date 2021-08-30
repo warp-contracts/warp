@@ -57,6 +57,8 @@ export class ContractInteractionsLoader implements InteractionsLoader {
     }
   }`;
 
+  private static readonly _30seconds = 30 * 1000;
+
   constructor(private readonly arweave: Arweave) {}
 
   async load(contractTxId: string, blockHeight: number): Promise<GQLEdgeInterface[]> {
@@ -106,7 +108,9 @@ export class ContractInteractionsLoader implements InteractionsLoader {
     });
 
     while (response.status === 403) {
-      await this.sleep(30 * 1000); // 30 seconds.
+      logger.debug(`GQL rate limiting, waiting ${ContractInteractionsLoader._30seconds}ms before next try.`);
+
+      await ContractInteractionsLoader.sleep(ContractInteractionsLoader._30seconds);
 
       response = await this.arweave.api.post('graphql', {
         query: ContractInteractionsLoader.query,
@@ -130,7 +134,7 @@ export class ContractInteractionsLoader implements InteractionsLoader {
     return txs;
   }
 
-  private async sleep(ms: number) {
+  static async sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
