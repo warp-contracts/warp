@@ -6,6 +6,7 @@
 #### Features not yet implemented
 - deploying contracts
 - arTransfer and tags handling for "viewState" ("interactRead")
+- "dry-runs" (though not sure if this should be part of the "core" SDK)
 - CLI (though not sure if that is a necessary - even if, should be 
 probably a separate lib built on top base SDK).
 
