@@ -100,10 +100,19 @@ export class ContractInteractionsLoader implements InteractionsLoader {
   }
 
   private async getNextPage(variables: ReqVariables): Promise<GQLTransactionsResultInterface> {
-    const response = await this.arweave.api.post('graphql', {
+    let response = await this.arweave.api.post('graphql', {
       query: ContractInteractionsLoader.query,
       variables
     });
+
+    while (response.status === 403) {
+      await this.sleep(30 * 1000); // 30 seconds.
+
+      response = await this.arweave.api.post('graphql', {
+        query: ContractInteractionsLoader.query,
+        variables
+      });
+    }
 
     if (response.status !== 200) {
       throw new Error(`Unable to retrieve transactions. Arweave gateway responded with status ${response.status}.`);
@@ -119,5 +128,9 @@ export class ContractInteractionsLoader implements InteractionsLoader {
     const txs = data.data.transactions;
 
     return txs;
+  }
+
+  private async sleep(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
