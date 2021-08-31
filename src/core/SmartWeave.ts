@@ -4,10 +4,11 @@ import {
   HandlerApi,
   InteractionsLoader,
   InteractionsSorter,
+  SmartWeaveBuilder,
   StateEvaluator
 } from '@smartweave/core';
 import Arweave from 'arweave';
-import { Contract, HandlerBasedContract, SmartWeaveBuilder } from '@smartweave/contract';
+import { Contract, HandlerBasedContract } from '@smartweave/contract';
 
 /**
  * The SmartWeave "motherboard" ;-).
