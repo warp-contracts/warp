@@ -65,7 +65,6 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
         cached: sortedInteractionsUpToBlock.length - missingInteractions.length
       });
 
-      // I (still) have no idea what I'm doing....
       // TODO: this probably should be removed, as it seems to protect from
       // some specific contract's implementation flaws
       // (i.e. inner calls between two contracts that lead to inf. call loop - circular dependency).
