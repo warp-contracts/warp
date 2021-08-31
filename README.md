@@ -30,8 +30,6 @@ To further improve contract state evaluation time, one can additionally use AWS 
     - [logger package](#logger-package)
 
 ### Installation and import
-V2 of the SDK is not currently available on npm.
-The SmartWeave SDK v2 can be installed directly from the gitHub repository.
 
 `yarn add redstone-smartweave`
 
