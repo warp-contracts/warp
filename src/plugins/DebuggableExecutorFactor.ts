@@ -10,10 +10,9 @@ import { ContractDefinition, ExecutorFactory } from '@smartweave/core';
 export class DebuggableExecutorFactory<Api> implements ExecutorFactory<Api> {
   constructor(
     private readonly baseImplementation: ExecutorFactory<Api>,
-    private readonly sourceCode: { [key: string]: string }
-  ) {
     // contract source code before default "normalization"
-  }
+    private readonly sourceCode: { [key: string]: string }
+  ) {}
 
   async create<State>(contractDefinition: ContractDefinition<State>): Promise<Api> {
     if (Object.prototype.hasOwnProperty.call(this.sourceCode, contractDefinition.txId)) {

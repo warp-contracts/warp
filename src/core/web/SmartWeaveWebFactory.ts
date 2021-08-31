@@ -1,5 +1,5 @@
 import Arweave from 'arweave';
-import { HandlerBasedContract, Contract, SmartWeave } from '@smartweave/contract';
+import { HandlerBasedContract, Contract, SmartWeave, SmartWeaveBuilder } from '@smartweave/contract';
 import {
   CacheableContractInteractionsLoader,
   CacheableExecutorFactory,
@@ -24,9 +24,17 @@ import { BsonFileBlockHeightSwCache, MemBlockHeightSwCache, MemCache } from '@sm
  */
 export class SmartWeaveWebFactory {
   /**
-   * Returns a {@link SmartWeave} that is using mem cache for all layers.
+   * Returns a fully configured {@link SmartWeave} that is using mem cache for all layers.
    */
   static memCached(arweave: Arweave): SmartWeave {
+    return this.memCachedBased(arweave).build();
+  }
+
+  /**
+   * Returns a preconfigured, memCached {@link SmartWeaveBuilder}, that allows for customization of the SmartWeave instance.
+   * Use {@link SmartWeaveBuilder.build()} to finish the configuration.
+   */
+  static memCachedBased(arweave: Arweave): SmartWeaveBuilder {
     const definitionLoader = new ContractDefinitionLoader(arweave, new MemCache());
 
     const interactionsLoader = new CacheableContractInteractionsLoader(
@@ -47,15 +55,22 @@ export class SmartWeaveWebFactory {
       .setInteractionsLoader(interactionsLoader)
       .setInteractionsSorter(interactionsSorter)
       .setExecutorFactory(executorFactory)
-      .setStateEvaluator(stateEvaluator)
-      .build();
+      .setStateEvaluator(stateEvaluator);
   }
 
   /**
-   * Returns a {@link SmartWeave} that (yup, you've guessed it!) does not use any caches.
-   * This one is gonna be slooow!
+   * Returns a fully configured, nonCached {@link SmartWeave}.
    */
   static nonCached(arweave: Arweave): SmartWeave {
+    return this.nonCachedBased(arweave).build();
+  }
+
+  /**
+   * Returns a preconfigured {@link SmartWeave} that (yup, you've guessed it!) does not use any caches.
+   * This one is gonna be slooow!
+   * Use {@link SmartWeaveBuilder.build()} to finish the configuration.
+   */
+  static nonCachedBased(arweave: Arweave): SmartWeaveBuilder {
     const definitionLoader = new ContractDefinitionLoader(arweave);
     const interactionsLoader = new ContractInteractionsLoader(arweave);
     const executorFactory = new HandlerExecutorFactory(arweave);
@@ -67,7 +82,6 @@ export class SmartWeaveWebFactory {
       .setInteractionsLoader(interactionsLoader)
       .setInteractionsSorter(interactionsSorter)
       .setExecutorFactory(executorFactory)
-      .setStateEvaluator(stateEvaluator)
-      .build();
+      .setStateEvaluator(stateEvaluator);
   }
 }

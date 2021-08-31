@@ -23,7 +23,7 @@ export class SmartWeave {
     readonly definitionLoader: DefinitionLoader,
     readonly interactionsLoader: InteractionsLoader,
     readonly interactionsSorter: InteractionsSorter,
-    readonly executorFactory: ExecutorFactory<HandlerApi<unknown>>, // TODO: really struggling with TS generics here...
+    readonly executorFactory: ExecutorFactory<HandlerApi<unknown>>,
     readonly stateEvaluator: StateEvaluator
   ) {}
 
