@@ -1,4 +1,10 @@
-import { Contract, HandlerBasedContract, SmartWeave, SmartWeaveWebFactory } from '@smartweave/contract';
+import {
+  Contract,
+  HandlerBasedContract,
+  SmartWeave,
+  SmartWeaveBuilder,
+  SmartWeaveWebFactory
+} from '@smartweave/contract';
 import Arweave from 'arweave';
 import {
   ContractDefinitionLoader,
@@ -20,10 +26,18 @@ import { BsonFileBlockHeightSwCache, MemBlockHeightSwCache, MemCache } from '@sm
  */
 export class SmartWeaveNodeFactory extends SmartWeaveWebFactory {
   /**
-   * Returns a {@link SmartWeave} that is using file-based cache for {@link StateEvaluator} layer
+   * Returns a fully configured {@link SmartWeave} that is using file-based cache for {@link StateEvaluator} layer
    * and mem cache for the rest.
    */
   static fileCached(arweave: Arweave, cacheBasePath?: string): SmartWeave {
+    return this.fileCachedBased(arweave, cacheBasePath).build();
+  }
+
+  /**
+   * Returns a preconfigured, fileCached {@link SmartWeaveBuilder}, that allows for customization of the SmartWeave instance.
+   * Use {@link SmartWeaveBuilder.build()} to finish the configuration.
+   */
+  static fileCachedBased(arweave: Arweave, cacheBasePath?: string): SmartWeaveBuilder {
     const definitionLoader = new ContractDefinitionLoader(arweave, new MemCache());
 
     const interactionsLoader = new CacheableContractInteractionsLoader(
@@ -44,7 +58,6 @@ export class SmartWeaveNodeFactory extends SmartWeaveWebFactory {
       .setInteractionsLoader(interactionsLoader)
       .setInteractionsSorter(interactionsSorter)
       .setExecutorFactory(executorFactory)
-      .setStateEvaluator(stateEvaluator)
-      .build();
+      .setStateEvaluator(stateEvaluator);
   }
 }

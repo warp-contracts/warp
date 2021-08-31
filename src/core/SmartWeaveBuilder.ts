@@ -1,5 +1,6 @@
 import Arweave from 'arweave';
 import {
+  DebuggableExecutorFactory,
   DefinitionLoader,
   ExecutorFactory,
   HandlerApi,
@@ -41,6 +42,14 @@ export class SmartWeaveBuilder {
   public setStateEvaluator(value: StateEvaluator): SmartWeaveBuilder {
     this._stateEvaluator = value;
     return this;
+  }
+
+  public overwriteSource(sourceCode: { [key: string]: string }): SmartWeave {
+    if (this._executorFactory == null) {
+      throw new Error('Set base ExecutorFactory first');
+    }
+    this._executorFactory = new DebuggableExecutorFactory(this._executorFactory, sourceCode);
+    return this.build();
   }
 
   build() {

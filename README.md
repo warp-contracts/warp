@@ -22,9 +22,9 @@ To further improve contract state evaluation time, one can additionally use AWS 
 - [Installation and import](#installation-and-import)
 - [Examples](#examples)
 - [Source code structure](#source-code-structure)
+    - [core package](#core-package)
     - [contract package](#contract-package)
     - [cache package](#cache-package)
-    - [core package](#core-package)
     - [plugins package](#plugins-package)
     - [legacy package](#legacy-package)
     - [logger package](#logger-package)
@@ -51,22 +51,9 @@ Please follow instructions in its README.md (and detail-ish comments in the exam
 ### Source code structure
 SDK's source code is divided into few main modules.
 
-#### Contract package
-Code located in the `contract` package contains base contract interface - `Contract` and its
-"reference" implementation - `HandlerBasedContract` - that allows to interact with contracts.
-To connect to a contract, first an instance of the `SmartWeave` must be created.
-This package contains `SmartWeave` factories that supply some most common configurations (e.g. cached or non-cached).  
-Refer the TSDocs for more information.
-
-#### Cache package
-Code located in the `cache` package contains base interfaces - `SwCache` and `BlockHeightSwCache`
-and some example implementations. These caches can be used while configuring `SmartWeave`
-instance - to greatly improve processing speed (i.e. contract's state evaluation)  .
-Refer the TSDocs for more information.
-
 #### Core package
 Code located in the `core` package contains all the main modules of the reference SDK v2 implementation.
-These modules are used to create instances of `SmartWeave`.
+These modules are used to create instances of `SmartWeave` - main class that allows to connect to contracts.
 There are currently 5 core interfaces:
 1. `DefinitionLoader` - it is responsible for loading contract's definition (i.e. its source code, initial state, etc.)
    Its reference implementation is `ContractDefinitionLoader`.
@@ -86,6 +73,18 @@ There are currently 5 core interfaces:
 Additionally, the core package contains the definition of all the tags used by the protocol - `SmartWeaveTags`.
 
 All interfaces and implementations are further described in TSDocs.
+
+#### Contract package
+Code located in the `contract` package contains base contract interface - `Contract` and its
+"reference" implementation - `HandlerBasedContract` - that allows to interact with contracts.
+To connect to a contract, first an instance of the `SmartWeave` must be created.
+Refer the TSDocs for more information.
+
+#### Cache package
+Code located in the `cache` package contains base interfaces - `SwCache` and `BlockHeightSwCache`
+and some example implementations. These caches can be used while configuring `SmartWeave`
+instance - to greatly improve processing speed (i.e. contract's state evaluation)  .
+Refer the TSDocs for more information.
 
 #### Plugins package
 This package contains some example extensions to base implementation, adding features like "Evolve", caching
