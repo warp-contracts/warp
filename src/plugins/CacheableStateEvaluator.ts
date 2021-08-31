@@ -18,7 +18,7 @@ const logger = LoggerFactory.INST.create(__filename);
 export class CacheableStateEvaluator extends DefaultStateEvaluator {
   constructor(
     arweave: Arweave,
-    private readonly cache: BlockHeightSwCache<EvalStateResult<unknown>>,
+    protected readonly cache: BlockHeightSwCache<EvalStateResult<unknown>>,
     executionContextModifiers: ExecutionContextModifier[] = []
   ) {
     super(arweave, executionContextModifiers);
