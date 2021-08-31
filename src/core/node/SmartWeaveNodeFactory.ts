@@ -1,17 +1,12 @@
-import {
-  Contract,
-  HandlerBasedContract,
-  SmartWeave,
-  SmartWeaveBuilder,
-  SmartWeaveWebFactory
-} from '@smartweave/contract';
 import Arweave from 'arweave';
 import {
   ContractDefinitionLoader,
   ContractInteractionsLoader,
-  EvalStateResult,
   HandlerExecutorFactory,
-  LexicographicalInteractionsSorter
+  LexicographicalInteractionsSorter,
+  SmartWeave,
+  SmartWeaveBuilder,
+  SmartWeaveWebFactory
 } from '@smartweave/core';
 import {
   CacheableContractInteractionsLoader,

@@ -1,5 +1,4 @@
 import Arweave from 'arweave';
-import { HandlerBasedContract, Contract, SmartWeave, SmartWeaveBuilder } from '@smartweave/contract';
 import {
   CacheableContractInteractionsLoader,
   CacheableExecutorFactory,
@@ -11,11 +10,12 @@ import {
   ContractInteractionsLoader,
   DefaultStateEvaluator,
   EvalStateResult,
-  HandlerApi,
   HandlerExecutorFactory,
-  LexicographicalInteractionsSorter
+  LexicographicalInteractionsSorter,
+  SmartWeave,
+  SmartWeaveBuilder
 } from '@smartweave/core';
-import { BsonFileBlockHeightSwCache, MemBlockHeightSwCache, MemCache } from '@smartweave/cache';
+import { MemBlockHeightSwCache, MemCache } from '@smartweave/cache';
 
 /**
  * A factory that simplifies the process of creating different versions of {@link SmartWeave}.
