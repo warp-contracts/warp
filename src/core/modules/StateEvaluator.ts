@@ -14,7 +14,7 @@ export interface StateEvaluator {
     currentInteraction: GQLNodeInterface,
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>
-  );
+  ): Promise<void>;
 }
 
 export class EvalStateResult<State> {

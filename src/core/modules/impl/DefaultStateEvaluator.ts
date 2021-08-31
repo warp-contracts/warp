@@ -117,7 +117,11 @@ export class DefaultStateEvaluator implements StateEvaluator {
       }
       logger.debug('Interaction evaluation', singleInteractionBenchmark.elapsed());
 
-      this.onStateUpdate<State>(currentInteraction, executionContext, new EvalStateResult(currentState, validity));
+      await this.onStateUpdate<State>(
+        currentInteraction,
+        executionContext,
+        new EvalStateResult(currentState, validity)
+      );
     }
     console.debug('State evaluation total:', stateEvaluationBenchmark.elapsed());
     return new EvalStateResult<State>(currentState, validity);
@@ -154,7 +158,7 @@ export class DefaultStateEvaluator implements StateEvaluator {
     return missingInteraction.node.tags[contractIndex + 1];
   }
 
-  onStateUpdate<State>(
+  async onStateUpdate<State>(
     currentInteraction: GQLNodeInterface,
     executionContext: ExecutionContext<State, unknown>,
     state: EvalStateResult<State>

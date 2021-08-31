@@ -28,6 +28,8 @@ const logger = LoggerFactory.INST.create(__filename);
  *     --1.cache.bson
  *     --323332.cache.bson
  * ...etc.
+ *
+ * Note: this is not performance-optimized for reading LARGE amount of contracts ;-)
  */
 export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
   // TODO: not sure why I'm using "string" as type for blockHeight...:-)
@@ -111,8 +113,8 @@ export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V
     }
   }
 
-  getLast(key: string): BlockHeightCacheResult<V> | null {
-    if (!this.contains(key)) {
+  async getLast(key: string): Promise<BlockHeightCacheResult<V> | null> {
+    if (!(await this.contains(key))) {
       return null;
     }
 
@@ -132,8 +134,8 @@ export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V
     };
   }
 
-  getLessOrEqual(key: string, blockHeight: number): BlockHeightCacheResult<V> | null {
-    if (!this.contains(key)) {
+  async getLessOrEqual(key: string, blockHeight: number): Promise<BlockHeightCacheResult<V> | null> {
+    if (!(await this.contains(key))) {
       return null;
     }
 
@@ -159,8 +161,8 @@ export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V
     };
   }
 
-  put({ cacheKey, blockHeight }: BlockHeightKey, value: V) {
-    if (!this.contains(cacheKey)) {
+  async put({ cacheKey, blockHeight }: BlockHeightKey, value: V): Promise<void> {
+    if (!(await this.contains(cacheKey))) {
       this.storage[cacheKey] = {};
     }
 
@@ -179,11 +181,11 @@ export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V
     }
   }
 
-  contains(key: string) {
+  async contains(key: string): Promise<boolean> {
     return Object.prototype.hasOwnProperty.call(this.storage, key);
   }
 
-  get(key: string, blockHeight: number): BlockHeightCacheResult<V> | null {
+  async get(key: string, blockHeight: number): Promise<BlockHeightCacheResult<V> | null> {
     throw new Error('Not implemented yet');
   }
 }

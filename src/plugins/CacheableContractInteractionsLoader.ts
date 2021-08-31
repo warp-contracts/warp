@@ -21,14 +21,14 @@ export class CacheableContractInteractionsLoader implements InteractionsLoader {
       blockHeight
     });
 
-    const cached = this.cache.get(contractId, blockHeight);
+    const cached = await this.cache.get(contractId, blockHeight);
 
     if (cached !== null) {
       logger.debug('InteractionsLoader - hit from cache!');
       return cached.cachedValue;
     } else {
       const result = await this.baseImplementation.load(contractId, blockHeight);
-      this.cache.put(new BlockHeightKey(contractId, blockHeight), result);
+      await this.cache.put(new BlockHeightKey(contractId, blockHeight), result);
       return result;
     }
   }
