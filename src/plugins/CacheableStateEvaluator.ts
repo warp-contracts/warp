@@ -42,10 +42,10 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     // if there was anything to cache...
     if (sortedInteractionsUpToBlock.length > 0) {
       // get latest available cache for the requested block height
-      cachedState = this.cache.getLessOrEqual(
+      cachedState = (await this.cache.getLessOrEqual(
         executionContext.contractDefinition.txId,
         requestedBlockHeight
-      ) as BlockHeightCacheResult<EvalStateResult<State>>;
+      )) as BlockHeightCacheResult<EvalStateResult<State>>;
 
       if (cachedState != null) {
         logger.debug(`Cached state for ${executionContext.contractDefinition.txId}`, {
@@ -104,12 +104,12 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     );
   }
 
-  onStateUpdate<State>(
+  async onStateUpdate<State>(
     currentInteraction: GQLNodeInterface,
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>
   ) {
-    this.cache.put(
+    await this.cache.put(
       new BlockHeightKey(executionContext.contractDefinition.txId, currentInteraction.block.height),
       state
     );

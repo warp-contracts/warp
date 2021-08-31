@@ -6,8 +6,8 @@ import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@sma
 export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
   private storage: { [key: string]: Map<number, V> } = {};
 
-  getLast(key: string): BlockHeightCacheResult<V> | null {
-    if (!this.contains(key)) {
+  async getLast(key: string): Promise<BlockHeightCacheResult<V> | null> {
+    if (!(await this.contains(key))) {
       return null;
     }
 
@@ -23,8 +23,8 @@ export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
     };
   }
 
-  getLessOrEqual(key: string, blockHeight: number): BlockHeightCacheResult<V> | null {
-    if (!this.contains(key)) {
+  async getLessOrEqual(key: string, blockHeight: number): Promise<BlockHeightCacheResult<V> | null> {
+    if (!(await this.contains(key))) {
       return null;
     }
 
@@ -44,20 +44,20 @@ export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
     };
   }
 
-  put({ cacheKey, blockHeight }: BlockHeightKey, value: V) {
-    if (!this.contains(cacheKey)) {
+  async put({ cacheKey, blockHeight }: BlockHeightKey, value: V): Promise<void> {
+    if (!(await this.contains(cacheKey))) {
       this.storage[cacheKey] = new Map();
     }
 
     this.storage[cacheKey].set(blockHeight, value);
   }
 
-  contains(key: string) {
+  async contains(key: string): Promise<boolean> {
     return Object.prototype.hasOwnProperty.call(this.storage, key);
   }
 
-  get(key: string, blockHeight: number): BlockHeightCacheResult<V> | null {
-    if (!this.contains(key)) {
+  async get(key: string, blockHeight: number): Promise<BlockHeightCacheResult<V> | null> {
+    if (!(await this.contains(key))) {
       return null;
     }
 
