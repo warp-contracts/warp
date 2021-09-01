@@ -12,6 +12,7 @@ function* chunks(arr, n) {
 }
 
 const arweave = Arweave.init({
+  // using our AWS Cloudfront cache/proxy, to speed up a little bit the whole process...
   host: 'dh48zl0solow5.cloudfront.net',
   port: 443,
   protocol: 'https',

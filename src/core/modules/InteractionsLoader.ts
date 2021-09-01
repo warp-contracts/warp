@@ -7,5 +7,5 @@ import { GQLEdgeInterface } from '@smartweave';
  * Note: InteractionsLoaders are not responsible for sorting interaction transactions!
  */
 export interface InteractionsLoader {
-  load(contractId: string, blockHeight: number): Promise<GQLEdgeInterface[]>;
+  load(contractId: string, fromBlockHeight: number, toBlockHeight: number): Promise<GQLEdgeInterface[]>;
 }

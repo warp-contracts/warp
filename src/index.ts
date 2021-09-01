@@ -6,3 +6,4 @@ export * from '@smartweave/contract';
 export * from '@smartweave/cache';
 export * from '@smartweave/plugins';
 export * from '@smartweave/legacy';
+export * from '@smartweave/utils';

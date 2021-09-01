@@ -15,15 +15,13 @@ import {
   SmartWeave,
   Tags,
   ArWallet,
-  emptyTransfer
+  emptyTransfer,
+  sleep
 } from '@smartweave';
 import { TransactionStatusResponse } from 'arweave/node/transactions';
+import { NetworkInfoInterface } from 'arweave/node/network';
 
 const logger = LoggerFactory.INST.create(__filename);
-
-const sleep = (ms) => {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-};
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -34,6 +32,7 @@ const sleep = (ms) => {
 export class HandlerBasedContract<State> implements Contract<State> {
   private wallet?: ArWallet;
   private evaluationOptions: EvaluationOptions = new DefaultEvaluationOptions();
+  public networkInfo?: NetworkInfoInterface = null;
 
   constructor(
     private readonly contractTxId: string,
@@ -43,6 +42,14 @@ export class HandlerBasedContract<State> implements Contract<State> {
     private readonly callingContract: Contract = null
   ) {
     this.waitForConfirmation = this.waitForConfirmation.bind(this);
+    if (callingContract != null) {
+      this.networkInfo = (callingContract as HandlerBasedContract<State>).networkInfo;
+
+      // sanity-check...
+      if (this.networkInfo == null) {
+        throw Error('Calling contract should have the network info already set!');
+      }
+    }
   }
 
   connect(wallet: ArWallet): Contract<State> {
@@ -63,6 +70,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     currentTx?: { interactionTxId: string; contractTxId: string }[]
   ): Promise<EvalStateResult<State>> {
     logger.info('Read state for', this.contractTxId);
+    this.maybeClearNetworkInfo();
+
     const { stateEvaluator } = this.smartweave;
     const executionContext = await this.createExecutionContext(this.contractTxId, blockHeight);
     const result = await stateEvaluator.eval(executionContext, currentTx || []);
@@ -77,6 +86,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     transfer: ArTransfer = emptyTransfer
   ): Promise<InteractionResult<State, View>> {
     logger.info('View state for', this.contractTxId);
+    this.maybeClearNetworkInfo();
     if (!this.wallet) {
       logger.warn('Wallet not set.');
     }
@@ -150,6 +160,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   async viewStateForTx<Input, View>(input: Input, transaction: InteractionTx): Promise<InteractionResult<State, View>> {
     logger.info(`Vies state for ${this.contractTxId}`, transaction);
+    this.maybeClearNetworkInfo();
     const { stateEvaluator } = this.smartweave;
 
     const executionContext = await this.createExecutionContextFromTx(this.contractTxId, transaction);
@@ -178,6 +189,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     if (!this.wallet) {
       throw new Error("Wallet not connected. Use 'connect' method first.");
     }
+    this.maybeClearNetworkInfo();
     const { arweave } = this.smartweave;
 
     const interactionTx = await createTx(
@@ -231,14 +243,34 @@ export class HandlerBasedContract<State> implements Contract<State> {
     let currentNetworkInfo;
 
     if (blockHeight == null) {
-      // FIXME: this should be done only once for the whole execution!
-      // - how to implement this without using some "global", singleton-based provider?
-      currentNetworkInfo = await arweave.network.getInfo();
+      // if this is a "root" call (ie. original call from SmartWeave's client)
+      if (this.callingContract == null) {
+        logger.debug('Reading network info for root call');
+        currentNetworkInfo = await arweave.network.getInfo();
+        this.networkInfo = currentNetworkInfo;
+      } else {
+        // if that's a call from within contract's source code
+        logger.debug('Reusing network info from the calling contract');
+
+        // note: the whole execution tree should use the same network info!
+        // this requirement was not fulfilled in the "v1" SDK - each subsequent
+        // call to contract (from contract's source code) was loading network info independently
+        currentNetworkInfo = (this.callingContract as HandlerBasedContract<State>).networkInfo;
+      }
       blockHeight = currentNetworkInfo.height;
     }
 
     const contractDefinition = await definitionLoader.load<State>(contractTxId);
-    const interactions = await interactionsLoader.load(contractTxId, blockHeight);
+
+    // note: "eagerly" loading all of the interactions up to the current
+    // network height (instead of the requested "blockHeight").
+    // as dumb as it may seem - this in fact significantly speeds up the processing
+    // - because the InteractionsLoader (usually CacheableContractInteractionsLoader)
+    // doesn't have to download missing interactions during the contract execution
+    // (eg. if contract is calling different contracts on different block heights).
+    // This basically limits the amount of interactions with Arweave GraphQL endpoint -
+    // each such interaction takes at least ~500ms.
+    const interactions = await interactionsLoader.load(contractTxId, 0, this.networkInfo.height);
     const sortedInteractions = await interactionsSorter.sort(interactions);
     const handler = (await executorFactory.create(contractDefinition)) as HandlerApi<State>;
 
@@ -266,7 +298,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const blockHeight = transaction.block.height;
     const caller = transaction.owner.address;
     const contractDefinition = await definitionLoader.load<State>(contractTxId);
-    const interactions = await interactionsLoader.load(contractTxId, blockHeight);
+    const interactions = await interactionsLoader.load(contractTxId, 0, blockHeight);
     const sortedInteractions = await interactionsSorter.sort(interactions);
     const handler = (await executorFactory.create(contractDefinition)) as HandlerApi<State>;
 
@@ -283,5 +315,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
       evaluationOptions: this.evaluationOptions,
       caller
     };
+  }
+
+  private maybeClearNetworkInfo() {
+    if (this.callingContract == null) {
+      logger.debug('Clearing network info for the root contract');
+      this.networkInfo = null;
+    }
   }
 }
