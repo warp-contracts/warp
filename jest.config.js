@@ -12,6 +12,7 @@ module.exports = {
     '@smartweave/legacy': '<rootDir>/src/legacy/index',
     '@smartweave/plugins': '<rootDir>/src/plugins/index',
     '@smartweave/logging': '<rootDir>/src/logging/index',
+    '@smartweave/utils': '<rootDir>/src/utils/index',
     '@smartweave': '<rootDir>/src/index'
   },
 

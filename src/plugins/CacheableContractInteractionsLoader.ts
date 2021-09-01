@@ -3,11 +3,9 @@ import { BlockHeightKey, BlockHeightSwCache, GQLEdgeInterface, InteractionsLoade
 const logger = LoggerFactory.INST.create(__filename);
 
 /**
- * Very simple and naive implementation of cache for InteractionsLoader layer.
- * It hits the cache only if we have stored value at the exact required block height.
- *
- * A better implementation would require getting "highest" available block height value from cache
- * - and then downloading missing transactions using GQL.
+ * This implementation InteractionsLoader tries to limit the amount of interactions
+ * with GraphQL endpoint. Additionally, it is downloading only the missing interactions
+ * (starting from the latest already cached) - to additionally limit the amount of "paging".
  */
 export class CacheableContractInteractionsLoader implements InteractionsLoader {
   constructor(
@@ -15,21 +13,44 @@ export class CacheableContractInteractionsLoader implements InteractionsLoader {
     private readonly cache: BlockHeightSwCache<GQLEdgeInterface[]>
   ) {}
 
-  async load(contractId: string, blockHeight: number): Promise<GQLEdgeInterface[]> {
+  async load(contractId: string, fromBlockHeight: number, toBlockHeight: number): Promise<GQLEdgeInterface[]> {
     logger.debug('Loading interactions', {
       contractId,
-      blockHeight
+      fromBlockHeight,
+      toBlockHeight
     });
 
-    const cached = await this.cache.get(contractId, blockHeight);
+    const { cachedHeight, cachedValue } = (await this.cache.getLast(contractId)) || {
+      cachedHeight: -1,
+      cachedValue: []
+    };
 
-    if (cached !== null) {
-      logger.debug('InteractionsLoader - hit from cache!');
-      return cached.cachedValue;
-    } else {
-      const result = await this.baseImplementation.load(contractId, blockHeight);
-      await this.cache.put(new BlockHeightKey(contractId, blockHeight), result);
-      return result;
+    if (cachedHeight >= toBlockHeight) {
+      logger.debug('Reusing interactions cached at higher block height:', cachedHeight);
+      return cachedValue.filter(
+        (interaction: GQLEdgeInterface) =>
+          interaction.node.block.height >= fromBlockHeight && interaction.node.block.height <= toBlockHeight
+      );
     }
+
+    const missingInteractions = await this.baseImplementation.load(contractId, cachedHeight + 1, toBlockHeight);
+
+    const result = cachedValue
+      .filter((interaction: GQLEdgeInterface) => interaction.node.block.height >= fromBlockHeight)
+      .concat(missingInteractions);
+
+    const valueToCache = cachedValue.concat(missingInteractions);
+
+    logger.debug('Interactions load result:', {
+      cached: cachedValue.length,
+      missing: missingInteractions.length,
+      total: valueToCache.length,
+      result: result.length
+    });
+    // note: interactions in cache should be always saved from the "0" block
+    // - that's why "result" variable is not used here
+    await this.cache.put(new BlockHeightKey(contractId, toBlockHeight), valueToCache);
+
+    return result;
   }
 }

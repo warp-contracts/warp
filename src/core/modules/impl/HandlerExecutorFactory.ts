@@ -108,7 +108,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
   ) {
     swGlobal.contracts.viewContractState = async <View>(contractTxId: string, input: any) => {
       throw new Error('TODO implement');
-      logger.debug('swGlobal.viewContractState call: %o', {
+      logger.debug('swGlobal.viewContractState call:', {
         from: contractDefinition.txId,
         to: contractTxId,
         input
@@ -126,7 +126,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
     currentTx: { interactionTxId: string; contractTxId: string }[]
   ) {
     swGlobal.contracts.readContractState = async (contractTxId: string, height?: number, returnValidity?: boolean) => {
-      logger.debug('swGlobal.readContractState call: ', {
+      logger.debug('swGlobal.readContractState call:', {
         from: contractDefinition.txId,
         to: contractTxId
       });

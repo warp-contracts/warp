@@ -16,6 +16,7 @@
       "@smartweave/legacy": ["legacy/index"],
       "@smartweave/plugins": ["plugins/index"],
       "@smartweave/logging": ["logging/index"],
+      "@smartweave/utils": ["utils/index"],
       "@smartweave": ["index"],
     }
   },

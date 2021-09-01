@@ -120,12 +120,11 @@ export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V
 
     const cached = this.storage[key];
 
-    // sort keys (ie. block heights) in asc order, then reverse and get
+    // sort keys (ie. block heights) in asc order and get
     // the first element (ie. highest cached block height).
     const highestBlockHeight = Object.keys(cached)
       .map((k) => +k)
       .sort()
-      .reverse()
       .pop();
 
     return {

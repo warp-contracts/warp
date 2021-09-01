@@ -13,9 +13,9 @@ export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
 
     const cached: Map<number, V> = this.storage[key];
 
-    // sort keys (ie. block heights) in asc order, then reverse and get
-    // the first element (ie. highest cached block height).
-    const highestBlockHeight = [...cached.keys()].sort().reverse().pop();
+    // sort keys (ie. block heights) in asc order and get
+    // the last element (ie. highest cached block height).
+    const highestBlockHeight = [...cached.keys()].sort().pop();
 
     return {
       cachedHeight: highestBlockHeight,

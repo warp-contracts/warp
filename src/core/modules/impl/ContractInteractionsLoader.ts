@@ -4,6 +4,7 @@ import {
   GQLTransactionsResultInterface,
   InteractionsLoader,
   LoggerFactory,
+  sleep,
   SmartWeaveTags
 } from '@smartweave';
 import Arweave from 'arweave';
@@ -16,6 +17,7 @@ interface TagFilter {
 }
 
 interface BlockFilter {
+  min: number;
   max: number;
 }
 
@@ -61,7 +63,7 @@ export class ContractInteractionsLoader implements InteractionsLoader {
 
   constructor(private readonly arweave: Arweave) {}
 
-  async load(contractTxId: string, blockHeight: number): Promise<GQLEdgeInterface[]> {
+  async load(contractTxId: string, fromBlockHeight: number, toBlockHeight: number): Promise<GQLEdgeInterface[]> {
     let variables: ReqVariables = {
       tags: [
         {
@@ -74,7 +76,8 @@ export class ContractInteractionsLoader implements InteractionsLoader {
         }
       ],
       blockFilter: {
-        max: blockHeight
+        min: fromBlockHeight,
+        max: toBlockHeight
       },
       first: MAX_REQUEST
     };
@@ -96,7 +99,11 @@ export class ContractInteractionsLoader implements InteractionsLoader {
       txInfos.push(...transactions.edges.filter((tx) => !tx.node.parent || !tx.node.parent.id));
     }
 
-    logger.debug('All interactions:', txInfos.length);
+    logger.debug('All loaded interactions:', {
+      from: fromBlockHeight,
+      to: toBlockHeight,
+      loaded: txInfos.length
+    });
 
     return txInfos;
   }
@@ -110,7 +117,7 @@ export class ContractInteractionsLoader implements InteractionsLoader {
     while (response.status === 403) {
       logger.debug(`GQL rate limiting, waiting ${ContractInteractionsLoader._30seconds}ms before next try.`);
 
-      await ContractInteractionsLoader.sleep(ContractInteractionsLoader._30seconds);
+      await sleep(ContractInteractionsLoader._30seconds);
 
       response = await this.arweave.api.post('graphql', {
         query: ContractInteractionsLoader.query,
@@ -132,9 +139,5 @@ export class ContractInteractionsLoader implements InteractionsLoader {
     const txs = data.data.transactions;
 
     return txs;
-  }
-
-  static async sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
