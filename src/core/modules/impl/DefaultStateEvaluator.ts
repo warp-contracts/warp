@@ -165,5 +165,4 @@ export class DefaultStateEvaluator implements StateEvaluator {
   ) {
     // noop
   }
-
 }

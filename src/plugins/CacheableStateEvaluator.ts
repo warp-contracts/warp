@@ -113,5 +113,4 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       state
     );
   }
-
 }
