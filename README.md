@@ -7,8 +7,8 @@
 - deploying contracts
 - arTransfer and tags handling for "viewState" ("interactRead")
 - "dry-runs" (though not sure if this should be part of the "core" SDK)
-- CLI (though not sure if that is a necessary - even if, should be 
-probably a separate lib built on top base SDK).
+- CLI (though not sure if that is a necessary - even if, it should be 
+probably a separate lib built on top of the base SDK).
 
 SmartWeave SDK v2 is the new, rewritten from scratch, SDK implementation proposal for interaction with SmartWeave Contracts.
 It has been built with performance (e.g. caching at multiple layers, Arweave calls optimization)
@@ -16,7 +16,7 @@ and modularity (e.g. ability to use different types of caches, imported from ext
 
 Please consider this as a work in progress and use at your own risk :-).
 
-The base motivation behind rewriting SmartWeave SDK (and roadmap proposal) has been described in [README_V2](README_v2.md).  
+The base motivation behind rewriting SmartWeave SDK (and roadmap proposal) has been described [here](https://github.com/redstone-finance/redstone-smartweave/blob/main/docs/ROAD_MAP.md).  
 To further improve contract state evaluation time, one can additionally use AWS CloudFront based Arweave cache described in [AWS CloudFront Cache](https://github.com/redstone-finance/redstone-smartweave-contracts/blob/main/docs/CACHE.md).
 
 - [Installation and import](#installation-and-import)
