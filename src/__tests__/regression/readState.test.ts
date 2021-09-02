@@ -46,3 +46,18 @@ describe.each(chunked)('.suite %#', (contracts: string[]) => {
     600000
   );
 });
+
+describe('readState', () => {
+  it('should properly read state at requested block height', async () => {
+    LoggerFactory.INST.logLevel('warn');
+    const contractTxId = 'CbGCxBJn6jLeezqDl1w3o8oCSeRCb-MmtZNKPodla-0';
+    const blockHeight = 707892;
+    const result = await readContract(arweave, contractTxId, blockHeight);
+    const resultString = JSON.stringify(result).trim();
+
+    const result2 = await smartWeave.contract(contractTxId).readState(blockHeight);
+    const result2String = JSON.stringify(result2.state).trim();
+
+    expect(result2String).toEqual(resultString);
+  });
+});
