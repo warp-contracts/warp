@@ -242,21 +242,24 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     let currentNetworkInfo;
 
-    if (blockHeight == null) {
-      // if this is a "root" call (ie. original call from SmartWeave's client)
-      if (this.callingContract == null) {
-        logger.debug('Reading network info for root call');
-        currentNetworkInfo = await arweave.network.getInfo();
-        this.networkInfo = currentNetworkInfo;
-      } else {
-        // if that's a call from within contract's source code
-        logger.debug('Reusing network info from the calling contract');
+    // if this is a "root" call (ie. original call from SmartWeave's client)
+    if (this.callingContract == null) {
+      logger.debug('Reading network info for root call');
+      currentNetworkInfo = await arweave.network.getInfo();
+      this.networkInfo = currentNetworkInfo;
+    } else {
+      // if that's a call from within contract's source code
+      logger.debug('Reusing network info from the calling contract');
 
-        // note: the whole execution tree should use the same network info!
-        // this requirement was not fulfilled in the "v1" SDK - each subsequent
-        // call to contract (from contract's source code) was loading network info independently
-        currentNetworkInfo = (this.callingContract as HandlerBasedContract<State>).networkInfo;
-      }
+      // note: the whole execution tree should use the same network info!
+      // this requirement was not fulfilled in the "v1" SDK - each subsequent
+      // call to contract (from contract's source code) was loading network info independently
+      // if the contract was evaluating for many minutes/hours, this could effectively lead to reading
+      // state on different block heights...
+      currentNetworkInfo = (this.callingContract as HandlerBasedContract<State>).networkInfo;
+    }
+
+    if (blockHeight == null) {
       blockHeight = currentNetworkInfo.height;
     }
 
@@ -270,6 +273,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     // (eg. if contract is calling different contracts on different block heights).
     // This basically limits the amount of interactions with Arweave GraphQL endpoint -
     // each such interaction takes at least ~500ms.
+    // TODO: this could be further optimized to always load interactions only up to the "root's" call requested height
     const interactions = await interactionsLoader.load(contractTxId, 0, this.networkInfo.height);
     const sortedInteractions = await interactionsSorter.sort(interactions);
     const handler = (await executorFactory.create(contractDefinition)) as HandlerApi<State>;
