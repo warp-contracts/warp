@@ -6,7 +6,7 @@ and modularity (e.g. ability to use different types of caches, imported from ext
 
 #### Warning: SDK is currently in alpha version.
 We're already using the new SDK on production, both in our webapp and nodes.
-However, if you'd like to use it in production as well, please contact us on [discord](https://discord.com/invite/PVxBZKFr46) to ensure a smooth transition and get help with testing
+However, if you'd like to use it in production as well, please contact us on [discord](https://discord.com/invite/PVxBZKFr46) to ensure a smooth transition and get help with testing.
 
 The base motivation behind rewriting SmartWeave SDK (and roadmap proposal) has been described [here](https://github.com/redstone-finance/redstone-smartweave/blob/main/docs/ROAD_MAP.md).  
 To further improve contract state evaluation time, one can additionally use AWS CloudFront based Arweave cache described in [AWS CloudFront Cache](https://github.com/redstone-finance/redstone-smartweave-contracts/blob/main/docs/CACHE.md).
