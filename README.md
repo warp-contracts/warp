@@ -1,26 +1,19 @@
 # SmartWeave SDK v2
 
-#### Warning: SDK is currently in alpha version.
-#### We do not recommend using it in a production env.
-
-#### Features not yet implemented
-- deploying contracts
-- arTransfer and tags handling for "viewState" ("interactRead")
-- "dry-runs" (though not sure if this should be part of the "core" SDK)
-- CLI (though not sure if that is a necessary - even if, it should be 
-probably a separate lib built on top of the base SDK).
-
 SmartWeave SDK v2 is the new, rewritten from scratch, SDK implementation proposal for interaction with SmartWeave Contracts.
 It has been built with performance (e.g. caching at multiple layers, Arweave calls optimization)
 and modularity (e.g. ability to use different types of caches, imported from external libraries) in mind.
 
-Please consider this as a work in progress and use at your own risk :-).
+#### Warning: SDK is currently in alpha version.
+We're already using the new SDK on production, both in our webapp and nodes.
+However, if you'd like to use it in production as well, please contact us on [discord](https://discord.com/invite/PVxBZKFr46) to ensure a smooth transition and get help with testing
 
 The base motivation behind rewriting SmartWeave SDK (and roadmap proposal) has been described [here](https://github.com/redstone-finance/redstone-smartweave/blob/main/docs/ROAD_MAP.md).  
 To further improve contract state evaluation time, one can additionally use AWS CloudFront based Arweave cache described in [AWS CloudFront Cache](https://github.com/redstone-finance/redstone-smartweave-contracts/blob/main/docs/CACHE.md).
 
 - [Installation and import](#installation-and-import)
 - [Examples](#examples)
+- [Missing features](#missing-features)
 - [Source code structure](#source-code-structure)
     - [core package](#core-package)
     - [contract package](#contract-package)
@@ -47,6 +40,16 @@ import { SmartWeave, Contract, ... } from 'redstone-smartweave'
 Usage examples can be found in
 a dedicated [repository](https://github.com/redstone-finance/redstone-smartweave-examples).
 Please follow instructions in its README.md (and detail-ish comments in the examples files) to learn more.
+
+### Missing features
+The features below are not yet implemented. They will be either added soon to the core SDK, or as 
+a separate libraries, built on top of the SDK:
+- deploying contracts
+- arTransfer and tags handling for "viewState" ("interactRead")
+- "dry-runs" (though not sure if this should be part of the "core" SDK)
+- CLI (though not sure if that is a necessary - even if, it should be
+  probably a separate lib built on top of the base SDK).
+
 
 ### Source code structure
 SDK's source code is divided into few main modules.
