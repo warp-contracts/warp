@@ -11,6 +11,7 @@ However, if you'd like to use it in production as well, please contact us on [di
 The base motivation behind rewriting SmartWeave SDK (and roadmap proposal) has been described [here](https://github.com/redstone-finance/redstone-smartweave/blob/main/docs/ROAD_MAP.md).  
 To further improve contract state evaluation time, one can additionally use AWS CloudFront based Arweave cache described in [AWS CloudFront Cache](https://github.com/redstone-finance/redstone-smartweave-contracts/blob/main/docs/CACHE.md).
 
+- [Development](#development)
 - [Installation and import](#installation-and-import)
 - [Examples](#examples)
 - [Missing features](#missing-features)
@@ -21,6 +22,10 @@ To further improve contract state evaluation time, one can additionally use AWS 
     - [plugins package](#plugins-package)
     - [legacy package](#legacy-package)
     - [logger package](#logger-package)
+
+### Development
+PRs are welcome! :-) Also, feel free to submit issues - with both bugs and feature proposals.
+Please use [semantic commit messages](https://gist.github.com/joshbuchea/6f47e86d2510bce28f8e7f42ae84c716)
 
 ### Installation and import
 
