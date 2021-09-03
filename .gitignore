@@ -13,4 +13,5 @@ lib/
 
 yarn-error.log
 cache/
-_scripts/**/*.json
+
+.experiments/

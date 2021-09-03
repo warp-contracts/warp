@@ -1,4 +1,5 @@
 import {
+  Benchmark,
   GQLEdgeInterface,
   GQLResultInterface,
   GQLTransactionsResultInterface,
@@ -109,10 +110,12 @@ export class ContractInteractionsLoader implements InteractionsLoader {
   }
 
   private async getNextPage(variables: ReqVariables): Promise<GQLTransactionsResultInterface> {
+    const benchmark = Benchmark.measure();
     let response = await this.arweave.api.post('graphql', {
       query: ContractInteractionsLoader.query,
       variables
     });
+    logger.debug('GQL page load:', benchmark.elapsed());
 
     while (response.status === 403) {
       logger.debug(`GQL rate limiting, waiting ${ContractInteractionsLoader._30seconds}ms before next try.`);
