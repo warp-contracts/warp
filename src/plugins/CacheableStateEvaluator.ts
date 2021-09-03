@@ -8,7 +8,7 @@ import {
 } from '@smartweave/core';
 import Arweave from 'arweave';
 import { GQLNodeInterface } from '@smartweave/legacy';
-import { LoggerFactory } from '@smartweave/logging';
+import { Benchmark, LoggerFactory } from '@smartweave/logging';
 
 /**
  * An implementation of DefaultStateEvaluator that adds caching capabilities
@@ -42,10 +42,12 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     // if there was anything to cache...
     if (sortedInteractionsUpToBlock.length > 0) {
       // get latest available cache for the requested block height
+      const benchmark = Benchmark.measure();
       cachedState = (await this.cache.getLessOrEqual(
         executionContext.contractDefinition.txId,
         requestedBlockHeight
       )) as BlockHeightCacheResult<EvalStateResult<State>>;
+      logger.trace('Retrieving value from cache', benchmark.elapsed());
 
       if (cachedState != null) {
         this.cLogger.debug(`Cached state for ${executionContext.contractDefinition.txId}`, {
