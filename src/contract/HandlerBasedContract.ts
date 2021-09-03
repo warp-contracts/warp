@@ -269,7 +269,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     logger.debug('network info', benchmark.elapsed());
 
     benchmark.reset();
-    const [contractDefinition, interactions]  = await Promise.all([
+    const [contractDefinition, interactions] = await Promise.all([
       definitionLoader.load<State>(contractTxId),
       // note: "eagerly" loading all of the interactions up to the current
       // network height (instead of the requested "blockHeight").

@@ -129,12 +129,10 @@ export class DefaultStateEvaluator implements StateEvaluator {
 
   private logResult<State>(result: InteractionResult<State, unknown>, currentTx: GQLNodeInterface) {
     if (result.type === 'exception') {
-      logger.error(`${result.errorMessage}`);
-      logger.error(`Executing of interaction: ${currentTx.id} threw exception.`);
+      logger.error(`Executing of interaction: ${currentTx.id} threw exception:`, `${result.errorMessage}`);
     }
     if (result.type === 'error') {
-      logger.error(`${result.errorMessage}`);
-      logger.error(`Executing of interaction: ${currentTx.id} returned error.`);
+      logger.warn(`Executing of interaction: ${currentTx.id} returned error:`, result.errorMessage);
     }
   }
 
