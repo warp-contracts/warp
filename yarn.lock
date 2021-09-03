@@ -5376,9 +5376,9 @@ slice-ansi@^4.0.0:
     is-fullwidth-code-point "^3.0.0"
 
 smartweave@^0.4.43:
-  version "0.4.43"
-  resolved "https://registry.yarnpkg.com/smartweave/-/smartweave-0.4.43.tgz#0a52dc7dd743dc8300d93e802115b1218f3f9bf6"
-  integrity sha512-jvWwkA3qpdrXngVAE9CeJRxNR0MbsNwvWq+m5U9GrtPY6IFOf9VUIC0mnWJ6SM+rcmXCDBCVFguNqWYfbL9DnA==
+  version "0.4.44"
+  resolved "https://registry.yarnpkg.com/smartweave/-/smartweave-0.4.44.tgz#a421e7ee36eda5d85803a90d11df5dd61c4bbe76"
+  integrity sha512-eERk6fAKKSSHp/1vF+WFh8AtL+Vcq71tNsC+L2Ty/75twldNeYQO53CWTiemgheYrIOOFLB6SeRzTgxEe+zyGA==
   dependencies:
     "@types/clui" "^0.3.0"
     "@types/inquirer" "^7.3.1"

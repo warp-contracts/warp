@@ -13,8 +13,9 @@ export class Benchmark {
     this.start = Date.now();
   }
 
-  public elapsed(): string {
+  public elapsed(rawValue = false): string | number {
     const end = Date.now();
-    return `${(end - this.start).toFixed(0)}ms`;
+    const result = end - this.start;
+    return rawValue ? result : `${(end - this.start).toFixed(0)}ms`;
   }
 }

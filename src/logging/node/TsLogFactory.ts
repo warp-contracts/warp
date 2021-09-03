@@ -7,7 +7,8 @@ export const defaultLoggerOptions: ISettingsParam = {
   displayFilePath: 'hidden',
   displayLoggerName: true,
   dateTimeTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-  minLevel: 'debug'
+  minLevel: 'debug',
+  overwriteConsole: false
 };
 
 /**

@@ -73,8 +73,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
     this.maybeClearNetworkInfo();
 
     const { stateEvaluator } = this.smartweave;
+    const benchmark = Benchmark.measure();
     const executionContext = await this.createExecutionContext(this.contractTxId, blockHeight);
+    logger.debug('context', benchmark.elapsed());
+    benchmark.reset();
     const result = await stateEvaluator.eval(executionContext, currentTx || []);
+    logger.debug('state', benchmark.elapsed());
     return result as EvalStateResult<State>;
   }
 
@@ -237,11 +241,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
     contractTxId: string,
     blockHeight?: number
   ): Promise<ExecutionContext<State, HandlerApi<State>>> {
-    const benchmark = Benchmark.measure();
     const { arweave, definitionLoader, interactionsLoader, interactionsSorter, executorFactory } = this.smartweave;
 
     let currentNetworkInfo;
 
+    const benchmark = Benchmark.measure();
     // if this is a "root" call (ie. original call from SmartWeave's client)
     if (this.callingContract == null) {
       logger.debug('Reading network info for root call');
@@ -262,23 +266,26 @@ export class HandlerBasedContract<State> implements Contract<State> {
     if (blockHeight == null) {
       blockHeight = currentNetworkInfo.height;
     }
+    logger.debug('network info', benchmark.elapsed());
 
-    const contractDefinition = await definitionLoader.load<State>(contractTxId);
-
-    // note: "eagerly" loading all of the interactions up to the current
-    // network height (instead of the requested "blockHeight").
-    // as dumb as it may seem - this in fact significantly speeds up the processing
-    // - because the InteractionsLoader (usually CacheableContractInteractionsLoader)
-    // doesn't have to download missing interactions during the contract execution
-    // (eg. if contract is calling different contracts on different block heights).
-    // This basically limits the amount of interactions with Arweave GraphQL endpoint -
-    // each such interaction takes at least ~500ms.
-    // TODO: this could be further optimized to always load interactions only up to the "root's" call requested height
-    const interactions = await interactionsLoader.load(contractTxId, 0, this.networkInfo.height);
+    benchmark.reset();
+    const [contractDefinition, interactions]  = await Promise.all([
+      definitionLoader.load<State>(contractTxId),
+      // note: "eagerly" loading all of the interactions up to the current
+      // network height (instead of the requested "blockHeight").
+      // as dumb as it may seem - this in fact significantly speeds up the processing
+      // - because the InteractionsLoader (usually CacheableContractInteractionsLoader)
+      // doesn't have to download missing interactions during the contract execution
+      // (eg. if contract is calling different contracts on different block heights).
+      // This basically limits the amount of interactions with Arweave GraphQL endpoint -
+      // each such interaction takes at least ~500ms.
+      // TODO: this could be further optimized to always load interactions only up to the "root's" call requested height
+      interactionsLoader.load(contractTxId, 0, this.networkInfo.height)
+    ]);
+    logger.debug('contract and interactions load', benchmark.elapsed());
     const sortedInteractions = await interactionsSorter.sort(interactions);
-    const handler = (await executorFactory.create(contractDefinition)) as HandlerApi<State>;
 
-    logger.debug('Creating execution context:', benchmark.elapsed());
+    const handler = (await executorFactory.create(contractDefinition)) as HandlerApi<State>;
 
     return {
       contractDefinition,
@@ -301,8 +308,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const { definitionLoader, interactionsLoader, interactionsSorter, executorFactory } = this.smartweave;
     const blockHeight = transaction.block.height;
     const caller = transaction.owner.address;
-    const contractDefinition = await definitionLoader.load<State>(contractTxId);
-    const interactions = await interactionsLoader.load(contractTxId, 0, blockHeight);
+    const [contractDefinition, interactions] = await Promise.all([
+      definitionLoader.load<State>(contractTxId),
+      await interactionsLoader.load(contractTxId, 0, blockHeight)
+    ]);
     const sortedInteractions = await interactionsSorter.sort(interactions);
     const handler = (await executorFactory.create(contractDefinition)) as HandlerApi<State>;
 
