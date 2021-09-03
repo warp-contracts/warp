@@ -140,13 +140,15 @@ export class HandlerBasedContract<State> implements Contract<State> {
       interaction,
       {
         id: null,
-        recipient: null,
+        recipient: transfer.target,
         owner: {
           address: executionContext.caller
         },
         tags: tags || [],
         fee: null,
-        quantity: null,
+        quantity: {
+          winston: transfer.winstonQty
+        },
         block: executionContext.currentBlockData
       },
       []
