@@ -123,7 +123,7 @@ export class DefaultStateEvaluator implements StateEvaluator {
         new EvalStateResult(currentState, validity)
       );
     }
-    console.debug('State evaluation total:', stateEvaluationBenchmark.elapsed());
+    logger.debug('State evaluation total:', stateEvaluationBenchmark.elapsed());
     return new EvalStateResult<State>(currentState, validity);
   }
 
