@@ -1,4 +1,4 @@
-import { EvalStateResult, EvaluationOptions, HandlerApi, InteractionResult, InteractionTx } from '@smartweave';
+import { EvalStateResult, EvaluationOptions, InteractionResult, InteractionTx } from '@smartweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 
 /**

@@ -1,4 +1,4 @@
-import { RedStoneLogger, LogLevel } from '@smartweave';
+import { LogLevel, RedStoneLogger } from '@smartweave';
 import { ConsoleLogger } from './ConsoleLogger';
 import { ISettingsParam } from 'tslog';
 

@@ -1,10 +1,12 @@
 import {
   ArTransfer,
+  ArWallet,
   Benchmark,
   Contract,
   ContractInteraction,
   createTx,
   DefaultEvaluationOptions,
+  emptyTransfer,
   EvalStateResult,
   EvaluationOptions,
   ExecutionContext,
@@ -12,11 +14,9 @@ import {
   InteractionResult,
   InteractionTx,
   LoggerFactory,
+  sleep,
   SmartWeave,
-  Tags,
-  ArWallet,
-  emptyTransfer,
-  sleep
+  Tags
 } from '@smartweave';
 import { TransactionStatusResponse } from 'arweave/node/transactions';
 import { NetworkInfoInterface } from 'arweave/node/network';

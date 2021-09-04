@@ -1,12 +1,4 @@
-import {
-  Benchmark,
-  ContractDefinition,
-  DefinitionLoader,
-  getTag,
-  LoggerFactory,
-  SmartWeaveTags,
-  SwCache
-} from '@smartweave';
+import { ContractDefinition, DefinitionLoader, getTag, LoggerFactory, SmartWeaveTags, SwCache } from '@smartweave';
 import Arweave from 'arweave';
 import Transaction from 'arweave/web/lib/transaction';
 
