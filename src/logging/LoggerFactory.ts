@@ -1,7 +1,6 @@
-import { RedStoneLogger, LogLevel } from '@smartweave';
-import { ConsoleLoggerFactory } from './web/ConsoleLoggerFactory';
-import { TsLogFactory } from './node/TsLogFactory';
+import { ConsoleLoggerFactory, LogLevel, RedStoneLogger } from '@smartweave';
 import { ISettingsParam } from 'tslog';
+import { TsLogFactory } from './node/TsLogFactory';
 
 export class LoggerFactory {
   static readonly INST: LoggerFactory = typeof window === 'undefined' ? new TsLogFactory() : new ConsoleLoggerFactory();

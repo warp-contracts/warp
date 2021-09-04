@@ -1,4 +1,4 @@
-import { ExecutionContext, GQLNodeInterface, HandlerApi } from '@smartweave';
+import { ExecutionContext, GQLNodeInterface } from '@smartweave';
 
 /**
  * Implementors of this class are responsible for evaluating contract's state
