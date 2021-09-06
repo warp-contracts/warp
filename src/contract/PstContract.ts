@@ -25,7 +25,7 @@ export interface TransferInput {
  * Profit Sharing Tokens.
  */
 export interface PstContract extends Contract {
-  currentBalance(target: string): Promise<InteractionResult<PstState, BalanceResult>>;
+  currentBalance(target: string): Promise<BalanceResult>;
 
   currentState(): Promise<PstState>;
 
