@@ -87,7 +87,7 @@ const { state, validity } = await contract.readState();
 #### View state (interactRead in V1)
 ```typescript
 // View state (similar to the "interactRead" from SmartWeave V1)
-const { state, validity } = await contract.viewState({
+const { result } = await contract.viewState({
   function: "NAME_OF_YOUR_FUNCTION",
   data: { ... }
 });
@@ -102,8 +102,31 @@ const result = await contract.writeInteraction({
 });
 ```
 
-### [Optional] 2.4 Confgure logging
-TODO - add description
+💡 You can read detailed explanation of each contract method [here.](CONTRACT_METHODS.md)
 
-### 3. Test everything 🔥
+### [Optional] 2.4 Confgure logging
+Smartweave V2 uses `tslog` library for logging. By default logger is set to "debug" level, which means that all messages with level "debug" or higher are logged.
+
+#### Update logger options
+```typescript
+LoggerFactory.INST.setOptions({
+  type: "json",
+  displayFilePath: "hidden",
+  displayInstanceName: false,
+  minLevel: "info",
+});
+```
+
+Learn more about available logging options in [tslog documentation.](https://tslog.js.org/tsdoc/interfaces/isettingsparam.html)
+
+#### Update logger level
+Instead of updaitng all logger options you can simply set the new minimum logger level
+```typescript
+LoggerFactory.INST.logLevel("info");
+```
+
+Available log levels are listed [here.](https://github.com/redstone-finance/redstone-smartweave/blob/main/src/logging/RedStoneLogger.ts#L1)
+
+
+## 3. Test everything 🔥
 Before deploying your changes test it carefully. If you face any problems please contact us [on our discord](https://redstone.finance/discord). We'll be happy to help 😊
