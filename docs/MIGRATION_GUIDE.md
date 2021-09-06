@@ -1,12 +1,6 @@
-# Migration Guide from SmartWeave to SmartWeave v2
+# Migration Guide from SmartWeave v1 to SmartWeave v2
 
-This guide describes <strong>the simplest</strong> way to switch to the new version of SmartWeave. It uses `SmartWeaveNodeFactory` for Node and `SmartWeaveWebFactory` for Web to quickly obtain fully configured, mem-cacheable SmartWeave instance.
-
-<br />
-
-To see a more detailed explanation of all the core modules visit the new [SmartWeave v2 docs](https://smartweave.docs.redstone.finance/) or check out the [source code.](https://github.com/redstone-finance/redstone-smartweave)
-
-<br />
+This guide describes <strong>the simplest</strong> way to switch to the new version of SmartWeave. It uses `SmartWeaveNodeFactory` for Node and `SmartWeaveWebFactory` for Web to quickly obtain fully configured, mem-cacheable SmartWeave instance. To see a more detailed explanation of all the core modules visit the new [SmartWeave v2 docs](https://smartweave.docs.redstone.finance/) or check out the [source code.](https://github.com/redstone-finance/redstone-smartweave)
 
 ### Need help? 🙋‍♂️
 Please feel free to contact us [on Discord](https://redstone.finance/discord) if you face any problems.
@@ -41,9 +35,7 @@ import { SmartWeave, Contract, ... } from 'redstone-smartweave';
 ## 2. Update your implementation 🧑‍💻
 ### 2.1 Initialise a SmartWeave client
 ```typescript
-// Node.js
-
-// Firstly, create an Arweave instance
+// Create an Arweave instance
 const arweave = Arweave.init({
   host: "dh48zl0solow5.cloudfront.net",
   port: 443,
@@ -52,7 +44,7 @@ const arweave = Arweave.init({
   logging: false,
 });
 
-// Then, create a default mem-cached SmartWeave client
+// Create a SmartWeave client
 const smartweave = SmartWeaveNodeFactory.memCached(arweave);
 ```
 
@@ -80,14 +72,13 @@ const contract = smartweave
 ### 2.3 Interact with your contract
 ```typescript
 // Read state (similar to the "interactRead" from SmartWeave V1)
-const { state, validity } = await cxyzContract.readState();
+const { state, validity } = await contract.readState();
 
 // Write interaction (similat to the "interactWrite" from SmartWeave V1)
 const result = await contract.writeInteraction({
   function: "NAME_OF_YOUR_FUNCTION",
   data: { ... }
 });
-
 ```
 
 ### [Optional] 2.2 Confgure logging
