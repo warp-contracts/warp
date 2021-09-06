@@ -3,7 +3,7 @@
 ### The issues with the current implementation
 * low performance (unnecessary calls to Arweave http api, no easy option to add caching layer, etc.)
 * no clearly defined base protocol 
-* implementation that is really (if not impossible...) to unit test
+* implementation that is really hard (if not impossible...) to unit test
 * no tests... :-(((
 * many c/p in the code (like the recent "evolve" feature)
 * any change in the base function (ie. adding cache) basically requires to make a c/p of the base function

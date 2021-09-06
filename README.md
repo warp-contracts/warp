@@ -24,6 +24,10 @@ To further improve contract state evaluation time, one can additionally use AWS 
 
 ### Installation and import
 
+#### Using npm
+`npm install redstone-smartweave`
+
+#### Using yarn
 `yarn add redstone-smartweave`
 
 You can import the full API or individual modules.
