@@ -20,12 +20,17 @@ Allows to connect wallet to a contract. Connecting a wallet MAY be done before "
 
 - `wallet`        a JWK object with private key or 'use_wallet' string.
 
-#### Example
-```typescript
-const contract = smartweave
-  .contract("YOUR_CONTRACT_TX_ID")
-  .connect(jwk);
-```
+<details>
+  <summary>Example</summary>
+
+  ```typescript
+  const contract = smartweave
+    .contract("YOUR_CONTRACT_TX_ID")
+    .connect(jwk);
+  ```
+</details>
+
+---
 
 ### `setEvaluationOptions`
 
@@ -40,15 +45,21 @@ Allows to set (EvaluationOptions)
   - `options.ignoreExceptions`      enables exceptions ignoring
   - `options.waitForConfirmation`   enables waiting for transaction confirmation
 
-#### Example
-```typescript
-const contract = smartweave
-  .contract("YOUR_CONTRACT_TX_ID")
-  .setEvaluationOptions({
-    waitForConfirmation: true,
-    ignoreExceptions: false,
-  });
-```
+<details>
+  <summary>Example</summary>
+
+  ```typescript
+  const contract = smartweave
+    .contract("YOUR_CONTRACT_TX_ID")
+    .setEvaluationOptions({
+      waitForConfirmation: true,
+      ignoreExceptions: false,
+    });
+  ```
+</details>
+
+---
+
 
 ### `readState`
 
@@ -61,10 +72,15 @@ Returns state of the contract at required blockHeight. Similar to the `readContr
 - `blockHeight`        Block height for state
 - `currentTx`          If specified, will be used as a current transaction
 
-#### Example
-```typescript
-const { state, validity } = await contract.readState();
-```
+<details>
+  <summary>Example</summary>
+
+  ```typescript
+  const { state, validity } = await contract.readState();
+  ```
+</details>
+
+---
 
 ### `viewState`
 
@@ -79,13 +95,18 @@ Returns the "view" of the state, computed by the SWC - ie. object that is a deri
 - `tags`                 an array of tags with name/value as objects
 - `transfer`             target and winstonQty for transfer
 
-#### Example
-```typescript
-const { result } = await contract.viewState<any, any>({
-  function: "NAME_OF_YOUR_FUNCTION",
-  data: { ... }
-});
-```
+<details>
+  <summary>Example</summary>
+
+  ```typescript
+  const { result } = await contract.viewState<any, any>({
+    function: "NAME_OF_YOUR_FUNCTION",
+    data: { ... }
+  });
+  ```
+</details>
+
+---
 
 ### `viewStateForTx`
 
@@ -100,14 +121,18 @@ A version of the viewState method to be used from within the contract's source c
 - `input`                the interaction input
 - `transaction`          interaction transaction
 
-#### Example
-```typescript
-const { result } = await contract.viewStateForTx<any, any>({
-  function: "NAME_OF_YOUR_FUNCTION",
-  data: { ... }
-}, transaction);
-```
+<details>
+  <summary>Example</summary>
 
+  ```typescript
+  const { result } = await contract.viewStateForTx<any, any>({
+    function: "NAME_OF_YOUR_FUNCTION",
+    data: { ... }
+  }, transaction);
+  ```
+</details>
+
+---
 
 ### `writeInteraction`
 
@@ -121,10 +146,19 @@ Writes a new "interaction" transaction - ie. such transaction that stores input 
 - `tags`          an array of tags with name/value as objects
 - `transfer`      target and winstonQty for transfer
 
-#### Example
-```typescript
-const result = await contract.writeInteraction({
-  function: "NAME_OF_YOUR_FUNCTION",
-  data: { ... }
-});
-```
+<details>
+  <summary>Example</summary>
+
+  ```typescript
+  const result = await contract.writeInteraction({
+    function: "NAME_OF_YOUR_FUNCTION",
+    data: { ... }
+  });
+  ```
+</details>
+
+---
+
+### Need help? 🙋‍♂️
+Please feel free to contact us [on Discord](https://redstone.finance/discord) if you face any problems.
+
