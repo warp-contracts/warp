@@ -1,5 +1,12 @@
-import { EvalStateResult, EvaluationOptions, InteractionResult, InteractionTx } from '@smartweave';
-import { JWKInterface } from 'arweave/node/lib/wallet';
+import {
+  ArTransfer,
+  ArWallet,
+  EvalStateResult,
+  EvaluationOptions,
+  InteractionResult,
+  InteractionTx,
+  Tags
+} from '@smartweave';
 
 /**
  * A base interface to be implemented by SmartWeave Contracts clients.
@@ -61,17 +68,3 @@ export interface Contract<State = unknown> {
    */
   writeInteraction<Input = unknown>(input: Input, tags?: Tags, transfer?: ArTransfer): Promise<string | null>;
 }
-
-export type ArWallet = JWKInterface | 'use_wallet';
-
-export type ArTransfer = {
-  target: string;
-  winstonQty: string;
-};
-
-export const emptyTransfer: ArTransfer = {
-  target: '',
-  winstonQty: '0'
-};
-
-export type Tags = { name: string; value: string }[];
