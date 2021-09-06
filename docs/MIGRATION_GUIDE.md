@@ -33,8 +33,11 @@ import { SmartWeave, Contract, ... } from 'redstone-smartweave';
 ```
 
 ## 2. Update your implementation 🧑‍💻
-### 2.1 Initialise a SmartWeave client
+### 2.1 Initialize a SmartWeave client
 ```typescript
+import Arweave from 'arweave';
+import { SmartWeaveNodeFactory } from 'redstone-smartweave';
+
 // Create an Arweave instance
 const arweave = Arweave.init({
   host: "dh48zl0solow5.cloudfront.net",
@@ -57,7 +60,7 @@ In this example we've used the `memCached` method. You can see other available m
 #### [Optional] Custom modules 🛠
 Smartweave V2 has a modular architecture, which allows you to connect custom modules to any part of the SmartWeave client implementation. See [custom-client-example.ts](https://github.com/redstone-finance/redstone-smartweave-examples/blob/main/src/custom-client-example.ts) to learn more.
 
-### 2.2 Connect to your contract
+### 2.2 Initialize contract object
 ```typescript
 // Simple connection (allows to read state)
 const contract = smartweave.contract("YOUR_CONTRACT_TX_ID");
