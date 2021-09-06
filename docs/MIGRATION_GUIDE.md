@@ -73,18 +73,36 @@ const contract = smartweave
 ```
 
 ### 2.3 Interact with your contract
+#### Read state (readContract in V1)
 ```typescript
-// Read state (similar to the "interactRead" from SmartWeave V1)
+// Read state (similar to the "readContract" from SmartWeave V1)
 const { state, validity } = await contract.readState();
 
-// Write interaction (similat to the "interactWrite" from SmartWeave V1)
+// state contains is an object with the latest state
+
+// validity is an object with valid and invalid transaction IDs
+// E.g. { "TX_ID1": true, "TX_ID2": false, ...}
+```
+
+#### View state (interactRead in V1)
+```typescript
+// View state (similar to the "interactRead" from SmartWeave V1)
+const { state, validity } = await contract.viewState({
+  function: "NAME_OF_YOUR_FUNCTION",
+  data: { ... }
+});
+```
+
+#### Write interaction (interactWrite in V1)
+```typescript
+// Write interaction (similar to the "interactWrite" from SmartWeave V1)
 const result = await contract.writeInteraction({
   function: "NAME_OF_YOUR_FUNCTION",
   data: { ... }
 });
 ```
 
-### [Optional] 2.2 Confgure logging
+### [Optional] 2.4 Confgure logging
 TODO - add description
 
 ### 3. Test everything 🔥
