@@ -21,7 +21,7 @@ export interface TransferInput {
 }
 
 /**
- * An type of contract designed specifically for the interaction with
+ * A type of {@link Contract} designed specifically for the interaction with
  * Profit Sharing Tokens.
  */
 export interface PstContract extends Contract {
