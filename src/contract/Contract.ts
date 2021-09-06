@@ -9,9 +9,15 @@ import {
 } from '@smartweave';
 
 /**
- * A base interface to be implemented by SmartWeave Contracts clients.
+ * A base interface to be implemented by SmartWeave Contracts clients
+ * - contains "low-level" methods that allow to interact with any contract
  */
 export interface Contract<State = unknown> {
+  /**
+   * Returns transaction id of this contract.
+   */
+  txId(): string;
+
   /**
    * Allows to connect wallet to a contract.
    * Connecting a wallet MAY be done before "viewState" (depending on contract implementation,
@@ -39,8 +45,6 @@ export interface Contract<State = unknown> {
    * ie. object that is a derivative of a current state and some specific
    * smart contract business logic.
    * Similar to the "interactRead" from the current SDK version.
-   *
-   * TODO: tags and transfer params are not currently handled.
    */
   viewState<Input = unknown, View = unknown>(
     input: Input,

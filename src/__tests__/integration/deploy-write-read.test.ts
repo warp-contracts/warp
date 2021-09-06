@@ -3,18 +3,27 @@ import fs from 'fs';
 import ArLocal from '@textury/arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { HandlerBasedContract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory } from '@smartweave';
+import { Contract, HandlerBasedContract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory } from '@smartweave';
 import path from 'path';
 
 let arweave: Arweave;
 let arlocal: ArLocal;
 let smartweave: SmartWeave;
-let contract: HandlerBasedContract<ExampleContractState>;
+let contract: Contract<ExampleContractState>;
 
 interface ExampleContractState {
   counter: number;
 }
 
+/**
+ * This integration test should verify whether the basic functions of the SmartWeave client
+ * work properly.
+ * It first deploys the new contract and verifies its initial state.
+ * Then it subsequently creates new interactions - to verify, whether
+ * the default caching mechanism (ie. interactions cache, state cache, etc).
+ * work properly (ie. they do download the not yet cached interactions and evaluate state
+ * for them).
+ */
 describe('Testing the SmartWeave client', () => {
   let contractSrc: string;
   let initialState: string;
@@ -32,7 +41,9 @@ describe('Testing the SmartWeave client', () => {
       protocol: 'http'
     });
 
-    LoggerFactory.INST.logLevel('debug');
+    LoggerFactory.INST.logLevel('error');
+    LoggerFactory.INST.logLevel('debug', 'CacheableContractInteractionsLoader');
+    LoggerFactory.INST.logLevel('debug', 'DefaultStateEvaluator');
 
     smartweave = SmartWeaveNodeFactory.memCached(arweave);
 

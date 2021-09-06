@@ -339,4 +339,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
       this.networkInfo = null;
     }
   }
+
+  txId(): string {
+    return this.contractTxId;
+  }
 }
