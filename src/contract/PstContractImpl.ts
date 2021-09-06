@@ -1,13 +1,17 @@
 import { BalanceResult, HandlerBasedContract, PstContract, PstState, TransferInput } from '@smartweave/contract';
-import { InteractionResult } from '@smartweave/core';
 
 interface BalanceInput {
+  function: string;
   target: string;
 }
 
 export class PstContractImpl extends HandlerBasedContract<PstState> implements PstContract {
-  async currentBalance(target: string): Promise<InteractionResult<PstState, BalanceResult>> {
-    return await super.viewState<BalanceInput, BalanceResult>({ target });
+  async currentBalance(target: string): Promise<BalanceResult> {
+    const interactionResult = await super.viewState<BalanceInput, BalanceResult>({ function: 'balance', target });
+    if (interactionResult.type !== 'ok') {
+      throw Error(interactionResult.errorMessage);
+    }
+    return interactionResult.result;
   }
 
   async currentState(): Promise<PstState> {

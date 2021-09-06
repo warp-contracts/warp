@@ -42,8 +42,6 @@ describe('Testing the SmartWeave client', () => {
     });
 
     LoggerFactory.INST.logLevel('error');
-    // LoggerFactory.INST.logLevel('debug', 'CacheableContractInteractionsLoader');
-    // LoggerFactory.INST.logLevel('debug', 'DefaultStateEvaluator');
 
     smartweave = SmartWeaveNodeFactory.memCached(arweave);
 
@@ -93,14 +91,10 @@ describe('Testing the SmartWeave client', () => {
     expect((await contract.readState()).state.counter).toEqual(559);
   });
 
-  /*
-  note: ArLocal currently doest not support the "block" endpoint, which
-  is required by the interactRead/viewState methods
-
   it('should properly view contract state', async () => {
-    const result = await contract.viewState<any, number>({ function: 'value' });
-    expect(result).toEqual(559);
-  });*/
+    const interactionResult = await contract.viewState<any, number>({ function: 'value' });
+    expect(interactionResult.result).toEqual(559);
+  });
 });
 
 async function mine() {

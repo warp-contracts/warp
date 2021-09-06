@@ -5,8 +5,6 @@ export function handle (state, action) {
   const input = action.input
   const caller = action.caller
 
-  console.log(action.input);
-
   if (input.function === 'transfer') {
     const target = input.target
     const qty = input.qty
@@ -45,11 +43,11 @@ export function handle (state, action) {
     const ticker = state.ticker
 
     if (typeof target !== 'string') {
-      throw new ContractError('Must specificy target to get balance for')
+      throw new ContractError('Must specify target to get balance for')
     }
 
     if (typeof balances[target] !== 'number') {
-      throw new ContractError('Cannnot get balance, target does not exist')
+      throw new ContractError('Cannot get balance, target does not exist')
     }
 
     return { result: { target, ticker, balance: balances[target] } }

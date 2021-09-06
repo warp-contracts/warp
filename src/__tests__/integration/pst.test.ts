@@ -71,12 +71,10 @@ describe('Testing the Profit Sharing Token', () => {
 
   it('should read pst state and balance data', async () => {
     expect(await pst.currentState()).toEqual(initialState);
-    /**
-     * ArLocal currently does not support 'block' endpoint, which is required by interactRead / viewState
-     */
-    // expect(await pst.currentBalance('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M')).toEqual(10000000);
-    // expect(await pst.currentBalance('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA')).toEqual(23111222);
-    // expect(await pst.currentBalance(walletAddress)).toEqual(555669);
+
+    expect((await pst.currentBalance('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M')).balance).toEqual(10000000);
+    expect((await pst.currentBalance('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA')).balance).toEqual(23111222);
+    expect((await pst.currentBalance(walletAddress)).balance).toEqual(555669);
   });
 
   it('should properly transfer tokens', async () => {
@@ -91,14 +89,12 @@ describe('Testing the Profit Sharing Token', () => {
     expect((await pst.currentState()).balances['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']).toEqual(10000000 + 555);
   });
 
-  /*
-  note: ArLocal currently doest not support the "block" endpoint, which
-  is required by the interactRead/viewState methods
-
   it('should properly view contract state', async () => {
-    const result = await contract.viewState<any, number>({ function: 'value' });
-    expect(result).toEqual(559);
-  });*/
+    const result = await pst.currentBalance('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M');
+    expect(result.balance).toEqual(10000000 + 555);
+    expect(result.ticker).toEqual('EXAMPLE_PST_TOKEN');
+    expect(result.target).toEqual('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M');
+  });
 });
 
 async function mine() {
