@@ -1,6 +1,6 @@
 import fs from 'fs';
 
-import ArLocal from '@textury/arlocal';
+import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import { Contract, HandlerBasedContract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory } from '@smartweave';
@@ -42,8 +42,8 @@ describe('Testing the SmartWeave client', () => {
     });
 
     LoggerFactory.INST.logLevel('error');
-    LoggerFactory.INST.logLevel('debug', 'CacheableContractInteractionsLoader');
-    LoggerFactory.INST.logLevel('debug', 'DefaultStateEvaluator');
+    // LoggerFactory.INST.logLevel('debug', 'CacheableContractInteractionsLoader');
+    // LoggerFactory.INST.logLevel('debug', 'DefaultStateEvaluator');
 
     smartweave = SmartWeaveNodeFactory.memCached(arweave);
 
