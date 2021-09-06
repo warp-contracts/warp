@@ -18,7 +18,7 @@ interface TagFilter {
 }
 
 interface BlockFilter {
-  min: number;
+  min?: number;
   max: number;
 }
 
@@ -77,7 +77,6 @@ export class ContractInteractionsLoader implements InteractionsLoader {
         }
       ],
       blockFilter: {
-        min: fromBlockHeight,
         max: toBlockHeight
       },
       first: MAX_REQUEST

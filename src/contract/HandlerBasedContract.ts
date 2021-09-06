@@ -35,7 +35,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   public networkInfo?: NetworkInfoInterface = null;
 
   constructor(
-    private readonly contractTxId: string,
+    readonly contractTxId: string,
     private readonly smartweave: SmartWeave,
     // note: this will be probably used for creating contract's
     // call hierarchy and generating some sort of "stack trace"
