@@ -1,6 +1,6 @@
 # Migration Guide from SmartWeave v1 to SmartWeave v2
 
-This guide describes <strong>the simplest</strong> way to switch to the new version of SmartWeave. It uses `SmartWeaveNodeFactory` for Node and `SmartWeaveWebFactory` for Web to quickly obtain fully configured, mem-cacheable SmartWeave instance. To see a more detailed explanation of all the core modules visit the new [SmartWeave v2 docs](https://smartweave.docs.redstone.finance/) or check out the [source code.](https://github.com/redstone-finance/redstone-smartweave)
+This guide describes <strong>the simplest</strong> way to switch to the new version of SmartWeave. It uses `SmartWeaveNodeFactory` for Node and `SmartWeaveWebFactory` for Web to quickly obtain fully configured, mem-cacheable SmartWeave instance. To see a more detailed explanation of all the core modules visit the [SmartWeave v2 documentation](https://smartweave.docs.redstone.finance/) or check out the [source code.](https://github.com/redstone-finance/redstone-smartweave)
 
 ### Need help? 🙋‍♂️
 Please feel free to contact us [on Discord](https://redstone.finance/discord) if you face any problems.
@@ -48,11 +48,14 @@ const arweave = Arweave.init({
 const smartweave = SmartWeaveNodeFactory.memCached(arweave);
 ```
 
-💡 Note: for Web environment you should use `SmartWeaveWebFactory` instead of `SmartWeaveNodeFactory`.
+For Web environment you should use `SmartWeaveWebFactory` instead of `SmartWeaveNodeFactory`.
 
 In this example we've used the `memCached` method. You can see other available methods in documentation:
 - [For Web](https://smartweave.docs.redstone.finance/classes/SmartWeaveWebFactory.html)
 - [For Node.js](https://smartweave.docs.redstone.finance/classes/SmartWeaveNodeFactory.html)
+
+#### [Optional] Custom modules 🛠
+Smartweave V2 has a modular architecture, which allows you to connect custom modules to any part of the SmartWeave client implementation. See [custom-client-example.ts](https://github.com/redstone-finance/redstone-smartweave-examples/blob/main/src/custom-client-example.ts) to learn more.
 
 ### 2.2 Connect to your contract
 ```typescript
@@ -62,7 +65,7 @@ const contract = smartweave.contract("YOUR_CONTRACT_TX_ID");
 // Connect with wallet (allows to update state)
 const contract = smartweave
   .contract("YOUR_CONTRACT_TX_ID")
-  .connect(jwk)
+  .connect(jwk) // jwk should be a valid private key (in JSON Web Key format)
   .setEvaluationOptions({
     // with this flag set to true, the write will wait for the transaction to be confirmed
     waitForConfirmation: true,
@@ -82,9 +85,6 @@ const result = await contract.writeInteraction({
 ```
 
 ### [Optional] 2.2 Confgure logging
-TODO - add description
-
-### [Optional] 2.3 Confgure caching
 TODO - add description
 
 ### 3. Test everything 🔥
