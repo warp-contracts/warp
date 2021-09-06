@@ -2,11 +2,11 @@
 
 - [Contract Methods](#contract-methods)
   - [`connect`](#connect)
+  - [`setEvaluationOptions`](#setevaluationoptions)
   - [`readState`](#readstate)
   - [`viewState`](#viewstate)
   - [`viewStateForTx`](#viewstatefortx)
   - [`writeInteraction`](#writeinteraction)
-  - [`setEvaluationOptions`](#setevaluationoptions)
 
 ## Contract Methods
 
@@ -20,6 +20,36 @@ Allows to connect wallet to a contract. Connecting a wallet MAY be done before "
 
 - `wallet`        a JWK object with private key or 'use_wallet' string.
 
+#### Example
+```typescript
+const contract = smartweave
+  .contract("YOUR_CONTRACT_TX_ID")
+  .connect(jwk);
+```
+
+### `setEvaluationOptions`
+
+```typescript
+function setEvaluationOptions(options: Partial<EvaluationOptions>): Contract<State>
+```
+
+Allows to set (EvaluationOptions)
+
+
+- `options`                         the interaction input
+  - `options.ignoreExceptions`      enables exceptions ignoring
+  - `options.waitForConfirmation`   enables waiting for transaction confirmation
+
+#### Example
+```typescript
+const contract = smartweave
+  .contract("YOUR_CONTRACT_TX_ID")
+  .setEvaluationOptions({
+    waitForConfirmation: true,
+    ignoreExceptions: false,
+  });
+```
+
 ### `readState`
 
 ```typescript
@@ -29,8 +59,12 @@ async function readState(blockHeight?: number, currentTx?: { contractTxId: strin
 Returns state of the contract at required blockHeight. Similar to the `readContract` from the version 1.
 
 - `blockHeight`        Block height for state
-- `currentTx`          TODO - add description
+- `currentTx`          If specified, will be used as a current transaction
 
+#### Example
+```typescript
+const { state, validity } = await contract.readState();
+```
 
 ### `viewState`
 
@@ -45,6 +79,14 @@ Returns the "view" of the state, computed by the SWC - ie. object that is a deri
 - `tags`                 an array of tags with name/value as objects
 - `transfer`             target and winstonQty for transfer
 
+#### Example
+```typescript
+const { result } = await contract.viewState<any, any>({
+  function: "NAME_OF_YOUR_FUNCTION",
+  data: { ... }
+});
+```
+
 ### `viewStateForTx`
 
 ```typescript
@@ -58,6 +100,14 @@ A version of the viewState method to be used from within the contract's source c
 - `input`                the interaction input
 - `transaction`          interaction transaction
 
+#### Example
+```typescript
+const { result } = await contract.viewStateForTx<any, any>({
+  function: "NAME_OF_YOUR_FUNCTION",
+  data: { ... }
+}, transaction);
+```
+
 
 ### `writeInteraction`
 
@@ -67,20 +117,14 @@ async function writeInteraction<Input>(input: Input, tags?: Tags, transfer?: ArT
 
 Writes a new "interaction" transaction - ie. such transaction that stores input for the contract.
 
-
 - `input`         the interaction input
 - `tags`          an array of tags with name/value as objects
 - `transfer`      target and winstonQty for transfer
 
-### `setEvaluationOptions`
-
+#### Example
 ```typescript
-setEvaluationOptions(options: Partial<EvaluationOptions>): Contract<State>
+const result = await contract.writeInteraction({
+  function: "NAME_OF_YOUR_FUNCTION",
+  data: { ... }
+});
 ```
-
-Allows to set (EvaluationOptions)
-
-
-- `options`                         the interaction input
-  - `options.ignoreExceptions`      enables exceptions ignoring
-  - `options.waitForConfirmation`   enables waiting for transaction confirmation

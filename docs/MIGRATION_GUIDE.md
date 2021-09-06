@@ -90,7 +90,7 @@ const { state, validity } = await contract.readState();
 #### View state (interactRead in V1)
 ```typescript
 // View state (similar to the "interactRead" from SmartWeave V1)
-const { result } = await contract.viewState({
+const { result } = await contract.viewState<Input, View>({
   function: "NAME_OF_YOUR_FUNCTION",
   data: { ... }
 });
