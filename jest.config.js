@@ -16,6 +16,10 @@ module.exports = {
     '@smartweave': '<rootDir>/src/index'
   },
 
+  testPathIgnorePatterns: [
+    "/.yalc/",
+  ],
+
   testEnvironment: 'node',
 
   transform: {

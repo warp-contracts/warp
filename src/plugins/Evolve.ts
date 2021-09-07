@@ -36,8 +36,11 @@ This also makes it easier to audit given contract - as you keep all its versions
 */
 
 function isEvolveCompatible(state: any): state is EvolveCompatibleState {
-  const settings =
-    state.settings && isIterable(state.settings) ? new Map<string, any>(state.settings) : new Map<string, any>();
+  if (!state) {
+    return false;
+  }
+
+  const settings = evalSettings(state);
 
   return state.evolve !== undefined || settings.has('evolve');
 }
@@ -62,8 +65,7 @@ export class Evolve implements ExecutionContextModifier {
     }
     const currentSrcTxId = executionContext.contractDefinition.srcTxId;
 
-    const settings =
-      state.settings && isIterable(state.settings) ? new Map<string, any>(state.settings) : new Map<string, any>();
+    const settings = evalSettings(state);
 
     // note: from my understanding - this variable holds the id of the transaction with updated source code.
     const evolve: string = state.evolve || settings.get('evolve');
@@ -112,10 +114,30 @@ export class Evolve implements ExecutionContextModifier {
   }
 }
 
+function evalSettings(state: any): Map<string, any> {
+  // default  - empty
+  let settings = new Map<string, any>();
+  if (state.settings) {
+    // for Iterable format
+    if (isIterable(state.settings)) {
+      settings = new Map<string, any>(state.settings);
+    // for Object format
+    } else if (isObject(state.settings)) {
+      settings = new Map<string, any>(Object.entries(state.settings));
+    }
+  }
+
+  return settings;
+}
+
 function isIterable(obj: unknown): boolean {
   // checks for null and undefined
   if (obj == null) {
     return false;
   }
   return typeof obj[Symbol.iterator] === 'function';
+}
+
+function isObject(obj: unknown): boolean {
+  return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
 }
