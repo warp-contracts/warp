@@ -121,7 +121,7 @@ function evalSettings(state: any): Map<string, any> {
     // for Iterable format
     if (isIterable(state.settings)) {
       settings = new Map<string, any>(state.settings);
-    // for Object format
+      // for Object format
     } else if (isObject(state.settings)) {
       settings = new Map<string, any>(Object.entries(state.settings));
     }

@@ -1,6 +1,6 @@
 {
   "name": "redstone-smartweave",
-  "version": "0.3.10-alpha.1",
+  "version": "0.3.10-alpha.2",
   "description": "An implementation of the SmartWeave SDK.",
   "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",
@@ -57,11 +57,11 @@
     "tslog": "^3.2.1"
   },
   "devDependencies": {
-    "arlocal": "^1.0.34",
     "@types/jest": "^27.0.1",
     "@types/node": "^16.7.1",
     "@typescript-eslint/eslint-plugin": "^4.29.2",
     "@typescript-eslint/parser": "^4.29.2",
+    "arlocal": "^1.0.34",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^3.4.1",
