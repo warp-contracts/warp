@@ -64,8 +64,10 @@ Smartweave V2 has a modular architecture, which allows you to connect custom mod
 ```typescript
 // Simple connection (allows to read state)
 const contract = smartweave.contract("YOUR_CONTRACT_TX_ID");
+```
+💡 Note! For being able to write interactions to blockchain you need to connect wallet to contract object.
 
-// Connect with wallet (allows to update state)
+```typescript
 const contract = smartweave
   .contract("YOUR_CONTRACT_TX_ID")
   .connect(jwk) // jwk should be a valid private key (in JSON Web Key format)
@@ -81,7 +83,7 @@ const contract = smartweave
 // Read state (similar to the "readContract" from SmartWeave V1)
 const { state, validity } = await contract.readState();
 
-// state contains is an object with the latest state
+// state is an object with the latest state
 
 // validity is an object with valid and invalid transaction IDs
 // E.g. { "TX_ID1": true, "TX_ID2": false, ...}
