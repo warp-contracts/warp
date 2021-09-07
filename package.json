@@ -57,7 +57,7 @@
     "tslog": "^3.2.1"
   },
   "devDependencies": {
-    "@textury/arlocal": "^1.0.27",
+    "arlocal": "^1.0.34",
     "@types/jest": "^27.0.1",
     "@types/node": "^16.7.1",
     "@typescript-eslint/eslint-plugin": "^4.29.2",
