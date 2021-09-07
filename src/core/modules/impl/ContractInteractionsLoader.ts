@@ -29,9 +29,9 @@ interface ReqVariables {
   after?: string;
 }
 
-const logger = LoggerFactory.INST.create(__filename);
-
 export class ContractInteractionsLoader implements InteractionsLoader {
+  private readonly logger = LoggerFactory.INST.create('ContractInteractionsLoader');
+
   private static readonly query = `query Transactions($tags: [TagFilter!]!, $blockFilter: BlockFilter!, $first: Int!, $after: String) {
     transactions(tags: $tags, block: $blockFilter, first: $first, sort: HEIGHT_ASC, after: $after) {
       pageInfo {
@@ -100,7 +100,7 @@ export class ContractInteractionsLoader implements InteractionsLoader {
       txInfos.push(...transactions.edges.filter((tx) => !tx.node.parent || !tx.node.parent.id));
     }
 
-    logger.debug('All loaded interactions:', {
+    this.logger.debug('All loaded interactions:', {
       from: fromBlockHeight,
       to: toBlockHeight,
       loaded: txInfos.length
@@ -115,10 +115,10 @@ export class ContractInteractionsLoader implements InteractionsLoader {
       query: ContractInteractionsLoader.query,
       variables
     });
-    logger.debug('GQL page load:', benchmark.elapsed());
+    this.logger.debug('GQL page load:', benchmark.elapsed());
 
     while (response.status === 403) {
-      logger.debug(`GQL rate limiting, waiting ${ContractInteractionsLoader._30seconds}ms before next try.`);
+      this.logger.debug(`GQL rate limiting, waiting ${ContractInteractionsLoader._30seconds}ms before next try.`);
 
       await sleep(ContractInteractionsLoader._30seconds);
 
@@ -133,7 +133,7 @@ export class ContractInteractionsLoader implements InteractionsLoader {
     }
 
     if (response.data.errors) {
-      logger.error(response.data.errors);
+      this.logger.error(response.data.errors);
       throw new Error('Error while loading interaction transactions');
     }
 

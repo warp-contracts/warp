@@ -1,13 +1,14 @@
 import path from 'path';
 import { ISettingsParam, Logger } from 'tslog';
-import { LogLevel, RedStoneLogger } from '../RedStoneLogger';
+import { RedStoneLogger } from '../RedStoneLogger';
+import { ILoggerFactory, LogLevel } from '@smartweave';
 
 export const defaultLoggerOptions: ISettingsParam = {
   displayFunctionName: false,
   displayFilePath: 'hidden',
   displayLoggerName: true,
   dateTimeTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-  minLevel: 'debug',
+  minLevel: 'info',
   overwriteConsole: false
 };
 
@@ -15,7 +16,7 @@ export const defaultLoggerOptions: ISettingsParam = {
  * A wrapper around "tslog" logging library that allows to change logging settings at runtime
  * (for each registered module independently, or globally - for all loggers).
  */
-export class TsLogFactory {
+export class TsLogFactory implements ILoggerFactory {
   private readonly registeredLoggers: { [moduleName: string]: Logger } = {};
   private readonly registeredOptions: { [moduleName: string]: ISettingsParam } = {};
 
@@ -32,7 +33,10 @@ export class TsLogFactory {
     // if moduleName not specified
     if (!moduleName) {
       // update default options
-      this.defaultOptions = newOptions;
+      this.defaultOptions = {
+        ...this.defaultOptions,
+        ...newOptions
+      };
       // update options for all already registered loggers
       Object.keys(this.registeredLoggers).forEach((key: string) => {
         this.registeredLoggers[key].setSettings({

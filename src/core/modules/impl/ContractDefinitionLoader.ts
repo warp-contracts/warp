@@ -2,9 +2,9 @@ import { ContractDefinition, DefinitionLoader, getTag, LoggerFactory, SmartWeave
 import Arweave from 'arweave';
 import Transaction from 'arweave/web/lib/transaction';
 
-const logger = LoggerFactory.INST.create(__filename);
-
 export class ContractDefinitionLoader implements DefinitionLoader {
+  private readonly logger = LoggerFactory.INST.create('ContractDefinitionLoader');
+
   constructor(
     private readonly arweave: Arweave,
     // TODO: cache should be removed from the core layer and implemented in a wrapper of the core implementation
@@ -13,7 +13,7 @@ export class ContractDefinitionLoader implements DefinitionLoader {
 
   async load<State>(contractTxId: string, forcedSrcTxId?: string): Promise<ContractDefinition<State>> {
     if (!forcedSrcTxId && this.cache?.contains(contractTxId)) {
-      logger.debug('ContractDefinitionLoader: Hit from cache!');
+      this.logger.debug('ContractDefinitionLoader: Hit from cache!');
       return Promise.resolve(this.cache?.get(contractTxId) as ContractDefinition<State>);
     }
 

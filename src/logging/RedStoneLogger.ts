@@ -1,5 +1,3 @@
-export type LogLevel = 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace' | 'silly';
-
 export interface RedStoneLogger {
   fatal(message?: any, ...optionalParams: any[]);
 

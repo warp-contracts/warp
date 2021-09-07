@@ -1,20 +1,20 @@
 import { BlockHeightKey, BlockHeightSwCache, GQLEdgeInterface, InteractionsLoader, LoggerFactory } from '@smartweave';
 
-const logger = LoggerFactory.INST.create(__filename);
-
 /**
  * This implementation InteractionsLoader tries to limit the amount of interactions
  * with GraphQL endpoint. Additionally, it is downloading only the missing interactions
  * (starting from the latest already cached) - to additionally limit the amount of "paging".
  */
 export class CacheableContractInteractionsLoader implements InteractionsLoader {
+  private readonly logger = LoggerFactory.INST.create('CacheableContractInteractionsLoader');
+
   constructor(
     private readonly baseImplementation: InteractionsLoader,
     private readonly cache: BlockHeightSwCache<GQLEdgeInterface[]>
   ) {}
 
   async load(contractId: string, fromBlockHeight: number, toBlockHeight: number): Promise<GQLEdgeInterface[]> {
-    logger.debug('Loading interactions', {
+    this.logger.debug('Loading interactions', {
       contractId,
       fromBlockHeight,
       toBlockHeight
@@ -26,7 +26,7 @@ export class CacheableContractInteractionsLoader implements InteractionsLoader {
     };
 
     if (cachedHeight >= toBlockHeight) {
-      logger.debug('Reusing interactions cached at higher block height:', cachedHeight);
+      this.logger.debug('Reusing interactions cached at higher block height:', cachedHeight);
       return cachedValue.filter(
         (interaction: GQLEdgeInterface) =>
           interaction.node.block.height >= fromBlockHeight && interaction.node.block.height <= toBlockHeight
@@ -41,7 +41,7 @@ export class CacheableContractInteractionsLoader implements InteractionsLoader {
 
     const valueToCache = cachedValue.concat(missingInteractions);
 
-    logger.debug('Interactions load result:', {
+    this.logger.debug('Interactions load result:', {
       cached: cachedValue.length,
       missing: missingInteractions.length,
       total: valueToCache.length,

@@ -23,8 +23,6 @@ export interface HandlerApi<State> {
   ): Promise<InteractionResult<State, Result>>;
 }
 
-const logger = LoggerFactory.INST.create(__filename);
-
 /**
  * A factory that produces handlers that are compatible with the "current" style of
  * writing SW contracts (ie. using "handle" function).
@@ -32,7 +30,12 @@ const logger = LoggerFactory.INST.create(__filename);
  * First candidate for the refactor!
  */
 export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknown>> {
-  constructor(private readonly arweave: Arweave) {}
+  private readonly logger = LoggerFactory.INST.create('HandlerExecutorFactory');
+
+  constructor(private readonly arweave: Arweave) {
+    this.assignReadContractState = this.assignReadContractState.bind(this);
+    this.assignViewContractState = this.assignViewContractState.bind(this);
+  }
 
   async create<State>(contractDefinition: ContractDefinition<State>): Promise<HandlerApi<State>> {
     const normalizedSource = HandlerExecutorFactory.normalizeContractSource(contractDefinition.src);
@@ -58,7 +61,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
           const handler = contractFunction(swGlobal, BigNumber, clarity) as HandlerFunction<State, Input, Result>;
           const stateCopy = JSON.parse(JSON.stringify(state));
           swGlobal._activeTx = interactionTx;
-          logger.debug(`SmartWeave.contract.id:`, swGlobal.contract.id);
+          self.logger.debug(`SmartWeave.contract.id:`, swGlobal.contract.id);
 
           self.assignReadContractState<Input, State>(swGlobal, contractDefinition, executionContext, currentTx);
           self.assignViewContractState<Input, State>(swGlobal, contractDefinition, executionContext);
@@ -107,8 +110,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
     executionContext: ExecutionContext<State>
   ) {
     swGlobal.contracts.viewContractState = async <View>(contractTxId: string, input: any) => {
-      throw new Error('TODO implement');
-      logger.debug('swGlobal.viewContractState call:', {
+      this.logger.debug('swGlobal.viewContractState call:', {
         from: contractDefinition.txId,
         to: contractTxId,
         input
@@ -126,7 +128,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
     currentTx: { interactionTxId: string; contractTxId: string }[]
   ) {
     swGlobal.contracts.readContractState = async (contractTxId: string, height?: number, returnValidity?: boolean) => {
-      logger.debug('swGlobal.readContractState call:', {
+      this.logger.debug('swGlobal.readContractState call:', {
         from: contractDefinition.txId,
         to: contractTxId
       });
