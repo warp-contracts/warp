@@ -21,8 +21,6 @@ import {
 import { TransactionStatusResponse } from 'arweave/node/transactions';
 import { NetworkInfoInterface } from 'arweave/node/network';
 
-const logger = LoggerFactory.INST.create(__filename);
-
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
  * of writing SW contracts (ie. using the "handle" function).
@@ -30,6 +28,8 @@ const logger = LoggerFactory.INST.create(__filename);
  * It requires {@link ExecutorFactory} that is using {@link HandlerApi} generic type.
  */
 export class HandlerBasedContract<State> implements Contract<State> {
+  private readonly logger = LoggerFactory.INST.create('HandlerBasedContract');
+
   private wallet?: ArWallet;
   private evaluationOptions: EvaluationOptions = new DefaultEvaluationOptions();
   public networkInfo?: NetworkInfoInterface = null;
@@ -69,16 +69,16 @@ export class HandlerBasedContract<State> implements Contract<State> {
     blockHeight?: number,
     currentTx?: { interactionTxId: string; contractTxId: string }[]
   ): Promise<EvalStateResult<State>> {
-    logger.info('Read state for', this.contractTxId);
+    this.logger.info('Read state for', this.contractTxId);
     this.maybeClearNetworkInfo();
 
     const { stateEvaluator } = this.smartweave;
     const benchmark = Benchmark.measure();
     const executionContext = await this.createExecutionContext(this.contractTxId, blockHeight);
-    logger.debug('context', benchmark.elapsed());
+    this.logger.debug('context', benchmark.elapsed());
     benchmark.reset();
     const result = await stateEvaluator.eval(executionContext, currentTx || []);
-    logger.debug('state', benchmark.elapsed());
+    this.logger.debug('state', benchmark.elapsed());
     return result as EvalStateResult<State>;
   }
 
@@ -89,10 +89,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
     tags: Tags = [],
     transfer: ArTransfer = emptyTransfer
   ): Promise<InteractionResult<State, View>> {
-    logger.info('View state for', this.contractTxId);
+    this.logger.info('View state for', this.contractTxId);
     this.maybeClearNetworkInfo();
     if (!this.wallet) {
-      logger.warn('Wallet not set.');
+      this.logger.warn('Wallet not set.');
     }
     const { arweave, stateEvaluator } = this.smartweave;
     // create execution context
@@ -121,7 +121,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     // eval current state
     const evalStateResult = await stateEvaluator.eval<State>(executionContext, []);
 
-    logger.debug('Creating new interaction for view state');
+    this.logger.debug('Creating new interaction for view state');
 
     // create interaction transaction
     const interaction: ContractInteraction<Input> = {
@@ -129,7 +129,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       caller: executionContext.caller
     };
 
-    logger.trace('interaction', interaction);
+    this.logger.trace('interaction', interaction);
     // TODO: what is the best/most efficient way of creating a transaction in this case?
     // creating a real transaction, with multiple calls to Arweave, seems like a huge waste.
 
@@ -153,7 +153,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     );
 
     if (handleResult.type !== 'ok') {
-      logger.fatal('Error while interacting with contract', {
+      this.logger.fatal('Error while interacting with contract', {
         type: handleResult.type,
         error: handleResult.errorMessage
       });
@@ -163,7 +163,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   }
 
   async viewStateForTx<Input, View>(input: Input, transaction: InteractionTx): Promise<InteractionResult<State, View>> {
-    logger.info(`Vies state for ${this.contractTxId}`, transaction);
+    this.logger.info(`Vies state for ${this.contractTxId}`, transaction);
     this.maybeClearNetworkInfo();
     const { stateEvaluator } = this.smartweave;
 
@@ -209,15 +209,15 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const response = await arweave.transactions.post(interactionTx);
 
     if (response.status !== 200) {
-      logger.error('Error while posting transaction', response);
+      this.logger.error('Error while posting transaction', response);
       return null;
     }
 
     if (this.evaluationOptions.waitForConfirmation) {
-      logger.info('Waiting for confirmation of', interactionTx.id);
+      this.logger.info('Waiting for confirmation of', interactionTx.id);
       const benchmark = Benchmark.measure();
       await this.waitForConfirmation(interactionTx.id);
-      logger.info('Transaction confirmed after', benchmark.elapsed());
+      this.logger.info('Transaction confirmed after', benchmark.elapsed());
     }
     return interactionTx.id;
   }
@@ -228,11 +228,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const status = await arweave.transactions.getStatus(transactionId);
 
     if (status.confirmed === null) {
-      logger.info(`Transaction ${transactionId} not yet confirmed. Waiting another 20 seconds before next check.`);
+      this.logger.info(`Transaction ${transactionId} not yet confirmed. Waiting another 20 seconds before next check.`);
       await sleep(20000);
       await this.waitForConfirmation(transactionId);
     } else {
-      logger.info(`Transaction ${transactionId} confirmed`, status);
+      this.logger.info(`Transaction ${transactionId} confirmed`, status);
       return status;
     }
   }
@@ -248,12 +248,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const benchmark = Benchmark.measure();
     // if this is a "root" call (ie. original call from SmartWeave's client)
     if (this.callingContract == null) {
-      logger.debug('Reading network info for root call');
+      this.logger.debug('Reading network info for root call');
       currentNetworkInfo = await arweave.network.getInfo();
       this.networkInfo = currentNetworkInfo;
     } else {
       // if that's a call from within contract's source code
-      logger.debug('Reusing network info from the calling contract');
+      this.logger.debug('Reusing network info from the calling contract');
 
       // note: the whole execution tree should use the same network info!
       // this requirement was not fulfilled in the "v1" SDK - each subsequent
@@ -266,7 +266,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     if (blockHeight == null) {
       blockHeight = currentNetworkInfo.height;
     }
-    logger.debug('network info', benchmark.elapsed());
+    this.logger.debug('network info', benchmark.elapsed());
 
     benchmark.reset();
     const [contractDefinition, interactions] = await Promise.all([
@@ -282,7 +282,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       // TODO: this could be further optimized to always load interactions only up to the "root's" call requested height
       interactionsLoader.load(contractTxId, 0, this.networkInfo.height)
     ]);
-    logger.debug('contract and interactions load', benchmark.elapsed());
+    this.logger.debug('contract and interactions load', benchmark.elapsed());
     const sortedInteractions = await interactionsSorter.sort(interactions);
 
     const handler = (await executorFactory.create(contractDefinition)) as HandlerApi<State>;
@@ -315,7 +315,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const sortedInteractions = await interactionsSorter.sort(interactions);
     const handler = (await executorFactory.create(contractDefinition)) as HandlerApi<State>;
 
-    logger.debug('Creating execution context from tx:', benchmark.elapsed());
+    this.logger.debug('Creating execution context from tx:', benchmark.elapsed());
 
     return {
       contractDefinition,
@@ -332,7 +332,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   private maybeClearNetworkInfo() {
     if (this.callingContract == null) {
-      logger.debug('Clearing network info for the root contract');
+      this.logger.debug('Clearing network info for the root contract');
       this.networkInfo = null;
     }
   }

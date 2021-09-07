@@ -1,19 +1,28 @@
-import { ConsoleLoggerFactory, LogLevel, RedStoneLogger } from '@smartweave';
-import { ISettingsParam } from 'tslog';
-import { TsLogFactory } from './node/TsLogFactory';
+import { LogLevel, RedStoneLogger } from '@smartweave/logging';
+import { ConsoleLoggerFactory } from './web/ConsoleLoggerFactory';
 
-export class LoggerFactory {
-  static readonly INST: LoggerFactory = typeof window === 'undefined' ? new TsLogFactory() : new ConsoleLoggerFactory();
+export interface ILoggerFactory {
+  setOptions(newOptions: any, moduleName?: string): void;
+
+  getOptions(moduleName?: string): any;
+
+  logLevel(level: LogLevel, moduleName?: string): void;
+
+  create(moduleName?: string): RedStoneLogger;
+}
+
+export class LoggerFactory implements ILoggerFactory {
+  static INST: ILoggerFactory = new ConsoleLoggerFactory();
 
   private constructor() {
     // not instantiable from outside
   }
 
-  setOptions(newOptions: ISettingsParam, moduleName?: string): void {
+  setOptions(newOptions: any, moduleName?: string): void {
     LoggerFactory.INST.setOptions(newOptions, moduleName);
   }
 
-  getOptions(moduleName?: string): ISettingsParam {
+  getOptions(moduleName?: string): any {
     return LoggerFactory.INST.getOptions(moduleName);
   }
 
@@ -23,5 +32,9 @@ export class LoggerFactory {
 
   create(moduleName?: string): RedStoneLogger {
     return LoggerFactory.INST.create(moduleName);
+  }
+
+  static use(logger: ILoggerFactory) {
+    LoggerFactory.INST = logger;
   }
 }

@@ -15,3 +15,7 @@ yarn-error.log
 cache/
 
 .experiments/
+
+yalc.lock
+
+.yalc/

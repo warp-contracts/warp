@@ -15,10 +15,10 @@ import {
 } from '@smartweave';
 import Arweave from 'arweave';
 
-const logger = LoggerFactory.INST.create(__filename);
-
 // FIXME: currently this is tightly coupled with the HandlerApi
 export class DefaultStateEvaluator implements StateEvaluator {
+  private readonly logger = LoggerFactory.INST.create('DefaultStateEvaluator');
+
   constructor(
     private readonly arweave: Arweave,
     private readonly executionContextModifiers: ExecutionContextModifier[] = []
@@ -48,21 +48,21 @@ export class DefaultStateEvaluator implements StateEvaluator {
     let currentState = baseState.state;
     const validity = JSON.parse(JSON.stringify(baseState.validity));
 
-    logger.info(
+    this.logger.info(
       `Evaluating state for ${executionContext.contractDefinition.txId} [${missingInteractions.length} non-cached of ${executionContext.sortedInteractions.length} all]`
     );
 
-    logger.trace(
+    this.logger.trace(
       'missingInteractions',
       missingInteractions.map((int) => {
         return int.node.id;
       })
     );
 
-    logger.trace('Init state', JSON.stringify(baseState.state));
+    this.logger.trace('Init state', JSON.stringify(baseState.state));
 
     for (const missingInteraction of missingInteractions) {
-      logger.debug(
+      this.logger.debug(
         `${missingInteraction.node.id}: ${missingInteractions.indexOf(missingInteraction) + 1}/${
           missingInteractions.length
         } [of all:${executionContext.sortedInteractions.length}]`
@@ -72,13 +72,13 @@ export class DefaultStateEvaluator implements StateEvaluator {
 
       const inputTag = this.findInputTag(missingInteraction, executionContext);
       if (!inputTag || inputTag.name !== SmartWeaveTags.INPUT) {
-        logger.error(`Skipping tx with missing or invalid Input tag - ${currentInteraction.id}`);
+        this.logger.error(`Skipping tx with missing or invalid Input tag - ${currentInteraction.id}`);
         continue;
       }
 
       const input = this.parseInput(inputTag);
       if (!input) {
-        logger.error(`Skipping tx with missing or invalid Input tag - ${currentInteraction.id}`);
+        this.logger.error(`Skipping tx with missing or invalid Input tag - ${currentInteraction.id}`);
         continue;
       }
 
@@ -115,7 +115,7 @@ export class DefaultStateEvaluator implements StateEvaluator {
         executionContext = await modify<State>(currentState, executionContext);
         currentState = stateCopy;
       }
-      logger.debug('Interaction evaluation', singleInteractionBenchmark.elapsed());
+      this.logger.debug('Interaction evaluation', singleInteractionBenchmark.elapsed());
 
       await this.onStateUpdate<State>(
         currentInteraction,
@@ -123,16 +123,16 @@ export class DefaultStateEvaluator implements StateEvaluator {
         new EvalStateResult(currentState, validity)
       );
     }
-    logger.debug('State evaluation total:', stateEvaluationBenchmark.elapsed());
+    this.logger.debug('State evaluation total:', stateEvaluationBenchmark.elapsed());
     return new EvalStateResult<State>(currentState, validity);
   }
 
   private logResult<State>(result: InteractionResult<State, unknown>, currentTx: GQLNodeInterface) {
     if (result.type === 'exception') {
-      logger.error(`Executing of interaction: ${currentTx.id} threw exception:`, `${result.errorMessage}`);
+      this.logger.error(`Executing of interaction: ${currentTx.id} threw exception:`, `${result.errorMessage}`);
     }
     if (result.type === 'error') {
-      logger.warn(`Executing of interaction: ${currentTx.id} returned error:`, result.errorMessage);
+      this.logger.warn(`Executing of interaction: ${currentTx.id} returned error:`, result.errorMessage);
     }
   }
 
@@ -140,7 +140,7 @@ export class DefaultStateEvaluator implements StateEvaluator {
     try {
       return JSON.parse(inputTag.value);
     } catch (e) {
-      logger.error(e);
+      this.logger.error(e);
       return null;
     }
   }

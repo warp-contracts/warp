@@ -15,8 +15,6 @@ export interface EvolveCompatibleState {
   evolve: string; // the transaction id of the Arweave transaction with the updated source code. odd naming convention..
 }
 
-const logger = LoggerFactory.INST.create(__filename);
-
 /*
 ...I'm still not fully convinced to the whole "evolve" idea.
 
@@ -46,6 +44,8 @@ function isEvolveCompatible(state: any): state is EvolveCompatibleState {
 }
 
 export class Evolve implements ExecutionContextModifier {
+  private readonly logger = LoggerFactory.INST.create('Evolve');
+
   constructor(
     private readonly definitionLoader: DefinitionLoader,
     private readonly executorFactory: ExecutorFactory<HandlerApi<unknown>>
@@ -58,9 +58,9 @@ export class Evolve implements ExecutionContextModifier {
     executionContext: ExecutionContext<State, HandlerApi<State>>
   ): Promise<ExecutionContext<State, HandlerApi<State>>> {
     const contractTxId = executionContext.contractDefinition.txId;
-    logger.debug(`trying to evolve for: ${contractTxId}`);
+    this.logger.debug(`trying to evolve for: ${contractTxId}`);
     if (!isEvolveCompatible(state)) {
-      logger.debug('State is not evolve compatible');
+      this.logger.debug('State is not evolve compatible');
       return executionContext;
     }
     const currentSrcTxId = executionContext.contractDefinition.srcTxId;
@@ -77,7 +77,7 @@ export class Evolve implements ExecutionContextModifier {
       canEvolve = true;
     }
     if (evolve && /[a-z0-9_-]{43}/i.test(evolve) && canEvolve) {
-      logger.debug('Checking evolve:', {
+      this.logger.debug('Checking evolve:', {
         current: currentSrcTxId,
         evolve
       });
@@ -86,7 +86,7 @@ export class Evolve implements ExecutionContextModifier {
         try {
           // note: that's really nasty IMO - loading original contract definition,
           // but forcing different sourceTxId...
-          logger.info('Evolving to: ', evolve);
+          this.logger.info('Evolving to: ', evolve);
           const newContractDefinition = await this.definitionLoader.load<State>(contractTxId, evolve);
           const newHandler = (await this.executorFactory.create<State>(newContractDefinition)) as HandlerApi<State>;
 
@@ -95,7 +95,7 @@ export class Evolve implements ExecutionContextModifier {
             contractDefinition: newContractDefinition,
             handler: newHandler
           };
-          logger.debug('evolved to:', {
+          this.logger.debug('evolved to:', {
             txId: modifiedContext.contractDefinition.txId,
             srcTxId: modifiedContext.contractDefinition.srcTxId
           });

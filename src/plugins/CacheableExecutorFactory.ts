@@ -3,12 +3,12 @@ import { ContractDefinition, ExecutorFactory } from '@smartweave/core';
 import { SwCache } from '@smartweave/cache';
 import { LoggerFactory } from '@smartweave/logging';
 
-const logger = LoggerFactory.INST.create(__filename);
-
 /**
  * An implementation of ExecutorFactory that adds caching capabilities
  */
 export class CacheableExecutorFactory<Api> implements ExecutorFactory<Api> {
+  private readonly logger = LoggerFactory.INST.create('CacheableExecutorFactory');
+
   constructor(
     arweave: Arweave,
     private readonly baseImplementation: ExecutorFactory<Api>,
@@ -25,7 +25,7 @@ export class CacheableExecutorFactory<Api> implements ExecutorFactory<Api> {
     // as "evolve" feature changes the srcTxId for the given txId...
     const cacheKey = `${contractDefinition.txId}_${contractDefinition.srcTxId}`;
     if (!this.cache.contains(cacheKey)) {
-      logger.debug('Updating executor factory cache');
+      this.logger.debug('Updating executor factory cache');
       const handler = await this.baseImplementation.create(contractDefinition);
       this.cache.put(cacheKey, handler);
     }

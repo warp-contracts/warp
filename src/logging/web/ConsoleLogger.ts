@@ -1,35 +1,67 @@
-import { RedStoneLogger } from '@smartweave';
+import { LoggerSettings, LogLevel, lvlToOrder, RedStoneLogger } from '@smartweave';
 
 export class ConsoleLogger implements RedStoneLogger {
+  constructor(private readonly moduleName, public settings: LoggerSettings) {}
+
   trace(message?: any, ...optionalParams: any[]) {
-    console.debug(message, optionalParams);
+    if (this.shouldLog('trace')) {
+      // note: no 'trace' for console logger
+      console.debug(this.message('trace', message), optionalParams);
+    }
   }
 
   error(message?: any, ...optionalParams: any[]) {
-    console.error(message, optionalParams);
+    if (this.shouldLog('error')) {
+      console.error(this.message('error', message), optionalParams);
+    }
   }
 
   info(message?: any, ...optionalParams: any[]) {
-    console.info(message, optionalParams);
+    if (this.shouldLog('info')) {
+      console.info(this.message('info', message), optionalParams);
+    }
   }
 
   silly(message?: any, ...optionalParams: any[]) {
-    console.debug(message, optionalParams);
+    if (this.shouldLog('silly')) {
+      // note: no silly level for console logger
+      console.debug(this.message('silly', message), optionalParams);
+    }
   }
 
   debug(message?: any, ...optionalParams: any[]) {
-    console.debug(message, optionalParams);
+    if (this.shouldLog('debug')) {
+      console.debug(this.message('debug', message), optionalParams);
+    }
   }
 
   warn(message?: any, ...optionalParams: any[]) {
-    console.warn(message, optionalParams);
+    if (this.shouldLog('warn')) {
+      console.warn(this.message('warn', message), optionalParams);
+    }
   }
 
   log(message?: any, ...optionalParams: any[]) {
-    console.info(message, optionalParams);
+    if (this.shouldLog('info')) {
+      console.info(this.message('info', message), optionalParams);
+    }
   }
 
   fatal(message?: any, ...optionalParams: any[]) {
-    console.error(message, optionalParams);
+    if (this.shouldLog('fatal')) {
+      console.error(this.message('fatal', message), optionalParams);
+    }
+  }
+
+  shouldLog(logLevel: LogLevel) {
+    return lvlToOrder(logLevel) >= lvlToOrder(this.settings.minLevel);
+  }
+
+  setSettings(settings: LoggerSettings) {
+    this.settings = settings;
+  }
+
+  message(lvl: LogLevel, message: string) {
+    return `${new Date().toISOString()} ${lvl.toUpperCase()} [${this.moduleName}] ${message}`;
   }
 }

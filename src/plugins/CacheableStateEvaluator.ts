@@ -10,12 +10,12 @@ import Arweave from 'arweave';
 import { GQLNodeInterface } from '@smartweave/legacy';
 import { LoggerFactory } from '@smartweave/logging';
 
-const logger = LoggerFactory.INST.create(__filename);
-
 /**
  * An implementation of DefaultStateEvaluator that adds caching capabilities
  */
 export class CacheableStateEvaluator extends DefaultStateEvaluator {
+  private readonly cLogger = LoggerFactory.INST.create('CacheableStateEvaluator');
+
   constructor(
     arweave: Arweave,
     private readonly cache: BlockHeightSwCache<EvalStateResult<unknown>>,
@@ -29,7 +29,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     currentTx: { interactionTxId: string; contractTxId: string }[]
   ): Promise<EvalStateResult<State>> {
     const requestedBlockHeight = executionContext.blockHeight;
-    logger.debug(`Requested state block height: ${requestedBlockHeight}`);
+    this.cLogger.debug(`Requested state block height: ${requestedBlockHeight}`);
 
     let cachedState: BlockHeightCacheResult<EvalStateResult<State>> | null = null;
 
@@ -48,7 +48,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       )) as BlockHeightCacheResult<EvalStateResult<State>>;
 
       if (cachedState != null) {
-        logger.debug(`Cached state for ${executionContext.contractDefinition.txId}`, {
+        this.cLogger.debug(`Cached state for ${executionContext.contractDefinition.txId}`, {
           block: cachedState.cachedHeight,
           requestedBlockHeight
         });
@@ -60,7 +60,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
         );
       }
 
-      logger.debug(`Interactions until [${requestedBlockHeight}]`, {
+      this.cLogger.debug(`Interactions until [${requestedBlockHeight}]`, {
         total: sortedInteractionsUpToBlock.length,
         cached: sortedInteractionsUpToBlock.length - missingInteractions.length
       });
@@ -74,7 +74,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
         if (entry.contractTxId === executionContext.contractDefinition.txId) {
           const index = missingInteractions.findIndex((tx) => tx.node.id === entry.interactionTxId);
           if (index !== -1) {
-            logger.debug('Inf. Loop fix - removing interaction', {
+            this.cLogger.debug('Inf. Loop fix - removing interaction', {
               contractTxId: entry.contractTxId,
               interactionTxId: entry.interactionTxId
             });
@@ -85,7 +85,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
 
       // if cache is up-to date - return immediately to speed-up the whole process
       if (missingInteractions.length === 0 && cachedState) {
-        logger.debug(`State up to requested  height [${requestedBlockHeight}]  fully cached!`);
+        this.cLogger.debug(`State up to requested  height [${requestedBlockHeight}]  fully cached!`);
         return cachedState.cachedValue;
       }
     }

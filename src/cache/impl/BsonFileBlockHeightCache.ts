@@ -4,7 +4,6 @@ import BSON from 'bson';
 import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@smartweave/cache';
 import { Benchmark, LoggerFactory } from '@smartweave/logging';
 
-const logger = LoggerFactory.INST.create(__filename);
 /**
  * An implementation of {@link BlockHeightSwCache} that stores its data in BSON files.
  * Data is flushed to disk every 10 new cache entries.
@@ -32,6 +31,8 @@ const logger = LoggerFactory.INST.create(__filename);
  * Note: this is not performance-optimized for reading LARGE amount of contracts ;-)
  */
 export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
+  private readonly logger = LoggerFactory.INST.create('BsonFileBlockHeightSwCache');
+
   // TODO: not sure why I'm using "string" as type for blockHeight...:-)
   // probably because of some issues with BSON parser...
   private readonly storage: { [key: string]: { [blockHeight: string]: V } };
@@ -71,9 +72,9 @@ export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V
 
         this.storage[directory][height] = cache as V;
       });
-      logger.debug(`loading cache for ${directory}`, benchmark.elapsed());
+      this.logger.debug(`loading cache for ${directory}`, benchmark.elapsed());
     });
-    logger.debug('Storage keys', Object.keys(this.storage));
+    this.logger.debug('Storage keys', Object.keys(this.storage));
 
     process.on('exit', () => {
       this.saveCache();
@@ -93,7 +94,7 @@ export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V
 
     // TODO: switch to async, as currently writing cache files may slow down contract execution.
     try {
-      logger.debug(`==== Storing cache update [${Object.keys(this.updatedStorage).length}] ====`);
+      this.logger.debug(`==== Storing cache update [${Object.keys(this.updatedStorage).length}] ====`);
       const directoryPath = this.basePath;
       Object.keys(this.updatedStorage).forEach((key) => {
         const directory = key;
