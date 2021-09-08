@@ -1,5 +1,6 @@
 import {
   DefinitionLoader,
+  EvolveState,
   ExecutionContext,
   ExecutionContextModifier,
   ExecutorFactory,
@@ -8,12 +9,6 @@ import {
   SmartWeaveError,
   SmartWeaveErrorType
 } from '@smartweave';
-
-export interface EvolveCompatibleState {
-  settings: any[]; // some..erm..settings?
-  canEvolve: boolean; // whether contract is allowed to evolve. seems to default to true..
-  evolve: string; // the transaction id of the Arweave transaction with the updated source code. odd naming convention..
-}
 
 /*
 ...I'm still not fully convinced to the whole "evolve" idea.
@@ -33,7 +28,7 @@ without the need of hard-coding contract's txId in the client's source code.
 This also makes it easier to audit given contract - as you keep all its versions in one place.
 */
 
-function isEvolveCompatible(state: any): state is EvolveCompatibleState {
+function isEvolveCompatible(state: any): state is EvolveState {
   if (!state) {
     return false;
   }
@@ -90,17 +85,18 @@ export class Evolve implements ExecutionContextModifier {
           const newContractDefinition = await this.definitionLoader.load<State>(contractTxId, evolve);
           const newHandler = (await this.executorFactory.create<State>(newContractDefinition)) as HandlerApi<State>;
 
-          const modifiedContext = {
-            ...executionContext,
-            contractDefinition: newContractDefinition,
-            handler: newHandler
-          };
+          //FIXME: side-effect...
+          executionContext.contractDefinition = newContractDefinition;
+          executionContext.handler = newHandler;
+
           this.logger.debug('evolved to:', {
-            txId: modifiedContext.contractDefinition.txId,
-            srcTxId: modifiedContext.contractDefinition.srcTxId
+            evolve: evolve,
+            newSrcTxId: executionContext.contractDefinition.srcTxId,
+            current: currentSrcTxId,
+            txId: executionContext.contractDefinition.txId,
           });
 
-          return modifiedContext;
+          return executionContext;
         } catch (e) {
           throw new SmartWeaveError(SmartWeaveErrorType.CONTRACT_NOT_FOUND, {
             message: `Contract having txId: ${contractTxId} not found`,

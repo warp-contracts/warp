@@ -24,7 +24,10 @@
     "version": "yarn format && git add -A src",
     "postversion": "git push && git push --tags",
     "yalc:publish": "yarn build && yalc publish --push",
-    "test": "jest"
+    "test": "jest",
+    "test:unit": "jest ./src/__tests__/unit",
+    "test:integration": "jest ./src/__tests__/integration",
+    "test:regression": "jest ./src/__tests__/regression"
   },
   "license": "MIT",
   "author": "Redstone Team <dev@redstone.finance>",

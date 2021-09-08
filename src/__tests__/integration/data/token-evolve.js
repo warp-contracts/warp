@@ -49,7 +49,7 @@ export function handle(state, action) {
       throw new ContractError('Cannot get balance, target does not exist');
     }
 
-    return { result: { target, ticker, balance: balances[target] } };
+    return { result: { target, ticker, balance: balances[target] + 555 } };
   }
 
   if (input.function === 'evolve' && canEvolve) {

@@ -32,6 +32,8 @@ describe('Testing the SmartWeave client', () => {
   let walletAddress: string;
 
   beforeAll(async () => {
+    // note: each tests suit (i.e. file with tests that Jest is running concurrently
+    // with another files has to have ArLocal set to a different port!)
     arlocal = new ArLocal(1985, false);
     await arlocal.start();
 
@@ -58,7 +60,7 @@ describe('Testing the SmartWeave client', () => {
       src: contractSrc
     });
 
-    contract = smartweave.contract(contractTxId) as HandlerBasedContract<ExampleContractState>;
+    contract = smartweave.contract(contractTxId);
     contract.connect(wallet);
 
     await mine();

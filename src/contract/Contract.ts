@@ -61,6 +61,9 @@ export interface Contract<State = unknown> {
    *
    * note: calling "interactRead" from withing contract's source code was not previously possible -
    * this is a new feature.
+   *
+   * TODO: this should not be exposed in a public API - as it is supposed
+   * to be used only by Handler code.
    */
   viewStateForTx<Input = unknown, View = unknown>(
     input: Input,

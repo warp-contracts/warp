@@ -30,13 +30,13 @@ import { NetworkInfoInterface } from 'arweave/node/network';
 export class HandlerBasedContract<State> implements Contract<State> {
   private readonly logger = LoggerFactory.INST.create('HandlerBasedContract');
 
-  private wallet?: ArWallet;
+  protected wallet?: ArWallet;
   private evaluationOptions: EvaluationOptions = new DefaultEvaluationOptions();
   public networkInfo?: NetworkInfoInterface = null;
 
   constructor(
     readonly contractTxId: string,
-    private readonly smartweave: SmartWeave,
+    protected readonly smartweave: SmartWeave,
     // note: this will be probably used for creating contract's
     // call hierarchy and generating some sort of "stack trace"
     private readonly callingContract: Contract = null
