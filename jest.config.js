@@ -18,6 +18,7 @@ module.exports = {
 
   testPathIgnorePatterns: [
     "/.yalc/",
+    "/data/"
   ],
 
   testEnvironment: 'node',

@@ -20,12 +20,14 @@ describe('Testing the Profit Sharing Token', () => {
   let initialState: PstState;
 
   beforeAll(async () => {
-    arlocal = new ArLocal(1985, false);
+    // note: each tests suit (i.e. file with tests that Jest is running concurrently
+    // with another files has to have ArLocal set to a different port!)
+    arlocal = new ArLocal(1986, false);
     await arlocal.start();
 
     arweave = Arweave.init({
       host: 'localhost',
-      port: 1985,
+      port: 1986,
       protocol: 'http'
     });
 
@@ -42,6 +44,7 @@ describe('Testing the Profit Sharing Token', () => {
     initialState = {
       ...stateFromFile,
       ...{
+        owner: walletAddress,
         balances: {
           ...stateFromFile.balances,
           [walletAddress]: 555669
@@ -94,6 +97,21 @@ describe('Testing the Profit Sharing Token', () => {
     expect(result.balance).toEqual(10000000 + 555);
     expect(result.ticker).toEqual('EXAMPLE_PST_TOKEN');
     expect(result.target).toEqual('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M');
+  });
+
+  it("should properly evolve contract's source code", async () => {
+    expect((await pst.currentState()).balances[walletAddress]).toEqual(555114);
+
+    const newSource = fs.readFileSync(path.join(__dirname, 'data/token-evolve.js'), 'utf8');
+
+    const newSrcTxId = await pst.saveNewSource(newSource);
+    await mine();
+
+    await pst.evolve(newSrcTxId);
+    await mine();
+
+    // note: the evolved balance always adds 555 to the result
+    expect((await pst.currentBalance(walletAddress)).balance).toEqual(555114 + 555);
   });
 });
 

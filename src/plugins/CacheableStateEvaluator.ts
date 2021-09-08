@@ -47,7 +47,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
         executionContext.contractDefinition.txId,
         requestedBlockHeight
       )) as BlockHeightCacheResult<EvalStateResult<State>>;
-      logger.trace('Retrieving value from cache', benchmark.elapsed());
+      this.cLogger.trace('Retrieving value from cache', benchmark.elapsed());
 
       if (cachedState != null) {
         this.cLogger.debug(`Cached state for ${executionContext.contractDefinition.txId}`, {
