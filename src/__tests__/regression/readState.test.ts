@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { readContract } from 'smartweave';
+import { interactRead, readContract } from 'smartweave';
 import Arweave from 'arweave';
 import { LoggerFactory, SmartWeaveNodeFactory } from '@smartweave';
 
@@ -20,13 +20,12 @@ const arweave = Arweave.init({
   logging: false
 });
 
+LoggerFactory.INST.logLevel('fatal');
 const smartWeave = SmartWeaveNodeFactory.memCached(arweave);
 
 const testCases: string[] = JSON.parse(fs.readFileSync(path.join(__dirname, 'test-cases.json'), 'utf-8'));
 
 const chunked: string[][][] = [...chunks(testCases, 10)];
-
-LoggerFactory.INST.logLevel('info');
 
 describe.each(chunked)('.suite %#', (contracts: string[]) => {
   // note: concurrent doesn't seem to be working here, duh...
@@ -49,7 +48,6 @@ describe.each(chunked)('.suite %#', (contracts: string[]) => {
 
 describe('readState', () => {
   it('should properly read state at requested block height', async () => {
-    LoggerFactory.INST.logLevel('warn');
     const contractTxId = 'CbGCxBJn6jLeezqDl1w3o8oCSeRCb-MmtZNKPodla-0';
     const blockHeight = 707892;
     const result = await readContract(arweave, contractTxId, blockHeight);
@@ -60,4 +58,20 @@ describe('readState', () => {
 
     expect(result2String).toEqual(resultString);
   });
+
+  it('should properly check balance of a PST contract', async () => {
+    const jwk = await arweave.wallets.generate();
+    const contractTxId = '-8A6RexFkpfWwuyVO98wzSFZh0d6VJuI-buTJvlwOJQ';
+    const v1Result = await interactRead(arweave, jwk, contractTxId, {
+      function: 'balance',
+      target: '6Z-ifqgVi1jOwMvSNwKWs6ewUEQ0gU9eo4aHYC3rN1M'
+    });
+
+    const v2Result = await smartWeave.contract(contractTxId).connect(jwk).viewState({
+      function: 'balance',
+      target: '6Z-ifqgVi1jOwMvSNwKWs6ewUEQ0gU9eo4aHYC3rN1M'
+    });
+
+    expect(v1Result).toEqual(v2Result.result);
+  }, 600000);
 });
