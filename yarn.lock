@@ -1466,7 +1466,7 @@ argparse@^1.0.7:
   dependencies:
     sprintf-js "~1.0.2"
 
-arlocal@^1.0.29, arlocal@^1.0.34:
+arlocal@^1.0.34:
   version "1.0.34"
   resolved "https://registry.yarnpkg.com/arlocal/-/arlocal-1.0.34.tgz#1f620238d5acf75b522a2d91f89e991fa8ebd5a1"
   integrity sha512-lwn+hBoh0lzW9UkkJqJXNMWN+u7tfVZUhvDoNFivcySh7lpGJQZcBycj4WkjNgUlHkhN1Kh/1kGulvYw9Cxdkw==
@@ -5326,15 +5326,14 @@ slice-ansi@^4.0.0:
     astral-regex "^2.0.0"
     is-fullwidth-code-point "^3.0.0"
 
-smartweave@^0.4.43:
-  version "0.4.44"
-  resolved "https://registry.yarnpkg.com/smartweave/-/smartweave-0.4.44.tgz#a421e7ee36eda5d85803a90d11df5dd61c4bbe76"
-  integrity sha512-eERk6fAKKSSHp/1vF+WFh8AtL+Vcq71tNsC+L2Ty/75twldNeYQO53CWTiemgheYrIOOFLB6SeRzTgxEe+zyGA==
+smartweave@0.4.45:
+  version "0.4.45"
+  resolved "https://registry.yarnpkg.com/smartweave/-/smartweave-0.4.45.tgz#fbcd83a6efa1b408e4eb5cbe9a07218549856153"
+  integrity sha512-CTrJpQhcK92Xppxb3uEl2EIzGMyDAXcG0CUHQ62H4om6Ez3JpB0C0v0MO/M0O6s+0s5cxAEyM1NPURPsTPO0BQ==
   dependencies:
     "@types/clui" "^0.3.0"
     "@types/inquirer" "^7.3.1"
     "@weavery/clarity" "^0.1.5"
-    arlocal "^1.0.29"
     arweave "^1.10.16"
     bignumber.js "^9.0.1"
     chalk "^4.1.2"
