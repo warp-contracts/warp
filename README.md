@@ -1,6 +1,6 @@
-# SmartWeave SDK v2
+# RedStone SmartWeave SDK
 
-SmartWeave SDK v2 is the new, rewritten from scratch, SDK implementation proposal for interaction with SmartWeave Contracts.
+RedStone SmartWeave SDK is the new, rewritten from scratch, SDK implementation proposal for interaction with SmartWeave Contracts.
 It has been built with performance (e.g. caching at multiple layers, Arweave calls optimization)
 and modularity (e.g. ability to use different types of caches, imported from external libraries) in mind.
 
@@ -9,7 +9,7 @@ We're already using the new SDK on production, both in our webapp and nodes.
 However, if you'd like to use it in production as well, please contact us on [discord](https://discord.com/invite/PVxBZKFr46) to ensure a smooth transition and get help with testing.
 
 The base motivation behind rewriting SmartWeave SDK (and roadmap proposal) has been described [here](https://github.com/redstone-finance/redstone-smartweave/blob/main/docs/ROAD_MAP.md).  
-To further improve contract state evaluation time, one can additionally use AWS CloudFront based Arweave cache described in [AWS CloudFront Cache](https://github.com/redstone-finance/redstone-smartweave-contracts/blob/main/docs/CACHE.md).
+To further improve contract state evaluation time, one can additionally use AWS CloudFront based Arweave cache described in [here](https://github.com/redstone-finance/redstone-smartweave-contracts/blob/main/docs/CACHE.md).
 
 - [Development](#development)
 - [Installation and import](#installation-and-import)
