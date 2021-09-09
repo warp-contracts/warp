@@ -10,14 +10,16 @@ import {
   HandlerApi,
   InteractionResult,
   LoggerFactory,
-  SmartWeaveTags,
-  StateEvaluator
+  StateEvaluator,
+  TagsParser
 } from '@smartweave';
 import Arweave from 'arweave';
 
 // FIXME: currently this is tightly coupled with the HandlerApi
 export class DefaultStateEvaluator implements StateEvaluator {
   private readonly logger = LoggerFactory.INST.create('DefaultStateEvaluator');
+
+  private readonly tagsParser = new TagsParser();
 
   constructor(
     private readonly arweave: Arweave,
@@ -70,8 +72,8 @@ export class DefaultStateEvaluator implements StateEvaluator {
       const singleInteractionBenchmark = Benchmark.measure();
       const currentInteraction: GQLNodeInterface = missingInteraction.node;
 
-      const inputTag = this.findInputTag(missingInteraction, executionContext);
-      if (!inputTag || inputTag.name !== SmartWeaveTags.INPUT) {
+      const inputTag = this.tagsParser.getInputTag(missingInteraction, executionContext.contractDefinition.txId);
+      if (!inputTag) {
         this.logger.error(`Skipping tx with missing or invalid Input tag - ${currentInteraction.id}`);
         continue;
       }
@@ -111,6 +113,7 @@ export class DefaultStateEvaluator implements StateEvaluator {
         // strangely - state is for some reason modified for some contracts (eg. YLVpmhSq5JmLltfg6R-5fL04rIRPrlSU22f6RQ6VyYE)
         // when calling any async (even simple timeout) function here...
         // that's a dumb workaround for this issue
+        // see https://github.com/ArweaveTeam/SmartWeave/pull/92 for more details
         const stateCopy = JSON.parse(JSON.stringify(currentState));
         executionContext = await modify<State>(currentState, executionContext);
         currentState = stateCopy;
@@ -143,17 +146,6 @@ export class DefaultStateEvaluator implements StateEvaluator {
       this.logger.error(e);
       return null;
     }
-  }
-
-  private findInputTag<State>(
-    missingInteraction: GQLEdgeInterface,
-    executionContext: ExecutionContext<State, unknown>
-  ): GQLTagInterface {
-    const contractIndex = missingInteraction.node.tags.findIndex(
-      (tag) => tag.name === SmartWeaveTags.CONTRACT_TX_ID && tag.value === executionContext.contractDefinition.txId
-    );
-
-    return missingInteraction.node.tags[contractIndex + 1];
   }
 
   async onStateUpdate<State>(
