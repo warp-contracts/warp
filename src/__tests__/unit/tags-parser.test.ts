@@ -112,7 +112,6 @@ describe('TagsParser', () => {
     });
   });
 
-
   // a suite for "traditional" tags format - where not a single fuck is given re. tags order.
   describe('for exactly one interaction in one tx', () => {
     it('should return the first occurrence of the input tag (1)', () => {
