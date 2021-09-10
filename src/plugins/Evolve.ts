@@ -93,7 +93,7 @@ export class Evolve implements ExecutionContextModifier {
             evolve: evolve,
             newSrcTxId: executionContext.contractDefinition.srcTxId,
             current: currentSrcTxId,
-            txId: executionContext.contractDefinition.txId,
+            txId: executionContext.contractDefinition.txId
           });
 
           return executionContext;

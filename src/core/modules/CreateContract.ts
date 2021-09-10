@@ -15,18 +15,18 @@ export const emptyTransfer: ArTransfer = {
 };
 
 export interface CommonContractData {
-  wallet: ArWallet
-  initState: string,
-  tags?: Tags,
-  transfer?: ArTransfer
+  wallet: ArWallet;
+  initState: string;
+  tags?: Tags;
+  transfer?: ArTransfer;
 }
 
 export interface ContractData extends CommonContractData {
-  src: string,
+  src: string;
 }
 
 export interface FromSrcTxContractData extends CommonContractData {
-  srcTxId: string,
+  srcTxId: string;
 }
 
 export interface CreateContract {

@@ -25,7 +25,7 @@ export interface EvolvingContract {
  * See ({@link Evolve})
  */
 export interface EvolveState {
-  settings: any[] | {} | null;
+  settings: any[] | unknown | null;
   canEvolve: boolean; // whether contract is allowed to evolve. seems to default to true..
   evolve: string; // the transaction id of the Arweave transaction with the updated source code. odd naming convention..
 }
