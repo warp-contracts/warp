@@ -53,8 +53,6 @@ Please follow instructions in its README.md (and detail-ish comments in the exam
 ### Missing features
 The features below are not yet implemented. They will be either added soon to the core SDK, or as 
 a separate libraries, built on top of the SDK:
-- deploying contracts
-- arTransfer and tags handling for "viewState" ("interactRead")
 - "dry-runs" (though not sure if this should be part of the "core" SDK)
 - CLI (though not sure if that is a necessary - even if, it should be
   probably a separate lib built on top of the base SDK).
