@@ -3,6 +3,7 @@ import BigNumber from 'bignumber.js';
 import * as clarity from '@weavery/clarity';
 import {
   ContractDefinition,
+  deepCopy,
   ExecutionContext,
   ExecutorFactory,
   InteractionTx,
@@ -148,7 +149,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
       // but this (i.e. returning always stateWithValidity from here) would break backwards compatibility
       // in current contract's source code..:/
 
-      return returnValidity ? stateWithValidity : stateWithValidity.state;
+      return returnValidity ? deepCopy(stateWithValidity) : deepCopy(stateWithValidity.state);
     };
   }
 
