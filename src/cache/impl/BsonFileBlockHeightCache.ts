@@ -3,6 +3,7 @@ import path from 'path';
 import BSON from 'bson';
 import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@smartweave/cache';
 import { Benchmark, LoggerFactory } from '@smartweave/logging';
+import { deepCopy } from '@smartweave/utils';
 
 /**
  * An implementation of {@link BlockHeightSwCache} that stores its data in BSON files.
@@ -130,7 +131,7 @@ export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V
 
     return {
       cachedHeight: highestBlockHeight,
-      cachedValue: cached[highestBlockHeight + '']
+      cachedValue: deepCopy(cached[highestBlockHeight + ''])
     };
   }
 
@@ -157,7 +158,7 @@ export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V
 
     return {
       cachedHeight: highestBlockHeight,
-      cachedValue: cached[highestBlockHeight + '']
+      cachedValue: deepCopy(cached[highestBlockHeight + ''])
     };
   }
 
@@ -170,8 +171,10 @@ export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V
       this.updatedStorage[cacheKey] = {};
     }
 
-    this.storage[cacheKey][blockHeight + ''] = value;
-    this.updatedStorage[cacheKey][blockHeight + ''] = value;
+    const copiedValue = deepCopy(value);
+
+    this.storage[cacheKey][blockHeight + ''] = copiedValue;
+    this.updatedStorage[cacheKey][blockHeight + ''] = copiedValue;
     this.putCounter++;
     // update disk cache every 10 new entries
     if (this.putCounter === 10) {

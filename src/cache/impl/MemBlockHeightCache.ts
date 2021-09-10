@@ -1,4 +1,5 @@
 import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@smartweave/cache';
+import { deepCopy } from '@smartweave/utils';
 
 /**
  * A simple, in-memory cache implementation of the BlockHeightSwCache
@@ -19,7 +20,7 @@ export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
 
     return {
       cachedHeight: highestBlockHeight,
-      cachedValue: cached.get(highestBlockHeight)
+      cachedValue: deepCopy(cached.get(highestBlockHeight))
     };
   }
 
@@ -40,7 +41,7 @@ export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
 
     return {
       cachedHeight: highestBlockHeight,
-      cachedValue: cached.get(highestBlockHeight)
+      cachedValue: deepCopy(cached.get(highestBlockHeight))
     };
   }
 
@@ -49,7 +50,7 @@ export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
       this.storage[cacheKey] = new Map();
     }
 
-    this.storage[cacheKey].set(blockHeight, value);
+    this.storage[cacheKey].set(blockHeight, deepCopy(value));
   }
 
   async contains(key: string): Promise<boolean> {
@@ -67,7 +68,7 @@ export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
 
     return {
       cachedHeight: blockHeight,
-      cachedValue: this.storage[key].get(blockHeight)
+      cachedValue: deepCopy(this.storage[key].get(blockHeight))
     };
   }
 }
