@@ -1,6 +1,6 @@
 {
   "name": "redstone-smartweave",
-  "version": "0.3.10-alpha.5",
+  "version": "0.3.10-alpha.6",
   "description": "An implementation of the SmartWeave SDK.",
   "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",
