@@ -75,7 +75,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const { stateEvaluator } = this.smartweave;
     const benchmark = Benchmark.measure();
     const executionContext = await this.createExecutionContext(this.contractTxId, blockHeight);
-    this.logger.debug('Contract src txId', executionContext.contractDefinition.srcTxId);
+    this.logger.info('Execution Context', {
+      blockHeight: executionContext.blockHeight,
+      srcTxId: executionContext.contractDefinition.srcTxId
+    });
     this.logger.debug('context', benchmark.elapsed());
     benchmark.reset();
     const result = await stateEvaluator.eval(executionContext, currentTx || []);

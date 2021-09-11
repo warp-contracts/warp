@@ -1,4 +1,4 @@
-import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@smartweave/cache';
+import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache, MemCache } from '@smartweave/cache';
 import {
   DefaultStateEvaluator,
   EvalStateResult,
@@ -7,8 +7,9 @@ import {
   HandlerApi
 } from '@smartweave/core';
 import Arweave from 'arweave';
-import { GQLNodeInterface } from '@smartweave/legacy';
+import { GQLEdgeInterface, GQLNodeInterface } from '@smartweave/legacy';
 import { Benchmark, LoggerFactory } from '@smartweave/logging';
+import { deepCopy } from '@smartweave/utils';
 
 /**
  * An implementation of DefaultStateEvaluator that adds caching capabilities
@@ -77,6 +78,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
           const index = missingInteractions.findIndex((tx) => tx.node.id === entry.interactionTxId);
           if (index !== -1) {
             this.cLogger.debug('Inf. Loop fix - removing interaction', {
+              height: missingInteractions[index].node.block.height,
               contractTxId: entry.contractTxId,
               interactionTxId: entry.interactionTxId
             });
@@ -87,7 +89,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
 
       // if cache is up-to date - return immediately to speed-up the whole process
       if (missingInteractions.length === 0 && cachedState) {
-        this.cLogger.debug(`State up to requested  height [${requestedBlockHeight}]  fully cached!`);
+        this.cLogger.fatal(`State up to requested  height [${requestedBlockHeight}]  fully cached!`);
         return cachedState.cachedValue;
       }
     }
@@ -110,6 +112,8 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>
   ) {
+    await super.onStateUpdate(currentInteraction, executionContext, state);
+
     await this.cache.put(
       new BlockHeightKey(executionContext.contractDefinition.txId, currentInteraction.block.height),
       state
