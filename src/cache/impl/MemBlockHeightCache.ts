@@ -49,7 +49,6 @@ export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
     if (!(await this.contains(cacheKey))) {
       this.storage[cacheKey] = new Map();
     }
-
     this.storage[cacheKey].set(blockHeight, deepCopy(value));
   }
 

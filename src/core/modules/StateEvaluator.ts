@@ -1,4 +1,4 @@
-import { ExecutionContext, GQLNodeInterface } from '@smartweave';
+import { ExecutionContext, GQLEdgeInterface, GQLNodeInterface } from '@smartweave';
 
 /**
  * Implementors of this class are responsible for evaluating contract's state
@@ -30,6 +30,8 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   ignoreExceptions = true;
 
   waitForConfirmation = false;
+
+  fcpOptimization = false;
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some of the features.
@@ -40,4 +42,7 @@ export interface EvaluationOptions {
   // allow to wait for confirmation of the interaction transaction - this way
   // you will know, when the new interaction is effectively available on the network
   waitForConfirmation: boolean;
+
+  // experimental optimization for contracts that utilize the Foreign Call Protocol
+  fcpOptimization: boolean;
 }

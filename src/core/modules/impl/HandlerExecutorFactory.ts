@@ -49,6 +49,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
+    const contractLogger = LoggerFactory.INST.create('Contract');
 
     return {
       async handle<Input, Result>(
@@ -59,11 +60,10 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
         currentTx: { interactionTxId: string; contractTxId: string }[]
       ): Promise<InteractionResult<State, Result>> {
         try {
-          const contractLogger = LoggerFactory.INST.create('Contract');
           const handler = contractFunction(swGlobal, BigNumber, clarity, contractLogger) as HandlerFunction<State, Input, Result>;
           const stateCopy = JSON.parse(JSON.stringify(state));
           swGlobal._activeTx = interactionTx;
-          self.logger.debug(`SmartWeave.contract.id:`, swGlobal.contract.id);
+          self.logger.trace(`SmartWeave.contract.id:`, swGlobal.contract.id);
 
           self.assignReadContractState<Input, State>(swGlobal, contractDefinition, executionContext, currentTx);
           self.assignViewContractState<Input, State>(swGlobal, contractDefinition, executionContext);
@@ -117,7 +117,9 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
         to: contractTxId,
         input
       });
-      const childContract = executionContext.smartweave.contract(contractTxId, executionContext.contract);
+      const childContract = executionContext.smartweave
+        .contract(contractTxId, executionContext.contract)
+        .setEvaluationOptions(executionContext.evaluationOptions);
 
       return await childContract.viewStateForTx(input, swGlobal._activeTx);
     };
@@ -130,12 +132,16 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
     currentTx: { interactionTxId: string; contractTxId: string }[]
   ) {
     swGlobal.contracts.readContractState = async (contractTxId: string, height?: number, returnValidity?: boolean) => {
+      const requestedHeight = height || swGlobal.block.height;
       this.logger.debug('swGlobal.readContractState call:', {
         from: contractDefinition.txId,
-        to: contractTxId
+        to: contractTxId,
+        height: requestedHeight,
+        transaction: swGlobal.transaction.id
       });
-      const requestedHeight = height || swGlobal.block.height;
-      const childContract = executionContext.smartweave.contract(contractTxId, executionContext.contract);
+      const childContract = executionContext.smartweave
+        .contract(contractTxId, executionContext.contract)
+        .setEvaluationOptions(executionContext.evaluationOptions);
 
       const stateWithValidity = await childContract.readState(requestedHeight, [
         ...(currentTx || []),
