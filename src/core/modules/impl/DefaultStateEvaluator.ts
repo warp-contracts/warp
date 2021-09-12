@@ -97,7 +97,7 @@ export class DefaultStateEvaluator implements StateEvaluator {
         currentTx
       );
 
-      this.logResult<State>(result, currentInteraction);
+      this.logResult<State>(result, currentInteraction, executionContext);
 
       if (result.type === 'exception' && evaluationOptions.ignoreExceptions !== true) {
         throw new Error(`Exception while processing ${JSON.stringify(interaction)}:\n${result.result}`);
@@ -130,12 +130,16 @@ export class DefaultStateEvaluator implements StateEvaluator {
     return new EvalStateResult<State>(currentState, validity);
   }
 
-  private logResult<State>(result: InteractionResult<State, unknown>, currentTx: GQLNodeInterface) {
+  private logResult<State>(
+    result: InteractionResult<State, unknown>,
+    currentTx: GQLNodeInterface,
+    executionContext: ExecutionContext<State, HandlerApi<State>>
+  ) {
     if (result.type === 'exception') {
-      this.logger.error(`Executing of interaction: ${currentTx.id} threw exception:`, `${result.errorMessage}`);
+      this.logger.error(`Executing of interaction: [${executionContext.contractDefinition.srcTxId} -> ${currentTx.id}] threw exception:`, `${result.errorMessage}`);
     }
     if (result.type === 'error') {
-      this.logger.warn(`Executing of interaction: ${currentTx.id} returned error:`, result.errorMessage);
+      this.logger.warn(`Executing of interaction: [${executionContext.contractDefinition.srcTxId} -> ${currentTx.id}] returned error:`, result.errorMessage);
     }
   }
 
