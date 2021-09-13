@@ -60,7 +60,11 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
         currentTx: { interactionTxId: string; contractTxId: string }[]
       ): Promise<InteractionResult<State, Result>> {
         try {
-          const handler = contractFunction(swGlobal, BigNumber, clarity, contractLogger) as HandlerFunction<State, Input, Result>;
+          const handler = contractFunction(swGlobal, BigNumber, clarity, contractLogger) as HandlerFunction<
+            State,
+            Input,
+            Result
+          >;
           const stateCopy = JSON.parse(JSON.stringify(state));
           swGlobal._activeTx = interactionTx;
           self.logger.trace(`SmartWeave.contract.id:`, swGlobal.contract.id);
