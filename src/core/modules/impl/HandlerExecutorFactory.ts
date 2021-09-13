@@ -59,7 +59,8 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
         currentTx: { interactionTxId: string; contractTxId: string }[]
       ): Promise<InteractionResult<State, Result>> {
         try {
-          const handler = contractFunction(swGlobal, BigNumber, clarity) as HandlerFunction<State, Input, Result>;
+          const contractLogger = LoggerFactory.INST.create('Contract');
+          const handler = contractFunction(swGlobal, BigNumber, clarity, contractLogger) as HandlerFunction<State, Input, Result>;
           const stateCopy = JSON.parse(JSON.stringify(state));
           swGlobal._activeTx = interactionTx;
           self.logger.debug(`SmartWeave.contract.id:`, swGlobal.contract.id);
@@ -172,7 +173,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
       .replace(/}\s*\)\s*\(\)\s*;/g, '');
 
     return `
-    const [SmartWeave, BigNumber, clarity] = arguments;
+    const [SmartWeave, BigNumber, clarity, logger] = arguments;
     clarity.SmartWeave = SmartWeave;
     class ContractError extends Error { constructor(message) { super(message); this.name = 'ContractError' } };
     function ContractAssert(cond, message) { if (!cond) throw new ContractError(message) };
