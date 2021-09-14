@@ -1,6 +1,6 @@
-# RedStone SmartWeave SDK
+# RedStone SmartContracts SDK
 
-RedStone SmartWeave SDK is the new, rewritten from scratch, SDK implementation proposal for interaction with SmartWeave Contracts.
+RedStone SmartContracts SDK is the new, rewritten from scratch, SDK implementation proposal for interaction with [SmartWeave](https://github.com/ArweaveTeam/SmartWeave) Contracts.
 It has been built with performance (e.g. caching at multiple layers, Arweave calls optimization)
 and modularity (e.g. ability to use different types of caches, imported from external libraries) in mind.
 
