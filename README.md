@@ -47,7 +47,7 @@ import { SmartWeave, Contract, ... } from 'redstone-smartweave'
 
 ### Examples
 Usage examples can be found in
-a dedicated [repository](https://github.com/redstone-finance/redstone-smartweave-examples).
+a dedicated [repository](https://github.com/redstone-finance/redstone-smartcontracts-examples).
 Please follow instructions in its README.md (and detail-ish comments in the examples files) to learn more.
 
 ### Missing features
