@@ -177,7 +177,7 @@ export class DefaultStateEvaluator implements StateEvaluator {
     currentInteraction: GQLNodeInterface,
     executionContext: ExecutionContext<State, unknown>,
     state: EvalStateResult<State>
-  ) {
+  ): Promise<void> {
     if (executionContext.evaluationOptions.fcpOptimization) {
       this.transactionStateCache.put(
         `${executionContext.contractDefinition.txId}|${currentInteraction.id}`,

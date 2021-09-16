@@ -9,7 +9,7 @@ export class LocalStorageBlockHeightCache<V = unknown> implements BlockHeightSwC
 
   async getLast(key: string): Promise<BlockHeightCacheResult<V> | null> {
     if (!(await this.contains(key))) {
-      return null;Block
+      return null;
     }
 
     const cached = this.getItem(key);

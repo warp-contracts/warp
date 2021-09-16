@@ -88,7 +88,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
 
       // if cache is up-to date - return immediately to speed-up the whole process
       if (missingInteractions.length === 0 && cachedState) {
-        this.cLogger.fatal(`State up to requested  height [${requestedBlockHeight}]  fully cached!`);
+        this.cLogger.debug(`State up to requested  height [${requestedBlockHeight}] fully cached!`);
         return cachedState.cachedValue;
       }
     }
@@ -110,7 +110,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     currentInteraction: GQLNodeInterface,
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>
-  ) {
+  ): Promise<void> {
     await super.onStateUpdate(currentInteraction, executionContext, state);
 
     await this.cache.put(

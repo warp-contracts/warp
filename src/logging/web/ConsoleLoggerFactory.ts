@@ -63,7 +63,7 @@ export class ConsoleLoggerFactory implements ILoggerFactory {
     }
   }
 
-  logLevel(level: LogLevel, moduleName?: string) {
+  logLevel(level: LogLevel, moduleName?: string): void {
     // FIXME: c/p from TsLogFactory...
     this.setOptions({ minLevel: level }, moduleName);
   }

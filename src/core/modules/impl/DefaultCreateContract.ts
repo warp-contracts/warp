@@ -9,7 +9,7 @@ export class DefaultCreateContract implements CreateContract {
     this.deployFromSourceTx = this.deployFromSourceTx.bind(this);
   }
 
-  async deploy(contractData: ContractData) {
+  async deploy(contractData: ContractData): Promise<string> {
     logger.debug('Creating new contract');
 
     const { wallet, src, initState, tags, transfer } = contractData;

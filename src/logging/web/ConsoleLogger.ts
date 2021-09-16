@@ -2,7 +2,7 @@ import { LoggerSettings, LogLevel, lvlToOrder, RedStoneLogger } from '@smartweav
 
 //ts-line
 export class ConsoleLogger implements RedStoneLogger {
-  constructor(private readonly moduleName, public settings: LoggerSettings) {}
+  constructor(private readonly moduleName: string, public settings: LoggerSettings) {}
 
   trace(message?: string, ...optionalParams: unknown[]): void {
     if (this.shouldLog('trace')) {
@@ -62,15 +62,15 @@ export class ConsoleLogger implements RedStoneLogger {
     }
   }
 
-  shouldLog(logLevel: LogLevel) {
+  shouldLog(logLevel: LogLevel): boolean {
     return lvlToOrder(logLevel) >= lvlToOrder(this.settings.minLevel);
   }
 
-  setSettings(settings: LoggerSettings) {
+  setSettings(settings: LoggerSettings): void {
     this.settings = settings;
   }
 
-  message(lvl: LogLevel, message: string) {
+  message(lvl: LogLevel, message: string): string {
     return `${new Date().toISOString()} ${lvl.toUpperCase()} [${this.moduleName}] ${message}`;
   }
 }
