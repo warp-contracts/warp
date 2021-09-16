@@ -1,15 +1,15 @@
 export interface RedStoneLogger {
-  fatal(message?: any, ...optionalParams: any[]);
+  fatal(message?: string, ...optionalParams: unknown[]): void;
 
-  error(message?: any, ...optionalParams: any[]);
+  error(message?: string, ...optionalParams: unknown[]): void;
 
-  warn(message?: any, ...optionalParams: any[]);
+  warn(message?: string, ...optionalParams: unknown[]): void;
 
-  info(message?: any, ...optionalParams: any[]);
+  info(message?: string, ...optionalParams: unknown[]): void;
 
-  debug(message?: any, ...optionalParams: any[]);
+  debug(message?: string, ...optionalParams: unknown[]): void;
 
-  trace(message?: any, ...optionalParams: any[]);
+  trace(message?: string, ...optionalParams: unknown[]): void;
 
-  silly(message?: any, ...optionalParams: any[]);
+  silly(message?: string, ...optionalParams: unknown[]): void;
 }

@@ -20,11 +20,11 @@ export class MemCache<V = any> implements SwCache<string, V> {
     return this.storage[key];
   }
 
-  put(key: string, value: V) {
+  put(key: string, value: V): void {
     this.storage[key] = value;
   }
 
-  remove(key: string) {
+  remove(key: string): void {
     delete this.storage[key];
   }
 }

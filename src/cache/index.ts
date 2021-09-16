@@ -1,4 +1,4 @@
-export * from './impl/BsonFileBlockHeightCache';
+export * from './impl/node/BsonFileBlockHeightCache';
 export * from './impl/MemBlockHeightCache';
 export * from './impl/MemCache';
 

@@ -6,7 +6,7 @@ import { Benchmark, LoggerFactory } from '@smartweave/logging';
 import { deepCopy } from '@smartweave/utils';
 
 /**
- * An implementation of {@link BlockHeightSwCache} that stores its data in BSON files.
+ * An example implementation of {@link BlockHeightSwCache} that stores its data in BSON files.
  * Data is flushed to disk every 10 new cache entries.
  *
  * Main use-case is the per block height state cache for contracts.
@@ -30,6 +30,8 @@ import { deepCopy } from '@smartweave/utils';
  * ...etc.
  *
  * Note: this is not performance-optimized for reading LARGE amount of contracts ;-)
+ * It doesn't use any LRU or any other cache entries removal policy.
+ * Consider this as an example of what might the cache implementation look-like.
  */
 export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
   private readonly logger = LoggerFactory.INST.create('BsonFileBlockHeightSwCache');

@@ -33,7 +33,6 @@ describe.each(chunked)('.suite %#', (contracts: string[]) => {
   it.concurrent.each(contracts)(
     '.test %# %o',
     async (contractTxId: string) => {
-      console.log('readContract', contractTxId);
       const result = await readContract(arweave, contractTxId);
       const resultString = JSON.stringify(result).trim();
 

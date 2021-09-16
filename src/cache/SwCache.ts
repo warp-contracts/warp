@@ -12,9 +12,9 @@ export interface SwCache<K = string, V = any> {
 
   contains(key: K): boolean;
 
-  put(key: K, value: V);
+  put(key: K, value: V): void;
 
-  clearAll();
+  clearAll(): void;
 
-  remove(key: K);
+  remove(key: K): void;
 }

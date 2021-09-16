@@ -1,54 +1,63 @@
 import { LoggerSettings, LogLevel, lvlToOrder, RedStoneLogger } from '@smartweave';
 
+//ts-line
 export class ConsoleLogger implements RedStoneLogger {
   constructor(private readonly moduleName, public settings: LoggerSettings) {}
 
-  trace(message?: any, ...optionalParams: any[]) {
+  trace(message?: string, ...optionalParams: unknown[]): void {
     if (this.shouldLog('trace')) {
       // note: no 'trace' for console logger
+      // eslint-disable-next-line no-console
       console.debug(this.message('trace', message), optionalParams);
     }
   }
 
-  error(message?: any, ...optionalParams: any[]) {
+  error(message?: string, ...optionalParams: unknown[]): void {
     if (this.shouldLog('error')) {
+      // eslint-disable-next-line no-console
       console.error(this.message('error', message), optionalParams);
     }
   }
 
-  info(message?: any, ...optionalParams: any[]) {
+  info(message?: string, ...optionalParams: unknown[]): void {
     if (this.shouldLog('info')) {
+      // eslint-disable-next-line no-console
       console.info(this.message('info', message), optionalParams);
     }
   }
 
-  silly(message?: any, ...optionalParams: any[]) {
+  silly(message?: string, ...optionalParams: unknown[]): void {
     if (this.shouldLog('silly')) {
       // note: no silly level for console logger
+      // eslint-disable-next-line no-console
       console.debug(this.message('silly', message), optionalParams);
     }
   }
 
-  debug(message?: any, ...optionalParams: any[]) {
+  debug(message?: string, ...optionalParams: unknown[]): void {
     if (this.shouldLog('debug')) {
+      // eslint-disable-next-line no-console
       console.debug(this.message('debug', message), optionalParams);
     }
   }
 
-  warn(message?: any, ...optionalParams: any[]) {
+  warn(message?: string, ...optionalParams: unknown[]): void {
     if (this.shouldLog('warn')) {
+      // eslint-disable-next-line no-console
       console.warn(this.message('warn', message), optionalParams);
     }
   }
 
-  log(message?: any, ...optionalParams: any[]) {
+  log(message?: string, ...optionalParams: unknown[]): void {
     if (this.shouldLog('info')) {
+      // eslint-disable-next-line no-console
       console.info(this.message('info', message), optionalParams);
     }
   }
 
-  fatal(message?: any, ...optionalParams: any[]) {
+  fatal(message?: string, ...optionalParams: unknown[]): void {
     if (this.shouldLog('fatal')) {
+      // eslint-disable-next-line no-console
       console.error(this.message('fatal', message), optionalParams);
     }
   }

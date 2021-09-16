@@ -1,4 +1,4 @@
-import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache, MemCache } from '@smartweave/cache';
+import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@smartweave/cache';
 import {
   DefaultStateEvaluator,
   EvalStateResult,
@@ -7,9 +7,8 @@ import {
   HandlerApi
 } from '@smartweave/core';
 import Arweave from 'arweave';
-import { GQLEdgeInterface, GQLNodeInterface } from '@smartweave/legacy';
+import { GQLNodeInterface } from '@smartweave/legacy';
 import { Benchmark, LoggerFactory } from '@smartweave/logging';
-import { deepCopy } from '@smartweave/utils';
 
 /**
  * An implementation of DefaultStateEvaluator that adds caching capabilities
