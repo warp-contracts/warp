@@ -6,7 +6,7 @@ import { deepCopy } from '@smartweave/utils';
  *
  * Note: this is not performance-optimized for reading LARGE amount of contracts.
  * It doesn't use any LRU or any other cache entries removal policy.
- * Consider this as an example of what might the cache implementation look-like.
+ * Consider this as an example of what the cache implementation may look-like.
  */
 export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
   private storage: { [key: string]: Map<number, V> } = {};

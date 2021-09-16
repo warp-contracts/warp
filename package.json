@@ -4,6 +4,8 @@
   "description": "An implementation of the SmartWeave SDK.",
   "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",
+  "browser": "./lib/esm/index.js",
+  "unpkg": "./lib/esm/index.js",
   "types": "./lib/types/index.d.ts",
   "sideEffects": false,
   "engines": {
@@ -57,7 +59,8 @@
     "bignumber.js": "^9.0.1",
     "bson": "^4.5.0",
     "json-beautify": "^1.1.1",
-    "tslog": "^3.2.1"
+    "tslog": "^3.2.1",
+    "@amoutonbrady/lz-string": "0.0.1"
   },
   "devDependencies": {
     "@types/jest": "^27.0.1",

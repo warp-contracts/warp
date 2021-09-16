@@ -1,9 +1,25 @@
-import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache, initLocalStorage } from '@smartweave';
+import {
+  BlockHeightCacheResult,
+  BlockHeightKey,
+  BlockHeightSwCache,
+  initLocalStorage,
+  LoggerFactory
+} from '@smartweave';
+import { compress, decompress } from '@amoutonbrady/lz-string';
 
 export class LocalStorageBlockHeightCache<V = unknown> implements BlockHeightSwCache<V> {
+  private readonly logger = LoggerFactory.INST.create('LocalStorageBlockHeightCache');
+
+  private putCounter = 0;
+
   private readonly localStorage: Storage;
 
-  constructor(private readonly prefix: string, private readonly maxBlocks: number = 100) {
+  constructor(
+    private readonly prefix: string,
+    private readonly maxBlocks: number = 10,
+    private readonly useCompression: boolean = false,
+    private readonly skip: number = 0
+  ) {
     this.localStorage = initLocalStorage();
   }
 
@@ -14,13 +30,20 @@ export class LocalStorageBlockHeightCache<V = unknown> implements BlockHeightSwC
 
     const cached = this.getItem(key);
 
+    this.logger.trace('Cached', cached);
+
     // sort keys (ie. block heights) in asc order and get
     // the last element (ie. highest cached block height).
-    const highestBlockHeight = [...cached.keys()].sort().pop();
+    const highestBlockHeight = Object.keys(cached)
+      .map((k) => +k)
+      .sort()
+      .pop();
+
+    this.logger.debug('Highest cached block height: ', highestBlockHeight);
 
     return {
       cachedHeight: highestBlockHeight,
-      cachedValue: cached[highestBlockHeight]
+      cachedValue: cached[highestBlockHeight + '']
     };
   }
 
@@ -31,33 +54,48 @@ export class LocalStorageBlockHeightCache<V = unknown> implements BlockHeightSwC
 
     const cached = this.getItem(key);
 
+    this.logger.trace('Cached', cached);
+
     // find first element in and desc-sorted keys array that is not higher than requested block height
-    const highestBlockHeight = [...cached.keys()]
+    const highestBlockHeight = Object.keys(cached)
+      .map((k) => +k)
       .sort()
       .reverse()
       .find((cachedBlockHeight) => {
         return cachedBlockHeight <= blockHeight;
       });
 
+    this.logger.debug('Highest cached block height:', highestBlockHeight);
+
     return {
       cachedHeight: highestBlockHeight,
-      cachedValue: cached[highestBlockHeight]
+      cachedValue: cached[highestBlockHeight + '']
     };
   }
 
   async put({ cacheKey, blockHeight }: BlockHeightKey, value: V): Promise<void> {
-    const data = (await this.contains(cacheKey)) ? this.getItem(cacheKey) : {};
-    if (Object.keys(data).length === this.maxBlocks) {
-      const lowestBlock = [...data.keys()].sort().shift();
-      delete data[lowestBlock];
+    if (this.putCounter++ < this.skip) {
+      return;
     }
+    this.putCounter = 0;
+    const data = (await this.contains(cacheKey)) ? this.getItem(cacheKey) : {};
+
+    this.logger.debug('Elements length:', Object.keys(data).length);
+
+    const keys = Object.keys(data);
+
+    if (keys.length === this.maxBlocks) {
+      const lowestBlock = keys.shift(); //keys.sort().shift();
+      delete data[lowestBlock + ''];
+    }
+
     data[blockHeight] = value;
 
     this.setItem(cacheKey, data);
   }
 
   async contains(key: string): Promise<boolean> {
-    return Object.prototype.hasOwnProperty.call(this.localStorage, key);
+    return Object.prototype.hasOwnProperty.call(this.localStorage, this.prefixed(key));
   }
 
   async get(key: string, blockHeight: number): Promise<BlockHeightCacheResult<V> | null> {
@@ -73,21 +111,24 @@ export class LocalStorageBlockHeightCache<V = unknown> implements BlockHeightSwC
 
     return {
       cachedHeight: blockHeight,
-      cachedValue: cached[blockHeight]
+      cachedValue: cached[blockHeight + '']
     };
   }
 
-  getItem(key: string): any {
+  private getItem(key: string): any {
     const cachedKey = this.prefixed(key);
-    return JSON.parse(this.localStorage.getItem(cachedKey));
+    return JSON.parse(
+      this.useCompression ? decompress(this.localStorage.getItem(cachedKey)) : this.localStorage.getItem(cachedKey)
+    );
   }
 
-  setItem(key: string, data: unknown): void {
+  private setItem(key: string, data: unknown): void {
     const cachedKey = this.prefixed(key);
-    this.localStorage.setItem(cachedKey, JSON.stringify(data));
+
+    this.localStorage.setItem(cachedKey, this.useCompression ? compress(JSON.stringify(data)) : JSON.stringify(data));
   }
 
-  prefixed(key): string {
+  private prefixed(key): string {
     return this.prefix + key;
   }
 }

@@ -26,7 +26,7 @@ export class CacheableContractInteractionsLoader implements InteractionsLoader {
     };
 
     if (cachedHeight >= toBlockHeight) {
-      this.logger.debug('Reusing interactions cached at higher block height:', cachedHeight);
+      this.logger.debug('Reusing interactions cached at block height:', cachedHeight);
       return cachedValue.filter(
         (interaction: GQLEdgeInterface) =>
           interaction.node.block.height >= fromBlockHeight && interaction.node.block.height <= toBlockHeight

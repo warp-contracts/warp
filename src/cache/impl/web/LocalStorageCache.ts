@@ -31,7 +31,7 @@ export class LocalStorageCache<V = unknown> implements SwCache<string, V> {
     this.localStorage.removeItem(this.prefixed(key));
   }
 
-  prefixed(key: string): string {
+  private prefixed(key: string): string {
     return this.prefix + key;
   }
 }

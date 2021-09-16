@@ -7,6 +7,11 @@
   resolved "https://registry.yarnpkg.com/@akiroz/size-chunker-stream/-/size-chunker-stream-0.0.1.tgz#07b0e6f4211df84416f5f26fcc80b18fca18463b"
   integrity sha512-iDfwBsg8gdmuVXg0k7tHSEurodRhiIKgkLmNDCM2Zx0y/Vm+iqzb4GzVThAptgyTFUlDdW2fv+kcXX6KgEiIAg==
 
+"@amoutonbrady/lz-string@0.0.1":
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/@amoutonbrady/lz-string/-/lz-string-0.0.1.tgz#f131cfbf0dfe3b73c8b7bd58c8e4c8fef7374f67"
+  integrity sha512-crH4ovRiiTg9y1lDTEtMwTdD4s/aYoz4EemUD3p+9GvHMOeJ3tUXQ/DQM1Mw9/wc9Od4jG97w0m9+gZmLysGFQ==
+
 "@apollo/protobufjs@1.2.2":
   version "1.2.2"
   resolved "https://registry.yarnpkg.com/@apollo/protobufjs/-/protobufjs-1.2.2.tgz#4bd92cd7701ccaef6d517cdb75af2755f049f87c"
