@@ -1,5 +1,5 @@
 /**
- * contains all data and meta-data of the given contact.
+ * This type contains all data and meta-data of the given contact.
  */
 export type ContractDefinition<State> = {
   txId: string;

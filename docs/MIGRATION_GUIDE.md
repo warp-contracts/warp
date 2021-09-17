@@ -1,4 +1,4 @@
-# Migration Guide from SmartWeave v1 to SmartWeave v2
+# Migration Guide from Arweave's SmartWeave SDL to RedStone SmartContracts
 
 This guide describes <strong>the simplest</strong> way to switch to the new version of SmartWeave. It uses `SmartWeaveNodeFactory` for Node and `SmartWeaveWebFactory` for Web to quickly obtain fully configured, mem-cacheable SmartWeave instance. To see a more detailed explanation of all the core modules visit the [SmartWeave v2 documentation](https://smartweave.docs.redstone.finance/) or check out the [source code.](https://github.com/redstone-finance/redstone-smartweave)
 

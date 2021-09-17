@@ -10,28 +10,45 @@ export interface BalanceResult {
 }
 
 /**
- * Interface for all contracts the implement the {@link Evolve} feature
+ * Interface for all contracts the implement the {@link Evolve} feature.
+ * Evolve is a feature that allows to change contract's source
+ * code, without having to deploy a new contract.
+ * See ({@link Evolve})
  */
 export interface EvolvingContract {
+  /**
+   * allows to post new contract source on Arweave
+   * @param newContractSource - new contract source...
+   */
   saveNewSource(newContractSource: string): Promise<string | null>;
 
+  /**
+   * effectively evolves the contract to the source.
+   * This requires the {@link saveNewSource} to be called first
+   * and its transaction to be confirmed by the network.
+   * @param newSrcTxId - result of the {@link saveNewSource} method call.
+   */
   evolve(newSrcTxId: string): Promise<string | null>;
 }
 
 /**
  * Interface describing state for all Evolve-compatible contracts.
- * Evolve is a feature that allows to change contract's source
- * code, without deploying a new contract.
- * See ({@link Evolve})
  */
 export interface EvolveState {
   settings: any[] | unknown | null;
-  canEvolve: boolean; // whether contract is allowed to evolve. seems to default to true..
-  evolve: string; // the transaction id of the Arweave transaction with the updated source code. odd naming convention..
+  /**
+   * whether contract is allowed to evolve. seems to default to true..
+   */
+  canEvolve: boolean;
+
+  /**
+   * the transaction id of the Arweave transaction with the updated source code.
+   */
+  evolve: string;
 }
 
 /**
- * Interface describing state for all PST contracts.
+ * Interface describing base state for all PST contracts.
  */
 export interface PstState extends EvolveState {
   ticker: string;
@@ -51,12 +68,23 @@ export interface TransferInput {
 
 /**
  * A type of {@link Contract} designed specifically for the interaction with
- * Profit Sharing Tokens.
+ * Profit Sharing Token contract.
  */
 export interface PstContract extends Contract, EvolvingContract {
+  /**
+   * return the current balance for the given wallet
+   * @param target - wallet address
+   */
   currentBalance(target: string): Promise<BalanceResult>;
 
+  /**
+   * returns the current contract state
+   */
   currentState(): Promise<PstState>;
 
+  /**
+   * allows to transfer PSTs between wallets
+   * @param transfer - data required to perform a transfer, see {@link transfer}
+   */
   transfer(transfer: TransferInput): Promise<string | null>;
 }

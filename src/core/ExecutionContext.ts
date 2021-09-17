@@ -7,16 +7,43 @@ import { BlockData } from 'arweave/node/blocks';
  * that are required to call contract's code.
  * This has been created to prevent some operations from loading certain data (eg.
  * contract's definition - which is very time consuming) multiple times
- * (eg. multiple calls to "loadContract" in "interactRead" in the current version of the SW SDK).
+ * (eg. multiple calls to "loadContract" in "interactRead" in the current version of the Arweave's smartweave.js).
  */
 export type ExecutionContext<State, Api = unknown> = {
+  /**
+   * {@link SmartWeave} client currently being used
+   */
   smartweave: SmartWeave;
+  /**
+   * {@link Contract} related to this execution context
+   */
   contract: Contract<State>;
+  /**
+   * The full {@link ContractDefinition} of the {@link Contract}
+   */
   contractDefinition: ContractDefinition<State>;
+  /**
+   * block height used for all operations - either requested block height or current network block height
+   */
   blockHeight: number;
+  /**
+   * all the interactions registered for this contract
+   */
   interactions: GQLEdgeInterface[];
+  /**
+   * interaction sorted using either {@link LexicographicalInteractionsSorter} or {@link BlockHeightInteractionsSorter}
+   * - crucial for proper and deterministic state evaluation
+   */
   sortedInteractions: GQLEdgeInterface[];
+  /**
+   * evaluation options currently being used
+   * TODO: this can be removed, as it should be accessible from the {@link Contract}
+   */
   evaluationOptions: EvaluationOptions;
+  /**
+   * A handle to the contract's "handle" function - ie. main function of the given SWC - that actually
+   * performs all the computation.
+   */
   handler: Api;
   currentNetworkInfo?: NetworkInfoInterface;
   currentBlockData?: BlockData;

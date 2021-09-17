@@ -8,13 +8,28 @@
  * @typeParam V - type of the cache value, default to `any`.
  */
 export interface SwCache<K = string, V = any> {
+  /**
+   * gets value by its key
+   */
   get(key: K): V;
 
+  /**
+   * checks whether cache contains entry for given key
+   */
   contains(key: K): boolean;
 
+  /**
+   * puts new value under specified key
+   */
   put(key: K, value: V);
 
+  /**
+   * clears the whole cache
+   */
   clearAll();
 
+  /**
+   * remove entry in cache for given key
+   */
   remove(key: K);
 }
