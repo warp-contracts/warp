@@ -30,8 +30,18 @@ import { NetworkInfoInterface } from 'arweave/node/network';
 export class HandlerBasedContract<State> implements Contract<State> {
   private readonly logger = LoggerFactory.INST.create('HandlerBasedContract');
 
+  /**
+   * wallet connected to this contract
+   * @protected
+   */
   protected wallet?: ArWallet;
   private evaluationOptions: EvaluationOptions = new DefaultEvaluationOptions();
+
+  /**
+   * current Arweave networkInfo that will be used for all operations of the SmartWeave protocol.
+   * Only the 'root' contract call should read this data from Arweave - all the inner calls ("child" contracts)
+   * should reuse this data from the parent ("calling) contract.
+   */
   public networkInfo?: NetworkInfoInterface = null;
 
   constructor(
@@ -86,7 +96,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return result as EvalStateResult<State>;
   }
 
-  // TODO: use tags and transfer params
   async viewState<Input, View>(
     input: Input,
     blockHeight?: number,
@@ -190,7 +199,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
     );
   }
 
-  // TODO: this basically calls previous version, to be refactored.
   async writeInteraction<Input>(
     input: Input,
     tags: Tags = [],

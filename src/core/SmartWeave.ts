@@ -14,7 +14,7 @@ import { Contract, HandlerBasedContract, PstContract, PstContractImpl } from '@s
 
 /**
  * The SmartWeave "motherboard" ;-).
- * This is the base class that supplies the implementation of the SmartWeave SDK.
+ * This is the base class that supplies the implementation of the SmartWeave protocol
  * Allows to plug-in different implementation of all the modules defined in the constructor.
  *
  * After being fully configured, it allows to "connect" to

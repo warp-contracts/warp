@@ -5,7 +5,6 @@
   - [`setEvaluationOptions`](#setevaluationoptions)
   - [`readState`](#readstate)
   - [`viewState`](#viewstate)
-  - [`viewStateForTx`](#viewstatefortx)
   - [`writeInteraction`](#writeinteraction)
 
 ## Contract Methods
