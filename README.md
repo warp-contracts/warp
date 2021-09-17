@@ -1,6 +1,6 @@
 # RedStone SmartContracts SDK
 RedStone SmartContracts SDK is the new, written from scratch, implementation of 
-the [SmartWeave](https://github.com/ArweaveTeam/SmartWeave) Protocol.
+the SmartWeave [Protocol](./docs/SMARTWEAVE_PROTOCOL.md).
 
 It has been built with performance (e.g. caching at multiple layers, Arweave calls optimization)
 and modularity (e.g. ability to use different types of caches, imported from external libraries) in mind.
@@ -9,9 +9,8 @@ and modularity (e.g. ability to use different types of caches, imported from ext
 We're already using the new SDK on production, both in our webapp and nodes.
 However, if you'd like to use it in production as well, please contact us on [discord](https://discord.com/invite/PVxBZKFr46) to ensure a smooth transition and get help with testing.
 
-The base motivation behind rewriting the original SDK (and roadmap proposal) has been described [here](https://github.com/redstone-finance/redstone-smartweave/blob/main/docs/ROAD_MAP.md).  
+The base motivation behind rewriting the original SDK (and roadmap proposal) has been described [here](./docs/ROAD_MAP.md).  
 To further improve contract state evaluation time, one can additionally use AWS CloudFront based Arweave cache described [here](https://github.com/redstone-finance/redstone-smartweave-contracts/blob/main/docs/CACHE.md).
-
 
 - [Architecture](#architecture)
 - [Development](#development)
