@@ -7,6 +7,8 @@ import { deepCopy } from '@smartweave/utils';
 export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
   private storage: { [key: string]: Map<number, V> } = {};
 
+  constructor(private maxStoredBlockHeights: number = Number.MAX_SAFE_INTEGER) {}
+
   async getLast(key: string): Promise<BlockHeightCacheResult<V> | null> {
     if (!(await this.contains(key))) {
       return null;
@@ -39,17 +41,25 @@ export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
         return cachedBlockHeight <= blockHeight;
       });
 
-    return {
-      cachedHeight: highestBlockHeight,
-      cachedValue: deepCopy(cached.get(highestBlockHeight))
-    };
+    return highestBlockHeight === undefined
+      ? null
+      : {
+          cachedHeight: highestBlockHeight,
+          cachedValue: deepCopy(cached.get(highestBlockHeight))
+        };
   }
 
   async put({ cacheKey, blockHeight }: BlockHeightKey, value: V): Promise<void> {
     if (!(await this.contains(cacheKey))) {
       this.storage[cacheKey] = new Map();
     }
-    this.storage[cacheKey].set(blockHeight, deepCopy(value));
+    const cached = this.storage[cacheKey];
+    if (cached.size == this.maxStoredBlockHeights) {
+      const toRemove = [...cached.keys()].sort().shift();
+      cached.delete(toRemove);
+    }
+
+    cached.set(blockHeight, deepCopy(value));
   }
 
   async contains(key: string): Promise<boolean> {

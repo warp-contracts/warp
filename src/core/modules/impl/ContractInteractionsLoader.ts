@@ -77,6 +77,7 @@ export class ContractInteractionsLoader implements InteractionsLoader {
         }
       ],
       blockFilter: {
+        min: fromBlockHeight,
         max: toBlockHeight
       },
       first: MAX_REQUEST
