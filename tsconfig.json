@@ -28,6 +28,7 @@
   "include": ["src"],
   "exclude": [
     "node_modules",
+    "tools",
     "**/__tests__/*",
     "_scripts"
   ]
