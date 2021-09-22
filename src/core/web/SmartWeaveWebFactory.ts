@@ -64,7 +64,7 @@ export class SmartWeaveWebFactory {
   /**
    * Returns a fully configured {@link SmartWeave} that is using mem cache for all layers.
    */
-  static memCached(arweave: Arweave): SmartWeave {
+  static memCached(arweave: Arweave, maxStoredBlockHeights: number = Number.MAX_SAFE_INTEGER): SmartWeave {
     return this.memCachedBased(arweave).build();
   }
 
@@ -72,19 +72,21 @@ export class SmartWeaveWebFactory {
    * Returns a preconfigured, memCached {@link SmartWeaveBuilder}, that allows for customization of the SmartWeave instance.
    * Use {@link SmartWeaveBuilder.build()} to finish the configuration.
    */
-  static memCachedBased(arweave: Arweave): SmartWeaveBuilder {
+  static memCachedBased(arweave: Arweave, maxStoredBlockHeights: number = Number.MAX_SAFE_INTEGER): SmartWeaveBuilder {
     const definitionLoader = new ContractDefinitionLoader(arweave, new MemCache());
 
     const interactionsLoader = new CacheableContractInteractionsLoader(
       new ContractInteractionsLoader(arweave),
-      new MemBlockHeightSwCache()
+      new MemBlockHeightSwCache(maxStoredBlockHeights)
     );
 
     const executorFactory = new CacheableExecutorFactory(arweave, new HandlerExecutorFactory(arweave), new MemCache());
 
-    const stateEvaluator = new CacheableStateEvaluator(arweave, new MemBlockHeightSwCache<EvalStateResult<unknown>>(), [
-      new Evolve(definitionLoader, executorFactory)
-    ]);
+    const stateEvaluator = new CacheableStateEvaluator(
+      arweave,
+      new MemBlockHeightSwCache<EvalStateResult<unknown>>(maxStoredBlockHeights),
+      [new Evolve(definitionLoader, executorFactory)]
+    );
 
     const interactionsSorter = new LexicographicalInteractionsSorter(arweave);
 

@@ -101,6 +101,8 @@ In functional programming terms it acts as a `fold` function - the state of the 
 2. A contract function
 3. An ordered list of actions
 
+![protocol](img/protocol.png)
+
 In order to evaluate contract state, SmartWeave Protocol client:
 1. Loads all the contract's interaction transactions up to the requested block height.
 2. Sorts the interaction transactions. The order of the interactions is determined firstly by interaction 
