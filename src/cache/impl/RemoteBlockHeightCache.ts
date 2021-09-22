@@ -4,6 +4,9 @@ import axios, { AxiosInstance } from 'axios';
 /**
  * A {@link BlockHeightSwCache} implementation that delegates all its methods
  * to remote endpoints.
+ *
+ * TODO: this could be further optimised - i.e. with the help of "level 1" memory cache
+ * that would store max X elements - and would be backed up by the "level 2" remote cache.
  */
 export class RemoteBlockHeightCache<V = any> implements BlockHeightSwCache<V> {
   private axios: AxiosInstance;
@@ -39,9 +42,13 @@ export class RemoteBlockHeightCache<V = any> implements BlockHeightSwCache<V> {
   }
 
   /**
+   * TODO: data should "flushed" in batches...
    * PUT '/:type/:key/:blockHeight' {data: value}
    */
   async put({ cacheKey, blockHeight }: BlockHeightKey, value: V): Promise<void> {
+    if (!value) {
+      return;
+    }
     await this.axios.put(`/${this.type}/${cacheKey}/${blockHeight}`, value);
   }
 

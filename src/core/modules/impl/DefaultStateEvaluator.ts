@@ -10,6 +10,7 @@ import {
   GQLTagInterface,
   HandlerApi,
   InteractionResult,
+  InteractionTx,
   LoggerFactory,
   MemCache,
   StateEvaluator,
@@ -50,30 +51,25 @@ export class DefaultStateEvaluator implements StateEvaluator {
   ): Promise<EvalStateResult<State>> {
     const stateEvaluationBenchmark = Benchmark.measure();
     const { ignoreExceptions } = executionContext.evaluationOptions;
+    const { contractDefinition, sortedInteractions } = executionContext;
 
     let currentState = baseState.state;
     let validity = deepCopy(baseState.validity);
 
     this.logger.info(
-      `Evaluating state for ${executionContext.contractDefinition.txId} [${missingInteractions.length} non-cached of ${executionContext.sortedInteractions.length} all]`
+      `Evaluating state for ${executionContext.contractDefinition.txId} 
+      [${missingInteractions.length} non-cached of ${executionContext.sortedInteractions.length} all]`
     );
 
-    this.logger.trace(
-      'missingInteractions',
-      missingInteractions.map((int) => {
-        return int.node.id;
-      })
-    );
-
-    this.logger.trace('Init state', JSON.stringify(baseState.state));
+    let lastEvaluatedInteraction = null;
 
     for (const missingInteraction of missingInteractions) {
       const currentInteraction: GQLNodeInterface = missingInteraction.node;
 
       this.logger.debug(
-        `[${executionContext.contractDefinition.txId}][${missingInteraction.node.id}]: ${
+        `[${contractDefinition.txId}][${missingInteraction.node.id}][${missingInteraction.node.block.height}]: ${
           missingInteractions.indexOf(missingInteraction) + 1
-        }/${missingInteractions.length} [of all:${executionContext.sortedInteractions.length}]`
+        }/${missingInteractions.length} [of all:${sortedInteractions.length}]`
       );
 
       const state = await this.onNextIteration(currentInteraction, executionContext);
@@ -84,7 +80,7 @@ export class DefaultStateEvaluator implements StateEvaluator {
       } else {
         const singleInteractionBenchmark = Benchmark.measure();
 
-        const inputTag = this.tagsParser.getInputTag(missingInteraction, executionContext.contractDefinition.txId);
+        const inputTag = this.tagsParser.getInputTag(missingInteraction, contractDefinition.txId);
         if (!inputTag) {
           this.logger.error(`Skipping tx with missing or invalid Input tag - ${currentInteraction.id}`);
           continue;
@@ -103,7 +99,7 @@ export class DefaultStateEvaluator implements StateEvaluator {
 
         const result = await executionContext.handler.handle(
           executionContext,
-          currentState,
+          new EvalStateResult(currentState, validity),
           interaction,
           currentInteraction,
           currentTx
@@ -115,16 +111,16 @@ export class DefaultStateEvaluator implements StateEvaluator {
           throw new Error(`Exception while processing ${JSON.stringify(interaction)}:\n${result.result}`);
         }
 
-        if (result.type === 'exception') {
-          this.logger.error('Credit:', (currentState as any).credit);
-        }
-
         validity[currentInteraction.id] = result.type === 'ok';
         // strangely - state is for some reason modified for some contracts (eg. YLVpmhSq5JmLltfg6R-5fL04rIRPrlSU22f6RQ6VyYE)
         // when calling any async (even simple timeout) function here...
         // that's (ie. deepCopy) a dumb workaround for this issue
         // see https://github.com/ArweaveTeam/SmartWeave/pull/92 for more details
         currentState = deepCopy(result.state);
+
+        // cannot simply take last element of the missingInteractions
+        // as there is no certainty that it has been evaluated (e.g. issues with input tag).
+        lastEvaluatedInteraction = currentInteraction;
 
         this.logger.debug('Interaction evaluation', singleInteractionBenchmark.elapsed());
       }
@@ -142,7 +138,15 @@ export class DefaultStateEvaluator implements StateEvaluator {
       }
     }
     this.logger.debug('State evaluation total:', stateEvaluationBenchmark.elapsed());
-    return new EvalStateResult<State>(currentState, validity);
+    const result = new EvalStateResult<State>(currentState, validity);
+
+    // state could have been full retrieved from cache
+    // or there were no interactions below requested block height
+    if (lastEvaluatedInteraction !== null) {
+      await this.onStateEvaluated(lastEvaluatedInteraction, executionContext, result);
+    }
+
+    return result;
   }
 
   private logResult<State>(
@@ -198,5 +202,21 @@ export class DefaultStateEvaluator implements StateEvaluator {
     } else {
       return deepCopy(cachedState as EvalStateResult<State>);
     }
+  }
+
+  onContractCall<State>(
+    currentInteraction: InteractionTx,
+    executionContext: ExecutionContext<State, unknown>,
+    state: EvalStateResult<State>
+  ): Promise<void> {
+    return Promise.resolve(undefined);
+  }
+
+  onStateEvaluated<State>(
+    lastInteraction: GQLNodeInterface,
+    executionContext: ExecutionContext<State>,
+    state: EvalStateResult<State>
+  ): Promise<void> {
+    return Promise.resolve(undefined);
   }
 }

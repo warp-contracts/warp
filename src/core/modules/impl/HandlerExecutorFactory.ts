@@ -4,6 +4,7 @@ import * as clarity from '@weavery/clarity';
 import {
   ContractDefinition,
   deepCopy,
+  EvalStateResult,
   ExecutionContext,
   ExecutorFactory,
   InteractionTx,
@@ -17,7 +18,7 @@ import {
 export interface HandlerApi<State> {
   handle<Input, Result>(
     executionContext: ExecutionContext<State>,
-    state: State,
+    currentResult: EvalStateResult<State>,
     interaction: ContractInteraction<Input>,
     interactionTx: InteractionTx,
     currentTx: { interactionTxId: string; contractTxId: string }[]
@@ -54,7 +55,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
     return {
       async handle<Input, Result>(
         executionContext: ExecutionContext<State>,
-        state: State,
+        currentResult: EvalStateResult<State>,
         interaction: ContractInteraction<Input>,
         interactionTx: InteractionTx,
         currentTx: { interactionTxId: string; contractTxId: string }[]
@@ -65,11 +66,19 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
             Input,
             Result
           >;
-          const stateCopy = JSON.parse(JSON.stringify(state));
+          const stateCopy = JSON.parse(JSON.stringify(currentResult.state));
           swGlobal._activeTx = interactionTx;
           self.logger.trace(`SmartWeave.contract.id:`, swGlobal.contract.id);
 
-          self.assignReadContractState<Input, State>(swGlobal, contractDefinition, executionContext, currentTx);
+          // TODO: refactor - too many arguments
+          self.assignReadContractState<Input, State>(
+            swGlobal,
+            contractDefinition,
+            executionContext,
+            currentTx,
+            currentResult,
+            interactionTx
+          );
           self.assignViewContractState<Input, State>(swGlobal, contractDefinition, executionContext);
 
           const handlerResult = await handler(stateCopy, interaction);
@@ -78,7 +87,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
             return {
               type: 'ok',
               result: handlerResult.result,
-              state: handlerResult.state || state
+              state: handlerResult.state || currentResult.state
             };
           }
 
@@ -90,7 +99,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
               return {
                 type: 'error',
                 errorMessage: err.message,
-                state,
+                state: currentResult.state,
                 // note: previous version was writing error message to a "result" field,
                 // which fucks-up the HandlerResult type definition -
                 // HandlerResult.result had to be declared as 'Result | string' - and that led to a poor dev exp.
@@ -101,7 +110,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
               return {
                 type: 'exception',
                 errorMessage: `${(err && err.stack) || (err && err.message)}`,
-                state,
+                state: currentResult.state,
                 result: null
               };
           }
@@ -133,7 +142,9 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
     swGlobal: SmartWeaveGlobal,
     contractDefinition: ContractDefinition<State>,
     executionContext: ExecutionContext<State>,
-    currentTx: { interactionTxId: string; contractTxId: string }[]
+    currentTx: { interactionTxId: string; contractTxId: string }[],
+    currentResult: EvalStateResult<State>,
+    interactionTx: InteractionTx
   ) {
     swGlobal.contracts.readContractState = async (contractTxId: string, height?: number, returnValidity?: boolean) => {
       const requestedHeight = height || swGlobal.block.height;
@@ -143,9 +154,13 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
         height: requestedHeight,
         transaction: swGlobal.transaction.id
       });
+
+      const { stateEvaluator } = executionContext.smartweave;
       const childContract = executionContext.smartweave
         .contract(contractTxId, executionContext.contract)
         .setEvaluationOptions(executionContext.evaluationOptions);
+
+      await stateEvaluator.onContractCall(interactionTx, executionContext, currentResult);
 
       const stateWithValidity = await childContract.readState(requestedHeight, [
         ...(currentTx || []),

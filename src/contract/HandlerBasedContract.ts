@@ -32,7 +32,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   /**
    * wallet connected to this contract
-   * @protected
    */
   protected wallet?: ArWallet;
   private evaluationOptions: EvaluationOptions = new DefaultEvaluationOptions();
@@ -87,7 +86,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const executionContext = await this.createExecutionContext(this.contractTxId, blockHeight);
     this.logger.info('Execution Context', {
       blockHeight: executionContext.blockHeight,
-      srcTxId: executionContext.contractDefinition.srcTxId
+      srcTxId: executionContext.contractDefinition.srcTxId,
+      missingInteractions: executionContext.sortedInteractions.length
     });
     this.logger.debug('context', benchmark.elapsed());
     benchmark.reset();
@@ -149,7 +149,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     // call one of the contract's view method
     const handleResult = await executionContext.handler.handle<Input, View>(
       executionContext,
-      evalStateResult.state,
+      evalStateResult,
       interaction,
       {
         id: null,
@@ -192,7 +192,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     return await executionContext.handler.handle<Input, View>(
       executionContext,
-      evalStateResult.state,
+      evalStateResult,
       interaction,
       transaction,
       []

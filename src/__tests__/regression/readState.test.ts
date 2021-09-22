@@ -21,7 +21,7 @@ const arweave = Arweave.init({
 });
 
 LoggerFactory.INST.logLevel('fatal');
-const smartWeave = SmartWeaveNodeFactory.memCached(arweave);
+const smartWeave = SmartWeaveNodeFactory.memCached(arweave, 10);
 
 const testCases: string[] = JSON.parse(fs.readFileSync(path.join(__dirname, 'test-cases.json'), 'utf-8'));
 
@@ -37,6 +37,7 @@ describe.each(chunked)('.suite %#', (contracts: string[]) => {
       const result = await readContract(arweave, contractTxId);
       const resultString = JSON.stringify(result).trim();
 
+      console.log('readState', contractTxId);
       const result2 = await smartWeave
         .contract(contractTxId)
         .setEvaluationOptions({

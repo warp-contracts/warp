@@ -13,6 +13,7 @@ The base motivation behind rewriting the original SDK (and roadmap proposal) has
 To further improve contract state evaluation time, one can additionally use AWS CloudFront based Arweave cache described [here](https://github.com/redstone-finance/redstone-smartweave-contracts/blob/main/docs/CACHE.md).
 
 - [Architecture](#architecture)
+- [State evaluation diagram](#state-evaluation-diagram)
 - [Development](#development)
   - [Installation and import](#installation-and-import)
   - [Examples](#examples)
@@ -45,6 +46,17 @@ This modular architecture has several advantages:
 1. Each module can be separately tested and developed.
 2. The SmartWeave client can be customized depending on user needs (e.g. different type of caches for web and node environment)
 3. It makes it easier to add new features on top of the core protocol - without the risk of breaking the functionality of the core layer.
+
+## State evaluation diagram
+![readState](docs/img/readstate.png)
+
+In order to perform contract state evaluation (at given block height), SDK performs certain operations.
+The diagram above and description assume the most basic “mem-cached” SDK client.
+1. Users who are interacting with the contract, call the “readState” method.
+2. Interactions Loader and Contract Definition Loader modules are then called in parallel - to load all the data required for state evaluation. Both Interactions Loader and Contract Definition Loader first check its corresponding cache whether data is already loaded - and load from Arweave only the missing part.
+3. With interactions and contract definition loaded - Executor Factory creates a handle to the SmartWeave contract main function (or loads it from its own cache)
+4. With all the interactions and a contract handle - the State Evaluator evaluates the state from the lastly cached value - and returns the result to User.
+
 
 ## Development
 PRs are welcome! :-) Also, feel free to submit [issues](https://github.com/redstone-finance/redstone-smartcontracts/issues) - with both bugs and feature proposals.

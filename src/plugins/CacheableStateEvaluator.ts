@@ -1,4 +1,4 @@
-import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache, MemCache } from '@smartweave/cache';
+import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@smartweave/cache';
 import {
   DefaultStateEvaluator,
   EvalStateResult,
@@ -7,9 +7,8 @@ import {
   HandlerApi
 } from '@smartweave/core';
 import Arweave from 'arweave';
-import { GQLEdgeInterface, GQLNodeInterface } from '@smartweave/legacy';
+import { GQLNodeInterface, InteractionTx } from '@smartweave/legacy';
 import { Benchmark, LoggerFactory } from '@smartweave/logging';
-import { deepCopy } from '@smartweave/utils';
 
 /**
  * An implementation of DefaultStateEvaluator that adds caching capabilities
@@ -34,11 +33,15 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
 
     let cachedState: BlockHeightCacheResult<EvalStateResult<State>> | null = null;
 
+    this.cLogger.debug('executionContext.sortedInteractions', executionContext.sortedInteractions.length);
+
     const sortedInteractionsUpToBlock = executionContext.sortedInteractions.filter((tx) => {
       return tx.node.block.height <= executionContext.blockHeight;
     });
 
     let missingInteractions = sortedInteractionsUpToBlock.slice();
+
+    this.cLogger.debug('missingInteractions', missingInteractions.length);
 
     // if there was anything to cache...
     if (sortedInteractionsUpToBlock.length > 0) {
@@ -52,7 +55,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
 
       if (cachedState != null) {
         this.cLogger.debug(`Cached state for ${executionContext.contractDefinition.txId}`, {
-          block: cachedState.cachedHeight,
+          cachedHeight: cachedState.cachedHeight,
           requestedBlockHeight
         });
 
@@ -107,16 +110,30 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     );
   }
 
-  async onStateUpdate<State>(
-    currentInteraction: GQLNodeInterface,
+  async onStateEvaluated<State>(
+    lastInteraction: GQLNodeInterface,
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>
-  ) {
-    await super.onStateUpdate(currentInteraction, executionContext, state);
-
+  ): Promise<void> {
+    this.cLogger.debug(
+      `onStateEvaluated: cache update for contract ${executionContext.contractDefinition.txId} [${lastInteraction.block.height}]`
+    );
     await this.cache.put(
-      new BlockHeightKey(executionContext.contractDefinition.txId, currentInteraction.block.height),
+      new BlockHeightKey(executionContext.contractDefinition.txId, lastInteraction.block.height),
       state
     );
+  }
+
+  async onStateUpdate<State>(
+    currentInteraction: GQLNodeInterface,
+    executionContext: ExecutionContext<State, unknown>,
+    state: EvalStateResult<State>
+  ): Promise<void> {
+    if (executionContext.evaluationOptions.updateCacheForEachInteraction) {
+      await this.cache.put(
+        new BlockHeightKey(executionContext.contractDefinition.txId, currentInteraction.block.height),
+        state
+      );
+    }
   }
 }

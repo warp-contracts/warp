@@ -1,4 +1,4 @@
-import { ExecutionContext, GQLEdgeInterface, GQLNodeInterface } from '@smartweave';
+import { ExecutionContext, GQLNodeInterface, InteractionTx } from '@smartweave';
 
 /**
  * Implementors of this class are responsible for evaluating contract's state
@@ -10,8 +10,29 @@ export interface StateEvaluator {
     currentTx: { interactionTxId: string; contractTxId: string }[]
   ): Promise<EvalStateResult<State>>;
 
+  /**
+   * a hook that is called on each state update (i.e. after evaluating state for each interaction)
+   */
   onStateUpdate<State>(
     currentInteraction: GQLNodeInterface,
+    executionContext: ExecutionContext<State>,
+    state: EvalStateResult<State>
+  ): Promise<void>;
+
+  /**
+   * a hook that is called after state has been fully evaluated
+   */
+  onStateEvaluated<State>(
+    lastInteraction: GQLNodeInterface,
+    executionContext: ExecutionContext<State>,
+    state: EvalStateResult<State>
+  ): Promise<void>;
+
+  /**
+   * a hook that is called before communicating with other contract
+   */
+  onContractCall<State>(
+    currentInteraction: InteractionTx,
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>
   ): Promise<void>;
@@ -32,6 +53,8 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   waitForConfirmation = false;
 
   fcpOptimization = false;
+
+  updateCacheForEachInteraction = true;
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some of the features.
@@ -45,4 +68,9 @@ export interface EvaluationOptions {
 
   // experimental optimization for contracts that utilize the Foreign Call Protocol
   fcpOptimization: boolean;
+
+  // whether cache should be updated after evaluating each interaction transaction.
+  // this can be switched off to speed up cache writes (ie. for some contracts (with flat structure)
+  // and caches it maybe more suitable to cache only after state has been fully evaluated)
+  updateCacheForEachInteraction: boolean;
 }
