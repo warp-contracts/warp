@@ -25,7 +25,7 @@ export class RemoteBlockHeightCache<V = any> implements BlockHeightSwCache<V> {
    */
   async getLast(key: string): Promise<BlockHeightCacheResult<V> | null> {
     const response = await this.axios.get<BlockHeightCacheResult<V> | null>(`/last/${this.type}/${key}`);
-    return response.data;
+    return response.data || null;
   }
 
   /**
@@ -35,7 +35,7 @@ export class RemoteBlockHeightCache<V = any> implements BlockHeightSwCache<V> {
     const response = await this.axios.get<BlockHeightCacheResult<V> | null>(
       `/less-or-equal/${this.type}/${key}/${blockHeight}`
     );
-    return response.data;
+    return response.data || null;
   }
 
   /**
@@ -58,6 +58,6 @@ export class RemoteBlockHeightCache<V = any> implements BlockHeightSwCache<V> {
    */
   async get(key: string, blockHeight: number): Promise<BlockHeightCacheResult<V> | null> {
     const response = await this.axios.get<BlockHeightCacheResult<V> | null>(`/${this.type}/${key}/${blockHeight}`);
-    return response.data;
+    return response.data || null;
   }
 }
