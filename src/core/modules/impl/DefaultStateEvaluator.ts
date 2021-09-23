@@ -57,8 +57,7 @@ export class DefaultStateEvaluator implements StateEvaluator {
     let validity = deepCopy(baseState.validity);
 
     this.logger.info(
-      `Evaluating state for ${executionContext.contractDefinition.txId} 
-      [${missingInteractions.length} non-cached of ${executionContext.sortedInteractions.length} all]`
+      `Evaluating state for ${executionContext.contractDefinition.txId} [${missingInteractions.length} non-cached of ${executionContext.sortedInteractions.length} all]`
     );
 
     let lastEvaluatedInteraction = null;
