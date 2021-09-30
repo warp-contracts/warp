@@ -20,9 +20,11 @@ async function main() {
 
   const transactionsLoader = new ContractInteractionsLoader(arweave);
 
-  const result = await transactionsLoader.load('Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY', 769686, 769686);
+  const result = await transactionsLoader.load('C_1uo08qRuQAeDi9Y1I8fkaWYUC9IWkOrKDNe9EphJo', 0, 779820);
 
-  fs.writeFileSync(path.join(__dirname, 'transactions.json'), JSON.stringify(result));
+  console.log(result.length);
+
+  //fs.writeFileSync(path.join(__dirname, 'data', 'transactions-2.json'), JSON.stringify(result));
 }
 
 main().catch((e) => console.error(e));

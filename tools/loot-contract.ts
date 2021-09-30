@@ -5,6 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import { SmartWeaveWebFactory } from '../src/core/web/SmartWeaveWebFactory';
 import { FromFileInteractionsLoader } from './FromFileInteractionsLoader';
+import { readContract } from 'smartweave';
 
 async function main() {
   LoggerFactory.use(new TsLogFactory());
@@ -18,15 +19,26 @@ async function main() {
     logging: false // Enable network request logging
   });
 
+  const contractTxId = 'Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY';
+
   const interactionsLoader = new FromFileInteractionsLoader(path.join(__dirname, 'data', 'interactions.json'));
 
-  const smartweave = SmartWeaveWebFactory.memCachedBased(arweave).setInteractionsLoader(interactionsLoader).build();
+  const smartweave = SmartWeaveWebFactory.memCachedBased(arweave)
+    .setInteractionsLoader(interactionsLoader)
+    .overwriteSource({
+      [contractTxId]: fs.readFileSync(path.join(__dirname, 'data', 'loot-contract-mods.js'), 'utf-8')
+    });
 
-  const lootContract = smartweave.contract('Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY');
+  const lootContract = smartweave.contract(contractTxId);
 
-  const { state } = await lootContract.readState();
+  const { state, validity } = await lootContract.readState();
 
-  fs.writeFileSync(path.join(__dirname, 'data', 'loot.json'), JSON.stringify(state));
+  //fs.writeFileSync(path.join(__dirname, 'data', 'validity.json'), JSON.stringify(validity));
+
+  //const result = await readContract(arweave, contractTxId, undefined, true);
+
+  //fs.writeFileSync(path.join(__dirname, 'data', 'validity_old.json'), JSON.stringify(result.validity));
+  //fs.writeFileSync(path.join(__dirname, 'data', 'state_old.json'), JSON.stringify(result.state));
 }
 
 main().catch((e) => console.error(e));

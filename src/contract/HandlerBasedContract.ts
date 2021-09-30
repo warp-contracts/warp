@@ -220,6 +220,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
       transfer.winstonQty
     );
 
+    this.logger.debug('interactionTx', interactionTx);
+
     const response = await arweave.transactions.post(interactionTx);
 
     if (response.status !== 200) {
