@@ -23,11 +23,7 @@ async function main() {
 
   const interactionsLoader = new FromFileInteractionsLoader(path.join(__dirname, 'data', 'interactions.json'));
 
-  const smartweave = SmartWeaveWebFactory.memCachedBased(arweave)
-    .setInteractionsLoader(interactionsLoader)
-    .overwriteSource({
-      [contractTxId]: fs.readFileSync(path.join(__dirname, 'data', 'loot-contract-mods.js'), 'utf-8')
-    });
+  const smartweave = SmartWeaveWebFactory.memCachedBased(arweave).setInteractionsLoader(interactionsLoader).build();
 
   const lootContract = smartweave.contract(contractTxId);
 
@@ -35,10 +31,9 @@ async function main() {
 
   //fs.writeFileSync(path.join(__dirname, 'data', 'validity.json'), JSON.stringify(validity));
 
-  //const result = await readContract(arweave, contractTxId, undefined, true);
 
   //fs.writeFileSync(path.join(__dirname, 'data', 'validity_old.json'), JSON.stringify(result.validity));
-  //fs.writeFileSync(path.join(__dirname, 'data', 'state_old.json'), JSON.stringify(result.state));
+  fs.writeFileSync(path.join(__dirname, 'data', 'state.json'), JSON.stringify(state));
 }
 
 main().catch((e) => console.error(e));
