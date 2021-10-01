@@ -2,11 +2,13 @@ import {
   ContractInteractionsLoader,
   GQLEdgeInterface,
   GQLResultInterface,
-  GQLTransactionsResultInterface
+  GQLTransactionsResultInterface, LoggerFactory
 } from '@smartweave';
 import Arweave from 'arweave';
 import fs from 'fs';
 import path from 'path';
+import { TsLogFactory } from '../src/logging/node/TsLogFactory';
+import Transaction from 'arweave/node/lib/transaction';
 
 // max number of results returned from single query.
 // If set more, arweave.net/graphql will still limit to 100 (not sure if that's a bug or feature).
@@ -32,7 +34,18 @@ query Transactions($tags: [TagFilter!]!, $after: String) {
   }`;
 
 const toSkip = ['C_1uo08qRuQAeDi9Y1I8fkaWYUC9IWkOrKDNe9EphJo',
-'B1SRLyFzWJjeA0ywW41Qu1j7ZpBLHsXSSrWLrT3ebd8'];
+'B1SRLyFzWJjeA0ywW41Qu1j7ZpBLHsXSSrWLrT3ebd8',
+'LkfzZvdl_vfjRXZOPjnov18cGnnK3aDKj0qSQCgkCX8',
+'l6S4oMyzw_rggjt4yt4LrnRmggHQ2CdM1hna2MK4o_c',
+'aMPlul_sA2TjcBOGpJndgZAcApZLMvFhUGYAPkZ3uLA'];
+
+
+const sourcesBlacklist = [
+  'MjrjR6qCFcld0VO83tt3NcpZs2FIuLscvo7ya64afbY',
+  'C_1uo08qRuQAeDi9Y1I8fkaWYUC9IWkOrKDNe9EphJo',
+  'Z3Arb_sfuLpFxyLfolLClLfe89BFgrbbgJM2rKsebEY',
+  'slRfB7WKAEQb5SiO7e-G_FWoAZ4LkoyAYE31ToPXTV8'
+];
 
 
 async function main() {
@@ -66,13 +79,28 @@ async function main() {
 
   const result = {};
 
+  LoggerFactory.use(new TsLogFactory());
+  LoggerFactory.INST.logLevel('info');
+  LoggerFactory.INST.logLevel('debug', 'ContractInteractionsLoader');
+
   const transactionsLoader = new ContractInteractionsLoader(arweave);
 
-
+  let totalInteractions = 0;
   // loading
   for (const contractTx of contractTxs) {
     const contractTxId = contractTx.node.id;
     if (toSkip.indexOf(contractTxId) !== -1) {
+      continue;
+    }
+
+    const tags = contractTx.node.tags;
+    if (
+    tags.some((tag) => {
+      const key = tag.name;
+      const value = tag.value;
+      return key.localeCompare('Contract-Src') === 0 && sourcesBlacklist.includes(value);
+    })) {
+      console.log("Skipping blacklisted contract's source");
       continue;
     }
 
@@ -83,6 +111,8 @@ async function main() {
     console.log(`${contractTxId}: ${interactions.length}`);
 
     result[contractTxId] = interactions.length;
+    totalInteractions += interactions.length;
+    console.log('Total:', totalInteractions);
     fs.writeFileSync(path.join(__dirname, 'data', `swc-stats.json`), JSON.stringify(result));
   }
 

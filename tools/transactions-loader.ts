@@ -20,7 +20,7 @@ async function main() {
 
   const transactionsLoader = new ContractInteractionsLoader(arweave);
 
-  const result = await transactionsLoader.load('C_1uo08qRuQAeDi9Y1I8fkaWYUC9IWkOrKDNe9EphJo', 0, 779820);
+  const result = await transactionsLoader.load('LkfzZvdl_vfjRXZOPjnov18cGnnK3aDKj0qSQCgkCX8', 0, 779820);
 
   console.log(result.length);
 
