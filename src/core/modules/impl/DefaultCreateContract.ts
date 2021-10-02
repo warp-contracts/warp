@@ -2,15 +2,15 @@ import { ContractData, CreateContract, FromSrcTxContractData, SmartWeaveTags } f
 import Arweave from 'arweave';
 import { LoggerFactory } from '@smartweave/logging';
 
-const logger = LoggerFactory.INST.create(__filename);
-
 export class DefaultCreateContract implements CreateContract {
+  private readonly logger = LoggerFactory.INST.create('DefaultCreateContract');
+
   constructor(private readonly arweave: Arweave) {
     this.deployFromSourceTx = this.deployFromSourceTx.bind(this);
   }
 
   async deploy(contractData: ContractData) {
-    logger.debug('Creating new contract');
+    this.logger.debug('Creating new contract');
 
     const { wallet, src, initState, tags, transfer } = contractData;
 
@@ -23,7 +23,7 @@ export class DefaultCreateContract implements CreateContract {
 
     await this.arweave.transactions.sign(srcTx, wallet);
 
-    logger.debug('Posting transaction with source');
+    this.logger.debug('Posting transaction with source');
     const response = await this.arweave.transactions.post(srcTx);
 
     if (response.status === 200 || response.status === 208) {
@@ -40,14 +40,14 @@ export class DefaultCreateContract implements CreateContract {
   }
 
   async deployFromSourceTx(contractData: FromSrcTxContractData): Promise<string> {
-    logger.debug('Creating new contract from src tx');
+    this.logger.debug('Creating new contract from src tx');
 
     const { wallet, srcTxId, initState, tags, transfer } = contractData;
 
     let contractTX = await this.arweave.createTransaction({ data: initState }, wallet);
 
     if (+transfer?.winstonQty > 0 && transfer.target.length) {
-      logger.debug('Creating additional transaction with AR transfer', transfer);
+      this.logger.debug('Creating additional transaction with AR transfer', transfer);
       contractTX = await this.arweave.createTransaction(
         {
           data: initState,
