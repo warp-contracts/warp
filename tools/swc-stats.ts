@@ -1,8 +1,10 @@
+/* eslint-disable */
 import {
   ContractInteractionsLoader,
   GQLEdgeInterface,
   GQLResultInterface,
-  GQLTransactionsResultInterface, LoggerFactory
+  GQLTransactionsResultInterface,
+  LoggerFactory
 } from '@smartweave';
 import Arweave from 'arweave';
 import fs from 'fs';
@@ -33,12 +35,13 @@ query Transactions($tags: [TagFilter!]!, $after: String) {
     }
   }`;
 
-const toSkip = ['C_1uo08qRuQAeDi9Y1I8fkaWYUC9IWkOrKDNe9EphJo',
-'B1SRLyFzWJjeA0ywW41Qu1j7ZpBLHsXSSrWLrT3ebd8',
-'LkfzZvdl_vfjRXZOPjnov18cGnnK3aDKj0qSQCgkCX8',
-'l6S4oMyzw_rggjt4yt4LrnRmggHQ2CdM1hna2MK4o_c',
-'aMPlul_sA2TjcBOGpJndgZAcApZLMvFhUGYAPkZ3uLA'];
-
+const toSkip = [
+  'C_1uo08qRuQAeDi9Y1I8fkaWYUC9IWkOrKDNe9EphJo',
+  'B1SRLyFzWJjeA0ywW41Qu1j7ZpBLHsXSSrWLrT3ebd8',
+  'LkfzZvdl_vfjRXZOPjnov18cGnnK3aDKj0qSQCgkCX8',
+  'l6S4oMyzw_rggjt4yt4LrnRmggHQ2CdM1hna2MK4o_c',
+  'aMPlul_sA2TjcBOGpJndgZAcApZLMvFhUGYAPkZ3uLA'
+];
 
 const sourcesBlacklist = [
   'MjrjR6qCFcld0VO83tt3NcpZs2FIuLscvo7ya64afbY',
@@ -46,7 +49,6 @@ const sourcesBlacklist = [
   'Z3Arb_sfuLpFxyLfolLClLfe89BFgrbbgJM2rKsebEY',
   'slRfB7WKAEQb5SiO7e-G_FWoAZ4LkoyAYE31ToPXTV8'
 ];
-
 
 async function main() {
   const arweave = Arweave.init({
@@ -95,11 +97,12 @@ async function main() {
 
     const tags = contractTx.node.tags;
     if (
-    tags.some((tag) => {
-      const key = tag.name;
-      const value = tag.value;
-      return key.localeCompare('Contract-Src') === 0 && sourcesBlacklist.includes(value);
-    })) {
+      tags.some((tag) => {
+        const key = tag.name;
+        const value = tag.value;
+        return key.localeCompare('Contract-Src') === 0 && sourcesBlacklist.includes(value);
+      })
+    ) {
       console.log("Skipping blacklisted contract's source");
       continue;
     }
@@ -116,7 +119,7 @@ async function main() {
     fs.writeFileSync(path.join(__dirname, 'data', `swc-stats.json`), JSON.stringify(result));
   }
 
- // fs.writeFileSync(path.join(__dirname, 'data', `swc-stats.json`), JSON.stringify(result));
+  // fs.writeFileSync(path.join(__dirname, 'data', `swc-stats.json`), JSON.stringify(result));
 
   // sorting
   console.log('Sorting...');

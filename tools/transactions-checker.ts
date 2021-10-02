@@ -1,3 +1,4 @@
+/* eslint-disable */
 import interactions from './data/interactions.json';
 import Arweave from 'arweave';
 import { LoggerFactory } from '../src';
@@ -22,7 +23,7 @@ async function main() {
 
   const result = [];
 
-  for (const t of (interactions['cachedValue'] as Array<GQLEdgeInterface>)) {
+  for (const t of interactions['cachedValue'] as Array<GQLEdgeInterface>) {
     const index: number = (interactions['cachedValue'] as Array<GQLEdgeInterface>).indexOf(t);
     const tx = t.node;
 

@@ -1,3 +1,4 @@
+/* eslint-disable */
 import Arweave from 'arweave';
 import { LoggerFactory } from '../src';
 import { TsLogFactory } from '../src/logging/node/TsLogFactory';
@@ -20,27 +21,26 @@ async function main() {
     logging: false // Enable network request logging
   });
 
-
   const smartweave = SmartWeaveWebFactory.memCached(arweave);
 
-  const jwk = readJSON("../redstone-node/.secrets/redstone-jwk.json");
+  const jwk = readJSON('../redstone-node/.secrets/redstone-jwk.json');
 
   const token = smartweave
-    .contract("lnG1-1_5lAoABx7oihhRXI3J5ybTTQ2HCi2FJbKPI_w")
+    .contract('lnG1-1_5lAoABx7oihhRXI3J5ybTTQ2HCi2FJbKPI_w')
     // connecting wallet to a contract. It is required before performing any "writeInteraction"
     // calling "writeInteraction" without connecting to a wallet first will cause a runtime error.
     .connect(jwk)
     .setEvaluationOptions({
       // with this flag set to true, the write will wait for the transaction to be confirmed
-      waitForConfirmation: true,
+      waitForConfirmation: true
     });
 
   const result = await token.writeInteraction<any>({
-    function: "transfer",
+    function: 'transfer',
     data: {
-      target: "fake",
-      qty: 15100900,
-    },
+      target: 'fake',
+      qty: 15100900
+    }
   });
 
   //const { state, validity } = await lootContract.readState();

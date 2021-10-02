@@ -28,8 +28,8 @@ const brokenTransactions = [
   '-b8gqnEsZp0AafO6tHTttTliGXu858vqolGs122dsaM',
   '_GR5BE5kae1JkCMUcbecJBuryqNzuAzd8BIVLey4CJA',
   '-k8bLMFysvyjKlakQaffbYyCSlZAGC7ZFq0KjhTVoKU',
-  '-Q8A_3JXH3yZms7awAhK2PFCinWfCzm1gvaa6ogi6O4',
-]
+  '-Q8A_3JXH3yZms7awAhK2PFCinWfCzm1gvaa6ogi6O4'
+];
 
 export class FromFileInteractionsLoader implements InteractionsLoader {
   private readonly logger = LoggerFactory.INST.create('FromFileInteractionsLoader');
@@ -38,8 +38,8 @@ export class FromFileInteractionsLoader implements InteractionsLoader {
 
   constructor(filePath: string) {
     const fileContent = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-    this.transactions = (fileContent.cachedValue as GQLEdgeInterface[]).filter(e => {
-      const skip = brokenTransactions.indexOf(e.node.id) >= 0
+    this.transactions = (fileContent.cachedValue as GQLEdgeInterface[]).filter((e) => {
+      const skip = brokenTransactions.indexOf(e.node.id) >= 0;
       if (skip) {
         this.logger.debug('Skipping', e.node.id);
       }

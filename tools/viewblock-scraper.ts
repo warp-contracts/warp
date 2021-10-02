@@ -1,3 +1,4 @@
+/* eslint-disable */
 import got from 'got';
 import { LoggerFactory } from '../src';
 import { TsLogFactory } from '../src/logging/node/TsLogFactory';
