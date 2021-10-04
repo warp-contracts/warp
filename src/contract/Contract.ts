@@ -7,6 +7,8 @@ import {
   InteractionTx,
   Tags
 } from '@smartweave';
+import { NetworkInfoInterface } from 'arweave/node/network';
+import { ContractCallStack } from '../core/ContractCallStack';
 
 /**
  * A base interface to be implemented by SmartWeave Contracts clients
@@ -100,4 +102,8 @@ export interface Contract<State = unknown> {
    * @param transfer - additional {@link ArTransfer} than can be attached to the interaction transaction
    */
   writeInteraction<Input = unknown>(input: Input, tags?: Tags, transfer?: ArTransfer): Promise<string | null>;
+
+  getCallStack(): ContractCallStack;
+
+  getNetworkInfo(): NetworkInfoInterface;
 }

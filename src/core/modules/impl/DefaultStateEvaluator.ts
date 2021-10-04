@@ -17,6 +17,7 @@ import {
   TagsParser
 } from '@smartweave';
 import Arweave from 'arweave';
+import { InteractionCall } from '../../ContractCallStack';
 
 // FIXME: currently this is tightly coupled with the HandlerApi
 export class DefaultStateEvaluator implements StateEvaluator {
@@ -50,8 +51,8 @@ export class DefaultStateEvaluator implements StateEvaluator {
     currentTx: { interactionTxId: string; contractTxId: string }[]
   ): Promise<EvalStateResult<State>> {
     const stateEvaluationBenchmark = Benchmark.measure();
-    const { ignoreExceptions } = executionContext.evaluationOptions;
-    const { contractDefinition, sortedInteractions } = executionContext;
+    const { ignoreExceptions, stackTrace } = executionContext.evaluationOptions;
+    const { contract, contractDefinition, sortedInteractions } = executionContext;
 
     let currentState = baseState.state;
     let validity = deepCopy(baseState.validity);
@@ -61,9 +62,12 @@ export class DefaultStateEvaluator implements StateEvaluator {
     );
 
     let lastEvaluatedInteraction = null;
+    let errorMessage = null;
 
     for (const missingInteraction of missingInteractions) {
-      const currentInteraction: GQLNodeInterface = missingInteraction.node;
+      const singleInteractionBenchmark = Benchmark.measure();
+      
+      const interactionTx: GQLNodeInterface = missingInteraction.node;
 
       this.logger.debug(
         `[${contractDefinition.txId}][${missingInteraction.node.id}][${missingInteraction.node.block.height}]: ${
@@ -71,46 +75,53 @@ export class DefaultStateEvaluator implements StateEvaluator {
         }/${missingInteractions.length} [of all:${sortedInteractions.length}]`
       );
 
-      const state = await this.onNextIteration(currentInteraction, executionContext);
+      const state = await this.onNextIteration(interactionTx, executionContext);
+      const inputTag = this.tagsParser.getInputTag(missingInteraction, executionContext.contractDefinition.txId);
+      if (!inputTag) {
+        this.logger.error(`Skipping tx - Input tag not found for ${interactionTx.id}`);
+        continue;
+      }
+      const input = this.parseInput(inputTag);
+      if (!input) {
+        this.logger.error(`Skipping tx - invalid Input tag - ${interactionTx.id}`);
+        continue;
+      }
+
+      const interaction: ContractInteraction<unknown> = {
+        input,
+        caller: interactionTx.owner.address
+      };
+
+      let intermediaryCacheHit = false;
+
+      const interactionData = {
+        interaction,
+        interactionTx,
+        currentTx
+      };
+
+      const interactionCall: InteractionCall = contract.getCallStack().addInteractionData(interactionData);
+
       if (state !== null) {
-        this.logger.debug('Found in cache');
+        this.logger.debug('Found in intermediary cache');
+        intermediaryCacheHit = true;
         currentState = state.state;
         validity = state.validity;
       } else {
-        const singleInteractionBenchmark = Benchmark.measure();
-
-        const inputTag = this.tagsParser.getInputTag(missingInteraction, contractDefinition.txId);
-        if (!inputTag) {
-          this.logger.error(`Skipping tx with missing or invalid Input tag - ${currentInteraction.id}`);
-          continue;
-        }
-
-        const input = this.parseInput(inputTag);
-        if (!input) {
-          this.logger.error(`Skipping tx with missing or invalid Input tag - ${currentInteraction.id}`);
-          continue;
-        }
-
-        const interaction: ContractInteraction<unknown> = {
-          input,
-          caller: currentInteraction.owner.address
-        };
-
         const result = await executionContext.handler.handle(
           executionContext,
           new EvalStateResult(currentState, validity),
-          interaction,
-          currentInteraction,
-          currentTx
+          interactionData
         );
+        errorMessage = result.errorMessage;
 
-        this.logResult<State>(result, currentInteraction, executionContext);
+        this.logResult<State>(result, interactionTx, executionContext);
 
         if (result.type === 'exception' && ignoreExceptions !== true) {
           throw new Error(`Exception while processing ${JSON.stringify(interaction)}:\n${result.result}`);
         }
 
-        validity[currentInteraction.id] = result.type === 'ok';
+        validity[interactionTx.id] = result.type === 'ok';
         // strangely - state is for some reason modified for some contracts (eg. YLVpmhSq5JmLltfg6R-5fL04rIRPrlSU22f6RQ6VyYE)
         // when calling any async (even simple timeout) function here...
         // that's (ie. deepCopy) a dumb workaround for this issue
@@ -119,16 +130,21 @@ export class DefaultStateEvaluator implements StateEvaluator {
 
         // cannot simply take last element of the missingInteractions
         // as there is no certainty that it has been evaluated (e.g. issues with input tag).
-        lastEvaluatedInteraction = currentInteraction;
+        lastEvaluatedInteraction = interactionTx;
 
         this.logger.debug('Interaction evaluation', singleInteractionBenchmark.elapsed());
       }
 
-      await this.onStateUpdate<State>(
-        currentInteraction,
-        executionContext,
-        new EvalStateResult(currentState, validity)
-      );
+      interactionCall.update({
+        cacheHit: false,
+        intermediaryCacheHit,
+        outputState: stackTrace.saveState ? currentState : undefined,
+        executionTime: singleInteractionBenchmark.elapsed(true) as number,
+        valid: validity[interactionTx.id],
+        errorMessage: errorMessage
+      });
+
+      await this.onStateUpdate<State>(interactionTx, executionContext, new EvalStateResult(currentState, validity));
 
       // I'm really NOT a fan of this "modify" feature, but I don't have idea how to better
       // implement the "evolve" feature
@@ -137,15 +153,15 @@ export class DefaultStateEvaluator implements StateEvaluator {
       }
     }
     this.logger.debug('State evaluation total:', stateEvaluationBenchmark.elapsed());
-    const result = new EvalStateResult<State>(currentState, validity);
+    const evalStateResult = new EvalStateResult<State>(currentState, validity);
 
     // state could have been full retrieved from cache
     // or there were no interactions below requested block height
     if (lastEvaluatedInteraction !== null) {
-      await this.onStateEvaluated(lastEvaluatedInteraction, executionContext, result);
+      await this.onStateEvaluated(lastEvaluatedInteraction, executionContext, evalStateResult);
     }
 
-    return result;
+    return evalStateResult;
   }
 
   private logResult<State>(

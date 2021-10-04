@@ -8,14 +8,19 @@ export class Benchmark {
   }
 
   private start = Date.now();
+  private end = null;
 
   public reset() {
     this.start = Date.now();
+    this.end = null;
   }
 
   public elapsed(rawValue = false): string | number {
-    const end = Date.now();
-    const result = end - this.start;
-    return rawValue ? result : `${(end - this.start).toFixed(0)}ms`;
+    if (this.end === null) {
+      this.end = Date.now();
+    }
+
+    const result = this.end - this.start;
+    return rawValue ? result : `${(this.end - this.start).toFixed(0)}ms`;
   }
 }
