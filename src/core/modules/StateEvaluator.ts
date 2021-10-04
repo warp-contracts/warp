@@ -30,6 +30,14 @@ export interface StateEvaluator {
 
   /**
    * a hook that is called before communicating with other contract
+   * note to myself: putting values into cache only "onContractCall" may degrade performance.
+   * For example"
+   * block 722317 - contract A calls B
+   * block 722727 - contract A calls B
+   * block 722695 - contract B calls A
+   * If we update cache only on contract call - for the last above call (B->A)
+   * we would retrieve state cached for 722317. If there are any transactions
+   * between 722317 and 722695 - the performance will be degraded.
    */
   onContractCall<State>(
     currentInteraction: InteractionTx,
@@ -55,6 +63,12 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   fcpOptimization = false;
 
   updateCacheForEachInteraction = true;
+
+  enhancedValidity = false;
+
+  stackTrace = {
+    saveState: false
+  }
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some of the features.
@@ -73,4 +87,13 @@ export interface EvaluationOptions {
   // this can be switched off to speed up cache writes (ie. for some contracts (with flat structure)
   // and caches it maybe more suitable to cache only after state has been fully evaluated)
   updateCacheForEachInteraction: boolean;
+
+  // enhanced validity report with error/exception messages included
+  enhancedValidity: boolean;
+
+  // a set of options that control the behaviour of the stack trace generator
+  stackTrace: {
+    // whether output state should be saved for each interaction in the stack trace (may result in huuuuge json files!)
+    saveState: boolean;
+  }
 }

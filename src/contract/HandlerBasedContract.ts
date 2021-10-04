@@ -11,6 +11,7 @@ import {
   EvaluationOptions,
   ExecutionContext,
   HandlerApi,
+  InteractionData,
   InteractionResult,
   InteractionTx,
   LoggerFactory,
@@ -20,6 +21,7 @@ import {
 } from '@smartweave';
 import { TransactionStatusResponse } from 'arweave/node/transactions';
 import { NetworkInfoInterface } from 'arweave/node/network';
+import { ContractCallStack, InteractionCall } from '../core/ContractCallStack';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -30,10 +32,7 @@ import { NetworkInfoInterface } from 'arweave/node/network';
 export class HandlerBasedContract<State> implements Contract<State> {
   private readonly logger = LoggerFactory.INST.create('HandlerBasedContract');
 
-  /**
-   * wallet connected to this contract
-   */
-  protected wallet?: ArWallet;
+  private callStack: ContractCallStack;
   private evaluationOptions: EvaluationOptions = new DefaultEvaluationOptions();
 
   /**
@@ -41,37 +40,36 @@ export class HandlerBasedContract<State> implements Contract<State> {
    * Only the 'root' contract call should read this data from Arweave - all the inner calls ("child" contracts)
    * should reuse this data from the parent ("calling) contract.
    */
-  public networkInfo?: NetworkInfoInterface = null;
+  private networkInfo?: NetworkInfoInterface = null;
+
+  /**
+   * wallet connected to this contract
+   */
+  protected wallet?: ArWallet;
 
   constructor(
     readonly contractTxId: string,
     protected readonly smartweave: SmartWeave,
     // note: this will be probably used for creating contract's
     // call hierarchy and generating some sort of "stack trace"
-    private readonly callingContract: Contract = null
+    private readonly callingContract: Contract = null,
+    private readonly callingInteraction: InteractionTx = null
   ) {
     this.waitForConfirmation = this.waitForConfirmation.bind(this);
     if (callingContract != null) {
-      this.networkInfo = (callingContract as HandlerBasedContract<State>).networkInfo;
-
+      this.networkInfo = callingContract.getNetworkInfo();
+      //callingContract.getCallStack().
       // sanity-check...
       if (this.networkInfo == null) {
         throw Error('Calling contract should have the network info already set!');
       }
+      const interaction: InteractionCall = callingContract.getCallStack().getInteraction(callingInteraction.id);
+      const callStack = new ContractCallStack(contractTxId);
+      interaction.interactionInput.foreignContractCalls.set(contractTxId, callStack);
+      this.callStack = callStack;
+    } else {
+      this.callStack = new ContractCallStack(contractTxId);
     }
-  }
-
-  connect(wallet: ArWallet): Contract<State> {
-    this.wallet = wallet;
-    return this;
-  }
-
-  setEvaluationOptions(options: Partial<EvaluationOptions>): Contract<State> {
-    this.evaluationOptions = {
-      ...this.evaluationOptions,
-      ...options
-    };
-    return this;
   }
 
   async readState(
@@ -79,7 +77,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     currentTx?: { interactionTxId: string; contractTxId: string }[]
   ): Promise<EvalStateResult<State>> {
     this.logger.info('Read state for', this.contractTxId);
-    this.maybeClearNetworkInfo();
+    this.maybeClear();
 
     const { stateEvaluator } = this.smartweave;
     const benchmark = Benchmark.measure();
@@ -103,7 +101,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     transfer: ArTransfer = emptyTransfer
   ): Promise<InteractionResult<State, View>> {
     this.logger.info('View state for', this.contractTxId);
-    this.maybeClearNetworkInfo();
+    this.maybeClear();
     if (!this.wallet) {
       this.logger.warn('Wallet not set.');
     }
@@ -147,11 +145,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
     // creating a real transaction, with multiple calls to Arweave, seems like a huge waste.
 
     // call one of the contract's view method
-    const handleResult = await executionContext.handler.handle<Input, View>(
-      executionContext,
-      evalStateResult,
+    const handleResult = await executionContext.handler.handle<Input, View>(executionContext, evalStateResult, {
       interaction,
-      {
+      interactionTx: {
         id: null,
         recipient: transfer.target,
         owner: {
@@ -164,8 +160,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
         },
         block: executionContext.currentBlockData
       },
-      []
-    );
+      currentTx: []
+    });
 
     if (handleResult.type !== 'ok') {
       this.logger.fatal('Error while interacting with contract', {
@@ -177,12 +173,15 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return handleResult;
   }
 
-  async viewStateForTx<Input, View>(input: Input, transaction: InteractionTx): Promise<InteractionResult<State, View>> {
-    this.logger.info(`Vies state for ${this.contractTxId}`, transaction);
-    this.maybeClearNetworkInfo();
+  async viewStateForTx<Input, View>(
+    input: Input,
+    interactionTx: InteractionTx
+  ): Promise<InteractionResult<State, View>> {
+    this.logger.info(`Vies state for ${this.contractTxId}`, interactionTx);
+    this.maybeClear();
     const { stateEvaluator } = this.smartweave;
 
-    const executionContext = await this.createExecutionContextFromTx(this.contractTxId, transaction);
+    const executionContext = await this.createExecutionContextFromTx(this.contractTxId, interactionTx);
     const evalStateResult = await stateEvaluator.eval<State>(executionContext, []);
 
     const interaction: ContractInteraction<Input> = {
@@ -190,13 +189,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
       caller: executionContext.caller
     };
 
-    return await executionContext.handler.handle<Input, View>(
-      executionContext,
-      evalStateResult,
+    return await executionContext.handler.handle<Input, View>(executionContext, evalStateResult, {
       interaction,
-      transaction,
-      []
-    );
+      interactionTx,
+      currentTx: []
+    });
   }
 
   async writeInteraction<Input>(
@@ -207,7 +204,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     if (!this.wallet) {
       throw new Error("Wallet not connected. Use 'connect' method first.");
     }
-    this.maybeClearNetworkInfo();
+    this.maybeClear();
     const { arweave } = this.smartweave;
 
     const interactionTx = await createTx(
@@ -346,14 +343,36 @@ export class HandlerBasedContract<State> implements Contract<State> {
     };
   }
 
-  private maybeClearNetworkInfo() {
+  private maybeClear() {
     if (this.callingContract == null) {
-      this.logger.debug('Clearing network info for the root contract');
+      this.logger.debug('Clearing network info and call stack for the root contract');
       this.networkInfo = null;
+      this.callStack = new ContractCallStack(this.txId());
     }
   }
 
   txId(): string {
     return this.contractTxId;
+  }
+
+  getCallStack(): ContractCallStack {
+    return this.callStack;
+  }
+
+  getNetworkInfo(): NetworkInfoInterface {
+    return this.networkInfo;
+  }
+
+  connect(wallet: ArWallet): Contract<State> {
+    this.wallet = wallet;
+    return this;
+  }
+
+  setEvaluationOptions(options: Partial<EvaluationOptions>): Contract<State> {
+    this.evaluationOptions = {
+      ...this.evaluationOptions,
+      ...options
+    };
+    return this;
   }
 }

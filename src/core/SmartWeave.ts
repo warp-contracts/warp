@@ -11,6 +11,7 @@ import {
 } from '@smartweave/core';
 import Arweave from 'arweave';
 import { Contract, HandlerBasedContract, PstContract, PstContractImpl } from '@smartweave/contract';
+import { InteractionTx } from '@smartweave/legacy';
 
 /**
  * The SmartWeave "motherboard" ;-).
@@ -43,8 +44,8 @@ export class SmartWeave {
    * @param contractTxId
    * @param callingContract
    */
-  contract<State>(contractTxId: string, callingContract?: Contract): Contract<State> {
-    return new HandlerBasedContract<State>(contractTxId, this, callingContract);
+  contract<State>(contractTxId: string, callingContract?: Contract, callingInteraction?: InteractionTx): Contract<State> {
+    return new HandlerBasedContract<State>(contractTxId, this, callingContract, callingInteraction);
   }
 
   /**

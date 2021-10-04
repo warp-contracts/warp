@@ -11,6 +11,13 @@ import {
   LoggerFactory,
   SmartWeaveGlobal
 } from '@smartweave';
+import { InteractionCall } from '../../ContractCallStack';
+
+export interface InteractionData<Input> {
+  interaction: ContractInteraction<Input>,
+  interactionTx: InteractionTx,
+  currentTx: { interactionTxId: string; contractTxId: string }[]
+}
 
 /**
  * A handle that effectively runs contract's code.
@@ -19,9 +26,7 @@ export interface HandlerApi<State> {
   handle<Input, Result>(
     executionContext: ExecutionContext<State>,
     currentResult: EvalStateResult<State>,
-    interaction: ContractInteraction<Input>,
-    interactionTx: InteractionTx,
-    currentTx: { interactionTxId: string; contractTxId: string }[]
+    interactionData: InteractionData<Input>,
   ): Promise<InteractionResult<State, Result>>;
 }
 
@@ -56,11 +61,11 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
       async handle<Input, Result>(
         executionContext: ExecutionContext<State>,
         currentResult: EvalStateResult<State>,
-        interaction: ContractInteraction<Input>,
-        interactionTx: InteractionTx,
-        currentTx: { interactionTxId: string; contractTxId: string }[]
+        interactionData: InteractionData<Input>
       ): Promise<InteractionResult<State, Result>> {
         try {
+          const { interaction, interactionTx, currentTx } = interactionData;
+
           const handler = contractFunction(swGlobal, BigNumber, clarity, contractLogger) as HandlerFunction<
             State,
             Input,
@@ -77,7 +82,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
             executionContext,
             currentTx,
             currentResult,
-            interactionTx
+            interactionTx,
           );
           self.assignViewContractState<Input, State>(swGlobal, contractDefinition, executionContext);
 
@@ -157,7 +162,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
 
       const { stateEvaluator } = executionContext.smartweave;
       const childContract = executionContext.smartweave
-        .contract(contractTxId, executionContext.contract)
+        .contract(contractTxId, executionContext.contract, interactionTx)
         .setEvaluationOptions(executionContext.evaluationOptions);
 
       await stateEvaluator.onContractCall(interactionTx, executionContext, currentResult);
@@ -220,7 +225,7 @@ export type HandlerResult<State, Result> = {
 };
 
 export type InteractionResult<State, Result> = HandlerResult<State, Result> & {
-  type: 'ok' | 'error' | 'exception';
+  type: InteractionResultType;
   errorMessage?: string;
 };
 
@@ -228,3 +233,6 @@ export type ContractInteraction<Input> = {
   input: Input;
   caller: string;
 };
+
+export type InteractionResultType = 'ok' | 'error' | 'exception';
+
