@@ -18,6 +18,7 @@ export * from './ExecutionContextModifier';
 export * from './SmartWeaveTags';
 export * from './ExecutionContext';
 export * from './ContractDefinition';
+export * from './ContractCallStack';
 
 export * from './web/SmartWeaveWebFactory';
 export * from './node/SmartWeaveNodeFactory';

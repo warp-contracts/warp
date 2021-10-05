@@ -1,4 +1,4 @@
-import { ExecutionContext, GQLNodeInterface, InteractionTx } from '@smartweave';
+import { BlockHeightCacheResult, ExecutionContext, GQLNodeInterface, InteractionTx } from '@smartweave';
 
 /**
  * Implementors of this class are responsible for evaluating contract's state
@@ -44,6 +44,11 @@ export interface StateEvaluator {
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>
   ): Promise<void>;
+
+  latestAvailableState<State>(
+    contractTxId: string,
+    blockHeight: number
+  ): Promise<BlockHeightCacheResult<EvalStateResult<State>> | null>;
 }
 
 export class EvalStateResult<State> {
@@ -68,7 +73,7 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
 
   stackTrace = {
     saveState: false
-  }
+  };
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some of the features.
@@ -95,5 +100,5 @@ export interface EvaluationOptions {
   stackTrace: {
     // whether output state should be saved for each interaction in the stack trace (may result in huuuuge json files!)
     saveState: boolean;
-  }
+  };
 }

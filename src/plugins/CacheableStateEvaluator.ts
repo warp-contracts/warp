@@ -7,7 +7,7 @@ import {
   HandlerApi
 } from '@smartweave/core';
 import Arweave from 'arweave';
-import { GQLNodeInterface, InteractionTx } from '@smartweave/legacy';
+import { GQLNodeInterface } from '@smartweave/legacy';
 import { Benchmark, LoggerFactory } from '@smartweave/logging';
 
 /**
@@ -31,7 +31,10 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     const requestedBlockHeight = executionContext.blockHeight;
     this.cLogger.debug(`Requested state block height: ${requestedBlockHeight}`);
 
-    let cachedState: BlockHeightCacheResult<EvalStateResult<State>> | null = null;
+    const cachedState = executionContext.cachedState;
+    if (cachedState?.cachedHeight === requestedBlockHeight) {
+      return cachedState.cachedValue;
+    }
 
     this.cLogger.debug('executionContext.sortedInteractions', executionContext.sortedInteractions.length);
 
@@ -47,10 +50,6 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     if (sortedInteractionsUpToBlock.length > 0) {
       // get latest available cache for the requested block height
       const benchmark = Benchmark.measure();
-      cachedState = (await this.cache.getLessOrEqual(
-        executionContext.contractDefinition.txId,
-        requestedBlockHeight
-      )) as BlockHeightCacheResult<EvalStateResult<State>>;
       this.cLogger.trace('Retrieving value from cache', benchmark.elapsed());
 
       if (cachedState != null) {
@@ -135,5 +134,14 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
         state
       );
     }
+  }
+
+  async latestAvailableState<State>(
+    contractTxId: string,
+    blockHeight: number
+  ): Promise<BlockHeightCacheResult<EvalStateResult<State>> | null> {
+    return (await this.cache.getLessOrEqual(contractTxId, blockHeight)) as BlockHeightCacheResult<
+      EvalStateResult<State>
+    >;
   }
 }

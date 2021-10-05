@@ -35,6 +35,10 @@ async function main() {
 
   //fs.writeFileSync(path.join(__dirname, 'data', 'validity_old.json'), JSON.stringify(result.validity));
   fs.writeFileSync(path.join(__dirname, 'data', 'state.json'), JSON.stringify(state));
+
+
+  console.log('second read');
+  await lootContract.readState();
 }
 
 main().catch((e) => console.error(e));

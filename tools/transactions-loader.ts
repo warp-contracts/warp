@@ -12,7 +12,7 @@ async function main() {
   LoggerFactory.INST.logLevel('debug');
 
   const arweave = Arweave.init({
-    host: 'arweave.net', // Hostname or IP address for a Arweave host
+    host: 'arweave.live', // Hostname or IP address for a Arweave host
     port: 443, // Port
     protocol: 'https', // Network protocol http or https
     timeout: 60000, // Network request timeouts in milliseconds
@@ -21,11 +21,11 @@ async function main() {
 
   const transactionsLoader = new ContractInteractionsLoader(arweave);
 
-  const result = await transactionsLoader.load('LkfzZvdl_vfjRXZOPjnov18cGnnK3aDKj0qSQCgkCX8', 0, 779820);
+  const result = await transactionsLoader.load('Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY', 0, 779820);
 
   console.log(result.length);
 
-  //fs.writeFileSync(path.join(__dirname, 'data', 'transactions-2.json'), JSON.stringify(result));
+  fs.writeFileSync(path.join(__dirname, 'data', 'transactions-live.json'), JSON.stringify(result));
 }
 
 main().catch((e) => console.error(e));

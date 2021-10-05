@@ -14,9 +14,9 @@ import {
 import { InteractionCall } from '../../ContractCallStack';
 
 export interface InteractionData<Input> {
-  interaction: ContractInteraction<Input>,
-  interactionTx: InteractionTx,
-  currentTx: { interactionTxId: string; contractTxId: string }[]
+  interaction: ContractInteraction<Input>;
+  interactionTx: InteractionTx;
+  currentTx: { interactionTxId: string; contractTxId: string }[];
 }
 
 /**
@@ -26,7 +26,7 @@ export interface HandlerApi<State> {
   handle<Input, Result>(
     executionContext: ExecutionContext<State>,
     currentResult: EvalStateResult<State>,
-    interactionData: InteractionData<Input>,
+    interactionData: InteractionData<Input>
   ): Promise<InteractionResult<State, Result>>;
 }
 
@@ -82,7 +82,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
             executionContext,
             currentTx,
             currentResult,
-            interactionTx,
+            interactionTx
           );
           self.assignViewContractState<Input, State>(swGlobal, contractDefinition, executionContext);
 
@@ -235,4 +235,3 @@ export type ContractInteraction<Input> = {
 };
 
 export type InteractionResultType = 'ok' | 'error' | 'exception';
-

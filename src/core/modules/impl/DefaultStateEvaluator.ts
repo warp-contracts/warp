@@ -1,5 +1,6 @@
 import {
   Benchmark,
+  BlockHeightCacheResult,
   ContractInteraction,
   deepCopy,
   EvalStateResult,
@@ -9,6 +10,7 @@ import {
   GQLNodeInterface,
   GQLTagInterface,
   HandlerApi,
+  InteractionCall,
   InteractionResult,
   InteractionTx,
   LoggerFactory,
@@ -17,7 +19,6 @@ import {
   TagsParser
 } from '@smartweave';
 import Arweave from 'arweave';
-import { InteractionCall } from '../../ContractCallStack';
 
 // FIXME: currently this is tightly coupled with the HandlerApi
 export class DefaultStateEvaluator implements StateEvaluator {
@@ -66,7 +67,7 @@ export class DefaultStateEvaluator implements StateEvaluator {
 
     for (const missingInteraction of missingInteractions) {
       const singleInteractionBenchmark = Benchmark.measure();
-      
+
       const interactionTx: GQLNodeInterface = missingInteraction.node;
 
       this.logger.debug(
@@ -233,5 +234,12 @@ export class DefaultStateEvaluator implements StateEvaluator {
     state: EvalStateResult<State>
   ): Promise<void> {
     return Promise.resolve(undefined);
+  }
+
+  async latestAvailableState<State>(
+    contractTxId: string,
+    blockHeight: number
+  ): Promise<BlockHeightCacheResult<EvalStateResult<State>> | null> {
+    return null;
   }
 }

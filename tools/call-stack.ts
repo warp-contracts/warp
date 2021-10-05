@@ -21,13 +21,12 @@ async function main() {
 
   const smartweave = SmartWeaveWebFactory.memCached(arweave);
 
-  const contract = smartweave.contract(contractTxId)
-    .setEvaluationOptions({
-      ignoreExceptions: false,
-      stackTrace: {
-        saveState: false
-      }
-    });
+  const contract = smartweave.contract(contractTxId).setEvaluationOptions({
+    ignoreExceptions: false,
+    stackTrace: {
+      saveState: false
+    }
+  });
 
   const { state, validity } = await contract.readState();
 
