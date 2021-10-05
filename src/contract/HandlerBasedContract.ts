@@ -3,6 +3,7 @@ import {
   ArWallet,
   Benchmark,
   Contract,
+  ContractCallStack,
   ContractInteraction,
   createTx,
   DefaultEvaluationOptions,
@@ -11,7 +12,7 @@ import {
   EvaluationOptions,
   ExecutionContext,
   HandlerApi,
-  InteractionData,
+  InteractionCall,
   InteractionResult,
   InteractionTx,
   LoggerFactory,
@@ -21,7 +22,6 @@ import {
 } from '@smartweave';
 import { TransactionStatusResponse } from 'arweave/node/transactions';
 import { NetworkInfoInterface } from 'arweave/node/network';
-import { ContractCallStack, InteractionCall } from '../core/ContractCallStack';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -42,6 +42,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
    */
   private networkInfo?: NetworkInfoInterface = null;
 
+  private rootBlockHeight: number = null;
+
   /**
    * wallet connected to this contract
    */
@@ -50,15 +52,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
   constructor(
     readonly contractTxId: string,
     protected readonly smartweave: SmartWeave,
-    // note: this will be probably used for creating contract's
-    // call hierarchy and generating some sort of "stack trace"
     private readonly callingContract: Contract = null,
     private readonly callingInteraction: InteractionTx = null
   ) {
     this.waitForConfirmation = this.waitForConfirmation.bind(this);
     if (callingContract != null) {
       this.networkInfo = callingContract.getNetworkInfo();
-      //callingContract.getCallStack().
+      this.rootBlockHeight = callingContract.getRootBlockHeight();
       // sanity-check...
       if (this.networkInfo == null) {
         throw Error('Calling contract should have the network info already set!');
@@ -77,15 +77,16 @@ export class HandlerBasedContract<State> implements Contract<State> {
     currentTx?: { interactionTxId: string; contractTxId: string }[]
   ): Promise<EvalStateResult<State>> {
     this.logger.info('Read state for', this.contractTxId);
-    this.maybeClear();
+    this.maybeResetRootContract(blockHeight);
 
     const { stateEvaluator } = this.smartweave;
     const benchmark = Benchmark.measure();
     const executionContext = await this.createExecutionContext(this.contractTxId, blockHeight);
     this.logger.info('Execution Context', {
       blockHeight: executionContext.blockHeight,
-      srcTxId: executionContext.contractDefinition.srcTxId,
-      missingInteractions: executionContext.sortedInteractions.length
+      srcTxId: executionContext.contractDefinition?.srcTxId,
+      missingInteractions: executionContext.sortedInteractions.length,
+      cachedStateHeight: executionContext.cachedState?.cachedHeight
     });
     this.logger.debug('context', benchmark.elapsed());
     benchmark.reset();
@@ -101,13 +102,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
     transfer: ArTransfer = emptyTransfer
   ): Promise<InteractionResult<State, View>> {
     this.logger.info('View state for', this.contractTxId);
-    this.maybeClear();
+    this.maybeResetRootContract(blockHeight);
     if (!this.wallet) {
       this.logger.warn('Wallet not set.');
     }
     const { arweave, stateEvaluator } = this.smartweave;
     // create execution context
-    let executionContext = await this.createExecutionContext(this.contractTxId, blockHeight);
+    let executionContext = await this.createExecutionContext(this.contractTxId, blockHeight, true);
 
     // add block data to execution context
     if (!executionContext.currentBlockData) {
@@ -177,8 +178,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     input: Input,
     interactionTx: InteractionTx
   ): Promise<InteractionResult<State, View>> {
-    this.logger.info(`Vies state for ${this.contractTxId}`, interactionTx);
-    this.maybeClear();
+    this.logger.info(`View state for ${this.contractTxId}`, interactionTx);
+    this.maybeResetRootContract();
     const { stateEvaluator } = this.smartweave;
 
     const executionContext = await this.createExecutionContextFromTx(this.contractTxId, interactionTx);
@@ -204,7 +205,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     if (!this.wallet) {
       throw new Error("Wallet not connected. Use 'connect' method first.");
     }
-    this.maybeClear();
+    this.maybeResetRootContract();
     const { arweave } = this.smartweave;
 
     const interactionTx = await createTx(
@@ -235,6 +236,35 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return interactionTx.id;
   }
 
+  txId(): string {
+    return this.contractTxId;
+  }
+
+  getCallStack(): ContractCallStack {
+    return this.callStack;
+  }
+
+  getNetworkInfo(): NetworkInfoInterface {
+    return this.networkInfo;
+  }
+
+  connect(wallet: ArWallet): Contract<State> {
+    this.wallet = wallet;
+    return this;
+  }
+
+  setEvaluationOptions(options: Partial<EvaluationOptions>): Contract<State> {
+    this.evaluationOptions = {
+      ...this.evaluationOptions,
+      ...options
+    };
+    return this;
+  }
+
+  getRootBlockHeight(): number {
+    return this.rootBlockHeight;
+  }
+
   private async waitForConfirmation(transactionId: string): Promise<TransactionStatusResponse> {
     const { arweave } = this.smartweave;
 
@@ -252,9 +282,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   private async createExecutionContext(
     contractTxId: string,
-    blockHeight?: number
+    blockHeight?: number,
+    forceDefinitionLoad = false
   ): Promise<ExecutionContext<State, HandlerApi<State>>> {
-    const { arweave, definitionLoader, interactionsLoader, interactionsSorter, executorFactory } = this.smartweave;
+    const { arweave, definitionLoader, interactionsLoader, interactionsSorter, executorFactory, stateEvaluator } =
+      this.smartweave;
 
     let currentNetworkInfo;
 
@@ -282,23 +314,41 @@ export class HandlerBasedContract<State> implements Contract<State> {
     this.logger.debug('network info', benchmark.elapsed());
 
     benchmark.reset();
-    const [contractDefinition, interactions] = await Promise.all([
-      definitionLoader.load<State>(contractTxId),
-      // note: "eagerly" loading all of the interactions up to the current
-      // network height (instead of the requested "blockHeight").
-      // as dumb as it may seem - this in fact significantly speeds up the processing
-      // - because the InteractionsLoader (usually CacheableContractInteractionsLoader)
-      // doesn't have to download missing interactions during the contract execution
-      // (eg. if contract is calling different contracts on different block heights).
-      // This basically limits the amount of interactions with Arweave GraphQL endpoint -
-      // each such interaction takes at least ~500ms.
-      // TODO: this could be further optimized to always load interactions only up to the "root's" call requested height
-      interactionsLoader.load(contractTxId, 0, this.networkInfo.height)
-    ]);
-    this.logger.debug('contract and interactions load', benchmark.elapsed());
-    const sortedInteractions = await interactionsSorter.sort(interactions);
 
-    const handler = (await executorFactory.create(contractDefinition)) as HandlerApi<State>;
+    const cachedState = await stateEvaluator.latestAvailableState<State>(contractTxId, blockHeight);
+    let cachedBlockHeight = -1;
+    if (cachedState != null) {
+      cachedBlockHeight = cachedState.cachedHeight;
+    }
+
+    let contractDefinition,
+      interactions = [],
+      sortedInteractions = [],
+      handler;
+    if (cachedBlockHeight != blockHeight) {
+      [contractDefinition, interactions] = await Promise.all([
+        definitionLoader.load<State>(contractTxId),
+        // note: "eagerly" loading all of the interactions up to the originally requested block height
+        // (instead of the blockHeight requested for this specific read state call).
+        // as dumb as it may seem - this in fact significantly speeds up the processing
+        // - because the InteractionsLoader (usually CacheableContractInteractionsLoader)
+        // doesn't have to download missing interactions during the contract execution
+        // (eg. if contract is calling different contracts on different block heights).
+        // This basically limits the amount of interactions with Arweave GraphQL endpoint -
+        // each such interaction takes at least ~500ms.
+        interactionsLoader.load(contractTxId, cachedBlockHeight + 1, this.rootBlockHeight || this.networkInfo.height)
+      ]);
+      this.logger.debug('contract and interactions load', benchmark.elapsed());
+      sortedInteractions = await interactionsSorter.sort(interactions);
+
+      handler = (await executorFactory.create(contractDefinition)) as HandlerApi<State>;
+    } else {
+      this.logger.debug('State fully cached, not loading interactions.');
+      if (forceDefinitionLoad) {
+        contractDefinition = await definitionLoader.load<State>(contractTxId);
+        handler = (await executorFactory.create(contractDefinition)) as HandlerApi<State>;
+      }
+    }
 
     return {
       contractDefinition,
@@ -309,7 +359,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
       smartweave: this.smartweave,
       contract: this,
       evaluationOptions: this.evaluationOptions,
-      currentNetworkInfo
+      currentNetworkInfo,
+      cachedState
     };
   }
 
@@ -343,36 +394,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
     };
   }
 
-  private maybeClear() {
+  private maybeResetRootContract(blockHeight?: number) {
     if (this.callingContract == null) {
       this.logger.debug('Clearing network info and call stack for the root contract');
       this.networkInfo = null;
       this.callStack = new ContractCallStack(this.txId());
+      this.rootBlockHeight = blockHeight;
     }
-  }
-
-  txId(): string {
-    return this.contractTxId;
-  }
-
-  getCallStack(): ContractCallStack {
-    return this.callStack;
-  }
-
-  getNetworkInfo(): NetworkInfoInterface {
-    return this.networkInfo;
-  }
-
-  connect(wallet: ArWallet): Contract<State> {
-    this.wallet = wallet;
-    return this;
-  }
-
-  setEvaluationOptions(options: Partial<EvaluationOptions>): Contract<State> {
-    this.evaluationOptions = {
-      ...this.evaluationOptions,
-      ...options
-    };
-    return this;
   }
 }

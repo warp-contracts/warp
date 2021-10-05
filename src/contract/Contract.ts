@@ -1,6 +1,7 @@
 import {
   ArTransfer,
   ArWallet,
+  ContractCallStack,
   EvalStateResult,
   EvaluationOptions,
   InteractionResult,
@@ -8,7 +9,6 @@ import {
   Tags
 } from '@smartweave';
 import { NetworkInfoInterface } from 'arweave/node/network';
-import { ContractCallStack } from '../core/ContractCallStack';
 
 /**
  * A base interface to be implemented by SmartWeave Contracts clients
@@ -106,4 +106,6 @@ export interface Contract<State = unknown> {
   getCallStack(): ContractCallStack;
 
   getNetworkInfo(): NetworkInfoInterface;
+
+  getRootBlockHeight(): number | null;
 }

@@ -44,7 +44,11 @@ export class SmartWeave {
    * @param contractTxId
    * @param callingContract
    */
-  contract<State>(contractTxId: string, callingContract?: Contract, callingInteraction?: InteractionTx): Contract<State> {
+  contract<State>(
+    contractTxId: string,
+    callingContract?: Contract,
+    callingInteraction?: InteractionTx
+  ): Contract<State> {
     return new HandlerBasedContract<State>(contractTxId, this, callingContract, callingInteraction);
   }
 

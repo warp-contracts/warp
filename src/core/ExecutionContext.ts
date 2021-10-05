@@ -1,4 +1,12 @@
-import { Contract, ContractDefinition, EvaluationOptions, GQLEdgeInterface, SmartWeave } from '@smartweave';
+import {
+  BlockHeightCacheResult,
+  Contract,
+  ContractDefinition,
+  EvalStateResult,
+  EvaluationOptions,
+  GQLEdgeInterface,
+  SmartWeave
+} from '@smartweave';
 import { NetworkInfoInterface } from 'arweave/node/network';
 import { BlockData } from 'arweave/node/blocks';
 
@@ -48,4 +56,5 @@ export type ExecutionContext<State, Api = unknown> = {
   currentNetworkInfo?: NetworkInfoInterface;
   currentBlockData?: BlockData;
   caller?: string; // note: this is only set for "viewState" operations
+  cachedState?: BlockHeightCacheResult<EvalStateResult<State>>;
 };
