@@ -139,6 +139,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
     this.maybeResetRootContract();
     const { arweave } = this.smartweave;
 
+    await this.callContract(input, undefined, tags, transfer);
+    const callStack: ContractCallStack = this.getCallStack();
+
     const interactionTx = await createTx(
       this.smartweave.arweave,
       this.wallet,
