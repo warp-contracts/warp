@@ -102,76 +102,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     transfer: ArTransfer = emptyTransfer
   ): Promise<InteractionResult<State, View>> {
     this.logger.info('View state for', this.contractTxId);
-    this.maybeResetRootContract(blockHeight);
-    if (!this.wallet) {
-      this.logger.warn('Wallet not set.');
-    }
-    const { arweave, stateEvaluator } = this.smartweave;
-    // create execution context
-    let executionContext = await this.createExecutionContext(this.contractTxId, blockHeight, true);
-
-    // add block data to execution context
-    if (!executionContext.currentBlockData) {
-      const currentBlockData = executionContext.currentNetworkInfo
-        ? // trying to optimise calls to arweave as much as possible...
-          await arweave.blocks.get(executionContext.currentNetworkInfo.current)
-        : await arweave.blocks.getCurrent();
-
-      executionContext = {
-        ...executionContext,
-        currentBlockData
-      };
-    }
-
-    // add caller info to execution context
-    const caller = this.wallet ? await arweave.wallets.jwkToAddress(this.wallet) : '';
-    executionContext = {
-      ...executionContext,
-      caller
-    };
-
-    // eval current state
-    const evalStateResult = await stateEvaluator.eval<State>(executionContext, []);
-
-    this.logger.debug('Creating new interaction for view state');
-
-    // create interaction transaction
-    const interaction: ContractInteraction<Input> = {
-      input,
-      caller: executionContext.caller
-    };
-
-    this.logger.trace('interaction', interaction);
-    // TODO: what is the best/most efficient way of creating a transaction in this case?
-    // creating a real transaction, with multiple calls to Arweave, seems like a huge waste.
-
-    // call one of the contract's view method
-    const handleResult = await executionContext.handler.handle<Input, View>(executionContext, evalStateResult, {
-      interaction,
-      interactionTx: {
-        id: null,
-        recipient: transfer.target,
-        owner: {
-          address: executionContext.caller
-        },
-        tags: tags || [],
-        fee: null,
-        quantity: {
-          winston: transfer.winstonQty
-        },
-        block: executionContext.currentBlockData
-      },
-      currentTx: []
-    });
-
-    if (handleResult.type !== 'ok') {
-      this.logger.fatal('Error while interacting with contract', {
-        type: handleResult.type,
-        error: handleResult.errorMessage
-      });
-    }
-
-    return handleResult;
+    return await this.callContract<Input, View>(input, blockHeight, tags, transfer);
   }
 
   async viewStateForTx<Input, View>(
@@ -263,6 +194,15 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   getRootBlockHeight(): number {
     return this.rootBlockHeight;
+  }
+
+  async dryWrite<Input>(input: Input, tags?: Tags, transfer?: ArTransfer): Promise<InteractionResult<State, unknown>> {
+    this.logger.info('Dry-write for', this.contractTxId);
+    return await this.callContract<Input>(input, undefined, tags, transfer);
+  }
+
+  dryWriteFromTx<Input>(input: Input, transaction: InteractionTx): Promise<EvalStateResult<State>> {
+    return Promise.resolve(undefined);
   }
 
   private async waitForConfirmation(transactionId: string): Promise<TransactionStatusResponse> {
@@ -401,5 +341,83 @@ export class HandlerBasedContract<State> implements Contract<State> {
       this.callStack = new ContractCallStack(this.txId());
       this.rootBlockHeight = blockHeight;
     }
+  }
+
+  private async callContract<Input, View = unknown>(
+    input: Input,
+    blockHeight?: number,
+    tags: Tags = [],
+    transfer: ArTransfer = emptyTransfer
+  ): Promise<InteractionResult<State, View>> {
+    this.maybeResetRootContract();
+    if (!this.wallet) {
+      this.logger.warn('Wallet not set.');
+    }
+    const { arweave, stateEvaluator } = this.smartweave;
+    // create execution context
+    let executionContext = await this.createExecutionContext(this.contractTxId, blockHeight, true);
+
+    // add block data to execution context
+    if (!executionContext.currentBlockData) {
+      const currentBlockData = executionContext.currentNetworkInfo
+        ? // trying to optimise calls to arweave as much as possible...
+          await arweave.blocks.get(executionContext.currentNetworkInfo.current)
+        : await arweave.blocks.getCurrent();
+
+      executionContext = {
+        ...executionContext,
+        currentBlockData
+      };
+    }
+
+    // add caller info to execution context
+    const caller = this.wallet ? await arweave.wallets.jwkToAddress(this.wallet) : '';
+    executionContext = {
+      ...executionContext,
+      caller
+    };
+
+    // eval current state
+    const evalStateResult = await stateEvaluator.eval<State>(executionContext, []);
+
+    this.logger.debug('Creating new interaction for view state');
+
+    // create interaction transaction
+    const interaction: ContractInteraction<Input> = {
+      input,
+      caller: executionContext.caller
+    };
+
+    this.logger.trace('interaction', interaction);
+    // TODO: what is the best/most efficient way of creating a transaction in this case?
+    // creating a real transaction, with multiple calls to Arweave, seems like a huge waste.
+
+    // call one of the contract's method
+    const handleResult: InteractionResult<State, View> = await executionContext.handler.handle<Input, View>(executionContext, evalStateResult, {
+      interaction,
+      interactionTx: {
+        id: null,
+        recipient: transfer.target,
+        owner: {
+          address: executionContext.caller
+        },
+        tags: tags || [],
+        fee: null,
+        quantity: {
+          winston: transfer.winstonQty
+        },
+        block: executionContext.currentBlockData
+      },
+      currentTx: []
+    });
+
+    if (handleResult.type !== 'ok') {
+      this.logger.fatal('Error while interacting with contract', {
+        type: handleResult.type,
+        error: handleResult.errorMessage
+      });
+    }
+
+    return handleResult;
   }
 }

@@ -108,4 +108,8 @@ export interface Contract<State = unknown> {
   getNetworkInfo(): NetworkInfoInterface;
 
   getRootBlockHeight(): number | null;
+
+  dryWrite<Input>(input: Input, tags?: Tags, transfer?: ArTransfer): Promise<InteractionResult<State, unknown>>;
+
+  dryWriteFromTx<Input>(input: Input, transaction: InteractionTx): Promise<EvalStateResult<State>>;
 }
