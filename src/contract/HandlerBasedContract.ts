@@ -110,22 +110,17 @@ export class HandlerBasedContract<State> implements Contract<State> {
     interactionTx: InteractionTx
   ): Promise<InteractionResult<State, View>> {
     this.logger.info(`View state for ${this.contractTxId}`, interactionTx);
-    this.maybeResetRootContract();
-    const { stateEvaluator } = this.smartweave;
+    return await this.callContractForTx<Input, View>(input, interactionTx);
+  }
 
-    const executionContext = await this.createExecutionContextFromTx(this.contractTxId, interactionTx);
-    const evalStateResult = await stateEvaluator.eval<State>(executionContext, []);
+  async dryWrite<Input>(input: Input, tags?: Tags, transfer?: ArTransfer): Promise<InteractionResult<State, unknown>> {
+    this.logger.info('Dry-write for', this.contractTxId);
+    return await this.callContract<Input>(input, undefined, tags, transfer);
+  }
 
-    const interaction: ContractInteraction<Input> = {
-      input,
-      caller: executionContext.caller
-    };
-
-    return await executionContext.handler.handle<Input, View>(executionContext, evalStateResult, {
-      interaction,
-      interactionTx,
-      currentTx: []
-    });
+  async dryWriteFromTx<Input>(input: Input, transaction: InteractionTx): Promise<InteractionResult<State, unknown>> {
+    this.logger.info(`Dry-write for transaction for ${this.contractTxId}`, transaction);
+    return await this.callContractForTx<Input>(input, transaction);
   }
 
   async writeInteraction<Input>(
@@ -197,15 +192,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   getRootBlockHeight(): number {
     return this.rootBlockHeight;
-  }
-
-  async dryWrite<Input>(input: Input, tags?: Tags, transfer?: ArTransfer): Promise<InteractionResult<State, unknown>> {
-    this.logger.info('Dry-write for', this.contractTxId);
-    return await this.callContract<Input>(input, undefined, tags, transfer);
-  }
-
-  dryWriteFromTx<Input>(input: Input, transaction: InteractionTx): Promise<EvalStateResult<State>> {
-    return Promise.resolve(undefined);
   }
 
   private async waitForConfirmation(transactionId: string): Promise<TransactionStatusResponse> {
@@ -283,7 +269,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
       ]);
       this.logger.debug('contract and interactions load', benchmark.elapsed());
       sortedInteractions = await interactionsSorter.sort(interactions);
-
       handler = (await executorFactory.create(contractDefinition)) as HandlerApi<State>;
     } else {
       this.logger.debug('State fully cached, not loading interactions.');
@@ -312,15 +297,32 @@ export class HandlerBasedContract<State> implements Contract<State> {
     transaction: InteractionTx
   ): Promise<ExecutionContext<State, HandlerApi<State>>> {
     const benchmark = Benchmark.measure();
-    const { definitionLoader, interactionsLoader, interactionsSorter, executorFactory } = this.smartweave;
+    const { definitionLoader, interactionsLoader, interactionsSorter, executorFactory, stateEvaluator } =
+      this.smartweave;
     const blockHeight = transaction.block.height;
     const caller = transaction.owner.address;
-    const [contractDefinition, interactions] = await Promise.all([
-      definitionLoader.load<State>(contractTxId),
-      await interactionsLoader.load(contractTxId, 0, blockHeight)
-    ]);
-    const sortedInteractions = await interactionsSorter.sort(interactions);
-    const handler = (await executorFactory.create(contractDefinition)) as HandlerApi<State>;
+
+    const cachedState = await stateEvaluator.latestAvailableState<State>(contractTxId, blockHeight);
+    let cachedBlockHeight = -1;
+    if (cachedState != null) {
+      cachedBlockHeight = cachedState.cachedHeight;
+    }
+
+    let contractDefinition,
+      interactions = [],
+      sortedInteractions = [],
+      handler;
+
+    if (cachedBlockHeight != blockHeight) {
+      [contractDefinition, interactions] = await Promise.all([
+        definitionLoader.load<State>(contractTxId),
+        await interactionsLoader.load(contractTxId, 0, blockHeight)
+      ]);
+      sortedInteractions = await interactionsSorter.sort(interactions);
+      handler = (await executorFactory.create(contractDefinition)) as HandlerApi<State>;
+    } else {
+      this.logger.debug('State fully cached, not loading interactions.');
+    }
 
     this.logger.debug('Creating execution context from tx:', benchmark.elapsed());
 
@@ -396,23 +398,27 @@ export class HandlerBasedContract<State> implements Contract<State> {
     // creating a real transaction, with multiple calls to Arweave, seems like a huge waste.
 
     // call one of the contract's method
-    const handleResult: InteractionResult<State, View> = await executionContext.handler.handle<Input, View>(executionContext, evalStateResult, {
-      interaction,
-      interactionTx: {
-        id: null,
-        recipient: transfer.target,
-        owner: {
-          address: executionContext.caller
+    const handleResult: InteractionResult<State, View> = await executionContext.handler.handle<Input, View>(
+      executionContext,
+      evalStateResult,
+      {
+        interaction,
+        interactionTx: {
+          id: null,
+          recipient: transfer.target,
+          owner: {
+            address: executionContext.caller
+          },
+          tags: tags || [],
+          fee: null,
+          quantity: {
+            winston: transfer.winstonQty
+          },
+          block: executionContext.currentBlockData
         },
-        tags: tags || [],
-        fee: null,
-        quantity: {
-          winston: transfer.winstonQty
-        },
-        block: executionContext.currentBlockData
-      },
-      currentTx: []
-    });
+        currentTx: []
+      }
+    );
 
     if (handleResult.type !== 'ok') {
       this.logger.fatal('Error while interacting with contract', {
@@ -422,5 +428,27 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
 
     return handleResult;
+  }
+
+  private async callContractForTx<Input, View = unknown>(
+    input: Input,
+    interactionTx: InteractionTx
+  ): Promise<InteractionResult<State, View>> {
+    this.maybeResetRootContract();
+    const { stateEvaluator } = this.smartweave;
+
+    const executionContext = await this.createExecutionContextFromTx(this.contractTxId, interactionTx);
+    const evalStateResult = await stateEvaluator.eval<State>(executionContext, []);
+
+    const interaction: ContractInteraction<Input> = {
+      input,
+      caller: executionContext.caller
+    };
+
+    return await executionContext.handler.handle<Input, View>(executionContext, evalStateResult, {
+      interaction,
+      interactionTx,
+      currentTx: []
+    });
   }
 }

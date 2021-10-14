@@ -94,6 +94,10 @@ export interface Contract<State = unknown> {
     transaction: InteractionTx
   ): Promise<InteractionResult<State, View>>;
 
+  dryWrite<Input>(input: Input, tags?: Tags, transfer?: ArTransfer): Promise<InteractionResult<State, unknown>>;
+
+  dryWriteFromTx<Input>(input: Input, transaction: InteractionTx): Promise<InteractionResult<State, unknown>>;
+
   /**
    * Writes a new "interaction" transaction - ie. such transaction that stores input for the contract.
    *
@@ -108,8 +112,4 @@ export interface Contract<State = unknown> {
   getNetworkInfo(): NetworkInfoInterface;
 
   getRootBlockHeight(): number | null;
-
-  dryWrite<Input>(input: Input, tags?: Tags, transfer?: ArTransfer): Promise<InteractionResult<State, unknown>>;
-
-  dryWriteFromTx<Input>(input: Input, transaction: InteractionTx): Promise<EvalStateResult<State>>;
 }
