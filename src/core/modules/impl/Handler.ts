@@ -49,8 +49,10 @@ export class Handler<State> implements HandlerApi<State> {
       this.logger.trace(`SmartWeave.contract.id:`, this.swGlobal.contract.id);
 
       // TODO: refactor - too many arguments
-      this.assignReadContractState<Input, State>(executionContext, currentTx, currentResult, interactionTx);
-      this.assignViewContractState<Input, State>(executionContext);
+      this.assignReadContractState<Input>(executionContext, currentTx, currentResult, interactionTx);
+      this.assignViewContractState<Input>(executionContext);
+      this.assignWrite(executionContext);
+
 
       const handlerResult = await handler(stateCopy, interaction);
 
@@ -88,7 +90,22 @@ export class Handler<State> implements HandlerApi<State> {
     }
   }
 
-  private assignViewContractState<Input, State>(executionContext: ExecutionContext<State>) {
+  private assignWrite(executionContext: ExecutionContext<State>) {
+    this.swGlobal.contracts.write = async <Input = unknown>(contractTxId: string, input: Input) => {
+      this.logger.debug('swGlobal.write call:', {
+        from: this.contractDefinition.txId,
+        to: contractTxId,
+        input
+      });
+      const childContract = executionContext.smartweave
+        .contract(contractTxId, executionContext.contract)
+        .setEvaluationOptions(executionContext.evaluationOptions);
+
+      return await childContract.dryWriteFromTx<Input>(input, this.swGlobal._activeTx);
+    };
+  }
+
+  private assignViewContractState<Input>(executionContext: ExecutionContext<State>) {
     this.swGlobal.contracts.viewContractState = async <View>(contractTxId: string, input: any) => {
       this.logger.debug('swGlobal.viewContractState call:', {
         from: this.contractDefinition.txId,
@@ -103,7 +120,7 @@ export class Handler<State> implements HandlerApi<State> {
     };
   }
 
-  private assignReadContractState<Input, State>(
+  private assignReadContractState<Input>(
     executionContext: ExecutionContext<State>,
     currentTx: { interactionTxId: string; contractTxId: string }[],
     currentResult: EvalStateResult<State>,
@@ -141,7 +158,6 @@ export class Handler<State> implements HandlerApi<State> {
       // (by simply using destructuring operator)...
       // but this (i.e. returning always stateWithValidity from here) would break backwards compatibility
       // in current contract's source code..:/
-
       return returnValidity ? deepCopy(stateWithValidity) : deepCopy(stateWithValidity.state);
     };
   }

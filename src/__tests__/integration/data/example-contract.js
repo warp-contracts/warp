@@ -6,6 +6,10 @@ export function handle(state, action) {
     state.counter++;
     return { state };
   }
+  if (action.input.function === 'add-amount') {
+    state.counter += action.input.amount;
+    return { state };
+  }
   if (action.input.function === 'value') {
     return { result: state.counter };
   }
