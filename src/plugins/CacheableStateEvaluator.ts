@@ -48,10 +48,6 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
 
     // if there was anything to cache...
     if (sortedInteractionsUpToBlock.length > 0) {
-      // get latest available cache for the requested block height
-      const benchmark = Benchmark.measure();
-      this.cLogger.trace('Retrieving value from cache', benchmark.elapsed());
-
       if (cachedState != null) {
         this.cLogger.debug(`Cached state for ${executionContext.contractDefinition.txId}`, {
           cachedHeight: cachedState.cachedHeight,
