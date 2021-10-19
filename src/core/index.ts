@@ -13,6 +13,7 @@ export * from './modules/impl/HandlerExecutorFactory';
 export * from './modules/impl/LexicographicalInteractionsSorter';
 export * from './modules/impl/DefaultCreateContract';
 export * from './modules/impl/TagsParser';
+export * from './modules/impl/normalize-source';
 
 export * from './ExecutionContextModifier';
 export * from './SmartWeaveTags';
