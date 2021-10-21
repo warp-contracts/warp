@@ -16,3 +16,7 @@ export const mapReplacer = (key: unknown, value: unknown) => {
     return value;
   }
 };
+
+export const asc = (a: number, b: number) => a - b;
+
+export const desc = (a: number, b: number) => b - a;

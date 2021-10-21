@@ -1,5 +1,5 @@
 import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@smartweave/cache';
-import { deepCopy } from '@smartweave/utils';
+import { deepCopy, asc, desc } from '@smartweave/utils';
 
 /**
  * A simple, in-memory cache implementation of the BlockHeightSwCache
@@ -18,7 +18,7 @@ export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
 
     // sort keys (ie. block heights) in asc order and get
     // the last element (ie. highest cached block height).
-    const highestBlockHeight = [...cached.keys()].sort().pop();
+    const highestBlockHeight = [...cached.keys()].sort(asc).pop();
 
     return {
       cachedHeight: highestBlockHeight,
@@ -35,8 +35,7 @@ export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
 
     // find first element in and desc-sorted keys array that is not higher than requested block height
     const highestBlockHeight = [...cached.keys()]
-      .sort()
-      .reverse()
+      .sort(desc)
       .find((cachedBlockHeight) => {
         return cachedBlockHeight <= blockHeight;
       });
@@ -55,7 +54,7 @@ export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
     }
     const cached = this.storage[cacheKey];
     if (cached.size == this.maxStoredBlockHeights) {
-      const toRemove = [...cached.keys()].sort().shift();
+      const toRemove = [...cached.keys()].sort(asc).shift();
       cached.delete(toRemove);
     }
 
