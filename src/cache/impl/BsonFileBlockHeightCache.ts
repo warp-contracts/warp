@@ -3,7 +3,7 @@ import path from 'path';
 import BSON from 'bson';
 import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@smartweave/cache';
 import { Benchmark, LoggerFactory } from '@smartweave/logging';
-import { deepCopy } from '@smartweave/utils';
+import { asc, deepCopy, desc } from '@smartweave/utils';
 
 /**
  * An implementation of {@link BlockHeightSwCache} that stores its data in BSON files.
@@ -126,7 +126,7 @@ export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V
     // the first element (ie. highest cached block height).
     const highestBlockHeight = Object.keys(cached)
       .map((k) => +k)
-      .sort()
+      .sort(asc)
       .pop();
 
     return {
@@ -145,8 +145,7 @@ export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V
     // find first element in a desc-sorted keys array that is not higher than requested block height
     const highestBlockHeight = Object.keys(cached)
       .map((k) => +k)
-      .sort()
-      .reverse()
+      .sort(desc)
       .find((cachedBlockHeight) => {
         return cachedBlockHeight <= blockHeight;
       });
