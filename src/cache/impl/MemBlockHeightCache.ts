@@ -34,11 +34,9 @@ export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
     const cached: Map<number, V> = this.storage[key];
 
     // find first element in and desc-sorted keys array that is not higher than requested block height
-    const highestBlockHeight = [...cached.keys()]
-      .sort(desc)
-      .find((cachedBlockHeight) => {
-        return cachedBlockHeight <= blockHeight;
-      });
+    const highestBlockHeight = [...cached.keys()].sort(desc).find((cachedBlockHeight) => {
+      return cachedBlockHeight <= blockHeight;
+    });
 
     return highestBlockHeight === undefined
       ? null
