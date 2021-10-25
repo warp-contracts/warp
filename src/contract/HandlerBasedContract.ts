@@ -5,19 +5,24 @@ import {
   Contract,
   ContractCallStack,
   ContractInteraction,
+  createDummyTx,
   createTx,
+  CurrentTx,
   DefaultEvaluationOptions,
   emptyTransfer,
   EvalStateResult,
   EvaluationOptions,
   ExecutionContext,
+  GQLNodeInterface,
   HandlerApi,
+  InnerWritesEvaluator,
   InteractionCall,
+  InteractionData,
   InteractionResult,
-  InteractionTx,
   LoggerFactory,
   sleep,
   SmartWeave,
+  SmartWeaveTags,
   Tags
 } from '@smartweave';
 import { TransactionStatusResponse } from 'arweave/node/transactions';
@@ -38,11 +43,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
   /**
    * current Arweave networkInfo that will be used for all operations of the SmartWeave protocol.
    * Only the 'root' contract call should read this data from Arweave - all the inner calls ("child" contracts)
-   * should reuse this data from the parent ("calling) contract.
+   * should reuse this data from the parent ("calling") contract.
    */
   private networkInfo?: NetworkInfoInterface = null;
 
   private rootBlockHeight: number = null;
+
+  private readonly innerWritesEvaluator = new InnerWritesEvaluator();
 
   /**
    * wallet connected to this contract
@@ -53,7 +60,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     readonly contractTxId: string,
     protected readonly smartweave: SmartWeave,
     private readonly callingContract: Contract = null,
-    private readonly callingInteraction: InteractionTx = null
+    private readonly callingInteraction: GQLNodeInterface = null
   ) {
     this.waitForConfirmation = this.waitForConfirmation.bind(this);
     if (callingContract != null) {
@@ -63,6 +70,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       if (this.networkInfo == null) {
         throw Error('Calling contract should have the network info already set!');
       }
+      this.logger.debug('Calling interaction id', callingInteraction.id);
       const interaction: InteractionCall = callingContract.getCallStack().getInteraction(callingInteraction.id);
       const callStack = new ContractCallStack(contractTxId);
       interaction.interactionInput.foreignContractCalls.set(contractTxId, callStack);
@@ -72,11 +80,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
   }
 
-  async readState(
-    blockHeight?: number,
-    currentTx?: { interactionTxId: string; contractTxId: string }[]
-  ): Promise<EvalStateResult<State>> {
-    this.logger.info('Read state for', this.contractTxId);
+  async readState(blockHeight?: number, currentTx?: CurrentTx[]): Promise<EvalStateResult<State>> {
+    this.logger.info('Read state for', {
+      contractTxId: this.contractTxId,
+      currentTx
+    });
     this.maybeResetRootContract(blockHeight);
 
     const { stateEvaluator } = this.smartweave;
@@ -107,7 +115,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   async viewStateForTx<Input, View>(
     input: Input,
-    interactionTx: InteractionTx
+    interactionTx: GQLNodeInterface
   ): Promise<InteractionResult<State, View>> {
     this.logger.info(`View state for ${this.contractTxId}`, interactionTx);
     return await this.callContractForTx<Input, View>(input, interactionTx);
@@ -118,9 +126,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return await this.callContract<Input>(input, undefined, tags, transfer);
   }
 
-  async dryWriteFromTx<Input>(input: Input, transaction: InteractionTx): Promise<InteractionResult<State, unknown>> {
-    this.logger.info(`Dry-write for transaction for ${this.contractTxId}`, transaction);
-    return await this.callContractForTx<Input>(input, transaction);
+  async dryWriteFromTx<Input>(
+    input: Input,
+    transaction: GQLNodeInterface,
+    currentTx?: CurrentTx[]
+  ): Promise<InteractionResult<State, unknown>> {
+    this.logger.info(`Dry-write from transaction ${transaction.id} for ${this.contractTxId}`);
+    return await this.callContractForTx<Input>(input, transaction, true, currentTx || []);
   }
 
   async writeInteraction<Input>(
@@ -128,14 +140,26 @@ export class HandlerBasedContract<State> implements Contract<State> {
     tags: Tags = [],
     transfer: ArTransfer = emptyTransfer
   ): Promise<string | null> {
+    this.logger.info('Write interaction input', input);
     if (!this.wallet) {
       throw new Error("Wallet not connected. Use 'connect' method first.");
     }
-    this.maybeResetRootContract();
     const { arweave } = this.smartweave;
 
     await this.callContract(input, undefined, tags, transfer);
     const callStack: ContractCallStack = this.getCallStack();
+    const innerWrites = this.innerWritesEvaluator.eval(callStack);
+    this.logger.debug('Input', input);
+    this.logger.debug('Callstack', callStack.print());
+
+    innerWrites.forEach((contractTxId) => {
+      tags.push({
+        name: SmartWeaveTags.INTERACT_WRITE,
+        value: contractTxId
+      });
+    });
+
+    this.logger.debug('Tags with inner calls', tags);
 
     const interactionTx = await createTx(
       this.smartweave.arweave,
@@ -146,8 +170,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
       transfer.target,
       transfer.winstonQty
     );
-
-    this.logger.debug('interactionTx', interactionTx);
 
     const response = await arweave.transactions.post(interactionTx);
 
@@ -294,7 +316,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   private async createExecutionContextFromTx(
     contractTxId: string,
-    transaction: InteractionTx
+    transaction: GQLNodeInterface
   ): Promise<ExecutionContext<State, HandlerApi<State>>> {
     const benchmark = Benchmark.measure();
     const { definitionLoader, interactionsLoader, interactionsSorter, executorFactory, stateEvaluator } =
@@ -319,10 +341,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
         await interactionsLoader.load(contractTxId, 0, blockHeight)
       ]);
       sortedInteractions = await interactionsSorter.sort(interactions);
-      handler = (await executorFactory.create(contractDefinition)) as HandlerApi<State>;
     } else {
       this.logger.debug('State fully cached, not loading interactions.');
+      contractDefinition = await definitionLoader.load<State>(contractTxId);
     }
+    handler = (await executorFactory.create(contractDefinition)) as HandlerApi<State>;
 
     this.logger.debug('Creating execution context from tx:', benchmark.elapsed());
 
@@ -335,7 +358,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
       smartweave: this.smartweave,
       contract: this,
       evaluationOptions: this.evaluationOptions,
-      caller
+      caller,
+      cachedState
     };
   }
 
@@ -354,6 +378,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     tags: Tags = [],
     transfer: ArTransfer = emptyTransfer
   ): Promise<InteractionResult<State, View>> {
+    this.logger.info('Call contract input', input);
     this.maybeResetRootContract();
     if (!this.wallet) {
       this.logger.warn('Wallet not set.');
@@ -385,39 +410,32 @@ export class HandlerBasedContract<State> implements Contract<State> {
     // eval current state
     const evalStateResult = await stateEvaluator.eval<State>(executionContext, []);
 
-    this.logger.debug('Creating new interaction for view state');
-
     // create interaction transaction
     const interaction: ContractInteraction<Input> = {
       input,
       caller: executionContext.caller
     };
 
-    this.logger.trace('interaction', interaction);
-    // TODO: what is the best/most efficient way of creating a transaction in this case?
-    // creating a real transaction, with multiple calls to Arweave, seems like a huge waste.
+    this.logger.debug('interaction', interaction);
+    const tx = await createTx(
+      arweave,
+      this.wallet,
+      this.contractTxId,
+      input,
+      tags,
+      transfer.target,
+      transfer.winstonQty
+    );
+    const dummyTx = createDummyTx(tx, executionContext.caller, executionContext.currentBlockData);
 
-    // call one of the contract's method
-    const handleResult: InteractionResult<State, View> = await executionContext.handler.handle<Input, View>(
-      executionContext,
-      evalStateResult,
+    const handleResult = await this.evalInteraction<Input, View>(
       {
         interaction,
-        interactionTx: {
-          id: null,
-          recipient: transfer.target,
-          owner: {
-            address: executionContext.caller
-          },
-          tags: tags || [],
-          fee: null,
-          quantity: {
-            winston: transfer.winstonQty
-          },
-          block: executionContext.currentBlockData
-        },
+        interactionTx: dummyTx,
         currentTx: []
-      }
+      },
+      executionContext,
+      evalStateResult
     );
 
     if (handleResult.type !== 'ok') {
@@ -432,23 +450,58 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   private async callContractForTx<Input, View = unknown>(
     input: Input,
-    interactionTx: InteractionTx
+    interactionTx: GQLNodeInterface,
+    dryWrite = false,
+    currentTx?: CurrentTx[]
   ): Promise<InteractionResult<State, View>> {
     this.maybeResetRootContract();
-    const { stateEvaluator } = this.smartweave;
 
     const executionContext = await this.createExecutionContextFromTx(this.contractTxId, interactionTx);
-    const evalStateResult = await stateEvaluator.eval<State>(executionContext, []);
+    const evalStateResult = await this.smartweave.stateEvaluator.eval<State>(executionContext, currentTx);
+
+    this.logger.debug('callContractForTx - evalStateResult', {
+      result: evalStateResult.state,
+      txId: this.contractTxId
+    });
 
     const interaction: ContractInteraction<Input> = {
       input,
       caller: executionContext.caller
     };
 
-    return await executionContext.handler.handle<Input, View>(executionContext, evalStateResult, {
+    const interactionData: InteractionData<Input> = {
       interaction,
       interactionTx,
-      currentTx: []
+      currentTx
+    };
+
+    return await this.evalInteraction(interactionData, executionContext, evalStateResult, dryWrite);
+  }
+
+  private async evalInteraction<Input, View = unknown>(
+    interactionData: InteractionData<Input>,
+    executionContext: ExecutionContext<State, HandlerApi<State>>,
+    evalStateResult: EvalStateResult<State>,
+    dryWrite = false
+  ) {
+    const interactionCall: InteractionCall = this.getCallStack().addInteractionData(interactionData, dryWrite);
+
+    const benchmark = Benchmark.measure();
+    const result = await executionContext.handler.handle<Input, View>(
+      executionContext,
+      evalStateResult,
+      interactionData
+    );
+
+    interactionCall.update({
+      cacheHit: false,
+      intermediaryCacheHit: false,
+      outputState: this.evaluationOptions.stackTrace.saveState ? result.state : undefined,
+      executionTime: benchmark.elapsed(true) as number,
+      valid: result.type === 'ok',
+      errorMessage: result.errorMessage
     });
+
+    return result;
   }
 }

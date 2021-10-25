@@ -6,11 +6,6 @@ import { JWKInterface } from 'arweave/node/lib/wallet';
 import { Contract, HandlerBasedContract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory } from '@smartweave';
 import path from 'path';
 
-let arweave: Arweave;
-let arlocal: ArLocal;
-let smartweave: SmartWeave;
-let contract: Contract<ExampleContractState>;
-
 interface ExampleContractState {
   counter: number;
 }
@@ -31,15 +26,20 @@ describe('Testing the SmartWeave client', () => {
   let wallet: JWKInterface;
   let walletAddress: string;
 
+  let arweave: Arweave;
+  let arlocal: ArLocal;
+  let smartweave: SmartWeave;
+  let contract: Contract<ExampleContractState>;
+
   beforeAll(async () => {
     // note: each tests suit (i.e. file with tests that Jest is running concurrently
     // with another files has to have ArLocal set to a different port!)
-    arlocal = new ArLocal(1985, false);
+    arlocal = new ArLocal(1940, false);
     await arlocal.start();
 
     arweave = Arweave.init({
       host: 'localhost',
-      port: 1985,
+      port: 1940,
       protocol: 'http'
     });
 
@@ -97,8 +97,8 @@ describe('Testing the SmartWeave client', () => {
     const interactionResult = await contract.viewState<any, number>({ function: 'value' });
     expect(interactionResult.result).toEqual(559);
   });
-});
 
-async function mine() {
-  await arweave.api.get('mine');
-}
+  async function mine() {
+    await arweave.api.get('mine');
+  }
+});

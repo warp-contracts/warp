@@ -1,14 +1,11 @@
-import { BlockHeightCacheResult, ExecutionContext, GQLNodeInterface, InteractionTx } from '@smartweave';
+import { BlockHeightCacheResult, CurrentTx, ExecutionContext, GQLNodeInterface } from '@smartweave';
 
 /**
  * Implementors of this class are responsible for evaluating contract's state
  * - based on the execution context.
  */
 export interface StateEvaluator {
-  eval<State>(
-    executionContext: ExecutionContext<State>,
-    currentTx: { interactionTxId: string; contractTxId: string }[]
-  ): Promise<EvalStateResult<State>>;
+  eval<State>(executionContext: ExecutionContext<State>, currentTx: CurrentTx[]): Promise<EvalStateResult<State>>;
 
   /**
    * a hook that is called on each state update (i.e. after evaluating state for each interaction)
@@ -28,6 +25,12 @@ export interface StateEvaluator {
     state: EvalStateResult<State>
   ): Promise<void>;
 
+  onInternalWriteStateUpdate<State>(
+    currentInteraction: GQLNodeInterface,
+    contractTxId: string,
+    state: EvalStateResult<State>
+  ): Promise<void>;
+
   /**
    * a hook that is called before communicating with other contract
    * note to myself: putting values into cache only "onContractCall" may degrade performance.
@@ -40,7 +43,7 @@ export interface StateEvaluator {
    * between 722317 and 722695 - the performance will be degraded.
    */
   onContractCall<State>(
-    currentInteraction: InteractionTx,
+    currentInteraction: GQLNodeInterface,
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>
   ): Promise<void>;

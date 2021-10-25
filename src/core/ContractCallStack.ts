@@ -1,11 +1,11 @@
-import { InteractionData } from '@smartweave';
+import { InteractionData, mapReplacer } from '@smartweave';
 
 export class ContractCallStack {
   readonly interactions: Map<string, InteractionCall> = new Map();
 
   constructor(public readonly contractTxId: string, public readonly label: string = '') {}
 
-  addInteractionData(interactionData: InteractionData<any>): InteractionCall {
+  addInteractionData(interactionData: InteractionData<any>, dryWrite = false): InteractionCall {
     const { interaction, interactionTx } = interactionData;
 
     const interactionCall = InteractionCall.create(
@@ -13,9 +13,10 @@ export class ContractCallStack {
         interactionTx.id,
         interactionTx.block.height,
         interactionTx.block.timestamp,
-        interaction.caller,
-        interaction.input.function,
-        interaction.input,
+        interaction?.caller,
+        interaction?.input.function,
+        interaction?.input,
+        interactionTx.dry,
         new Map()
       )
     );
@@ -27,6 +28,10 @@ export class ContractCallStack {
 
   getInteraction(txId: string) {
     return this.interactions.get(txId);
+  }
+
+  print(): string {
+    return JSON.stringify(this, mapReplacer);
   }
 }
 
@@ -51,6 +56,7 @@ export class InteractionInput {
     public readonly caller: string,
     public readonly functionName: string,
     public readonly functionArguments: [],
+    public readonly dryWrite: boolean,
     public readonly foreignContractCalls: Map<string, ContractCallStack> = new Map()
   ) {}
 }

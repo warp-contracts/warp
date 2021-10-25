@@ -24,12 +24,12 @@ describe('Testing the SmartWeave client', () => {
   beforeAll(async () => {
     // note: each tests suit (i.e. file with tests that Jest is running concurrently
     // with another files has to have ArLocal set to a different port!)
-    arlocal = new ArLocal(1987, false);
+    arlocal = new ArLocal(1950, false);
     await arlocal.start();
 
     arweave = Arweave.init({
       host: 'localhost',
-      port: 1987,
+      port: 1950,
       protocol: 'http'
     });
 
