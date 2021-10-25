@@ -32,7 +32,7 @@ async function main() {
 
   const callStack = contract.getCallStack();
 
-  fs.writeFileSync(path.join(__dirname, 'data', 'call_stack.json'), JSON.stringify(callStack, mapReplacer));
+  fs.writeFileSync(path.join(__dirname, 'data', 'call_stack.json'), callStack.print());
 }
 
 main().catch((e) => console.error(e));

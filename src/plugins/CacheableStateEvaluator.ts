@@ -8,7 +8,8 @@ import {
 } from '@smartweave/core';
 import Arweave from 'arweave';
 import { GQLNodeInterface } from '@smartweave/legacy';
-import { Benchmark, LoggerFactory } from '@smartweave/logging';
+import { LoggerFactory } from '@smartweave/logging';
+import { CurrentTx } from '@smartweave/contract';
 
 /**
  * An implementation of DefaultStateEvaluator that adds caching capabilities
@@ -26,7 +27,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
 
   async eval<State>(
     executionContext: ExecutionContext<State, HandlerApi<State>>,
-    currentTx: { interactionTxId: string; contractTxId: string }[]
+    currentTx: CurrentTx[]
   ): Promise<EvalStateResult<State>> {
     const requestedBlockHeight = executionContext.blockHeight;
     this.cLogger.debug(`Requested state block height: ${requestedBlockHeight}`);
@@ -66,11 +67,9 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
         cached: sortedInteractionsUpToBlock.length - missingInteractions.length
       });
 
-      // TODO: this probably should be removed, as it seems to protect from
-      // some specific contract's implementation flaws
-      // (i.e. inner calls between two contracts that lead to inf. call loop - circular dependency).
-      // Instead - some kind of stack trace should be generated and "stackoverflow"
-      // exception should be thrown during contract's execution.
+      // TODO: this is tricky part, needs proper description
+      // for now: it prevents from infinite loop calls between calls that are making
+      // internal interact writes.
       for (const entry of currentTx || []) {
         if (entry.contractTxId === executionContext.contractDefinition.txId) {
           const index = missingInteractions.findIndex((tx) => tx.node.id === entry.interactionTxId);
@@ -80,7 +79,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
               contractTxId: entry.contractTxId,
               interactionTxId: entry.interactionTxId
             });
-            missingInteractions.splice(index, 1);
+            missingInteractions.splice(index);
           }
         }
       }
@@ -110,6 +109,9 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>
   ): Promise<void> {
+    if (lastInteraction.dry) {
+      return;
+    }
     this.cLogger.debug(
       `onStateEvaluated: cache update for contract ${executionContext.contractDefinition.txId} [${lastInteraction.block.height}]`
     );
@@ -121,15 +123,19 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
 
   async onStateUpdate<State>(
     currentInteraction: GQLNodeInterface,
-    executionContext: ExecutionContext<State, unknown>,
+    executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>
   ): Promise<void> {
+    if (currentInteraction.dry) {
+      return;
+    }
     if (executionContext.evaluationOptions.updateCacheForEachInteraction) {
       await this.cache.put(
         new BlockHeightKey(executionContext.contractDefinition.txId, currentInteraction.block.height),
         state
       );
     }
+    await super.onStateUpdate(currentInteraction, executionContext, state);
   }
 
   async latestAvailableState<State>(
@@ -139,5 +145,21 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     return (await this.cache.getLessOrEqual(contractTxId, blockHeight)) as BlockHeightCacheResult<
       EvalStateResult<State>
     >;
+  }
+
+  async onInternalWriteStateUpdate<State>(
+    currentInteraction: GQLNodeInterface,
+    contractTxId: string,
+    state: EvalStateResult<State>
+  ): Promise<void> {
+    if (currentInteraction.dry) {
+      return;
+    }
+    this.cLogger.debug('Internal write state update:', {
+      height: currentInteraction.block.height,
+      contractTxId,
+      state
+    });
+    await this.cache.put(new BlockHeightKey(contractTxId, +currentInteraction.block.height), state);
   }
 }

@@ -1,7 +1,6 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import { InteractionTx } from './interaction-tx';
-import { GQLTagInterface } from './gqlResult';
+import { GQLNodeInterface, GQLTagInterface } from './gqlResult';
 
 /**
  *
@@ -41,9 +40,11 @@ export class SmartWeaveGlobal {
   contracts: {
     readContractState: (contractId: string) => Promise<any>;
     viewContractState: (contractId: string, input: any) => Promise<any>;
+    write: (contractId: string, input: any) => Promise<any>;
+    refreshState: () => Promise<any>;
   };
 
-  _activeTx?: InteractionTx;
+  _activeTx?: GQLNodeInterface;
 
   get _isDryRunning() {
     return !this._activeTx;
@@ -66,6 +67,14 @@ export class SmartWeaveGlobal {
       },
 
       viewContractState: (contractId: string, input: any) => {
+        throw new Error('Not implemented');
+      },
+
+      write: (contractId: string, input: any) => {
+        throw new Error('Not implemented');
+      },
+
+      refreshState: () => {
         throw new Error('Not implemented');
       }
     };

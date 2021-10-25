@@ -10,5 +10,6 @@ export enum SmartWeaveTags {
   CONTRACT_SRC_TX_ID = 'Contract-Src', // note: should be named Contract-Src-Tx-Id
   MIN_FEE = 'Min-Fee',
   INIT_STATE = 'Init-State',
-  INIT_STATE_TX = 'Init-State-TX'
+  INIT_STATE_TX = 'Init-State-TX',
+  INTERACT_WRITE = 'Interact-Write'
 }

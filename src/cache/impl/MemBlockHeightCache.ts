@@ -1,10 +1,13 @@
 import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@smartweave/cache';
 import { deepCopy, asc, desc } from '@smartweave/utils';
+import { LoggerFactory } from '@smartweave/logging';
 
 /**
  * A simple, in-memory cache implementation of the BlockHeightSwCache
  */
 export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
+  private readonly logger = LoggerFactory.INST.create('MemBlockHeightSwCache');
+
   private storage: { [key: string]: Map<number, V> } = {};
 
   constructor(private maxStoredBlockHeights: number = Number.MAX_SAFE_INTEGER) {}
@@ -38,6 +41,15 @@ export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
       return cachedBlockHeight <= blockHeight;
     });
 
+    if (blockHeight === 6) {
+      console.log('Cache get', {
+        requestedHeight: blockHeight,
+        key,
+        highestBlockHeight,
+        value: cached.get(highestBlockHeight)
+      });
+    }
+
     return highestBlockHeight === undefined
       ? null
       : {
@@ -55,6 +67,12 @@ export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
       const toRemove = [...cached.keys()].sort(asc).shift();
       cached.delete(toRemove);
     }
+
+    this.logger.debug('Mem cache put:', {
+      cacheKey,
+      blockHeight,
+      value
+    });
 
     cached.set(blockHeight, deepCopy(value));
   }

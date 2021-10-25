@@ -4,11 +4,13 @@ import {
   ContractCallStack,
   EvalStateResult,
   EvaluationOptions,
+  GQLNodeInterface,
   InteractionResult,
-  InteractionTx,
   Tags
 } from '@smartweave';
 import { NetworkInfoInterface } from 'arweave/node/network';
+
+export type CurrentTx = { interactionTxId: string; contractTxId: string };
 
 /**
  * A base interface to be implemented by SmartWeave Contracts clients
@@ -48,10 +50,7 @@ export interface Contract<State = unknown> {
    * be skipped during contract inner calls - to prevent the infinite call loop issue
    * (mostly related to contracts that use the Foreign Call Protocol)
    */
-  readState(
-    blockHeight?: number,
-    currentTx?: { interactionTxId: string; contractTxId: string }[]
-  ): Promise<EvalStateResult<State>>;
+  readState(blockHeight?: number, currentTx?: CurrentTx[]): Promise<EvalStateResult<State>>;
 
   /**
    * Returns the "view" of the state, computed by the SWC -
@@ -91,12 +90,16 @@ export interface Contract<State = unknown> {
    */
   viewStateForTx<Input = unknown, View = unknown>(
     input: Input,
-    transaction: InteractionTx
+    transaction: GQLNodeInterface
   ): Promise<InteractionResult<State, View>>;
 
   dryWrite<Input>(input: Input, tags?: Tags, transfer?: ArTransfer): Promise<InteractionResult<State, unknown>>;
 
-  dryWriteFromTx<Input>(input: Input, transaction: InteractionTx): Promise<InteractionResult<State, unknown>>;
+  dryWriteFromTx<Input>(
+    input: Input,
+    transaction: GQLNodeInterface,
+    currentTx?: CurrentTx[]
+  ): Promise<InteractionResult<State, unknown>>;
 
   /**
    * Writes a new "interaction" transaction - ie. such transaction that stores input for the contract.
