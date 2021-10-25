@@ -11,7 +11,7 @@ import {
 } from '@smartweave/core';
 import Arweave from 'arweave';
 import { Contract, HandlerBasedContract, PstContract, PstContractImpl } from '@smartweave/contract';
-import { InteractionTx } from '@smartweave/legacy';
+import { GQLNodeInterface } from '@smartweave/legacy';
 
 /**
  * The SmartWeave "motherboard" ;-).
@@ -47,7 +47,7 @@ export class SmartWeave {
   contract<State>(
     contractTxId: string,
     callingContract?: Contract,
-    callingInteraction?: InteractionTx
+    callingInteraction?: GQLNodeInterface
   ): Contract<State> {
     return new HandlerBasedContract<State>(contractTxId, this, callingContract, callingInteraction);
   }

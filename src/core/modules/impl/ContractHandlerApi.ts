@@ -1,32 +1,36 @@
 import {
   ContractDefinition,
+  CurrentTx,
   deepCopy,
   EvalStateResult,
   ExecutionContext,
+  GQLNodeInterface,
   HandlerApi,
   HandlerFunction,
   InteractionData,
   InteractionResult,
-  InteractionTx,
   LoggerFactory,
-  RedStoneLogger
+  RedStoneLogger,
+  SmartWeaveGlobal
 } from '@smartweave';
 import BigNumber from 'bignumber.js';
 import * as clarity from '@weavery/clarity';
 
-export class Handler<State> implements HandlerApi<State> {
+export class ContractHandlerApi<State> implements HandlerApi<State> {
   private readonly contractLogger: RedStoneLogger;
-  private readonly logger = LoggerFactory.INST.create('Handler');
+  private readonly logger = LoggerFactory.INST.create('ContractHandler');
 
   constructor(
-    private readonly swGlobal,
+    private readonly swGlobal: SmartWeaveGlobal,
     private readonly contractFunction: Function,
     private readonly contractDefinition: ContractDefinition<State>
   ) {
-    this.contractLogger = LoggerFactory.INST.create(swGlobal.id);
+    this.contractLogger = LoggerFactory.INST.create(swGlobal.contract.id);
 
     this.assignReadContractState = this.assignReadContractState.bind(this);
     this.assignViewContractState = this.assignViewContractState.bind(this);
+    this.assignWrite = this.assignWrite.bind(this);
+    this.assignRefreshState = this.assignRefreshState.bind(this);
   }
 
   async handle<Input, Result>(
@@ -48,13 +52,13 @@ export class Handler<State> implements HandlerApi<State> {
       this.swGlobal._activeTx = interactionTx;
       this.logger.trace(`SmartWeave.contract.id:`, this.swGlobal.contract.id);
 
-      // TODO: refactor - too many arguments
       this.assignReadContractState<Input>(executionContext, currentTx, currentResult, interactionTx);
       this.assignViewContractState<Input>(executionContext);
-      this.assignWrite(executionContext);
-
+      this.assignWrite(executionContext, currentTx);
+      this.assignRefreshState(executionContext);
 
       const handlerResult = await handler(stateCopy, interaction);
+      this.logger.debug('handlerResult', handlerResult);
 
       if (handlerResult && (handlerResult.state || handlerResult.result)) {
         return {
@@ -90,18 +94,37 @@ export class Handler<State> implements HandlerApi<State> {
     }
   }
 
-  private assignWrite(executionContext: ExecutionContext<State>) {
+  private assignWrite(executionContext: ExecutionContext<State>, currentTx: CurrentTx[]) {
     this.swGlobal.contracts.write = async <Input = unknown>(contractTxId: string, input: Input) => {
       this.logger.debug('swGlobal.write call:', {
         from: this.contractDefinition.txId,
         to: contractTxId,
         input
       });
-      const childContract = executionContext.smartweave
-        .contract(contractTxId, executionContext.contract)
+
+      const calleeContract = executionContext.smartweave
+        .contract(contractTxId, executionContext.contract, this.swGlobal._activeTx)
         .setEvaluationOptions(executionContext.evaluationOptions);
 
-      return await childContract.dryWriteFromTx<Input>(input, this.swGlobal._activeTx);
+      const result = await calleeContract.dryWriteFromTx<Input>(input, this.swGlobal._activeTx, [
+        ...(currentTx || []),
+        {
+          contractTxId: this.contractDefinition.txId,
+          interactionTxId: this.swGlobal.transaction.id
+        }
+      ]);
+
+      this.logger.debug('Cache result?:', !this.swGlobal._activeTx.dry);
+      await executionContext.smartweave.stateEvaluator.onInternalWriteStateUpdate(
+        this.swGlobal._activeTx,
+        contractTxId,
+        {
+          state: result.state as State,
+          validity: {}
+        }
+      );
+
+      return result;
     };
   }
 
@@ -113,7 +136,7 @@ export class Handler<State> implements HandlerApi<State> {
         input
       });
       const childContract = executionContext.smartweave
-        .contract(contractTxId, executionContext.contract)
+        .contract(contractTxId, executionContext.contract, this.swGlobal._activeTx)
         .setEvaluationOptions(executionContext.evaluationOptions);
 
       return await childContract.viewStateForTx(input, this.swGlobal._activeTx);
@@ -122,9 +145,9 @@ export class Handler<State> implements HandlerApi<State> {
 
   private assignReadContractState<Input>(
     executionContext: ExecutionContext<State>,
-    currentTx: { interactionTxId: string; contractTxId: string }[],
+    currentTx: CurrentTx[],
     currentResult: EvalStateResult<State>,
-    interactionTx: InteractionTx
+    interactionTx: GQLNodeInterface
   ) {
     this.swGlobal.contracts.readContractState = async (
       contractTxId: string,
@@ -159,6 +182,18 @@ export class Handler<State> implements HandlerApi<State> {
       // but this (i.e. returning always stateWithValidity from here) would break backwards compatibility
       // in current contract's source code..:/
       return returnValidity ? deepCopy(stateWithValidity) : deepCopy(stateWithValidity.state);
+    };
+  }
+
+  private assignRefreshState(executionContext: ExecutionContext<State>) {
+    this.swGlobal.contracts.refreshState = async () => {
+      const stateEvaluator = executionContext.smartweave.stateEvaluator;
+      console.log('refresh:', {
+        contract: this.swGlobal.contract.id,
+        height: this.swGlobal.block.height
+      });
+      const result = await stateEvaluator.latestAvailableState(this.swGlobal.contract.id, this.swGlobal.block.height);
+      return result?.cachedValue.state;
     };
   }
 }

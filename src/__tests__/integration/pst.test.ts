@@ -6,11 +6,6 @@ import { JWKInterface } from 'arweave/node/lib/wallet';
 import { LoggerFactory, PstContract, PstState, SmartWeave, SmartWeaveNodeFactory } from '@smartweave';
 import path from 'path';
 
-let arweave: Arweave;
-let arlocal: ArLocal;
-let smartweave: SmartWeave;
-let pst: PstContract;
-
 describe('Testing the Profit Sharing Token', () => {
   let contractSrc: string;
 
@@ -19,15 +14,20 @@ describe('Testing the Profit Sharing Token', () => {
 
   let initialState: PstState;
 
+  let arweave: Arweave;
+  let arlocal: ArLocal;
+  let smartweave: SmartWeave;
+  let pst: PstContract;
+
   beforeAll(async () => {
     // note: each tests suit (i.e. file with tests that Jest is running concurrently
     // with another files has to have ArLocal set to a different port!)
-    arlocal = new ArLocal(1986, false);
+    arlocal = new ArLocal(1930, false);
     await arlocal.start();
 
     arweave = Arweave.init({
       host: 'localhost',
-      port: 1986,
+      port: 1930,
       protocol: 'http'
     });
 
@@ -113,8 +113,8 @@ describe('Testing the Profit Sharing Token', () => {
     // note: the evolved balance always adds 555 to the result
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(555114 + 555);
   });
-});
 
-async function mine() {
-  await arweave.api.get('mine');
-}
+  async function mine() {
+    await arweave.api.get('mine');
+  }
+});

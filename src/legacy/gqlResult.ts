@@ -43,6 +43,7 @@ export interface GQLNodeInterface {
   parent: {
     id: string;
   };
+  dry?: boolean;
 }
 
 export interface GQLEdgeInterface {

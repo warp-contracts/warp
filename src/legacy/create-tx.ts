@@ -1,7 +1,8 @@
 import Arweave from 'arweave';
-import { ArWallet } from '@smartweave';
+import { ArWallet, GQLNodeInterface, GQLTagInterface } from '@smartweave';
 import Transaction from 'arweave/node/lib/transaction';
 import { CreateTransactionInterface } from 'arweave/node/common';
+import { BlockData } from 'arweave/node/blocks';
 
 export async function createTx(
   arweave: Arweave,
@@ -42,4 +43,65 @@ export async function createTx(
 
   await arweave.transactions.sign(interactionTx, wallet);
   return interactionTx;
+}
+
+export function createDummyTx(tx: Transaction, from: string, block: BlockData): GQLNodeInterface {
+  return {
+    id: tx.id,
+    owner: {
+      address: from,
+      key: ''
+    },
+    recipient: tx.target,
+    tags: tx.tags,
+    fee: {
+      winston: tx.reward,
+      ar: ''
+    },
+    quantity: {
+      winston: tx.quantity,
+      ar: ''
+    },
+    block: {
+      id: block.indep_hash,
+      height: block.height,
+      timestamp: block.timestamp,
+      previous: null
+    },
+    // note: calls within dry runs cannot be cached (per block - like the state cache)!
+    // that's super important, as the block height used for
+    // the dry-run is the current network block height
+    // - and not the block height of the real transaction that
+    // will be mined on Arweave.
+    // If we start caching results of the dry-runs, we can completely fuck-up
+    // the consecutive state evaluations.
+    // - that's why we're setting "dry" flag to true here
+    // - this prevents the caching layer from saving
+    // the state evaluated for such interaction in cache.
+    dry: true,
+    anchor: null,
+    signature: null,
+    data: null,
+    parent: null
+  };
+}
+
+export function unpackTags(tx: Transaction): Record<string, string | string[]> {
+  const tags = tx.get('tags') as any;
+  const result: Record<string, string | string[]> = {};
+
+  for (const tag of tags) {
+    try {
+      const name = tag.get('name', { decode: true, string: true }) as string;
+      const value = tag.get('value', { decode: true, string: true }) as string;
+      if (!result.hasOwnProperty(name)) {
+        result[name] = value;
+        continue;
+      }
+      result[name] = [...result[name], value];
+    } catch (e) {
+      // ignore tags with invalid utf-8 strings in key or value.
+    }
+  }
+  return result;
 }

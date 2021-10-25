@@ -21,7 +21,7 @@ const arweave = Arweave.init({
 });
 
 LoggerFactory.INST.logLevel('fatal');
-const smartWeave = SmartWeaveNodeFactory.memCached(arweave, 10);
+const smartWeave = SmartWeaveNodeFactory.memCached(arweave, 5);
 
 const testCases: string[] = JSON.parse(fs.readFileSync(path.join(__dirname, 'test-cases.json'), 'utf-8'));
 

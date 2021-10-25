@@ -65,7 +65,8 @@ export class ContractInteractionsLoader implements InteractionsLoader {
   constructor(private readonly arweave: Arweave) {}
 
   async load(contractTxId: string, fromBlockHeight: number, toBlockHeight: number): Promise<GQLEdgeInterface[]> {
-    let variables: ReqVariables = {
+    this.logger.debug('Loading interactions for', contractTxId);
+    const mainTransactionsVariables: ReqVariables = {
       tags: [
         {
           name: SmartWeaveTags.APP_NAME,
@@ -82,7 +83,38 @@ export class ContractInteractionsLoader implements InteractionsLoader {
       },
       first: MAX_REQUEST
     };
+    const mainInteractions = await this.loadPages(mainTransactionsVariables);
+    this.logger.debug('Main Interactions:', mainInteractions);
+    this.logger.debug('Main interactions length:', mainInteractions.length);
 
+    let innerWritesVariables: ReqVariables = {
+      tags: [
+        {
+          name: SmartWeaveTags.INTERACT_WRITE,
+          values: [contractTxId]
+        }
+      ],
+      blockFilter: {
+        min: fromBlockHeight,
+        max: toBlockHeight
+      },
+      first: MAX_REQUEST
+    };
+    const innerWritesInteractions = await this.loadPages(innerWritesVariables);
+    this.logger.debug('Inner Writes Interactions', innerWritesInteractions);
+    this.logger.debug('Inner writes interactions length:', innerWritesInteractions.length);
+    const allInteractions = mainInteractions.concat(innerWritesInteractions);
+
+    this.logger.debug('All loaded interactions:', {
+      from: fromBlockHeight,
+      to: toBlockHeight,
+      loaded: allInteractions.length
+    });
+
+    return allInteractions;
+  }
+
+  private async loadPages(variables: ReqVariables) {
     let transactions = await this.getNextPage(variables);
 
     const txInfos: GQLEdgeInterface[] = transactions.edges.filter((tx) => !tx.node.parent || !tx.node.parent.id);
@@ -99,13 +131,6 @@ export class ContractInteractionsLoader implements InteractionsLoader {
 
       txInfos.push(...transactions.edges.filter((tx) => !tx.node.parent || !tx.node.parent.id));
     }
-
-    this.logger.debug('All loaded interactions:', {
-      from: fromBlockHeight,
-      to: toBlockHeight,
-      loaded: txInfos.length
-    });
-
     return txInfos;
   }
 
