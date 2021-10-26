@@ -10,6 +10,7 @@ export async function handle(state, action) {
   const _msgSender = action.caller;
 
   if (_input.function === 'stake') {
+    console.log('stake:', _msgSender);
     const amount = _input.amount;
     if (amount < _minimumStake) {
       throw new ContractError(`You must stake at least ${_minimumStake} tokens`);
@@ -20,6 +21,8 @@ export async function handle(state, action) {
     if (tokenState.balances[_msgSender] < amount) {
       throw new ContractError('Cannot stake more token than you hold unstaked');
     }
+
+    console.log('allowances', tokenState.allowances);
 
     if (!tokenState.allowances[_msgSender]) {
       throw new ContractError('Caller must increase their allowance');

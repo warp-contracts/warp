@@ -466,7 +466,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     const interaction: ContractInteraction<Input> = {
       input,
-      caller: executionContext.caller
+      caller: this.callingContract.txId()//executionContext.caller
     };
 
     const interactionData: InteractionData<Input> = {

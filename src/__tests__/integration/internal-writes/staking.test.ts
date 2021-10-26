@@ -139,6 +139,10 @@ describe('Testing internal writes', () => {
     });
 
     it('should approve for staking contract', async () => {
+      console.log('Wallet addresss', walletAddress);
+      console.log('token address', tokenContractTxId);
+      console.log('staking contract address', stakingContractTxId);
+
       await tokenContract.writeInteraction({
         function: 'approve',
         spender: stakingContractTxId,
@@ -154,6 +158,7 @@ describe('Testing internal writes', () => {
     });
 
     it('should stake tokens', async () => {
+      console.log('Wallet addresss', walletAddress);
       await stakingContract.writeInteraction({
         function: 'stake',
         amount: 1000
