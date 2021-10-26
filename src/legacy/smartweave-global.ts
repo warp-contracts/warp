@@ -46,10 +46,6 @@ export class SmartWeaveGlobal {
 
   _activeTx?: GQLNodeInterface;
 
-  get _isDryRunning() {
-    return !this._activeTx;
-  }
-
   constructor(arweave: Arweave, contract: { id: string; owner: string }) {
     this.unsafeClient = arweave;
     this.arweave = {
