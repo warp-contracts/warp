@@ -22,12 +22,12 @@ describe('Testing the Profit Sharing Token', () => {
   beforeAll(async () => {
     // note: each tests suit (i.e. file with tests that Jest is running concurrently
     // with another files has to have ArLocal set to a different port!)
-    arlocal = new ArLocal(1930, false);
+    arlocal = new ArLocal(1820, false);
     await arlocal.start();
 
     arweave = Arweave.init({
       host: 'localhost',
-      port: 1930,
+      port: 1820,
       protocol: 'http'
     });
 
