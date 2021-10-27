@@ -151,13 +151,13 @@ describe('Testing internal writes', () => {
       await tokenContract.writeInteraction({
         function: 'approve',
         spender: stakingContractTxId,
-        amount: 1000
+        amount: 9999
       });
       await mine();
 
       expect((await tokenContract.readState()).state.allowances).toEqual({
         [walletAddress]: {
-          [stakingContractTxId]: 1000
+          [stakingContractTxId]: 9999
         }
       });
     });
@@ -181,6 +181,11 @@ describe('Testing internal writes', () => {
       expect(tokenState.balances).toEqual({
         [walletAddress]: 9000,
         [stakingContractTxId]: 1000
+      });
+      expect(tokenState.allowances).toEqual({
+        [walletAddress]: {
+          [stakingContractTxId]: 8999
+        }
       });
     });
   });
@@ -221,7 +226,7 @@ describe('Testing internal writes', () => {
       await tokenContract.writeInteraction({
         function: 'approve',
         spender: stakingContractTxId,
-        amount: 1000
+        amount: 9999
       });
       await mine();
 
@@ -235,6 +240,11 @@ describe('Testing internal writes', () => {
       expect(tokenState.balances).toEqual({
         [walletAddress]: 9000,
         [stakingContractTxId]: 1000
+      });
+      expect(tokenState.allowances).toEqual({
+        [walletAddress]: {
+          [stakingContractTxId]: 8999
+        }
       });
       expect((await stakingContract.readState()).state.stakes).toEqual({
         [walletAddress]: {
