@@ -21,10 +21,6 @@ export function handle(state, action) {
   if (_input.function === 'approve') {
     const spender = _input.spender;
     const amount = _input.amount;
-    console.log('approve:', {
-      _msgSender,
-      spender
-    });
 
     if (!_allowances[_msgSender]) {
       _allowances[_msgSender] = {};
@@ -69,17 +65,12 @@ export function handle(state, action) {
     const amount = _input.amount;
 
     const currentAllowance = _allowances[sender][_msgSender];
-    console.log('transferFrom msgSender:', {
-      sender,
-      _msgSender,
-      currentAllowance
-    });
 
     if (currentAllowance === undefined || currentAllowance < amount) {
       throw new ContractError(`Transfer amount exceeds allowance`);
     }
 
-    _allowances[sender][_msgSender] = _allowances[sender][_msgSender] - amount;
+    _allowances[sender][_msgSender] -= amount;
 
     return _transfer(sender, recipient, amount);
   }
