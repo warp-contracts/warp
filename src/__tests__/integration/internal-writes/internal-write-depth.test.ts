@@ -119,7 +119,7 @@ describe('Testing internal writes', () => {
     contractA = smartweave
       .contract(contractATxId)
       .setEvaluationOptions({
-        internalWrites: true
+        internalWrites: true,
       })
       .connect(wallet);
     contractB = smartweave
@@ -268,6 +268,56 @@ describe('Testing internal writes', () => {
     it('should properly evaluate the state again', async () => {
       expect((await contractB.readState()).state.counter).toEqual(567);
       expect((await contractC.readState()).state.counter).toEqual(231);
+    });
+  });
+
+  describe('with different maxDepths', () => {
+    beforeEach(async () => {
+      await deployContracts();
+    });
+
+    it('should properly evaluate contractC state for maxDepth = 3', async () => {
+      contractC.setEvaluationOptions({
+        maxCallDepth: 3
+      });
+
+      await contractB.writeInteraction({ function: 'add' });
+      await contractB.writeInteraction({ function: 'add' });
+      await contractC.writeInteraction({ function: 'add' });
+      await mine();
+
+      await contractA.writeInteraction({
+        function: 'writeInDepth',
+        contractId1: contractBTxId,
+        contractId2: contractCTxId,
+        amount: 10
+      });
+      await mine();
+
+      expect((await contractC.readState()).state.counter).toEqual(231);
+      expect((await contractC.readState()).state.counter).toEqual(231);
+    });
+
+    it('should throw when evaluating ContractC state for maxDepth = 2', async () => {
+      contractC.setEvaluationOptions({
+        maxCallDepth: 2,
+        ignoreExceptions: false
+      });
+
+      await contractB.writeInteraction({ function: 'add' });
+      await contractB.writeInteraction({ function: 'add' });
+      await contractC.writeInteraction({ function: 'add' });
+      await mine();
+
+      await contractA.writeInteraction({
+        function: 'writeInDepth',
+        contractId1: contractBTxId,
+        contractId2: contractCTxId,
+        amount: 10
+      });
+      await mine();
+
+      await expect(contractC.readState()).rejects.toThrow(/(.)*Error: Max call depth(.*)/);
     });
   });
 

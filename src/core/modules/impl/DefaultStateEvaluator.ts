@@ -91,9 +91,11 @@ export class DefaultStateEvaluator implements StateEvaluator {
           .getCallStack()
           .addInteractionData({ interaction: null, interactionTx, currentTx });
 
-        const writingContract = executionContext.smartweave
-          .contract(writingContractTxId, executionContext.contract, interactionTx)
-          .setEvaluationOptions(executionContext.evaluationOptions);
+        const writingContract = executionContext.smartweave.contract(
+          writingContractTxId,
+          executionContext.contract,
+          interactionTx
+        );
 
         this.logger.debug('Reading state of the calling contract', interactionTx.block.height);
         await writingContract.readState(interactionTx.block.height, [
@@ -162,7 +164,7 @@ export class DefaultStateEvaluator implements StateEvaluator {
           this.logResult<State>(result, interactionTx, executionContext);
 
           if (result.type === 'exception' && ignoreExceptions !== true) {
-            throw new Error(`Exception while processing ${JSON.stringify(interaction)}:\n${result.result}`);
+            throw new Error(`Exception while processing ${JSON.stringify(interaction)}:\n${result.errorMessage}`);
           }
 
           validity[interactionTx.id] = result.type === 'ok';
