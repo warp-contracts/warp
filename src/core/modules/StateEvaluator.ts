@@ -72,11 +72,14 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
 
   updateCacheForEachInteraction = true;
 
+  internalWrites = false;
+
+  maxCallDepth = 7; // your lucky number...
+
   stackTrace = {
     saveState: false
   };
 
-  internalWrites: false;
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some of the features.
@@ -96,13 +99,22 @@ export interface EvaluationOptions {
   // and caches it maybe more suitable to cache only after state has been fully evaluated)
   updateCacheForEachInteraction: boolean;
 
+  // a new, experimental enhancement of the protocol that allows for interactWrites from
+  // smart contract's source code.
+  internalWrites: boolean;
+
+  // maximum call depth between contracts
+  // eg. ContractA calls ContractB,
+  // then ContractB calls ContractC,
+  // then ContractC calls ContractD
+  // - call depth = 3
+  // this is added as a protection from "stackoverflow" errors
+  maxCallDepth: number;
+
   // a set of options that control the behaviour of the stack trace generator
   stackTrace: {
     // whether output state should be saved for each interaction in the stack trace (may result in huuuuge json files!)
     saveState: boolean;
   };
 
-  // a new, experimental enhancement of the protocol that allows for interactWrites from
-  // smart contract's source code.
-  internalWrites: boolean;
 }

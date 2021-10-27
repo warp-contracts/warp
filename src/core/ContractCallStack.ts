@@ -3,9 +3,9 @@ import { InteractionData, mapReplacer } from '@smartweave';
 export class ContractCallStack {
   readonly interactions: Map<string, InteractionCall> = new Map();
 
-  constructor(public readonly contractTxId: string, public readonly label: string = '') {}
+  constructor(public readonly contractTxId: string, public readonly depth: number, public readonly label: string = '') {}
 
-  addInteractionData(interactionData: InteractionData<any>, dryWrite = false): InteractionCall {
+  addInteractionData(interactionData: InteractionData<any>): InteractionCall {
     const { interaction, interactionTx } = interactionData;
 
     const interactionCall = InteractionCall.create(

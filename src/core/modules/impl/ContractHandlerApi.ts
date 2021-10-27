@@ -106,9 +106,11 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
         input
       });
 
-      const calleeContract = executionContext.smartweave
-        .contract(contractTxId, executionContext.contract, this.swGlobal._activeTx)
-        .setEvaluationOptions(executionContext.evaluationOptions);
+      const calleeContract = executionContext.smartweave.contract(
+        contractTxId,
+        executionContext.contract,
+        this.swGlobal._activeTx
+      );
 
       const result = await calleeContract.dryWriteFromTx<Input>(input, this.swGlobal._activeTx, [
         ...(currentTx || []),
@@ -139,9 +141,11 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
         to: contractTxId,
         input
       });
-      const childContract = executionContext.smartweave
-        .contract(contractTxId, executionContext.contract, this.swGlobal._activeTx)
-        .setEvaluationOptions(executionContext.evaluationOptions);
+      const childContract = executionContext.smartweave.contract(
+        contractTxId,
+        executionContext.contract,
+        this.swGlobal._activeTx
+      );
 
       return await childContract.viewStateForTx(input, this.swGlobal._activeTx);
     };
@@ -167,9 +171,11 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
       });
 
       const { stateEvaluator } = executionContext.smartweave;
-      const childContract = executionContext.smartweave
-        .contract(contractTxId, executionContext.contract, interactionTx)
-        .setEvaluationOptions(executionContext.evaluationOptions);
+      const childContract = executionContext.smartweave.contract(
+        contractTxId,
+        executionContext.contract,
+        interactionTx
+      );
 
       await stateEvaluator.onContractCall(interactionTx, executionContext, currentResult);
 

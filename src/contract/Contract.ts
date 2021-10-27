@@ -115,4 +115,10 @@ export interface Contract<State = unknown> {
   getNetworkInfo(): NetworkInfoInterface;
 
   getRootBlockHeight(): number | null;
+
+  parent(): Contract | null;
+
+  callDepth(): number;
+
+  evaluationOptions(): EvaluationOptions;
 }
