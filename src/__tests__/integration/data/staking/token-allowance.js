@@ -79,6 +79,8 @@ export function handle(state, action) {
       throw new ContractError(`Transfer amount exceeds allowance`);
     }
 
+    _allowances[sender][_msgSender] = _allowances[sender][_msgSender] - amount;
+
     return _transfer(sender, recipient, amount);
   }
 
