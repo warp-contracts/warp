@@ -7,7 +7,6 @@ import { Contract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory } from '@sma
 import path from 'path';
 import { TsLogFactory } from '../../../logging/node/TsLogFactory';
 
-
 /**
  * This verifies whether combination of read and write state works properly.
  * 1. User calls ContractA.writeContractCheck(amount)
@@ -109,8 +108,18 @@ describe('Testing internal writes', () => {
       src: callingContractSrc
     });
 
-    calleeContract = smartweave.contract(calleeTxId).connect(wallet);
-    callingContract = smartweave.contract(callingTxId).connect(wallet);
+    calleeContract = smartweave
+      .contract(calleeTxId)
+      .setEvaluationOptions({
+        internalWrites: true
+      })
+      .connect(wallet);
+    callingContract = smartweave
+      .contract(callingTxId)
+      .setEvaluationOptions({
+        internalWrites: true
+      })
+      .connect(wallet);
 
     await mine();
   }

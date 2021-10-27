@@ -1,5 +1,5 @@
 import {
-  Benchmark,
+  Benchmark, EvaluationOptions,
   GQLEdgeInterface,
   GQLResultInterface,
   GQLTransactionsResultInterface,
@@ -64,8 +64,13 @@ export class ContractInteractionsLoader implements InteractionsLoader {
 
   constructor(private readonly arweave: Arweave) {}
 
-  async load(contractTxId: string, fromBlockHeight: number, toBlockHeight: number): Promise<GQLEdgeInterface[]> {
-    this.logger.debug('Loading interactions for', contractTxId);
+  async load(
+    contractId: string,
+    fromBlockHeight: number,
+    toBlockHeight: number,
+    evaluationOptions: EvaluationOptions
+  ): Promise<GQLEdgeInterface[]> {
+    this.logger.debug('Loading interactions for', contractId);
     const mainTransactionsVariables: ReqVariables = {
       tags: [
         {
@@ -74,7 +79,7 @@ export class ContractInteractionsLoader implements InteractionsLoader {
         },
         {
           name: SmartWeaveTags.CONTRACT_TX_ID,
-          values: [contractTxId]
+          values: [contractId]
         }
       ],
       blockFilter: {
@@ -83,35 +88,35 @@ export class ContractInteractionsLoader implements InteractionsLoader {
       },
       first: MAX_REQUEST
     };
-    const mainInteractions = await this.loadPages(mainTransactionsVariables);
-    this.logger.debug('Main Interactions:', mainInteractions);
-    this.logger.debug('Main interactions length:', mainInteractions.length);
 
-    let innerWritesVariables: ReqVariables = {
-      tags: [
-        {
-          name: SmartWeaveTags.INTERACT_WRITE,
-          values: [contractTxId]
-        }
-      ],
-      blockFilter: {
-        min: fromBlockHeight,
-        max: toBlockHeight
-      },
-      first: MAX_REQUEST
-    };
-    const innerWritesInteractions = await this.loadPages(innerWritesVariables);
-    this.logger.debug('Inner Writes Interactions', innerWritesInteractions);
-    this.logger.debug('Inner writes interactions length:', innerWritesInteractions.length);
-    const allInteractions = mainInteractions.concat(innerWritesInteractions);
+    let interactions = await this.loadPages(mainTransactionsVariables);
+
+    if (evaluationOptions.internalWrites) {
+      let innerWritesVariables: ReqVariables = {
+        tags: [
+          {
+            name: SmartWeaveTags.INTERACT_WRITE,
+            values: [contractId]
+          }
+        ],
+        blockFilter: {
+          min: fromBlockHeight,
+          max: toBlockHeight
+        },
+        first: MAX_REQUEST
+      };
+      const innerWritesInteractions = await this.loadPages(innerWritesVariables);
+      this.logger.debug('Inner writes interactions length:', innerWritesInteractions.length);
+      interactions = interactions.concat(innerWritesInteractions);
+    }
 
     this.logger.debug('All loaded interactions:', {
       from: fromBlockHeight,
       to: toBlockHeight,
-      loaded: allInteractions.length
+      loaded: interactions.length
     });
 
-    return allInteractions;
+    return interactions;
   }
 
   private async loadPages(variables: ReqVariables) {

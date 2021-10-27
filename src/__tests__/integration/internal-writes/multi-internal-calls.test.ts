@@ -61,7 +61,6 @@ describe('Testing internal writes', () => {
   let contractBTxId;
   let contractCTxId;
 
-
   beforeAll(async () => {
     // note: each tests suit (i.e. file with tests that Jest is running concurrently
     // with another files has to have ArLocal set to a different port!)
@@ -111,9 +110,9 @@ describe('Testing internal writes', () => {
       src: contractBSrc
     });
 
-    contractA = smartweave.contract(contractATxId).connect(wallet);
-    contractB = smartweave.contract(contractBTxId).connect(wallet);
-    contractC = smartweave.contract(contractCTxId).connect(wallet);
+    contractA = smartweave.contract(contractATxId).setEvaluationOptions({ internalWrites: true }).connect(wallet);
+    contractB = smartweave.contract(contractBTxId).setEvaluationOptions({ internalWrites: true }).connect(wallet);
+    contractC = smartweave.contract(contractCTxId).setEvaluationOptions({ internalWrites: true }).connect(wallet);
 
     await mine();
   }

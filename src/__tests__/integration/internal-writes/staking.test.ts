@@ -79,8 +79,14 @@ describe('Testing internal writes', () => {
       src: stakingContractSrc
     });
 
-    tokenContract = smartweave.contract(tokenContractTxId).connect(wallet);
-    stakingContract = smartweave.contract(stakingContractTxId).connect(wallet);
+    tokenContract = smartweave
+      .contract(tokenContractTxId)
+      .setEvaluationOptions({ internalWrites: true })
+      .connect(wallet);
+    stakingContract = smartweave
+      .contract(stakingContractTxId)
+      .setEvaluationOptions({ internalWrites: true })
+      .connect(wallet);
 
     await mine();
   }
@@ -129,12 +135,11 @@ describe('Testing internal writes', () => {
       });
       await mine();
 
-      expect((await stakingContract.readState()).state.stakes).toEqual({
-      });
+      expect((await stakingContract.readState()).state.stakes).toEqual({});
 
       const tokenState = (await tokenContract.readState()).state;
       expect(tokenState.balances).toEqual({
-        [walletAddress]: 10000,
+        [walletAddress]: 10000
       });
     });
 
@@ -178,8 +183,6 @@ describe('Testing internal writes', () => {
         [stakingContractTxId]: 1000
       });
     });
-
-
   });
 
   describe('with read states at the end', () => {
@@ -240,7 +243,6 @@ describe('Testing internal writes', () => {
         }
       });
     });
-
   });
 
   async function mine() {

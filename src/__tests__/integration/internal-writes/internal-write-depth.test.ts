@@ -116,9 +116,24 @@ describe('Testing internal writes', () => {
       src: contractBSrc
     });
 
-    contractA = smartweave.contract(contractATxId).connect(wallet);
-    contractB = smartweave.contract(contractBTxId).connect(wallet);
-    contractC = smartweave.contract(contractCTxId).connect(wallet);
+    contractA = smartweave
+      .contract(contractATxId)
+      .setEvaluationOptions({
+        internalWrites: true
+      })
+      .connect(wallet);
+    contractB = smartweave
+      .contract(contractBTxId)
+      .setEvaluationOptions({
+        internalWrites: true
+      })
+      .connect(wallet);
+    contractC = smartweave
+      .contract(contractCTxId)
+      .setEvaluationOptions({
+        internalWrites: true
+      })
+      .connect(wallet);
 
     await mine();
   }

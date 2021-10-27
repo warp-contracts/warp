@@ -72,11 +72,11 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
 
   updateCacheForEachInteraction = true;
 
-  enhancedValidity = false;
-
   stackTrace = {
     saveState: false
   };
+
+  internalWrites: false;
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some of the features.
@@ -96,12 +96,13 @@ export interface EvaluationOptions {
   // and caches it maybe more suitable to cache only after state has been fully evaluated)
   updateCacheForEachInteraction: boolean;
 
-  // enhanced validity report with error/exception messages included
-  enhancedValidity: boolean;
-
   // a set of options that control the behaviour of the stack trace generator
   stackTrace: {
     // whether output state should be saved for each interaction in the stack trace (may result in huuuuge json files!)
     saveState: boolean;
   };
+
+  // a new, experimental enhancement of the protocol that allows for interactWrites from
+  // smart contract's source code.
+  internalWrites: boolean;
 }

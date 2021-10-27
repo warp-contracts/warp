@@ -96,6 +96,10 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
 
   private assignWrite(executionContext: ExecutionContext<State>, currentTx: CurrentTx[]) {
     this.swGlobal.contracts.write = async <Input = unknown>(contractTxId: string, input: Input) => {
+      if (!executionContext.evaluationOptions.internalWrites) {
+        throw new Error("Internal writes feature switched off. Change EvaluationOptions.internalWrites flag to 'true'");
+      }
+      
       this.logger.debug('swGlobal.write call:', {
         from: this.contractDefinition.txId,
         to: contractTxId,
