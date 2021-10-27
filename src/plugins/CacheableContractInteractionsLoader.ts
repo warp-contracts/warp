@@ -1,4 +1,11 @@
-import { BlockHeightKey, BlockHeightSwCache, GQLEdgeInterface, InteractionsLoader, LoggerFactory } from '@smartweave';
+import {
+  BlockHeightKey,
+  BlockHeightSwCache,
+  EvaluationOptions,
+  GQLEdgeInterface,
+  InteractionsLoader,
+  LoggerFactory
+} from '@smartweave';
 
 /**
  * This implementation of the {@link InteractionsLoader} tries to limit the amount of interactions
@@ -13,7 +20,12 @@ export class CacheableContractInteractionsLoader implements InteractionsLoader {
     private readonly cache: BlockHeightSwCache<GQLEdgeInterface[]>
   ) {}
 
-  async load(contractId: string, fromBlockHeight: number, toBlockHeight: number): Promise<GQLEdgeInterface[]> {
+  async load(
+    contractId: string,
+    fromBlockHeight: number,
+    toBlockHeight: number,
+    evaluationOptions: EvaluationOptions
+  ): Promise<GQLEdgeInterface[]> {
     this.logger.debug('Loading interactions', {
       contractId,
       fromBlockHeight,
@@ -38,7 +50,12 @@ export class CacheableContractInteractionsLoader implements InteractionsLoader {
       cachedValue
     });
 
-    const missingInteractions = await this.baseImplementation.load(contractId, cachedHeight + 1, toBlockHeight);
+    const missingInteractions = await this.baseImplementation.load(
+      contractId,
+      cachedHeight + 1,
+      toBlockHeight,
+      evaluationOptions
+    );
 
     const result = cachedValue
       .filter((interaction: GQLEdgeInterface) => interaction.node.block.height >= fromBlockHeight)

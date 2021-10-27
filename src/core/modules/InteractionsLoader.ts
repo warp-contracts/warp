@@ -1,4 +1,4 @@
-import { GQLEdgeInterface } from '@smartweave';
+import { EvaluationOptions, GQLEdgeInterface } from '@smartweave';
 
 /**
  * Implementors of this interface add functionality of loading contract's interaction transactions.
@@ -7,5 +7,10 @@ import { GQLEdgeInterface } from '@smartweave';
  * Note: InteractionsLoaders are not responsible for sorting interaction transactions!
  */
 export interface InteractionsLoader {
-  load(contractId: string, fromBlockHeight: number, toBlockHeight: number): Promise<GQLEdgeInterface[]>;
+  load(
+    contractId: string,
+    fromBlockHeight: number,
+    toBlockHeight: number,
+    evaluationOptions: EvaluationOptions
+  ): Promise<GQLEdgeInterface[]>;
 }

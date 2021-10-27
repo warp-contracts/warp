@@ -110,7 +110,7 @@ async function main() {
     console.log(
       `\n[${contractTxs.indexOf(contractTx) + 1} / ${contractTxs.length}] loading interactions of the ${contractTxId}`
     );
-    const interactions = await transactionsLoader.load(contractTxId, 0, 779826);
+    const interactions = await transactionsLoader.load(contractTxId, 0, 779826, evaluationOptions);
     console.log(`${contractTxId}: ${interactions.length}`);
 
     result[contractTxId] = interactions.length;

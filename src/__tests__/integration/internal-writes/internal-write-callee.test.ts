@@ -11,7 +11,6 @@ interface ExampleContractState {
   counter: number;
 }
 
-
 /**
  * The most basic example of writes between contracts.
  * In this suite "User" is calling CallingContract.writeContract
@@ -97,8 +96,18 @@ describe('Testing internal writes', () => {
       src: callingContractSrc
     });
 
-    calleeContract = smartweave.contract<ExampleContractState>(calleeTxId).connect(wallet);
-    callingContract = smartweave.contract(callingTxId).connect(wallet);
+    calleeContract = smartweave
+      .contract<ExampleContractState>(calleeTxId)
+      .setEvaluationOptions({
+        internalWrites: true
+      })
+      .connect(wallet);
+    callingContract = smartweave
+      .contract(callingTxId)
+      .setEvaluationOptions({
+        internalWrites: true
+      })
+      .connect(wallet);
 
     await mine();
   }

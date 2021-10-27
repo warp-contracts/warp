@@ -47,7 +47,12 @@ export class FromFileInteractionsLoader implements InteractionsLoader {
     });
   }
 
-  async load(contractId: string, fromBlockHeight: number, toBlockHeight: number): Promise<GQLEdgeInterface[]> {
+  async load(
+    contractId: string,
+    fromBlockHeight: number,
+    toBlockHeight: number,
+    evaluationOptions: EvaluationOptions
+  ): Promise<GQLEdgeInterface[]> {
     return this.transactions;
   }
 }

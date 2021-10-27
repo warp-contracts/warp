@@ -21,7 +21,12 @@ async function main() {
 
   const transactionsLoader = new ContractInteractionsLoader(arweave);
 
-  const result = await transactionsLoader.load('Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY', 0, 779820);
+  const result = await transactionsLoader.load(
+    'Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY',
+    0,
+    779820,
+    evaluationOptions
+  );
 
   console.log(result.length);
 

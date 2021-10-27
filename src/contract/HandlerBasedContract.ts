@@ -146,20 +146,22 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
     const { arweave } = this.smartweave;
 
-    await this.callContract(input, undefined, tags, transfer);
-    const callStack: ContractCallStack = this.getCallStack();
-    const innerWrites = this.innerWritesEvaluator.eval(callStack);
-    this.logger.debug('Input', input);
-    this.logger.debug('Callstack', callStack.print());
+    if (this.evaluationOptions.internalWrites) {
+      await this.callContract(input, undefined, tags, transfer);
+      const callStack: ContractCallStack = this.getCallStack();
+      const innerWrites = this.innerWritesEvaluator.eval(callStack);
+      this.logger.debug('Input', input);
+      this.logger.debug('Callstack', callStack.print());
 
-    innerWrites.forEach((contractTxId) => {
-      tags.push({
-        name: SmartWeaveTags.INTERACT_WRITE,
-        value: contractTxId
+      innerWrites.forEach((contractTxId) => {
+        tags.push({
+          name: SmartWeaveTags.INTERACT_WRITE,
+          value: contractTxId
+        });
       });
-    });
 
-    this.logger.debug('Tags with inner calls', tags);
+      this.logger.debug('Tags with inner calls', tags);
+    }
 
     const interactionTx = await createTx(
       this.smartweave.arweave,
@@ -287,7 +289,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
         // (eg. if contract is calling different contracts on different block heights).
         // This basically limits the amount of interactions with Arweave GraphQL endpoint -
         // each such interaction takes at least ~500ms.
-        interactionsLoader.load(contractTxId, cachedBlockHeight + 1, this.rootBlockHeight || this.networkInfo.height)
+        interactionsLoader.load(
+          contractTxId,
+          cachedBlockHeight + 1,
+          this.rootBlockHeight || this.networkInfo.height,
+          this.evaluationOptions
+        )
       ]);
       this.logger.debug('contract and interactions load', benchmark.elapsed());
       sortedInteractions = await interactionsSorter.sort(interactions);
@@ -338,7 +345,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     if (cachedBlockHeight != blockHeight) {
       [contractDefinition, interactions] = await Promise.all([
         definitionLoader.load<State>(contractTxId),
-        await interactionsLoader.load(contractTxId, 0, blockHeight)
+        await interactionsLoader.load(contractTxId, 0, blockHeight, this.evaluationOptions)
       ]);
       sortedInteractions = await interactionsSorter.sort(interactions);
     } else {
@@ -466,7 +473,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     const interaction: ContractInteraction<Input> = {
       input,
-      caller: this.callingContract.txId()//executionContext.caller
+      caller: this.callingContract.txId() //executionContext.caller
     };
 
     const interactionData: InteractionData<Input> = {
