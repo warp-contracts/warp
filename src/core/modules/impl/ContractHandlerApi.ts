@@ -11,14 +11,15 @@ import {
   InteractionResult,
   LoggerFactory,
   RedStoneLogger,
-  SmartWeaveGlobal
+  SmartWeaveGlobal,
+  timeout
 } from '@smartweave';
 import BigNumber from 'bignumber.js';
 import * as clarity from '@weavery/clarity';
 
 export class ContractHandlerApi<State> implements HandlerApi<State> {
   private readonly contractLogger: RedStoneLogger;
-  private readonly logger = LoggerFactory.INST.create('ContractHandler');
+  private readonly logger = LoggerFactory.INST.create('ContractHandlerApi');
 
   constructor(
     private readonly swGlobal: SmartWeaveGlobal,
@@ -40,6 +41,10 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
   ): Promise<InteractionResult<State, Result>> {
     const contractLogger = LoggerFactory.INST.create('Contract');
 
+    const { timeoutId, timeoutPromise } = timeout(
+      executionContext.evaluationOptions.maxInteractionEvaluationTimeSeconds
+    );
+
     try {
       const { interaction, interactionTx, currentTx } = interactionData;
 
@@ -57,7 +62,8 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
       this.assignWrite(executionContext, currentTx);
       this.assignRefreshState(executionContext);
 
-      const handlerResult = await handler(stateCopy, interaction);
+      const handlerResult = await Promise.race([timeoutPromise, handler(stateCopy, interaction)]);
+
       this.logger.debug('handlerResult', handlerResult);
 
       if (handlerResult && (handlerResult.state || handlerResult.result)) {
@@ -86,10 +92,18 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
         default:
           return {
             type: 'exception',
-            errorMessage: `${(err && err.stack) || (err && err.message)}`,
+            errorMessage: `${(err && err.stack) || (err && err.message) || err}`,
             state: currentResult.state,
             result: null
           };
+      }
+    } finally {
+      if (timeoutId !== null) {
+        // it is important to clear the timeout promise
+        // - promise.race won't "cancel" it automatically if the "handler" promise "wins"
+        // - and this would ofc. cause a waste in cpu cycles
+        // (+ Jest complains about async operations not being stopped properly).
+        clearTimeout(timeoutId);
       }
     }
   }
@@ -99,7 +113,7 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
       if (!executionContext.evaluationOptions.internalWrites) {
         throw new Error("Internal writes feature switched off. Change EvaluationOptions.internalWrites flag to 'true'");
       }
-      
+
       this.logger.debug('swGlobal.write call:', {
         from: this.contractDefinition.txId,
         to: contractTxId,

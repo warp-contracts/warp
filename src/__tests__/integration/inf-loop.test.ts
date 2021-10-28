@@ -3,7 +3,7 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, HandlerBasedContract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory } from '@smartweave';
+import { Contract, HandlerBasedContract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory, timeout } from '@smartweave';
 import path from 'path';
 
 let arweave: Arweave;
@@ -23,33 +23,39 @@ describe('Testing the SmartWeave client', () => {
   beforeAll(async () => {
     // note: each tests suit (i.e. file with tests that Jest is running concurrently
     // with another files has to have ArLocal set to a different port!)
-    arlocal = new ArLocal(1800, false);
+    arlocal = new ArLocal(1830, false);
     await arlocal.start();
 
     arweave = Arweave.init({
       host: 'localhost',
-      port: 1800,
+      port: 1830,
       protocol: 'http'
     });
 
-    LoggerFactory.INST.logLevel('error');
+    LoggerFactory.INST.logLevel('debug');
 
     smartweave = SmartWeaveNodeFactory.memCached(arweave);
 
     wallet = await arweave.wallets.generate();
     walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
-    contractSrc = fs.readFileSync(path.join(__dirname, 'data/very-complicated-contract.js'), 'utf8');
+    contractSrc = fs.readFileSync(path.join(__dirname, 'data/inf-loop-contract.js'), 'utf8');
 
     // deploying contract using the new SDK.
     const contractTxId = await smartweave.createContract.deploy({
       wallet,
-      initState: JSON.stringify({}),
+      initState: JSON.stringify({
+        counter: 10
+      }),
       src: contractSrc
     });
 
-    contract = smartweave.contract(contractTxId);
-    contract.connect(wallet);
+    contract = smartweave
+      .contract<ExampleContractState>(contractTxId)
+      .setEvaluationOptions({
+        maxInteractionEvaluationTimeSeconds: 1
+      })
+      .connect(wallet);
 
     await mine();
   });
@@ -60,6 +66,35 @@ describe('Testing the SmartWeave client', () => {
 
   it('should properly deploy contract with initial state', async () => {
     expect(await contract.readState()).not.toBeUndefined();
+  });
+
+  it('should run the non blocking function', async () => {
+    await contract.writeInteraction({
+      function: 'add'
+    });
+    await mine();
+
+    expect((await contract.readState()).state.counter).toEqual(20);
+  });
+
+  it('should exit long running function', async () => {
+    await contract.writeInteraction({
+      function: 'loop'
+    });
+    await mine();
+
+    await contract.writeInteraction({
+      function: 'add'
+    });
+    await mine();
+
+    // wait for a while for the "inf-loop" to finish
+    // otherwise Jest will complain that there are unresolved promises
+    // after finishing the tests
+    try {
+      await timeout(2).timeoutPromise;
+    } catch {}
+    expect((await contract.readState()).state.counter).toEqual(30);
   });
 });
 

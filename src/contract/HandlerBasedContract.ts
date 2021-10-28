@@ -166,7 +166,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const { arweave } = this.smartweave;
 
     if (this._evaluationOptions.internalWrites) {
-      await this.callContract(input, undefined, tags, transfer);
+      const handlerResult = await this.callContract(input, undefined, tags, transfer);
+      /*if (handlerResult.type !== "ok") {
+        throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
+      }*/
       const callStack: ContractCallStack = this.getCallStack();
       const innerWrites = this._innerWritesEvaluator.eval(callStack);
       this.logger.debug('Input', input);
