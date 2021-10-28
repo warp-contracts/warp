@@ -76,6 +76,8 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
 
   maxCallDepth = 7; // your lucky number...
 
+  maxInteractionEvaluationTimeSeconds = 60;
+
   stackTrace = {
     saveState: false
   };
@@ -103,13 +105,16 @@ export interface EvaluationOptions {
   // smart contract's source code.
   internalWrites: boolean;
 
-  // maximum call depth between contracts
+  // the maximum call depth between contracts
   // eg. ContractA calls ContractB,
   // then ContractB calls ContractC,
   // then ContractC calls ContractD
   // - call depth = 3
   // this is added as a protection from "stackoverflow" errors
   maxCallDepth: number;
+
+  // the maximum evaluation time of a single interaction transaction
+  maxInteractionEvaluationTimeSeconds: number;
 
   // a set of options that control the behaviour of the stack trace generator
   stackTrace: {

@@ -20,3 +20,17 @@ export const mapReplacer = (key: unknown, value: unknown) => {
 export const asc = (a: number, b: number) => a - b;
 
 export const desc = (a: number, b: number) => b - a;
+
+export function timeout(s: number): { timeoutId: number; timeoutPromise: Promise<any> } {
+  let timeoutId = null;
+  const timeoutPromise = new Promise((resolve, reject) => {
+    timeoutId = setTimeout(() => {
+      clearTimeout(timeoutId);
+      reject('timeout');
+    }, s * 1000);
+  });
+  return {
+    timeoutId,
+    timeoutPromise
+  };
+}
