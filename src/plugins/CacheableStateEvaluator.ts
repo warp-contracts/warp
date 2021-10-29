@@ -160,6 +160,6 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       contractTxId,
       state
     });
-    await this.cache.put(new BlockHeightKey(contractTxId, +currentInteraction.block.height), state);
+    await this.cache.put(new BlockHeightKey(contractTxId, currentInteraction.block.height), state);
   }
 }

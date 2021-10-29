@@ -83,7 +83,9 @@ export class DefaultStateEvaluator implements StateEvaluator {
 
       this.logger.debug('interactWrite?:', isInteractWrite);
 
+      // other contract makes write ("writing contract") on THIS contract
       if (isInteractWrite) {
+        // evaluating txId of the contract that is writing on THIS contract
         const writingContractTxId = this.tagsParser.getContractTag(missingInteraction);
         this.logger.debug('Loading writing contract', writingContractTxId);
 
@@ -91,6 +93,7 @@ export class DefaultStateEvaluator implements StateEvaluator {
           .getCallStack()
           .addInteractionData({ interaction: null, interactionTx, currentTx });
 
+        // creating a Contract instance for the "writing" contract
         const writingContract = executionContext.smartweave.contract(
           writingContractTxId,
           executionContext.contract,
@@ -98,6 +101,12 @@ export class DefaultStateEvaluator implements StateEvaluator {
         );
 
         this.logger.debug('Reading state of the calling contract', interactionTx.block.height);
+
+        /**
+        Reading the state of the writing contract.
+        This in turn will cause the state of THIS contract to be
+        updated in cache - see {@link ContractHandlerApi.assignWrite}
+        */
         await writingContract.readState(interactionTx.block.height, [
           ...(currentTx || []),
           {
@@ -106,6 +115,7 @@ export class DefaultStateEvaluator implements StateEvaluator {
           }
         ]);
 
+        // loading latest state of THIS contract from cache
         const newState = await this.latestAvailableState(contractDefinition.txId, interactionTx.block.height);
         this.logger.debug('New state:', {
           height: interactionTx.block.height,
@@ -116,10 +126,22 @@ export class DefaultStateEvaluator implements StateEvaluator {
         if (newState !== null) {
           currentState = deepCopy(newState.cachedValue.state);
           validity[interactionTx.id] = newState.cachedValue.validity[interactionTx.id];
+        } else {
+          validity[interactionTx.id] = false;
         }
         lastEvaluatedInteraction = interactionTx;
+
+        interactionCall.update({
+          cacheHit: false,
+          intermediaryCacheHit: false,
+          outputState: stackTrace.saveState ? currentState : undefined,
+          executionTime: singleInteractionBenchmark.elapsed(true) as number,
+          valid: validity[interactionTx.id],
+          errorMessage: errorMessage
+        });
+
         this.logger.debug('New state after internal write', { contractTxId: contractDefinition.txId, newState });
-      } else {
+      } else { // "direct" interaction with this contract - "standard" processing
         const inputTag = this.tagsParser.getInputTag(missingInteraction, executionContext.contractDefinition.txId);
         if (!inputTag) {
           this.logger.error(`Skipping tx - Input tag not found for ${interactionTx.id}`);
@@ -189,9 +211,9 @@ export class DefaultStateEvaluator implements StateEvaluator {
           valid: validity[interactionTx.id],
           errorMessage: errorMessage
         });
-
-        await this.onStateUpdate<State>(interactionTx, executionContext, new EvalStateResult(currentState, validity));
       }
+
+      await this.onStateUpdate<State>(interactionTx, executionContext, new EvalStateResult(currentState, validity));
       // I'm really NOT a fan of this "modify" feature, but I don't have idea how to better
       // implement the "evolve" feature
       for (const { modify } of this.executionContextModifiers) {
