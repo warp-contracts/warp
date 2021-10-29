@@ -53,8 +53,8 @@ describe('Testing internal writes', () => {
     wallet = await arweave.wallets.generate();
     walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
-    tokenContractSrc = fs.readFileSync(path.join(__dirname, '../data/staking/token-allowance.js'), 'utf8');
-    tokenContractInitialState = fs.readFileSync(path.join(__dirname, '../data/staking/token-allowance.json'), 'utf8');
+    tokenContractSrc = fs.readFileSync(path.join(__dirname, '../data/staking/erc-20.js'), 'utf8');
+    tokenContractInitialState = fs.readFileSync(path.join(__dirname, '../data/staking/erc-20.json'), 'utf8');
     stakingContractSrc = fs.readFileSync(path.join(__dirname, '../data/staking/staking-contract.js'), 'utf8');
     stakingContractInitialState = fs.readFileSync(
       path.join(__dirname, '../data/staking/staking-contract.json'),
@@ -101,7 +101,7 @@ describe('Testing internal writes', () => {
         allowances: {},
         balances: {},
         owner: walletAddress,
-        ticker: 'EXAMPLE_PST_TOKEN',
+        ticker: 'ERC-20',
         totalSupply: 0
       });
       expect((await stakingContract.readState()).state).toEqual({
@@ -195,7 +195,7 @@ describe('Testing internal writes', () => {
         allowances: {},
         balances: {},
         owner: walletAddress,
-        ticker: 'EXAMPLE_PST_TOKEN',
+        ticker: 'ERC-20',
         totalSupply: 0
       });
       expect((await stakingContract.readState()).state).toEqual({

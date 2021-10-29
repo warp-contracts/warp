@@ -48,6 +48,18 @@ export function handle(state, action) {
     return { state };
   }
 
+  if (_input.function === 'burn') {
+    const account = _input.account;
+    const amount = _input.amount;
+    if (_balances[account] < amount) {
+      throw new ContractError(`Burn amount exceeds balance`);
+    }
+
+    _balances[account] -= amount;
+    state.totalSupply -= amount;
+    return { state };
+  }
+
   if (_input.function === 'allowance') {
     const owner = _input.owner;
     const spender = _input.spender;
