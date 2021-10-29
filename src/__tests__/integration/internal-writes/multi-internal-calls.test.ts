@@ -333,9 +333,22 @@ describe('Testing internal writes', () => {
       expect((await contractC.readState()).state.counter).toEqual(276);
     });
 
-    it('should properly evaluate again the state', async () => {
+    it('should properly evaluate the state again', async () => {
       expect((await contractB.readState()).state.counter).toEqual(634);
       expect((await contractC.readState()).state.counter).toEqual(276);
+    });
+
+    it('should properly evaluate state with a new client', async () => {
+      const contractB2 = SmartWeaveNodeFactory.memCached(arweave)
+        .contract<any>(contractBTxId)
+        .setEvaluationOptions({ internalWrites: true })
+        .connect(wallet);
+      const contractC2 = SmartWeaveNodeFactory.memCached(arweave)
+        .contract<any>(contractCTxId)
+        .setEvaluationOptions({ internalWrites: true })
+        .connect(wallet);
+      expect((await contractB2.readState()).state.counter).toEqual(634);
+      expect((await contractC2.readState()).state.counter).toEqual(276);
     });
   });
 

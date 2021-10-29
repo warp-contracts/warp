@@ -72,12 +72,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
       this._callDepth = _parentContract.callDepth() + 1;
       const interaction: InteractionCall = _parentContract.getCallStack().getInteraction(_callingInteraction.id);
 
-      console.log('Call depth', {
-        callDepth: this._callDepth,
-        max: this._evaluationOptions.maxCallDepth,
-        options: this._evaluationOptions
-      });
-
       if (this._callDepth > this._evaluationOptions.maxCallDepth) {
         throw Error(
           `Max call depth of ${this._evaluationOptions.maxCallDepth} has been exceeded for interaction ${JSON.stringify(

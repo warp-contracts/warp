@@ -21,7 +21,7 @@ async function main() {
   let calleeTxId;
 
   LoggerFactory.use(new TsLogFactory());
-  LoggerFactory.INST.logLevel('error');
+  LoggerFactory.INST.logLevel('debug');
   //LoggerFactory.INST.logLevel('debug', 'HandlerBasedContract');
   /*LoggerFactory.INST.logLevel('debug', 'DefaultStateEvaluator');
   LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
