@@ -233,6 +233,15 @@ describe('Testing internal writes', () => {
     it('should properly evaluate state again', async () => {
       expect((await calleeContract.readState()).state.counter).toEqual(634);
     });
+
+    it('should properly evaluate state again with a new client', async () => {
+      const calleeContract2 = SmartWeaveNodeFactory.memCached(arweave)
+        .contract<ExampleContractState>(calleeTxId)
+        .setEvaluationOptions({
+          internalWrites: true
+        })
+      expect((await calleeContract2.readState()).state.counter).toEqual(634);
+    });
   });
 
   async function mine() {

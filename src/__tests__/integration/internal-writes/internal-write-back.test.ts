@@ -65,7 +65,7 @@ describe('Testing internal writes', () => {
       protocol: 'http'
     });
 
-    LoggerFactory.use(new TsLogFactory());
+    //LoggerFactory.use(new TsLogFactory());
     LoggerFactory.INST.logLevel('error');
   });
 
@@ -177,6 +177,19 @@ describe('Testing internal writes', () => {
       expect((await contractB.readState()).state.counter).toEqual(805);
     });
 
+    it('should properly evaluate state with a new client', async () => {
+      const contractA2 = SmartWeaveNodeFactory.memCached(arweave)
+        .contract<any>(contractATxId)
+        .setEvaluationOptions({ internalWrites: true })
+        .connect(wallet);
+      const contractB2 = SmartWeaveNodeFactory.memCached(arweave)
+        .contract<any>(contractBTxId)
+        .setEvaluationOptions({ internalWrites: true })
+        .connect(wallet);
+      expect((await contractA2.readState()).state.counter).toEqual(1055);
+      expect((await contractB2.readState()).state.counter).toEqual(805);
+    });
+
     /**
      * This tests verifies whether changing state of the ContractA by ContractB
      * allows to perform some logic based on the Contract's A updated state
@@ -202,6 +215,19 @@ describe('Testing internal writes', () => {
     it('should properly evaluate state again', async () => {
       expect((await contractA.readState()).state.counter).toEqual(-805);
       expect((await contractB.readState()).state.counter).toEqual(2060);
+    });
+
+    it('should properly evaluate state with a new client', async () => {
+      const contractA2 = SmartWeaveNodeFactory.memCached(arweave)
+        .contract<any>(contractATxId)
+        .setEvaluationOptions({ internalWrites: true })
+        .connect(wallet);
+      const contractB2 = SmartWeaveNodeFactory.memCached(arweave)
+        .contract<any>(contractBTxId)
+        .setEvaluationOptions({ internalWrites: true })
+        .connect(wallet);
+      expect((await contractA2.readState()).state.counter).toEqual(-805);
+      expect((await contractB2.readState()).state.counter).toEqual(2060);
     });
   });
 
@@ -254,10 +280,27 @@ describe('Testing internal writes', () => {
       expect((await contractB.readState()).state.counter).toEqual(2060);
     });
 
+    xit('should properly evaluate state with a new client', async () => {
+      const contractA2 = SmartWeaveNodeFactory.memCached(arweave)
+        .contract<any>(contractATxId)
+        .setEvaluationOptions({ internalWrites: true })
+        .connect(wallet);
+      const contractB2 = SmartWeaveNodeFactory.memCached(arweave)
+        .contract<any>(contractBTxId)
+        .setEvaluationOptions({ internalWrites: true })
+        .connect(wallet);
+
+      LoggerFactory.INST.logLevel('debug');
+
+      expect((await contractA2.readState()).state.counter).toEqual(-805);
+      expect((await contractB2.readState()).state.counter).toEqual(2060);
+    });
+
     it('should properly evaluate state again', async () => {
       expect((await contractA.readState()).state.counter).toEqual(-805);
       expect((await contractB.readState()).state.counter).toEqual(2060);
     });
+
   });
 
   describe('with read state of A contract', () => {
@@ -297,6 +340,19 @@ describe('Testing internal writes', () => {
       });
       await mine();
       expect((await contractB.readState()).state.counter).toEqual(755);
+    });
+
+    it('should properly evaluate state with a new client', async () => {
+      const contractA2 = SmartWeaveNodeFactory.memCached(arweave)
+        .contract<any>(contractATxId)
+        .setEvaluationOptions({ internalWrites: true })
+        .connect(wallet);
+      const contractB2 = SmartWeaveNodeFactory.memCached(arweave)
+        .contract<any>(contractBTxId)
+        .setEvaluationOptions({ internalWrites: true })
+        .connect(wallet);
+      expect((await contractA2.readState()).state.counter).toEqual(855);
+      expect((await contractB2.readState()).state.counter).toEqual(755);
     });
   });
 
