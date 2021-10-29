@@ -157,7 +157,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
   async writeInteraction<Input>(
     input: Input,
     tags: Tags = [],
-    transfer: ArTransfer = emptyTransfer
+    transfer: ArTransfer = emptyTransfer,
+    strict = false
   ): Promise<string | null> {
     this.logger.info('Write interaction input', input);
     if (!this.wallet) {
@@ -166,10 +167,16 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const { arweave } = this.smartweave;
 
     if (this._evaluationOptions.internalWrites) {
+      // Call contract and verify if there are any internal writes:
+      // 1. Evaluate current contract state
+      // 2. Apply input as "dry-run" transaction
+      // 3. Verify the callStack and search for any "internalWrites" transactions
+      // 4. For each found "internalWrite" transaction - generate additional tag:
+      // {name: 'InternalWrite', value: callingContractTxId}
       const handlerResult = await this.callContract(input, undefined, tags, transfer);
-      /*if (handlerResult.type !== "ok") {
+      if (strict && handlerResult.type !== "ok") {
         throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
-      }*/
+      }
       const callStack: ContractCallStack = this.getCallStack();
       const innerWrites = this._innerWritesEvaluator.eval(callStack);
       this.logger.debug('Input', input);

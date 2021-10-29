@@ -107,8 +107,9 @@ export interface Contract<State = unknown> {
    * @param input -  new input to the contract that will be assigned with this interactions transaction
    * @param tags - additional tags that can be attached to the newly created interaction transaction
    * @param transfer - additional {@link ArTransfer} than can be attached to the interaction transaction
+   * @param strict - transaction will be posted on Arweave only if the dry-run of the input result is "ok"
    */
-  writeInteraction<Input = unknown>(input: Input, tags?: Tags, transfer?: ArTransfer): Promise<string | null>;
+  writeInteraction<Input = unknown>(input: Input, tags?: Tags, transfer?: ArTransfer, strict?: boolean): Promise<string | null>;
 
   getCallStack(): ContractCallStack;
 
