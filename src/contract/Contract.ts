@@ -109,17 +109,55 @@ export interface Contract<State = unknown> {
    * @param transfer - additional {@link ArTransfer} than can be attached to the interaction transaction
    * @param strict - transaction will be posted on Arweave only if the dry-run of the input result is "ok"
    */
-  writeInteraction<Input = unknown>(input: Input, tags?: Tags, transfer?: ArTransfer, strict?: boolean): Promise<string | null>;
+  writeInteraction<Input = unknown>(
+    input: Input,
+    tags?: Tags,
+    transfer?: ArTransfer,
+    strict?: boolean
+  ): Promise<string | null>;
 
+  /**
+   * Returns the full call tree report the last
+   * interaction with contract (eg. after reading state)
+   */
   getCallStack(): ContractCallStack;
 
+  /**
+   * Gets network info assigned to this contract.
+   * Network info is refreshed between interactions with
+   * given contract (eg. between consecutive calls to {@link Contract.readState})
+   * but reused within given execution tree (ie. only "root" contract loads the
+   * network info - eg. if readState calls other contracts, these calls will use the
+   * "root" contract network info - so that the whole execution is performed with the
+   * same network info)
+   */
   getNetworkInfo(): NetworkInfoInterface;
 
+  /**
+   * Get the block height requested by user for the given interaction with contract
+   * (eg. readState or viewState call)
+   */
   getRootBlockHeight(): number | null;
 
+  /**
+   * Gets the parent contract - ie. contract that called THIS contract during the
+   * state evaluation.
+   */
   parent(): Contract | null;
 
+  /**
+   * Return the depth of the call to this contract.
+   * Eg. 
+   * 1. User calls ContractA.readState() - depth = 0
+   * 2. ContractA.readState() calls ContractB.readState() - depth = 1
+   * 3. ContractB.readState calls ContractC.readState() - depth = 2
+   */
   callDepth(): number;
 
+  /**
+   * {@link EvaluationOptions} assigned to this contract.
+   * The evaluation options for the child contracts are always
+   * the same as the evaluation options of the root contract.
+   */
   evaluationOptions(): EvaluationOptions;
 }

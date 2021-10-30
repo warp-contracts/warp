@@ -168,7 +168,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       // 4. For each found "internalWrite" transaction - generate additional tag:
       // {name: 'InternalWrite', value: callingContractTxId}
       const handlerResult = await this.callContract(input, undefined, tags, transfer);
-      if (strict && handlerResult.type !== "ok") {
+      if (strict && handlerResult.type !== 'ok') {
         throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
       }
       const callStack: ContractCallStack = this.getCallStack();
@@ -184,6 +184,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
       });
 
       this.logger.debug('Tags with inner calls', tags);
+    } else {
+      if (strict) {
+        const handlerResult = await this.callContract(input, undefined, tags, transfer);
+        if (handlerResult.type !== 'ok') {
+          throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
+        }
+      }
     }
 
     const interactionTx = await createTx(
@@ -421,7 +428,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     if (!executionContext.currentBlockData) {
       const currentBlockData = executionContext.currentNetworkInfo
         ? // trying to optimise calls to arweave as much as possible...
-          await arweave.blocks.get(executionContext.currentNetworkInfo.current)
+        await arweave.blocks.get(executionContext.currentNetworkInfo.current)
         : await arweave.blocks.getCurrent();
 
       executionContext = {
