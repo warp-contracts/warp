@@ -21,7 +21,6 @@ const arweave = Arweave.init({
 });
 
 LoggerFactory.INST.logLevel('fatal');
-const smartWeave = SmartWeaveNodeFactory.memCached(arweave, 5);
 
 const testCases: string[] = JSON.parse(fs.readFileSync(path.join(__dirname, 'test-cases.json'), 'utf-8'));
 
@@ -36,9 +35,8 @@ describe.each(chunked)('.suite %#', (contracts: string[]) => {
       console.log('readContract', contractTxId);
       const result = await readContract(arweave, contractTxId);
       const resultString = JSON.stringify(result).trim();
-
       console.log('readState', contractTxId);
-      const result2 = await smartWeave
+      const result2 = await SmartWeaveNodeFactory.memCached(arweave, 5)
         .contract(contractTxId)
         .setEvaluationOptions({
           fcpOptimization: true
@@ -59,7 +57,7 @@ describe('readState', () => {
     const result = await readContract(arweave, contractTxId, blockHeight);
     const resultString = JSON.stringify(result).trim();
 
-    const result2 = await smartWeave.contract(contractTxId).readState(blockHeight);
+    const result2 = await SmartWeaveNodeFactory.memCached(arweave, 5).contract(contractTxId).readState(blockHeight);
     const result2String = JSON.stringify(result2.state).trim();
 
     expect(result2String).toEqual(resultString);
@@ -73,7 +71,7 @@ describe('readState', () => {
       target: '6Z-ifqgVi1jOwMvSNwKWs6ewUEQ0gU9eo4aHYC3rN1M'
     });
 
-    const v2Result = await smartWeave.contract(contractTxId).connect(jwk).viewState({
+    const v2Result = await SmartWeaveNodeFactory.memCached(arweave, 5).contract(contractTxId).connect(jwk).viewState({
       function: 'balance',
       target: '6Z-ifqgVi1jOwMvSNwKWs6ewUEQ0gU9eo4aHYC3rN1M'
     });
