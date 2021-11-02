@@ -28,14 +28,14 @@ without the need of hard-coding contract's txId in the client's source code.
 This also makes it easier to audit given contract - as you keep all its versions in one place.
 */
 
-function isEvolveCompatible(state: any): state is EvolveState {
+function isEvolveCompatible(state: unknown): state is EvolveState {
   if (!state) {
     return false;
   }
 
   const settings = evalSettings(state);
 
-  return state.evolve !== undefined || settings.has('evolve');
+  return (state as EvolveState).evolve !== undefined || settings.has('evolve');
 }
 
 export class Evolve implements ExecutionContextModifier {

@@ -31,8 +31,6 @@ export interface HandlerApi<State> {
 /**
  * A factory that produces handlers that are compatible with the "current" style of
  * writing SW contracts (ie. using "handle" function).
- * Note: this code is mostly ported from the previous version of the SDK and is somewhat messy...
- * First candidate for the refactor!
  */
 export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknown>> {
   private readonly logger = LoggerFactory.INST.create('HandlerExecutorFactory');

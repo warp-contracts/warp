@@ -35,7 +35,7 @@ export class SmartWeave {
     this.createContract = new DefaultCreateContract(arweave);
   }
 
-  static builder(arweave: Arweave) {
+  static builder(arweave: Arweave): SmartWeaveBuilder {
     return new SmartWeaveBuilder(arweave);
   }
 

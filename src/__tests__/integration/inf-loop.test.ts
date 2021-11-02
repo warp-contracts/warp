@@ -3,7 +3,7 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, HandlerBasedContract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory, timeout } from '@smartweave';
+import { Contract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory, timeout } from '@smartweave';
 import path from 'path';
 
 let arweave: Arweave;
@@ -18,7 +18,6 @@ describe('Testing the SmartWeave client', () => {
   let contractSrc: string;
 
   let wallet: JWKInterface;
-  let walletAddress: string;
 
   beforeAll(async () => {
     // note: each tests suit (i.e. file with tests that Jest is running concurrently
@@ -37,7 +36,6 @@ describe('Testing the SmartWeave client', () => {
     smartweave = SmartWeaveNodeFactory.memCached(arweave);
 
     wallet = await arweave.wallets.generate();
-    walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
     contractSrc = fs.readFileSync(path.join(__dirname, 'data/inf-loop-contract.js'), 'utf8');
 
@@ -93,7 +91,9 @@ describe('Testing the SmartWeave client', () => {
     // after finishing the tests
     try {
       await timeout(2).timeoutPromise;
-    } catch {}
+    } catch {
+      // noop
+    }
     expect((await contract.readState()).state.counter).toEqual(30);
   });
 });

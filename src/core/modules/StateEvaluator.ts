@@ -81,7 +81,6 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   stackTrace = {
     saveState: false
   };
-
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some of the features.
@@ -121,5 +120,4 @@ export interface EvaluationOptions {
     // whether output state should be saved for each interaction in the stack trace (may result in huuuuge json files!)
     saveState: boolean;
   };
-
 }

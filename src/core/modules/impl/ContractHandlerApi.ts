@@ -23,6 +23,7 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
 
   constructor(
     private readonly swGlobal: SmartWeaveGlobal,
+    // eslint-disable-next-line
     private readonly contractFunction: Function,
     private readonly contractDefinition: ContractDefinition<State>
   ) {

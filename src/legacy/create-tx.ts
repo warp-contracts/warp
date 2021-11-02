@@ -1,5 +1,5 @@
 import Arweave from 'arweave';
-import { ArWallet, GQLNodeInterface, GQLTagInterface } from '@smartweave';
+import { ArWallet, GQLNodeInterface } from '@smartweave';
 import Transaction from 'arweave/node/lib/transaction';
 import { CreateTransactionInterface } from 'arweave/node/common';
 import { BlockData } from 'arweave/node/blocks';
@@ -94,7 +94,7 @@ export function unpackTags(tx: Transaction): Record<string, string | string[]> {
     try {
       const name = tag.get('name', { decode: true, string: true }) as string;
       const value = tag.get('value', { decode: true, string: true }) as string;
-      if (!result.hasOwnProperty(name)) {
+      if (!Object.prototype.hasOwnProperty.call(result, name)) {
         result[name] = value;
         continue;
       }

@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { InteractionsLoader } from '../src/core/modules/InteractionsLoader';
 import { GQLEdgeInterface } from '../src/legacy/gqlResult';
 import * as fs from 'fs';

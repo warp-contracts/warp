@@ -1,3 +1,4 @@
+/* eslint-disable */
 import fs from 'fs';
 
 import ArLocal from 'arlocal';
@@ -44,7 +45,6 @@ describe('Testing internal writes', () => {
   let calleeInitialState: string;
 
   let wallet: JWKInterface;
-  let walletAddress: string;
 
   let arweave: Arweave;
   let arlocal: ArLocal;
@@ -77,7 +77,6 @@ describe('Testing internal writes', () => {
     smartweave = SmartWeaveNodeFactory.memCached(arweave);
 
     wallet = await arweave.wallets.generate();
-    walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
     callingContractSrc = fs.readFileSync(path.join(__dirname, '../data/writing-contract.js'), 'utf8');
     callingContractInitialState = fs.readFileSync(path.join(__dirname, '../data/writing-contract-state.json'), 'utf8');
@@ -239,7 +238,7 @@ describe('Testing internal writes', () => {
         .contract<ExampleContractState>(calleeTxId)
         .setEvaluationOptions({
           internalWrites: true
-        })
+        });
       expect((await calleeContract2.readState()).state.counter).toEqual(634);
     });
   });

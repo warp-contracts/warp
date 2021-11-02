@@ -1,3 +1,4 @@
+/* eslint-disable */
 import fs from 'fs';
 
 import ArLocal from 'arlocal';
