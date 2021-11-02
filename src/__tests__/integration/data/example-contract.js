@@ -8,14 +8,11 @@ export async function handle(state, action) {
   }
 
   if (action.input.function === 'addAndWrite') {
-    console.log('add and write');
     const result = await SmartWeave.contracts.write(action.input.contractId, {
       function: 'addAmount',
       amount: action.input.amount
     });
 
-    console.log('result from caller:', result);
-    // 555 + 200
     state.counter += result.state.counter;
 
     return { state };

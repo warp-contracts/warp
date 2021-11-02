@@ -217,10 +217,6 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
   private assignRefreshState(executionContext: ExecutionContext<State>) {
     this.swGlobal.contracts.refreshState = async () => {
       const stateEvaluator = executionContext.smartweave.stateEvaluator;
-      console.log('refresh:', {
-        contract: this.swGlobal.contract.id,
-        height: this.swGlobal.block.height
-      });
       const result = await stateEvaluator.latestAvailableState(this.swGlobal.contract.id, this.swGlobal.block.height);
       return result?.cachedValue.state;
     };
