@@ -52,7 +52,7 @@ export class DefaultStateEvaluator implements StateEvaluator {
     currentTx: CurrentTx[]
   ): Promise<EvalStateResult<State>> {
     const stateEvaluationBenchmark = Benchmark.measure();
-    const { ignoreExceptions, stackTrace } = executionContext.evaluationOptions;
+    const { ignoreExceptions, stackTrace, internalWrites } = executionContext.evaluationOptions;
     const { contract, contractDefinition, sortedInteractions } = executionContext;
 
     let currentState = baseState.state;
@@ -84,7 +84,7 @@ export class DefaultStateEvaluator implements StateEvaluator {
       this.logger.debug('interactWrite?:', isInteractWrite);
 
       // other contract makes write ("writing contract") on THIS contract
-      if (isInteractWrite) {
+      if (isInteractWrite && internalWrites) {
         // evaluating txId of the contract that is writing on THIS contract
         const writingContractTxId = this.tagsParser.getContractTag(missingInteraction);
         this.logger.debug('Loading writing contract', writingContractTxId);
