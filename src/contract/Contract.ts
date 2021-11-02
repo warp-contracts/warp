@@ -93,6 +93,14 @@ export interface Contract<State = unknown> {
     transaction: GQLNodeInterface
   ): Promise<InteractionResult<State, View>>;
 
+  /**
+   * A dry-write operation on contract. It first loads the contract's state and then
+   * creates a "dummy" transaction and applies the given Input on top of the current contract's
+   * state.
+   * @param input - input to be applied on the current contract's state
+   * @param tags - additional tags to be added to interaction transaction
+   * @param transfer - additional {@link ArTransfer} data to be associated with the "dummy" transaction
+   */
   dryWrite<Input>(input: Input, tags?: Tags, transfer?: ArTransfer): Promise<InteractionResult<State, unknown>>;
 
   dryWriteFromTx<Input>(
