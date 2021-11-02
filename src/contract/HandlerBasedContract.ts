@@ -369,8 +369,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     let contractDefinition,
       interactions = [],
-      sortedInteractions = [],
-      handler;
+      sortedInteractions = [];
 
     if (cachedBlockHeight != blockHeight) {
       [contractDefinition, interactions] = await Promise.all([
@@ -382,7 +381,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       this.logger.debug('State fully cached, not loading interactions.');
       contractDefinition = await definitionLoader.load<State>(contractTxId);
     }
-    handler = (await executorFactory.create(contractDefinition)) as HandlerApi<State>;
+    const handler = (await executorFactory.create(contractDefinition)) as HandlerApi<State>;
 
     this.logger.debug('Creating execution context from tx:', benchmark.elapsed());
 
@@ -428,7 +427,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     if (!executionContext.currentBlockData) {
       const currentBlockData = executionContext.currentNetworkInfo
         ? // trying to optimise calls to arweave as much as possible...
-        await arweave.blocks.get(executionContext.currentNetworkInfo.current)
+          await arweave.blocks.get(executionContext.currentNetworkInfo.current)
         : await arweave.blocks.getCurrent();
 
       executionContext = {

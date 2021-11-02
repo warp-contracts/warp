@@ -1,5 +1,5 @@
 import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@smartweave/cache';
-import { deepCopy, asc, desc } from '@smartweave/utils';
+import { asc, deepCopy, desc } from '@smartweave/utils';
 import { LoggerFactory } from '@smartweave/logging';
 
 /**
@@ -40,15 +40,6 @@ export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
     const highestBlockHeight = [...cached.keys()].sort(desc).find((cachedBlockHeight) => {
       return cachedBlockHeight <= blockHeight;
     });
-
-    if (blockHeight === 6) {
-      console.log('Cache get', {
-        requestedHeight: blockHeight,
-        key,
-        highestBlockHeight,
-        value: cached.get(highestBlockHeight)
-      });
-    }
 
     return highestBlockHeight === undefined
       ? null

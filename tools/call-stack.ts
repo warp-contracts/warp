@@ -1,3 +1,4 @@
+/* eslint-disable */
 import Arweave from 'arweave';
 import { LoggerFactory, mapReplacer } from '../src';
 import { TsLogFactory } from '../src/logging/node/TsLogFactory';

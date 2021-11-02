@@ -3,7 +3,11 @@ import { InteractionData, mapReplacer } from '@smartweave';
 export class ContractCallStack {
   readonly interactions: Map<string, InteractionCall> = new Map();
 
-  constructor(public readonly contractTxId: string, public readonly depth: number, public readonly label: string = '') {}
+  constructor(
+    public readonly contractTxId: string,
+    public readonly depth: number,
+    public readonly label: string = ''
+  ) {}
 
   addInteractionData(interactionData: InteractionData<any>): InteractionCall {
     const { interaction, interactionTx } = interactionData;
@@ -26,7 +30,7 @@ export class ContractCallStack {
     return interactionCall;
   }
 
-  getInteraction(txId: string) {
+  getInteraction(txId: string): InteractionCall {
     return this.interactions.get(txId);
   }
 
@@ -43,7 +47,7 @@ export class InteractionCall {
     return new InteractionCall(interactionInput);
   }
 
-  update(interactionOutput: InteractionOutput) {
+  update(interactionOutput: InteractionOutput): void {
     this.interactionOutput = interactionOutput;
   }
 }

@@ -147,7 +147,7 @@ export interface Contract<State = unknown> {
 
   /**
    * Return the depth of the call to this contract.
-   * Eg. 
+   * Eg.
    * 1. User calls ContractA.readState() - depth = 0
    * 2. ContractA.readState() calls ContractB.readState() - depth = 1
    * 3. ContractB.readState calls ContractC.readState() - depth = 2

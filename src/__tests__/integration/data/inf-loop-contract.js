@@ -21,9 +21,8 @@ export async function handle(state, action) {
   }
 
   function timeout(delay) {
-    return new Promise(function(resolve) {
+    return new Promise(function (resolve) {
       setTimeout(resolve, delay);
     });
   }
-
 }

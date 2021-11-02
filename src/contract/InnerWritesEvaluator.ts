@@ -13,9 +13,11 @@ export class InnerWritesEvaluator {
   private evalForeignCalls(rootContractTxId: string, interaction: InteractionCall, result: Array<string>) {
     interaction.interactionInput.foreignContractCalls.forEach((foreignContractCall) => {
       foreignContractCall.interactions.forEach((foreignInteraction) => {
-        if (foreignInteraction.interactionInput.dryWrite
-          && !result.includes(foreignContractCall.contractTxId)
-          && rootContractTxId !== foreignContractCall.contractTxId /*"write-backs"*/) {
+        if (
+          foreignInteraction.interactionInput.dryWrite &&
+          !result.includes(foreignContractCall.contractTxId) &&
+          rootContractTxId !== foreignContractCall.contractTxId /*"write-backs"*/
+        ) {
           result.push(foreignContractCall.contractTxId);
         }
         this.evalForeignCalls(rootContractTxId, foreignInteraction, result);

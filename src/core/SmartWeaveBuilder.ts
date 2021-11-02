@@ -52,7 +52,7 @@ export class SmartWeaveBuilder {
     return this.build();
   }
 
-  build() {
+  build(): SmartWeave {
     return new SmartWeave(
       this._arweave,
       this._definitionLoader,

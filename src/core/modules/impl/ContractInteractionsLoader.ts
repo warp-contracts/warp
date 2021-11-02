@@ -1,5 +1,6 @@
 import {
-  Benchmark, EvaluationOptions,
+  Benchmark,
+  EvaluationOptions,
   GQLEdgeInterface,
   GQLResultInterface,
   GQLTransactionsResultInterface,
@@ -92,7 +93,7 @@ export class ContractInteractionsLoader implements InteractionsLoader {
     let interactions = await this.loadPages(mainTransactionsVariables);
 
     if (evaluationOptions.internalWrites) {
-      let innerWritesVariables: ReqVariables = {
+      const innerWritesVariables: ReqVariables = {
         tags: [
           {
             name: SmartWeaveTags.INTERACT_WRITE,

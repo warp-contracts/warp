@@ -96,7 +96,6 @@ export function handle(state, action) {
 
   throw new ContractError(`No function supplied or function not recognised: "${_input.function}"`);
 
-
   function _transfer(sender, recipient, amount) {
     if (amount <= 0 || sender === recipient) {
       throw new ContractError('Invalid token transfer');

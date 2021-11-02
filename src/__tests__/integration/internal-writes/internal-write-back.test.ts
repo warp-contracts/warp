@@ -1,3 +1,4 @@
+/* eslint-disable */
 import fs from 'fs';
 
 import ArLocal from 'arlocal';
@@ -5,7 +6,6 @@ import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import { Contract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory } from '@smartweave';
 import path from 'path';
-import { TsLogFactory } from '../../../logging/node/TsLogFactory';
 
 /**
  * This test verifies "write-backs" between contracts:
@@ -43,7 +43,6 @@ describe('Testing internal writes', () => {
   let contractBInitialState: string;
 
   let wallet: JWKInterface;
-  let walletAddress: string;
 
   let arweave: Arweave;
   let arlocal: ArLocal;
@@ -77,7 +76,6 @@ describe('Testing internal writes', () => {
     smartweave = SmartWeaveNodeFactory.memCached(arweave);
 
     wallet = await arweave.wallets.generate();
-    walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
     contractASrc = fs.readFileSync(path.join(__dirname, '../data/writing-contract.js'), 'utf8');
     contractAInitialState = fs.readFileSync(path.join(__dirname, '../data/writing-contract-state.json'), 'utf8');
@@ -300,7 +298,6 @@ describe('Testing internal writes', () => {
       expect((await contractA.readState()).state.counter).toEqual(-805);
       expect((await contractB.readState()).state.counter).toEqual(2060);
     });
-
   });
 
   describe('with read state of A contract', () => {
