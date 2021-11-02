@@ -14,3 +14,5 @@ jobs:
         run: yarn test:unit
       - name: Run integration tests
         run: yarn test:integration
+      - name: Run regression tests
+        run: yarn test:regression
