@@ -12,7 +12,6 @@ lib/
 .DS_Store
 
 yarn-error.log
-cache/
 
 .experiments/
 
