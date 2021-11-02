@@ -141,7 +141,8 @@ export class DefaultStateEvaluator implements StateEvaluator {
         });
 
         this.logger.debug('New state after internal write', { contractTxId: contractDefinition.txId, newState });
-      } else { // "direct" interaction with this contract - "standard" processing
+      } else {
+        // "direct" interaction with this contract - "standard" processing
         const inputTag = this.tagsParser.getInputTag(missingInteraction, executionContext.contractDefinition.txId);
         if (!inputTag) {
           this.logger.error(`Skipping tx - Input tag not found for ${interactionTx.id}`);
@@ -190,11 +191,7 @@ export class DefaultStateEvaluator implements StateEvaluator {
           }
 
           validity[interactionTx.id] = result.type === 'ok';
-          // strangely - state is for some reason modified for some contracts (eg. YLVpmhSq5JmLltfg6R-5fL04rIRPrlSU22f6RQ6VyYE)
-          // when calling any async (even simple timeout) function here...
-          // that's (ie. deepCopy) a dumb workaround for this issue
-          // see https://github.com/ArweaveTeam/SmartWeave/pull/92 for more details
-          currentState = deepCopy(result.state);
+          currentState = result.state;
 
           // cannot simply take last element of the missingInteractions
           // as there is no certainty that it has been evaluated (e.g. issues with input tag).
@@ -264,7 +261,7 @@ export class DefaultStateEvaluator implements StateEvaluator {
     currentInteraction: GQLNodeInterface,
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>
-  ) {
+  ): Promise<void> {
     if (executionContext.evaluationOptions.fcpOptimization && !currentInteraction.dry) {
       this.transactionStateCache.put(
         `${executionContext.contractDefinition.txId}|${currentInteraction.id}`,

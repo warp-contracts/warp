@@ -62,7 +62,11 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
       this.assignWrite(executionContext, currentTx);
       this.assignRefreshState(executionContext);
 
-      const handlerResult = await Promise.race([timeoutPromise, handler(stateCopy, interaction)]);
+      // strangely - state is for some reason modified for some contracts (eg. YLVpmhSq5JmLltfg6R-5fL04rIRPrlSU22f6RQ6VyYE)
+      // when calling any async (even simple timeout) function here...
+      // that's (ie. deepCopy) a dumb workaround for this issue
+      // see https://github.com/ArweaveTeam/SmartWeave/pull/92 for more details
+      const handlerResult = deepCopy(await Promise.race([timeoutPromise, handler(stateCopy, interaction)]));
 
       this.logger.debug('handlerResult', handlerResult);
 
