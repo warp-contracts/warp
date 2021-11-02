@@ -102,6 +102,5 @@ TSDocs can be found [here](https://smartweave.docs.redstone.finance/).
 ### Missing features
 Some features from the original Arweave's smartweave.js are not yet implemented. They will be either added soon to the core SDK, or as
 a separate libraries, built on top of the SDK:
-- "dry-runs" (though not sure if this should be part of the "core" SDK)
 - CLI (though not sure if that is a necessary - even if, it should be
   probably a separate lib built on top of the base SDK).
