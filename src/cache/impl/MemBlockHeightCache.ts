@@ -59,12 +59,6 @@ export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
       cached.delete(toRemove);
     }
 
-    this.logger.debug('Mem cache put:', {
-      cacheKey,
-      blockHeight,
-      value
-    });
-
     cached.set(blockHeight, deepCopy(value));
   }
 
