@@ -8,6 +8,13 @@ import path from 'path';
 import { TsLogFactory } from '../../../logging/node/TsLogFactory';
 
 /**
+ * This tests verifies a standard approve/transferFrom workflow for a ERC-20ish token contract
+ * and a staking contract.
+ * 1. User approves certain amount of tokens for staking contract on the token contract
+ * 2. User stakes certain amount of tokens on the staking contract - at this point the staking
+ * contract makes an internal write to the token contract. The token contract verifies the
+ * allowance for the staking contract - and if it is sufficient - performs a transfer on the
+ * staking contract address.
  */
 describe('Testing internal writes', () => {
   let tokenContractSrc: string;
