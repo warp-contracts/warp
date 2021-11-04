@@ -8,10 +8,10 @@ export interface StateEvaluator {
   eval<State>(executionContext: ExecutionContext<State>, currentTx: CurrentTx[]): Promise<EvalStateResult<State>>;
 
   /**
-   * a hook that is called on each state update (i.e. after evaluating state for each interaction)
+   * a hook that is called on each state update (i.e. after evaluating state for each interaction transaction)
    */
   onStateUpdate<State>(
-    currentInteraction: GQLNodeInterface,
+    transaction: GQLNodeInterface,
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>
   ): Promise<void>;
@@ -20,42 +20,56 @@ export interface StateEvaluator {
    * a hook that is called after state has been fully evaluated
    */
   onStateEvaluated<State>(
-    lastInteraction: GQLNodeInterface,
+    transaction: GQLNodeInterface,
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>
   ): Promise<void>;
 
+  /**
+   * a hook that is called after performing internal write between contracts
+   */
   onInternalWriteStateUpdate<State>(
-    currentInteraction: GQLNodeInterface,
+    transaction: GQLNodeInterface,
     contractTxId: string,
     state: EvalStateResult<State>
   ): Promise<void>;
 
   /**
-   * a hook that is called before communicating with other contract
+   * a hook that is called before communicating with other contract.
    * note to myself: putting values into cache only "onContractCall" may degrade performance.
-   * For example"
-   * block 722317 - contract A calls B
-   * block 722727 - contract A calls B
-   * block 722695 - contract B calls A
+   * For example:
+   * 1. block 722317 - contract A calls B
+   * 2. block 722727 - contract A calls B
+   * 3. block 722695 - contract B calls A
    * If we update cache only on contract call - for the last above call (B->A)
    * we would retrieve state cached for 722317. If there are any transactions
    * between 722317 and 722695 - the performance will be degraded.
    */
   onContractCall<State>(
-    currentInteraction: GQLNodeInterface,
+    transaction: GQLNodeInterface,
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>
   ): Promise<void>;
 
+  /**
+   * loads latest available state for given contract for given blockHeight.
+   * - implementors should be aware that there might multiple interactions
+   * for single block - and sort them according to protocol specification.
+   */
   latestAvailableState<State>(
     contractTxId: string,
     blockHeight: number
   ): Promise<BlockHeightCacheResult<EvalStateResult<State>> | null>;
+
+  transactionState<State>(transaction: GQLNodeInterface, contractTxId: string): Promise<EvalStateResult<State> | undefined>;
 }
 
 export class EvalStateResult<State> {
-  constructor(readonly state: State, readonly validity: Record<string, boolean>) {}
+  constructor(
+    readonly state: State,
+    readonly validity: Record<string, boolean>,
+    readonly transactionId?: string,
+    readonly blockId?: string) {}
 }
 
 export class DefaultEvaluationOptions implements EvaluationOptions {

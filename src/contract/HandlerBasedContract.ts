@@ -328,6 +328,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       ]);
       this.logger.debug('contract and interactions load', benchmark.elapsed());
       sortedInteractions = await interactionsSorter.sort(interactions);
+      this.logger.debug('Sorted interactions', sortedInteractions);
       handler = (await executorFactory.create(contractDefinition)) as HandlerApi<State>;
     } else {
       this.logger.debug('State fully cached, not loading interactions.');

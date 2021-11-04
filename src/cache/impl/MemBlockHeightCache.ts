@@ -8,9 +8,13 @@ import { LoggerFactory } from '@smartweave/logging';
 export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
   private readonly logger = LoggerFactory.INST.create('MemBlockHeightSwCache');
 
-  private storage: { [key: string]: Map<number, V> } = {};
+  protected storage: { [key: string]: Map<number, V> } = {};
 
   constructor(private maxStoredBlockHeights: number = Number.MAX_SAFE_INTEGER) {}
+
+  flush(): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
 
   async getLast(key: string): Promise<BlockHeightCacheResult<V> | null> {
     if (!(await this.contains(key))) {

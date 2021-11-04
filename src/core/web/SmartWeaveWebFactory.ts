@@ -8,12 +8,11 @@ import {
 import {
   ContractDefinitionLoader,
   ContractInteractionsLoader,
-  DefaultStateEvaluator,
-  EvalStateResult,
   HandlerExecutorFactory,
   LexicographicalInteractionsSorter,
   SmartWeave,
-  SmartWeaveBuilder
+  SmartWeaveBuilder,
+  StateCache
 } from '@smartweave/core';
 import { MemBlockHeightSwCache, MemCache, RemoteBlockHeightCache } from '@smartweave/cache';
 
@@ -47,7 +46,7 @@ export class SmartWeaveWebFactory {
 
     const stateEvaluator = new CacheableStateEvaluator(
       arweave,
-      new RemoteBlockHeightCache<EvalStateResult<unknown>>('STATE', cacheBaseURL),
+      new RemoteBlockHeightCache<StateCache<unknown>>('STATE', cacheBaseURL),
       [new Evolve(definitionLoader, executorFactory)]
     );
 
@@ -84,37 +83,10 @@ export class SmartWeaveWebFactory {
 
     const stateEvaluator = new CacheableStateEvaluator(
       arweave,
-      new MemBlockHeightSwCache<EvalStateResult<unknown>>(maxStoredBlockHeights),
+      new MemBlockHeightSwCache<StateCache<unknown>>(maxStoredBlockHeights),
       [new Evolve(definitionLoader, executorFactory)]
     );
 
-    const interactionsSorter = new LexicographicalInteractionsSorter(arweave);
-
-    return SmartWeave.builder(arweave)
-      .setDefinitionLoader(definitionLoader)
-      .setInteractionsLoader(interactionsLoader)
-      .setInteractionsSorter(interactionsSorter)
-      .setExecutorFactory(executorFactory)
-      .setStateEvaluator(stateEvaluator);
-  }
-
-  /**
-   * Returns a fully configured, nonCached {@link SmartWeave}.
-   */
-  static nonCached(arweave: Arweave): SmartWeave {
-    return this.nonCachedBased(arweave).build();
-  }
-
-  /**
-   * Returns a preconfigured {@link SmartWeave} that (yup, you've guessed it!) does not use any caches.
-   * This one is gonna be slooow!
-   * Use {@link SmartWeaveBuilder.build()} to finish the configuration.
-   */
-  static nonCachedBased(arweave: Arweave): SmartWeaveBuilder {
-    const definitionLoader = new ContractDefinitionLoader(arweave);
-    const interactionsLoader = new ContractInteractionsLoader(arweave);
-    const executorFactory = new HandlerExecutorFactory(arweave);
-    const stateEvaluator = new DefaultStateEvaluator(arweave, [new Evolve(definitionLoader, executorFactory)]);
     const interactionsSorter = new LexicographicalInteractionsSorter(arweave);
 
     return SmartWeave.builder(arweave)

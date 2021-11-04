@@ -149,7 +149,7 @@ export class ContractInteractionsLoader implements InteractionsLoader {
     this.logger.debug('GQL page load:', benchmark.elapsed());
 
     while (response.status === 403) {
-      this.logger.debug(`GQL rate limiting, waiting ${ContractInteractionsLoader._30seconds}ms before next try.`);
+      this.logger.warn(`GQL rate limiting, waiting ${ContractInteractionsLoader._30seconds}ms before next try.`);
 
       await sleep(ContractInteractionsLoader._30seconds);
 

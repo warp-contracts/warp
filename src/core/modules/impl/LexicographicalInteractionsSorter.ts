@@ -15,15 +15,19 @@ export class LexicographicalInteractionsSorter implements InteractionsSorter {
     return copy.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
   }
 
-  private async addSortKey(txInfo: GQLEdgeInterface) {
+  private async addSortKey(txInfo:  GQLEdgeInterface) {
     const { node } = txInfo;
 
-    const blockHashBytes = this.arweave.utils.b64UrlToBuffer(node.block.id);
-    const txIdBytes = this.arweave.utils.b64UrlToBuffer(node.id);
+    txInfo.sortKey = await this.createSortKey(node.block.id, node.id, node.block.height);
+  }
+
+  public async createSortKey(blockId: string, transactionId: string, blockHeight: number) {
+    const blockHashBytes = this.arweave.utils.b64UrlToBuffer(blockId);
+    const txIdBytes = this.arweave.utils.b64UrlToBuffer(transactionId);
     const concatenated = this.arweave.utils.concatBuffers([blockHashBytes, txIdBytes]);
     const hashed = arrayToHex(await this.arweave.crypto.hash(concatenated));
-    const blockHeight = `000000${node.block.height}`.slice(-12);
+    const blockHeightString = `000000${blockHeight}`.slice(-12);
 
-    txInfo.sortKey = `${blockHeight},${hashed}`;
+    return `${blockHeightString},${hashed}`;
   }
 }

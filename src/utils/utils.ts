@@ -4,7 +4,7 @@ export const sleep = (ms: number): Promise<void> => {
 };
 
 export const deepCopy = (input: unknown): any => {
-  return JSON.parse(JSON.stringify(input));
+  return JSON.parse(JSON.stringify(input, mapReplacer), mapReviver);
 };
 
 export const mapReplacer = (key: unknown, value: unknown) => {
@@ -16,6 +16,15 @@ export const mapReplacer = (key: unknown, value: unknown) => {
   } else {
     return value;
   }
+};
+
+export const mapReviver = (key: unknown, value: any) => {
+  if (typeof value === 'object' && value !== null) {
+    if (value.dataType === 'Map') {
+      return new Map(value.value);
+    }
+  }
+  return value;
 };
 
 export const asc = (a: number, b: number): number => a - b;

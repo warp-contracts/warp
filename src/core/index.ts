@@ -14,6 +14,7 @@ export * from './modules/impl/LexicographicalInteractionsSorter';
 export * from './modules/impl/DefaultCreateContract';
 export * from './modules/impl/TagsParser';
 export * from './modules/impl/normalize-source';
+export * from './modules/impl/StateCache';
 
 export * from './ExecutionContextModifier';
 export * from './SmartWeaveTags';

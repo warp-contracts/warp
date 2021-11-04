@@ -66,16 +66,14 @@ async function main() {
     });
 
     calleeContract = smartweave.contract(calleeTxId).connect(wallet).setEvaluationOptions({
-      ignoreExceptions: false
+      ignoreExceptions: false,
+      internalWrites: true,
     });
     callingContract = smartweave.contract(callingTxId).connect(wallet).setEvaluationOptions({
-      ignoreExceptions: false
+      ignoreExceptions: false,
+      internalWrites: true
     });
     await mine();
-
-    await calleeContract.writeInteraction({ function: 'add' });
-    await calleeContract.writeInteraction({ function: 'add' });
-    await mine(); // 102
 
     await calleeContract.writeInteraction({ function: 'add' });
     await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
@@ -85,7 +83,6 @@ async function main() {
     logger.info('Read state 1', result1.state);*/
 
     await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
-    await mine();  // 123
     await calleeContract.writeInteraction({ function: 'add' });
     await mine(); //124
 
