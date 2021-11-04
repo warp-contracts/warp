@@ -142,6 +142,12 @@ export class ContractInteractionsLoader implements InteractionsLoader {
 
   private async getNextPage(variables: ReqVariables): Promise<GQLTransactionsResultInterface> {
     const benchmark = Benchmark.measure();
+
+    this.logger.debug('Query', {
+      query: ContractInteractionsLoader.query,
+      variables
+    })
+
     let response = await this.arweave.api.post('graphql', {
       query: ContractInteractionsLoader.query,
       variables
