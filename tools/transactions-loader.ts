@@ -5,6 +5,7 @@ import { TsLogFactory } from '../src/logging/node/TsLogFactory';
 import fs from 'fs';
 import path from 'path';
 import { ContractInteractionsLoader } from '../src/core/modules/impl/ContractInteractionsLoader';
+import { DefaultEvaluationOptions } from '../src/core/modules/StateEvaluator';
 
 async function main() {
   LoggerFactory.use(new TsLogFactory());
@@ -22,10 +23,10 @@ async function main() {
   const transactionsLoader = new ContractInteractionsLoader(arweave);
 
   const result = await transactionsLoader.load(
-    'Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY',
+    'LppT1p3wri4FCKzW5buohsjWxpJHC58_rgIO-rYTMB8',
     0,
     779820,
-    evaluationOptions
+    new DefaultEvaluationOptions()
   );
 
   console.log(result.length);
