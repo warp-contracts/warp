@@ -4,7 +4,7 @@
  *
  * @typeParam V - type of value stored in cache, defaults to `any`.
  */
-export interface BlockHeightSwCache<V = any> {
+export interface BlockHeightSwCache<V> {
   /**
    * returns cached value for the highest available in cache block that is not higher than `blockHeight`.
    */

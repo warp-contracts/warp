@@ -5,6 +5,7 @@ import { TsLogFactory } from '../src/logging/node/TsLogFactory';
 import fs from 'fs';
 import path from 'path';
 import { ContractInteractionsLoader } from '../src/core/modules/impl/ContractInteractionsLoader';
+import { DefaultEvaluationOptions } from '../../smartweave-loot/.yalc/redstone-smartweave';
 
 async function main() {
   LoggerFactory.use(new TsLogFactory());
@@ -25,7 +26,7 @@ async function main() {
     'Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY',
     0,
     779820,
-    evaluationOptions
+    new DefaultEvaluationOptions()
   );
 
   console.log(result.length);
