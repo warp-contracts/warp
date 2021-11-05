@@ -40,7 +40,7 @@ describe.each(chunked)('.suite %#', (contracts: string[]) => {
       const result2 = await SmartWeaveNodeFactory.memCached(arweave, 5)
         .contract(contractTxId)
         .setEvaluationOptions({
-          fcpOptimization: true
+          updateCacheForEachInteraction: false
         })
         .readState();
       const result2String = JSON.stringify(result2.state).trim();

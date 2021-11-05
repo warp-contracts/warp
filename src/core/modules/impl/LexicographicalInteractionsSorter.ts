@@ -15,7 +15,7 @@ export class LexicographicalInteractionsSorter implements InteractionsSorter {
     return copy.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
   }
 
-  private async addSortKey(txInfo:  GQLEdgeInterface) {
+  private async addSortKey(txInfo: GQLEdgeInterface) {
     const { node } = txInfo;
 
     txInfo.sortKey = await this.createSortKey(node.block.id, node.id, node.block.height);

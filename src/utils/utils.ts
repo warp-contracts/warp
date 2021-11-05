@@ -29,7 +29,11 @@ export const mapReviver = (key: unknown, value: any) => {
 
 export const asc = (a: number, b: number): number => a - b;
 
+export const ascS = (a: string, b: string): number => +a - +b;
+
 export const desc = (a: number, b: number): number => b - a;
+
+export const descS = (a: string, b: string): number => +b - +a;
 
 export function timeout(s: number): { timeoutId: number; timeoutPromise: Promise<any> } {
   let timeoutId = null;

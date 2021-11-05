@@ -61,7 +61,10 @@ export interface StateEvaluator {
     blockHeight: number
   ): Promise<BlockHeightCacheResult<EvalStateResult<State>> | null>;
 
-  transactionState<State>(transaction: GQLNodeInterface, contractTxId: string): Promise<EvalStateResult<State> | undefined>;
+  transactionState<State>(
+    transaction: GQLNodeInterface,
+    contractTxId: string
+  ): Promise<EvalStateResult<State> | undefined>;
 }
 
 export class EvalStateResult<State> {
@@ -69,7 +72,8 @@ export class EvalStateResult<State> {
     readonly state: State,
     readonly validity: Record<string, boolean>,
     readonly transactionId?: string,
-    readonly blockId?: string) {}
+    readonly blockId?: string
+  ) {}
 }
 
 export class DefaultEvaluationOptions implements EvaluationOptions {

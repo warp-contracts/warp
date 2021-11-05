@@ -148,32 +148,6 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       return null;
     }
 
-    /*if (stateCache.cachedValue.length == 1) {
-      this.cLogger.debug('CacheValue size 1', stateCache.cachedValue.values().next().value);
-      return new BlockHeightCacheResult<EvalStateResult<State>>(
-        stateCache.cachedHeight,
-        stateCache.cachedValue.values().next().value
-      );
-    }
-
-    const sorter = new LexicographicalInteractionsSorter(this.arweave);
-
-    this.cLogger.debug('State cache', JSON.stringify(stateCache.cachedValue, mapReplacer));
-    const toSort = await Promise.all(
-      [...stateCache.cachedValue.values()].map(async (k) => {
-        return {
-          transactionId: k.transactionId,
-          sortKey: await sorter.createSortKey(k.blockId, k.transactionId, blockHeight)
-        };
-      })
-    );
-    const sorted = toSort.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
-    this.cLogger.debug('sorted:', sorted);
-
-    const lastKey = sorted.pop();
-
-    this.cLogger.debug('Last key: ', lastKey);*/
-
     return new BlockHeightCacheResult<EvalStateResult<State>>(
       stateCache.cachedHeight,
       [...stateCache.cachedValue].pop()
@@ -198,7 +172,8 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>
   ): Promise<void> {
-    await this.putInCache(executionContext.contractDefinition.txId, transaction, state);
+    //FIXME: https://github.com/redstone-finance/redstone-smartcontracts/issues/53
+    //await this.putInCache(executionContext.contractDefinition.txId, transaction, state);
   }
 
   async transactionState<State>(
@@ -228,10 +203,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     }
     const transactionId = transaction.id;
     const blockHeight = transaction.block.height;
-    this.cLogger.debug('putInCache:', {
-      state: state.state,
-      transactionId
-    });
+
     const stateToCache = new EvalStateResult(state.state, state.validity, transactionId, transaction.block.id);
     const stateCache = await this.cache.get(contractTxId, blockHeight);
     if (stateCache != null) {
