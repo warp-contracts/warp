@@ -65,7 +65,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       `Evaluating state for ${contractDefinition.txId} [${missingInteractions.length} non-cached of ${sortedInteractions.length} all]`
     );
 
-    this.logger.debug('Base state:', baseState.state);
+    this.logger.trace('Base state:', baseState.state);
 
     let lastEvaluatedInteraction = null;
     let errorMessage = null;
@@ -215,7 +215,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         });
 
         await this.onStateUpdate<State>(interactionTx, executionContext, new EvalStateResult(currentState, validity));
-
       }
 
       // I'm really NOT a fan of this "modify" feature, but I don't have idea how to better
