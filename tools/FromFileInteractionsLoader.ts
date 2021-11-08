@@ -3,6 +3,7 @@ import { InteractionsLoader } from '../src/core/modules/InteractionsLoader';
 import { GQLEdgeInterface } from '../src/legacy/gqlResult';
 import * as fs from 'fs';
 import { LoggerFactory } from '../src';
+import { EvaluationOptions } from '../src/core/modules/StateEvaluator';
 
 const brokenTransactions = [
   '3O5Nvfbj72BDJT2bDC5EUm6gmkManJADsn93vKzQISU',

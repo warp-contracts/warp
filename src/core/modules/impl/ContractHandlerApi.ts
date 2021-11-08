@@ -69,8 +69,6 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
       // see https://github.com/ArweaveTeam/SmartWeave/pull/92 for more details
       const handlerResult = deepCopy(await Promise.race([timeoutPromise, handler(stateCopy, interaction)]));
 
-      this.logger.debug('handlerResult', handlerResult);
-
       if (handlerResult && (handlerResult.state || handlerResult.result)) {
         return {
           type: 'ok',
