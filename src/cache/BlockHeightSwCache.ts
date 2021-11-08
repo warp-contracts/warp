@@ -18,7 +18,7 @@ export interface BlockHeightSwCache<V> {
   /**
    * returns value for the key and exact blockHeight
    */
-  get(key: string, blockHeight: number): Promise<BlockHeightCacheResult<V> | null>;
+  get(key: string, blockHeight: number, returnDeepCopy?: boolean): Promise<BlockHeightCacheResult<V> | null>;
 
   /**
    * puts new value in cache under given {@link BlockHeightKey.key} and {@link BlockHeightKey.blockHeight}.

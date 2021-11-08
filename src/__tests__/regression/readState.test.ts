@@ -4,6 +4,7 @@ import path from 'path';
 import { interactRead, readContract } from 'smartweave';
 import Arweave from 'arweave';
 import { LoggerFactory, SmartWeaveNodeFactory } from '@smartweave';
+import { TsLogFactory } from '../../logging/node/TsLogFactory';
 
 function* chunks(arr, n) {
   for (let i = 0; i < arr.length; i += n) {
@@ -14,7 +15,7 @@ function* chunks(arr, n) {
 
 const arweave = Arweave.init({
   // using our AWS Cloudfront cache/proxy, to speed up a little bit the whole process...
-  host: 'dh48zl0solow5.cloudfront.net',
+  host: 'arweave.net',
   port: 443,
   protocol: 'https',
   timeout: 60000,
@@ -37,12 +38,7 @@ describe.each(chunked)('.suite %#', (contracts: string[]) => {
       const result = await readContract(arweave, contractTxId);
       const resultString = JSON.stringify(result).trim();
       console.log('readState', contractTxId);
-      const result2 = await SmartWeaveNodeFactory.memCached(arweave, 5)
-        .contract(contractTxId)
-        .setEvaluationOptions({
-          updateCacheForEachInteraction: false
-        })
-        .readState();
+      const result2 = await SmartWeaveNodeFactory.memCached(arweave, 5).contract(contractTxId).readState();
       const result2String = JSON.stringify(result2.state).trim();
 
       expect(result2String).toEqual(resultString);

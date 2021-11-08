@@ -1,5 +1,6 @@
 import Arweave from 'arweave';
 import {
+  CacheableStateEvaluator,
   ContractDefinitionLoader,
   ContractInteractionsLoader,
   HandlerExecutorFactory,
@@ -8,12 +9,7 @@ import {
   SmartWeaveBuilder,
   SmartWeaveWebFactory
 } from '@smartweave/core';
-import {
-  CacheableContractInteractionsLoader,
-  CacheableExecutorFactory,
-  CacheableStateEvaluator,
-  Evolve
-} from '@smartweave/plugins';
+import { CacheableContractInteractionsLoader, CacheableExecutorFactory, Evolve } from '@smartweave/plugins';
 import { BsonFileBlockHeightSwCache, MemBlockHeightSwCache, MemCache } from '@smartweave/cache';
 
 /**
