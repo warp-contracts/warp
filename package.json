@@ -58,6 +58,7 @@
     "bignumber.js": "^9.0.1",
     "bson": "^4.5.0",
     "json-beautify": "^1.1.1",
+    "lodash": "^4.17.21",
     "tslog": "^3.2.2"
   },
   "devDependencies": {

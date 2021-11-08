@@ -1,10 +1,14 @@
 /* eslint-disable */
+import cloneDeep from 'lodash/cloneDeep';
+
 export const sleep = (ms: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
 export const deepCopy = (input: unknown): any => {
-  return JSON.parse(JSON.stringify(input, mapReplacer), mapReviver);
+  return cloneDeep(input);
+  // note: parse/stringify combination is slooow: https://jsben.ch/bWfk9
+  //return JSON.parse(JSON.stringify(input, mapReplacer), mapReviver);
 };
 
 export const mapReplacer = (key: unknown, value: unknown) => {

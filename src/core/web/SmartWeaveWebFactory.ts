@@ -1,11 +1,7 @@
 import Arweave from 'arweave';
+import { CacheableContractInteractionsLoader, CacheableExecutorFactory, Evolve } from '@smartweave/plugins';
 import {
-  CacheableContractInteractionsLoader,
-  CacheableExecutorFactory,
   CacheableStateEvaluator,
-  Evolve
-} from '@smartweave/plugins';
-import {
   ContractDefinitionLoader,
   ContractInteractionsLoader,
   HandlerExecutorFactory,

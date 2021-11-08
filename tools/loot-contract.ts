@@ -19,18 +19,13 @@ async function main() {
     logging: false // Enable network request logging
   });
 
-  const contractTxId = 'w27141UQGgrCFhkiw9tL7A0-qWMQjbapU3mq2TfI4Cg';
+  const contractTxId = 'Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY';
 
   const interactionsLoader = new FromFileInteractionsLoader(path.join(__dirname, 'data', 'interactions.json'));
 
-  const smartweave = SmartWeaveWebFactory.memCachedBased(arweave, 1)
-    .build();
+  const smartweave = SmartWeaveWebFactory.memCachedBased(arweave).setInteractionsLoader(interactionsLoader).build();
 
-  const lootContract = smartweave
-    .contract(contractTxId)
-    .setEvaluationOptions({
-      updateCacheForEachInteraction: false
-    });
+  const lootContract = smartweave.contract(contractTxId);
 
   const { state, validity } = await lootContract.readState();
 
@@ -39,6 +34,10 @@ async function main() {
 
   //fs.writeFileSync(path.join(__dirname, 'data', 'validity_old.json'), JSON.stringify(result.validity));
   fs.writeFileSync(path.join(__dirname, 'data', 'state.json'), JSON.stringify(state));
+
+
+  console.log('second read');
+  await lootContract.readState();
 }
 
 main().catch((e) => console.error(e));

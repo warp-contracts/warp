@@ -205,10 +205,16 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     const blockHeight = transaction.block.height;
 
     const stateToCache = new EvalStateResult(state.state, state.validity, transactionId, transaction.block.id);
-    const stateCache = await this.cache.get(contractTxId, blockHeight);
+    await this.cache.put(new BlockHeightKey(contractTxId, blockHeight), [stateToCache]);
+
+    // we do not return a deepCopy here - as this operation significantly (2-3x) degrades performance
+    // for contracts with multiple interactions on single block height
+    const stateCache = await this.cache.get(contractTxId, blockHeight, false);
     if (stateCache != null) {
+      // note: since we're not returning deepCopy of the cached array in this case
+      // - there is no need to put the updated array in the cache manually (ie. calling this.cache.put())
+      // - as we're operating on the reference.
       stateCache.cachedValue.push(stateToCache);
-      await this.cache.put(new BlockHeightKey(contractTxId, blockHeight), stateCache.cachedValue);
     } else {
       await this.cache.put(new BlockHeightKey(contractTxId, blockHeight), [stateToCache]);
     }

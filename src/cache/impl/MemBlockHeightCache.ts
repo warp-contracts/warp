@@ -1,5 +1,5 @@
 import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@smartweave/cache';
-import { ascS, deepCopy, descS } from '@smartweave/utils';
+import { asc, deepCopy, desc } from '@smartweave/utils';
 import { LoggerFactory } from '@smartweave/logging';
 
 /**
@@ -8,9 +8,7 @@ import { LoggerFactory } from '@smartweave/logging';
 export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
   private readonly logger = LoggerFactory.INST.create('MemBlockHeightSwCache');
 
-  // not using map here, as setting values in map seems to be slower
-  // then setting value for simple object - see tools/map-benchmark.ts
-  protected storage: { [contractId: string]: { [key: string]: V } } = {};
+  protected storage: { [key: string]: Map<number, V> } = {};
 
   constructor(private maxStoredBlockHeights: number = Number.MAX_SAFE_INTEGER) {}
 
@@ -23,15 +21,15 @@ export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
       return null;
     }
 
-    const cached = this.storage[key];
+    const cached: Map<number, V> = this.storage[key];
 
     // sort keys (ie. block heights) in asc order and get
     // the last element (ie. highest cached block height).
-    const highestBlockHeight = [...Object.keys(cached)].sort(ascS).pop();
+    const highestBlockHeight = [...cached.keys()].sort(asc).pop();
 
     return {
-      cachedHeight: +highestBlockHeight,
-      cachedValue: deepCopy(cached[highestBlockHeight])
+      cachedHeight: highestBlockHeight,
+      cachedValue: deepCopy(cached.get(highestBlockHeight))
     };
   }
 
@@ -40,51 +38,50 @@ export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
       return null;
     }
 
-    const cached = this.storage[key];
+    const cached: Map<number, V> = this.storage[key];
 
     // find first element in and desc-sorted keys array that is not higher than requested block height
-    const highestBlockHeight = [...Object.keys(cached)].sort(descS).find((cachedBlockHeight) => {
-      return +cachedBlockHeight <= blockHeight;
+    const highestBlockHeight = [...cached.keys()].sort(desc).find((cachedBlockHeight) => {
+      return cachedBlockHeight <= blockHeight;
     });
 
     return highestBlockHeight === undefined
       ? null
       : {
-          cachedHeight: +highestBlockHeight,
-          cachedValue: deepCopy(cached[highestBlockHeight])
+          cachedHeight: highestBlockHeight,
+          cachedValue: deepCopy(cached.get(highestBlockHeight))
         };
   }
 
   async put({ cacheKey, blockHeight }: BlockHeightKey, value: V): Promise<void> {
     if (!(await this.contains(cacheKey))) {
-      this.storage[cacheKey] = {};
+      this.storage[cacheKey] = new Map();
     }
     const cached = this.storage[cacheKey];
-    const cachedKeys = Object.keys(cached);
-    if (cachedKeys.length == this.maxStoredBlockHeights) {
-      const toRemove = [...cachedKeys].sort(ascS).shift();
-      delete cached[toRemove];
+    if (cached.size == this.maxStoredBlockHeights) {
+      const toRemove = [...cached.keys()].sort(asc).shift();
+      cached.delete(toRemove);
     }
 
-    cached['' + blockHeight] = value;
+    cached.set(blockHeight, deepCopy(value));
   }
 
   async contains(key: string): Promise<boolean> {
     return Object.prototype.hasOwnProperty.call(this.storage, key);
   }
 
-  async get(key: string, blockHeight: number): Promise<BlockHeightCacheResult<V> | null> {
+  async get(key: string, blockHeight: number, returnDeepCopy = true): Promise<BlockHeightCacheResult<V> | null> {
     if (!(await this.contains(key))) {
       return null;
     }
 
-    if (!this.storage[key].hasOwnProperty('' + blockHeight)) {
+    if (!this.storage[key].has(blockHeight)) {
       return null;
     }
 
     return {
       cachedHeight: blockHeight,
-      cachedValue: deepCopy(this.storage[key]['' + blockHeight])
+      cachedValue: returnDeepCopy ? deepCopy(this.storage[key].get(blockHeight)) : this.storage[key].get(blockHeight)
     };
   }
 }

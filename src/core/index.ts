@@ -9,6 +9,7 @@ export * from './modules/impl/BlockHeightInteractionsSorter';
 export * from './modules/impl/ContractDefinitionLoader';
 export * from './modules/impl/ContractInteractionsLoader';
 export * from './modules/impl/DefaultStateEvaluator';
+export * from './modules/impl/CacheableStateEvaluator';
 export * from './modules/impl/HandlerExecutorFactory';
 export * from './modules/impl/LexicographicalInteractionsSorter';
 export * from './modules/impl/DefaultCreateContract';
