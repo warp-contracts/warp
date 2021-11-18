@@ -52,7 +52,7 @@ export class CacheableContractInteractionsLoader implements InteractionsLoader {
 
     const missingInteractions = await this.baseImplementation.load(
       contractId,
-      cachedHeight + 1,
+      fromBlockHeight,
       toBlockHeight,
       evaluationOptions
     );
