@@ -25,9 +25,6 @@ export function handle(state, action) {
     if (!_allowances[_msgSender]) {
       _allowances[_msgSender] = {};
     }
-    if (!_allowances[_msgSender][spender]) {
-      _allowances[_msgSender][spender] = {};
-    }
 
     _allowances[_msgSender][spender] = amount;
 
