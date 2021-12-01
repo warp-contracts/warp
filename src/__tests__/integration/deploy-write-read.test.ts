@@ -52,11 +52,13 @@ describe('Testing the SmartWeave client', () => {
     initialState = fs.readFileSync(path.join(__dirname, 'data/example-contract-state.json'), 'utf8');
 
     // deploying contract using the new SDK.
+    await addFunds();
     const contractTxId = await smartweave.createContract.deploy({
       wallet,
       initState: initialState,
       src: contractSrc
     });
+
 
     contract = smartweave.contract(contractTxId);
     contract.connect(wallet);
@@ -98,5 +100,10 @@ describe('Testing the SmartWeave client', () => {
 
   async function mine() {
     await arweave.api.get('mine');
+  }
+
+  async function addFunds() {
+    const walletAddress = await arweave.wallets.getAddress(wallet);
+    await arweave.api.get(`/mint/${walletAddress}/1000`);
   }
 });

@@ -67,7 +67,11 @@ export class SmartWeaveWebFactory {
    * Returns a preconfigured, memCached {@link SmartWeaveBuilder}, that allows for customization of the SmartWeave instance.
    * Use {@link SmartWeaveBuilder.build()} to finish the configuration.
    */
-  static memCachedBased(arweave: Arweave, maxStoredBlockHeights: number = Number.MAX_SAFE_INTEGER): SmartWeaveBuilder {
+  static memCachedBased(
+    arweave: Arweave,
+    maxStoredBlockHeights: number = Number.MAX_SAFE_INTEGER,
+    stateCache?: MemBlockHeightSwCache<StateCache<unknown>>
+  ): SmartWeaveBuilder {
     const definitionLoader = new ContractDefinitionLoader(arweave, new MemCache());
 
     const interactionsLoader = new CacheableContractInteractionsLoader(
@@ -79,7 +83,7 @@ export class SmartWeaveWebFactory {
 
     const stateEvaluator = new CacheableStateEvaluator(
       arweave,
-      new MemBlockHeightSwCache<StateCache<unknown>>(maxStoredBlockHeights),
+      stateCache ? stateCache : new MemBlockHeightSwCache<StateCache<unknown>>(maxStoredBlockHeights),
       [new Evolve(definitionLoader, executorFactory)]
     );
 
