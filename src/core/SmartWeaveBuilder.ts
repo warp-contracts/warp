@@ -1,5 +1,6 @@
 import Arweave from 'arweave';
 import {
+  BlockHeightSwCache,
   DebuggableExecutorFactory,
   DefinitionLoader,
   ExecutorFactory,
