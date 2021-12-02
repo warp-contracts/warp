@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { MemBlockHeightSwCache } from '@smartweave/cache';
+import { BlockHeightKey, MemBlockHeightSwCache } from '@smartweave/cache';
 import { Benchmark, LoggerFactory } from '@smartweave/logging';
 
 /**
@@ -40,6 +40,8 @@ export class FileBlockHeightSwCache<V = any> extends MemBlockHeightSwCache<V> {
   private readonly fLogger = LoggerFactory.INST.create('FileBlockHeightSwCache');
 
   private isFlushing = false;
+
+  private isDirty = false;
 
   constructor(
     private readonly basePath = path.join(__dirname, 'storage', 'state'),
@@ -88,9 +90,6 @@ export class FileBlockHeightSwCache<V = any> extends MemBlockHeightSwCache<V> {
   }
 
   private async saveCache() {
-    if (this.isFlushing) {
-      return;
-    }
     this.isFlushing = true;
     this.fLogger.info(`==== Persisting cache ====`);
     // TODO: switch to async, as currently writing cache files may slow down contract execution.
@@ -115,6 +114,7 @@ export class FileBlockHeightSwCache<V = any> extends MemBlockHeightSwCache<V> {
           );
         }
       }
+      this.isDirty = false;
     } catch (e) {
       this.fLogger.error('Error while flushing cache', e);
     } finally {
@@ -123,7 +123,16 @@ export class FileBlockHeightSwCache<V = any> extends MemBlockHeightSwCache<V> {
     }
   }
 
+  async put({ cacheKey, blockHeight }: BlockHeightKey, value: V): Promise<void> {
+    this.isDirty = true;
+    return super.put({ cacheKey, blockHeight }, value);
+  }
+
   async flush(): Promise<void> {
+    if (this.isFlushing || !this.isDirty) {
+      return;
+    }
+
     await this.saveCache();
   }
 }

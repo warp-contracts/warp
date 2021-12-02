@@ -139,7 +139,7 @@ describe('Testing the SmartWeave client', () => {
 
   function removeCacheDir() {
     if (fs.existsSync(cacheDir)) {
-      fs.rmdirSync(cacheDir, { recursive: true });
+      fs.rmSync(cacheDir, { recursive: true });
     }
   }
 });
