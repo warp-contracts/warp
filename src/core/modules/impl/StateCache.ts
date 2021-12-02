@@ -1,4 +1,4 @@
 import { EvalStateResult } from '@smartweave';
 
-export type StateCache<State> = Array<EvalStateResult<State>>;
-//export type StateCache<State> = EvalStateResult<State>;
+// note: only arrays are guaranteed to be stringified in a particular order.
+export type StateCache<State> = EvalStateResult<State>[];

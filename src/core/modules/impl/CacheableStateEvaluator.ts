@@ -12,7 +12,7 @@ import Arweave from 'arweave';
 import { GQLNodeInterface } from '@smartweave/legacy';
 import { LoggerFactory } from '@smartweave/logging';
 import { CurrentTx } from '@smartweave/contract';
-import { mapReplacer } from '@smartweave/utils';
+import { deepCopy, mapReplacer } from '@smartweave/utils';
 
 /**
  * An implementation of DefaultStateEvaluator that adds caching capabilities.
@@ -200,24 +200,34 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
   protected async putInCache<State>(
     contractTxId: string,
     transaction: GQLNodeInterface,
-    state: EvalStateResult<State>
+    evalStateResult: EvalStateResult<State>
   ): Promise<void> {
     if (transaction.dry) {
       return;
     }
+    // we do not return a deepCopy here - as this operation significantly (2-3x) degrades performance
+    // for contracts with multiple interactions on single block height
+    const stateCache = await this.cache.get(contractTxId, transaction.block.height, false);
     const transactionId = transaction.id;
     const blockHeight = transaction.block.height;
 
-    const stateToCache = new EvalStateResult(state.state, state.validity, transactionId, transaction.block.id);
+    const stateToCache = new EvalStateResult(evalStateResult.state, evalStateResult.validity, transactionId, transaction.block.id);
 
-    // we do not return a deepCopy here - as this operation significantly (2-3x) degrades performance
-    // for contracts with multiple interactions on single block height
-    const stateCache = await this.cache.get(contractTxId, blockHeight, false);
     if (stateCache != null) {
+      const transactionState = stateCache.cachedValue.find((sc) => {
+        return sc.transactionId === transaction.id;
+      });
+      if (transactionState) {
+        if (JSON.stringify(transactionState.state) === JSON.stringify(evalStateResult.state)) {
+          return;
+        }
+      } else {
+        stateCache.cachedValue.push(stateToCache);
+      }
+
       // note: since we're not returning deepCopy of the cached array in this case
       // - there is no need to put the updated array in the cache manually (ie. calling this.cache.put())
       // - as we're operating on the reference.
-      stateCache.cachedValue.push(stateToCache);
     } else {
       await this.cache.put(new BlockHeightKey(contractTxId, blockHeight), [stateToCache]);
     }

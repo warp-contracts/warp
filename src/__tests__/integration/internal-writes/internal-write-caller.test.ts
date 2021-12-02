@@ -78,7 +78,6 @@ describe('Testing internal writes', () => {
       protocol: 'http'
     });
 
-    LoggerFactory.use(new TsLogFactory());
     LoggerFactory.INST.logLevel('error');
   });
 

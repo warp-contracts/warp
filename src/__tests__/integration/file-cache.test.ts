@@ -43,6 +43,7 @@ describe('Testing the SmartWeave client', () => {
     });
 
     LoggerFactory.INST.logLevel('error');
+    LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
 
     smartweave = SmartWeaveNodeFactory.fileCached(arweave, cacheDir);
 

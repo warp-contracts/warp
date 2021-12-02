@@ -69,8 +69,8 @@ export interface StateEvaluator {
 
 export class EvalStateResult<State> {
   constructor(
-    readonly state: State,
-    readonly validity: Record<string, boolean>,
+    public state: State,
+    public validity: Record<string, boolean>,
     readonly transactionId?: string,
     readonly blockId?: string
   ) {}
