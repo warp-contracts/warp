@@ -37,9 +37,7 @@ describe.each(chunked)('.suite %#', (contracts: string[]) => {
       const result = await readContract(arweave, contractTxId);
       const resultString = JSON.stringify(result).trim();
       console.log('readState', contractTxId);
-      const result2 = await SmartWeaveNodeFactory.memCached(arweave, 5)
-        .contract(contractTxId)
-        .readState();
+      const result2 = await SmartWeaveNodeFactory.memCached(arweave, 5).contract(contractTxId).readState();
       const result2String = JSON.stringify(result2.state).trim();
 
       expect(result2String).toEqual(resultString);
