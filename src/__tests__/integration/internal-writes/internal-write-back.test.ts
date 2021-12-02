@@ -6,6 +6,7 @@ import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import { Contract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory } from '@smartweave';
 import path from 'path';
+import { addFunds, mineBlock } from '../_helpers';
 
 /**
  * This test verifies "write-backs" between contracts:
@@ -64,7 +65,6 @@ describe('Testing internal writes', () => {
       protocol: 'http'
     });
 
-    //LoggerFactory.use(new TsLogFactory());
     LoggerFactory.INST.logLevel('error');
   });
 
@@ -76,6 +76,7 @@ describe('Testing internal writes', () => {
     smartweave = SmartWeaveNodeFactory.memCached(arweave);
 
     wallet = await arweave.wallets.generate();
+    await addFunds(arweave, wallet);
 
     contractASrc = fs.readFileSync(path.join(__dirname, '../data/writing-contract.js'), 'utf8');
     contractAInitialState = fs.readFileSync(path.join(__dirname, '../data/writing-contract-state.json'), 'utf8');
@@ -107,7 +108,7 @@ describe('Testing internal writes', () => {
       })
       .connect(wallet);
 
-    await mine();
+    await mineBlock(arweave);
   }
 
   describe('with read states in between', () => {
@@ -136,7 +137,7 @@ describe('Testing internal writes', () => {
         contractId: contractBTxId,
         amount: 100
       });
-      await mine();
+      await mineBlock(arweave);
       expect((await contractA.readState()).state.counter).toEqual(855);
       expect((await contractB.readState()).state.counter).toEqual(755);
     });
@@ -151,13 +152,13 @@ describe('Testing internal writes', () => {
         contractId: contractBTxId,
         amount: 50
       });
-      await mine();
+      await mineBlock(arweave);
       await contractB.writeInteraction({
         function: 'addAmount',
         contractId: contractBTxId,
         amount: 20
       });
-      await mine();
+      await mineBlock(arweave);
 
       await contractA.writeInteraction({
         function: 'addAmount',
@@ -169,7 +170,7 @@ describe('Testing internal writes', () => {
         contractId: contractBTxId,
         amount: 30
       });
-      await mine();
+      await mineBlock(arweave);
 
       expect((await contractA.readState()).state.counter).toEqual(1055);
       expect((await contractB.readState()).state.counter).toEqual(805);
@@ -205,7 +206,7 @@ describe('Testing internal writes', () => {
         contractId: contractBTxId,
         amount: 200
       });
-      await mine();
+      await mineBlock(arweave);
       expect((await contractA.readState()).state.counter).toEqual(-805);
       expect((await contractB.readState()).state.counter).toEqual(2060);
     });
@@ -240,20 +241,20 @@ describe('Testing internal writes', () => {
         contractId: contractBTxId,
         amount: 100
       });
-      await mine();
+      await mineBlock(arweave);
 
       await contractA.writeInteraction({
         function: 'addAmount',
         contractId: contractBTxId,
         amount: 50
       });
-      await mine();
+      await mineBlock(arweave);
       await contractB.writeInteraction({
         function: 'addAmount',
         contractId: contractBTxId,
         amount: 20
       });
-      await mine();
+      await mineBlock(arweave);
 
       await contractA.writeInteraction({
         function: 'addAmount',
@@ -265,14 +266,14 @@ describe('Testing internal writes', () => {
         contractId: contractBTxId,
         amount: 30
       });
-      await mine();
+      await mineBlock(arweave);
 
       await contractA.writeInteraction({
         function: 'writeBackCheck',
         contractId: contractBTxId,
         amount: 200
       });
-      await mine();
+      await mineBlock(arweave);
 
       expect((await contractA.readState()).state.counter).toEqual(-805);
       expect((await contractB.readState()).state.counter).toEqual(2060);
@@ -315,7 +316,7 @@ describe('Testing internal writes', () => {
         contractId: contractBTxId,
         amount: 100
       });
-      await mine();
+      await mineBlock(arweave);
       expect((await contractA.readState()).state.counter).toEqual(855);
     });
   });
@@ -335,7 +336,7 @@ describe('Testing internal writes', () => {
         contractId: contractBTxId,
         amount: 100
       });
-      await mine();
+      await mineBlock(arweave);
       expect((await contractB.readState()).state.counter).toEqual(755);
     });
 
@@ -352,8 +353,4 @@ describe('Testing internal writes', () => {
       expect((await contractB2.readState()).state.counter).toEqual(755);
     });
   });
-
-  async function mine() {
-    await arweave.api.get('mine');
-  }
 });

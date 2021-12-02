@@ -5,6 +5,7 @@ import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import { Contract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory } from '@smartweave';
 import path from 'path';
+import { addFunds, mineBlock } from './_helpers';
 
 let arweave: Arweave;
 let arlocal: ArLocal;
@@ -36,6 +37,7 @@ describe('Testing the SmartWeave client', () => {
     smartweave = SmartWeaveNodeFactory.memCached(arweave);
 
     wallet = await arweave.wallets.generate();
+    await addFunds(arweave, wallet);
 
     contractSrc = fs.readFileSync(path.join(__dirname, 'data/very-complicated-contract.js'), 'utf8');
 
@@ -49,7 +51,7 @@ describe('Testing the SmartWeave client', () => {
     contract = smartweave.contract(contractTxId);
     contract.connect(wallet);
 
-    await mine();
+    await mineBlock(arweave);
   });
 
   afterAll(async () => {
@@ -60,7 +62,3 @@ describe('Testing the SmartWeave client', () => {
     expect(await contract.readState()).not.toBeUndefined();
   });
 });
-
-async function mine() {
-  await arweave.api.get('mine');
-}

@@ -1,56 +1,58 @@
 import fs from 'fs';
 import path from 'path';
-import BSON from 'bson';
 import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@smartweave/cache';
 import { Benchmark, LoggerFactory } from '@smartweave/logging';
 import { asc, deepCopy, desc } from '@smartweave/utils';
 
 /**
- * An implementation of {@link BlockHeightSwCache} that stores its data in BSON files.
- * Data is flushed to disk every 10 new cache entries.
+ * An implementation of {@link BlockHeightSwCache} that stores its data in JSON files.
+ * Data is flushed to disk every "batchSize" ({@link DEFAULT_BATCH_SIZE} by default) new cache entries.
  *
  * Main use-case is the per block height state cache for contracts.
  *
  * A separate file is created for each block height - otherwise it was common to
- * hit 16 megabytes file size limit for bson files.
- *
- * At time of writing, completely cached state for all contracts, at all block heights,
- * was taking ~2.5GB of disk space :-).
+ * hit 16 megabytes file size limit for json files.
  *
  * The files are organised in the following structure:
  * --/basePath
- *   --/txId_1
- *     --1.cache.bson
- *     --2.cache.bson
+ *   --/contractTxId_1
+ *     --1.cache.json
+ *     --2.cache.json
  *     ...
- *     --748832.cache.bson
- *   --/txId_2
- *     --1.cache.bson
- *     --323332.cache.bson
+ *     --748832.cache.json
+ *   --/contractTxId_2
+ *     --1.cache.json
+ *     --323332.cache.json
  * ...etc.
  *
- * Note: this is not performance-optimized for reading LARGE amount of contracts ;-)
+ * Note: this is not performance-optimized for reading LARGE amount of contracts.
+ * Note: BSON has issues with top-level arrays - https://github.com/mongodb/js-bson/issues/319
+ * - so moving back to plain JSON...
+ *
+ * @Deprecated - a more mature persistent cache, based on LevelDB (or similar storage)
+ * should be implemented.
  */
-export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
-  private readonly logger = LoggerFactory.INST.create('BsonFileBlockHeightSwCache');
+export const DEFAULT_BATCH_SIZE = 100;
 
-  // TODO: not sure why I'm using "string" as type for blockHeight...:-)
-  // probably because of some issues with BSON parser...
+export class FileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
+  private readonly logger = LoggerFactory.INST.create('FileBlockHeightSwCache');
+
   private readonly storage: { [key: string]: { [blockHeight: string]: V } };
 
   private updatedStorage: { [key: string]: { [blockHeight: string]: V } } = {};
 
-  private saving = false;
+  private isFlushing = false;
 
   private putCounter = 0;
 
-  private readonly basePath;
-
-  constructor(basePath?: string) {
+  constructor(
+    private readonly basePath = path.join(__dirname, 'storage', 'state'),
+    private readonly batchSize = DEFAULT_BATCH_SIZE
+  ) {
     this.saveCache = this.saveCache.bind(this);
+    this.flush = this.flush.bind(this);
 
     this.storage = {};
-    this.basePath = basePath ? basePath : path.join(__dirname, 'storage', 'state');
 
     if (!fs.existsSync(this.basePath)) {
       fs.mkdirSync(this.basePath);
@@ -69,7 +71,7 @@ export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V
         const cacheFilePath = path.join(cacheDirPath, file);
 
         const height = file.split('.')[0];
-        const cache = BSON.deserialize(fs.readFileSync(path.join(cacheFilePath)));
+        const cache = JSON.parse(fs.readFileSync(path.join(cacheFilePath), 'utf-8'));
 
         this.storage[directory][height] = cache as V;
       });
@@ -88,10 +90,10 @@ export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V
   }
 
   private saveCache() {
-    if (this.saving) {
+    if (this.isFlushing) {
       return;
     }
-    this.saving = true;
+    this.isFlushing = true;
 
     // TODO: switch to async, as currently writing cache files may slow down contract execution.
     try {
@@ -105,13 +107,13 @@ export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V
 
         for (const height of Object.keys(this.updatedStorage[key])) {
           fs.writeFileSync(
-            path.join(directoryPath, directory, `${height}.cache.bson`),
-            BSON.serialize(this.updatedStorage[key][height])
+            path.join(directoryPath, directory, `${height}.cache.json`),
+            JSON.stringify(this.updatedStorage[key][height])
           );
         }
       });
     } finally {
-      this.saving = false;
+      this.isFlushing = false;
     }
   }
 
@@ -175,11 +177,9 @@ export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V
     this.storage[cacheKey][blockHeight + ''] = copiedValue;
     this.updatedStorage[cacheKey][blockHeight + ''] = copiedValue;
     this.putCounter++;
-    // update disk cache every 10 new entries
-    if (this.putCounter === 10) {
-      this.putCounter = 0;
-      this.saveCache();
-      this.updatedStorage = {};
+    // update disk cache every this.batchSize new entries
+    if (this.putCounter === this.batchSize) {
+      await this.flush();
     }
   }
 
@@ -187,7 +187,26 @@ export class BsonFileBlockHeightSwCache<V = any> implements BlockHeightSwCache<V
     return Object.prototype.hasOwnProperty.call(this.storage, key);
   }
 
-  async get(key: string, blockHeight: number): Promise<BlockHeightCacheResult<V> | null> {
-    throw new Error('Not implemented yet');
+  async get(key: string, blockHeight: number, returnDeepCopy = true): Promise<BlockHeightCacheResult<V> | null> {
+    if (!(await this.contains(key))) {
+      return null;
+    }
+
+    const cached = this.storage[key];
+
+    if (!Object.prototype.hasOwnProperty.call(cached, blockHeight + '')) {
+      return null;
+    }
+
+    return {
+      cachedHeight: blockHeight,
+      cachedValue: returnDeepCopy ? deepCopy(cached[blockHeight + '']) : cached[blockHeight + '']
+    };
+  }
+
+  async flush(): Promise<void> {
+    this.putCounter = 0;
+    this.saveCache();
+    this.updatedStorage = {};
   }
 }

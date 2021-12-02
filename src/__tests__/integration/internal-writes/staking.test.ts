@@ -7,6 +7,7 @@ import { JWKInterface } from 'arweave/node/lib/wallet';
 import { Contract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory } from '@smartweave';
 import path from 'path';
 import { TsLogFactory } from '../../../logging/node/TsLogFactory';
+import { addFunds, mineBlock } from '../_helpers';
 
 /**
  * This tests verifies a standard approve/transferFrom workflow for a ERC-20ish token contract
@@ -59,6 +60,7 @@ describe('Testing internal writes', () => {
     smartweave = SmartWeaveNodeFactory.memCached(arweave);
 
     wallet = await arweave.wallets.generate();
+    await addFunds(arweave, wallet);
     walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
     tokenContractSrc = fs.readFileSync(path.join(__dirname, '../data/staking/erc-20.js'), 'utf8');
@@ -96,7 +98,7 @@ describe('Testing internal writes', () => {
       .setEvaluationOptions({ internalWrites: true })
       .connect(wallet);
 
-    await mine();
+    await mineBlock(arweave);
   }
 
   describe('with read states in between', () => {
@@ -126,7 +128,7 @@ describe('Testing internal writes', () => {
         account: walletAddress,
         amount: 10000
       });
-      await mine();
+      await mineBlock(arweave);
 
       const tokenState = (await tokenContract.readState()).state;
 
@@ -141,7 +143,7 @@ describe('Testing internal writes', () => {
         function: 'stake',
         amount: 1000
       });
-      await mine();
+      await mineBlock(arweave);
 
       expect((await stakingContract.readState()).state.stakes).toEqual({});
 
@@ -157,7 +159,7 @@ describe('Testing internal writes', () => {
         spender: stakingContractTxId,
         amount: 9999
       });
-      await mine();
+      await mineBlock(arweave);
 
       expect((await tokenContract.readState()).state.allowances).toEqual({
         [walletAddress]: {
@@ -171,7 +173,7 @@ describe('Testing internal writes', () => {
         function: 'stake',
         amount: 1000
       });
-      await mine();
+      await mineBlock(arweave);
 
       expect((await stakingContract.readState()).state.stakes).toEqual({
         [walletAddress]: {
@@ -218,26 +220,26 @@ describe('Testing internal writes', () => {
         account: walletAddress,
         amount: 10000
       });
-      await mine();
+      await mineBlock(arweave);
 
       await stakingContract.writeInteraction({
         function: 'stake',
         amount: 1000
       });
-      await mine();
+      await mineBlock(arweave);
 
       await tokenContract.writeInteraction({
         function: 'approve',
         spender: stakingContractTxId,
         amount: 9999
       });
-      await mine();
+      await mineBlock(arweave);
 
       await stakingContract.writeInteraction({
         function: 'stake',
         amount: 1000
       });
-      await mine();
+      await mineBlock(arweave);
 
       const tokenState = (await tokenContract.readState()).state;
       expect(tokenState.balances).toEqual({
@@ -257,8 +259,4 @@ describe('Testing internal writes', () => {
       });
     });
   });
-
-  async function mine() {
-    await arweave.api.get('mine');
-  }
 });

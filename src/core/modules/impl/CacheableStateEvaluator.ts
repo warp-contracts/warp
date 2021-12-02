@@ -124,6 +124,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
 
     this.cLogger.debug(`onStateEvaluated: cache update for contract ${contractTxId} [${transaction.block.height}]`);
     await this.putInCache(contractTxId, transaction, state);
+    await this.cache.flush();
   }
 
   async onStateUpdate<State>(
@@ -205,7 +206,6 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     const blockHeight = transaction.block.height;
 
     const stateToCache = new EvalStateResult(state.state, state.validity, transactionId, transaction.block.id);
-    await this.cache.put(new BlockHeightKey(contractTxId, blockHeight), [stateToCache]);
 
     // we do not return a deepCopy here - as this operation significantly (2-3x) degrades performance
     // for contracts with multiple interactions on single block height
