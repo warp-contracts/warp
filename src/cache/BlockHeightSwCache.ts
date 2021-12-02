@@ -29,6 +29,11 @@ export interface BlockHeightSwCache<V> {
    * checks whether cache has any value stored for given cache key
    */
   contains(key: string): Promise<boolean>;
+
+  /**
+   * flushes cache to underneath storage (if available)
+   */
+  flush(): Promise<void>;
 }
 
 export class BlockHeightKey {

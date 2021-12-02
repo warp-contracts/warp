@@ -5,6 +5,7 @@ import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import { Contract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory, timeout } from '@smartweave';
 import path from 'path';
+import { addFunds, mineBlock } from './_helpers';
 
 let arweave: Arweave;
 let arlocal: ArLocal;
@@ -36,6 +37,7 @@ describe('Testing the SmartWeave client', () => {
     smartweave = SmartWeaveNodeFactory.memCached(arweave);
 
     wallet = await arweave.wallets.generate();
+    await addFunds(arweave, wallet);
 
     contractSrc = fs.readFileSync(path.join(__dirname, 'data/inf-loop-contract.js'), 'utf8');
 
@@ -55,7 +57,7 @@ describe('Testing the SmartWeave client', () => {
       })
       .connect(wallet);
 
-    await mine();
+    await mineBlock(arweave);
   });
 
   afterAll(async () => {
@@ -70,7 +72,7 @@ describe('Testing the SmartWeave client', () => {
     await contract.writeInteraction({
       function: 'add'
     });
-    await mine();
+    await mineBlock(arweave);
 
     expect((await contract.readState()).state.counter).toEqual(20);
   });
@@ -79,12 +81,12 @@ describe('Testing the SmartWeave client', () => {
     await contract.writeInteraction({
       function: 'loop'
     });
-    await mine();
+    await mineBlock(arweave);
 
     await contract.writeInteraction({
       function: 'add'
     });
-    await mine();
+    await mineBlock(arweave);
 
     // wait for a while for the "inf-loop" to finish
     // otherwise Jest will complain that there are unresolved promises
@@ -97,7 +99,3 @@ describe('Testing the SmartWeave client', () => {
     expect((await contract.readState()).state.counter).toEqual(30);
   });
 });
-
-async function mine() {
-  await arweave.api.get('mine');
-}

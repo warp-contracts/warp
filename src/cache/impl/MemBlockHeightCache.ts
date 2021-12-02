@@ -12,10 +12,6 @@ export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
 
   constructor(private maxStoredBlockHeights: number = Number.MAX_SAFE_INTEGER) {}
 
-  flush(): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
-
   async getLast(key: string): Promise<BlockHeightCacheResult<V> | null> {
     if (!(await this.contains(key))) {
       return null;
@@ -83,5 +79,9 @@ export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
       cachedHeight: blockHeight,
       cachedValue: returnDeepCopy ? deepCopy(this.storage[key].get(blockHeight)) : this.storage[key].get(blockHeight)
     };
+  }
+
+  flush(): Promise<void> {
+    return Promise.resolve(undefined);
   }
 }

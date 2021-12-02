@@ -1,7 +1,7 @@
 {
   "name": "redstone-smartweave",
   "version": "0.4.0",
-  "description": "An implementation of the SmartWeave SDK.",
+  "description": "An implementation of the SmartWeave smart contract protocol.",
   "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",
   "types": "./lib/types/index.d.ts",
@@ -56,7 +56,6 @@
     "arweave-multihost": "^0.1.0",
     "axios": "^0.21.4",
     "bignumber.js": "^9.0.1",
-    "bson": "^4.5.0",
     "json-beautify": "^1.1.1",
     "lodash": "^4.17.21",
     "tslog": "^3.2.2"

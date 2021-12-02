@@ -5,6 +5,7 @@ import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import { LoggerFactory, PstContract, PstState, SmartWeave, SmartWeaveNodeFactory } from '@smartweave';
 import path from 'path';
+import { addFunds, mineBlock } from './_helpers';
 
 describe('Testing the Profit Sharing Token', () => {
   let contractSrc: string;
@@ -36,6 +37,7 @@ describe('Testing the Profit Sharing Token', () => {
     smartweave = SmartWeaveNodeFactory.memCached(arweave);
 
     wallet = await arweave.wallets.generate();
+    await addFunds(arweave, wallet);
     walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
     contractSrc = fs.readFileSync(path.join(__dirname, 'data/token-pst.js'), 'utf8');
@@ -65,7 +67,7 @@ describe('Testing the Profit Sharing Token', () => {
     // connecting wallet to the PST contract
     pst.connect(wallet);
 
-    await mine();
+    await mineBlock(arweave);
   });
 
   afterAll(async () => {
@@ -86,7 +88,7 @@ describe('Testing the Profit Sharing Token', () => {
       qty: 555
     });
 
-    await mine();
+    await mineBlock(arweave);
 
     expect((await pst.currentState()).balances[walletAddress]).toEqual(555669 - 555);
     expect((await pst.currentState()).balances['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']).toEqual(10000000 + 555);
@@ -105,16 +107,12 @@ describe('Testing the Profit Sharing Token', () => {
     const newSource = fs.readFileSync(path.join(__dirname, 'data/token-evolve.js'), 'utf8');
 
     const newSrcTxId = await pst.saveNewSource(newSource);
-    await mine();
+    await mineBlock(arweave);
 
     await pst.evolve(newSrcTxId);
-    await mine();
+    await mineBlock(arweave);
 
     // note: the evolved balance always adds 555 to the result
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(555114 + 555);
   });
-
-  async function mine() {
-    await arweave.api.get('mine');
-  }
 });

@@ -67,4 +67,8 @@ export class RemoteBlockHeightCache<V = any> implements BlockHeightSwCache<V> {
     const response = await this.axios.get<BlockHeightCacheResult<V> | null>(`/${this.type}/${key}/${blockHeight}`);
     return response.data || null;
   }
+
+  flush(): Promise<void> {
+    return Promise.resolve(undefined);
+  }
 }
