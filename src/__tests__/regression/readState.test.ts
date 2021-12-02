@@ -14,7 +14,6 @@ function* chunks(arr, n) {
 }
 
 const arweave = Arweave.init({
-  // using our AWS Cloudfront cache/proxy, to speed up a little bit the whole process...
   host: 'arweave.net',
   port: 443,
   protocol: 'https',
@@ -38,7 +37,9 @@ describe.each(chunked)('.suite %#', (contracts: string[]) => {
       const result = await readContract(arweave, contractTxId);
       const resultString = JSON.stringify(result).trim();
       console.log('readState', contractTxId);
-      const result2 = await SmartWeaveNodeFactory.memCached(arweave, 5).contract(contractTxId).readState();
+      const result2 = await SmartWeaveNodeFactory.memCached(arweave, 5)
+        .contract(contractTxId)
+        .readState();
       const result2String = JSON.stringify(result2.state).trim();
 
       expect(result2String).toEqual(resultString);
@@ -54,7 +55,10 @@ describe('readState', () => {
     const result = await readContract(arweave, contractTxId, blockHeight);
     const resultString = JSON.stringify(result).trim();
 
-    const result2 = await SmartWeaveNodeFactory.memCached(arweave, 5).contract(contractTxId).readState(blockHeight);
+    const result2 = await SmartWeaveNodeFactory.memCached(arweave, 5)
+      .contract(contractTxId)
+      .setEvaluationOptions({ updateCacheForEachInteraction: false })
+      .readState(blockHeight);
     const result2String = JSON.stringify(result2.state).trim();
 
     expect(result2String).toEqual(resultString);
@@ -68,10 +72,14 @@ describe('readState', () => {
       target: '6Z-ifqgVi1jOwMvSNwKWs6ewUEQ0gU9eo4aHYC3rN1M'
     });
 
-    const v2Result = await SmartWeaveNodeFactory.memCached(arweave, 5).contract(contractTxId).connect(jwk).viewState({
-      function: 'balance',
-      target: '6Z-ifqgVi1jOwMvSNwKWs6ewUEQ0gU9eo4aHYC3rN1M'
-    });
+    const v2Result = await SmartWeaveNodeFactory.memCached(arweave, 5)
+      .contract(contractTxId)
+      .setEvaluationOptions({ updateCacheForEachInteraction: false })
+      .connect(jwk)
+      .viewState({
+        function: 'balance',
+        target: '6Z-ifqgVi1jOwMvSNwKWs6ewUEQ0gU9eo4aHYC3rN1M'
+      });
 
     expect(v1Result).toEqual(v2Result.result);
   }, 600000);

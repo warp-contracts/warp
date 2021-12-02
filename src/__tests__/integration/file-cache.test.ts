@@ -124,6 +124,19 @@ describe('Testing the SmartWeave client', () => {
     expect((await contract3.readState()).state.counter).toEqual(563);
   });
 
+  it('should properly eval state for missing interactions', async () => {
+    await contract.writeInteraction({ function: 'add' });
+    await mineBlock(arweave);
+    await contract.writeInteraction({ function: 'add' });
+    await mineBlock(arweave);
+
+    const contract4 = SmartWeaveNodeFactory.fileCached(arweave, cacheDir)
+      .contract<ExampleContractState>(contract.txId())
+      .connect(wallet);
+    expect((await contract4.readState()).state.counter).toEqual(565);
+    expect((await contract.readState()).state.counter).toEqual(565);
+  });
+
   function removeCacheDir() {
     if (fs.existsSync(cacheDir)) {
       fs.rmdirSync(cacheDir, { recursive: true });
