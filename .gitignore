@@ -18,3 +18,5 @@ yarn-error.log
 yalc.lock
 
 .yalc/
+
+cache/

@@ -116,6 +116,11 @@ export interface EvaluationOptions {
   // whether cache should be updated after evaluating each interaction transaction.
   // this can be switched off to speed up cache writes (ie. for some contracts (with flat structure)
   // and caches it maybe more suitable to cache only after state has been fully evaluated)
+  // NOTE: currently safe for contracts that don't make any reads from other contracts
+  // (eg. basic PSTs, community contracts, etc.)
+  // If used with contracts that make reads from other contracts - may cause issues with state evaluation
+  // - eg contracts: w27141UQGgrCFhkiw9tL7A0-qWMQjbapU3mq2TfI4Cg, 38TR3D8BxlPTc89NOW67IkQQUPR8jDLaJNdYv-4wWfM
+  // https://github.com/redstone-finance/redstone-smartcontracts/issues/53
   updateCacheForEachInteraction: boolean;
 
   // a new, experimental enhancement of the protocol that allows for interactWrites from

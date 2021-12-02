@@ -71,7 +71,7 @@ export class ContractInteractionsLoader implements InteractionsLoader {
     toBlockHeight: number,
     evaluationOptions: EvaluationOptions
   ): Promise<GQLEdgeInterface[]> {
-    this.logger.debug('Loading interactions for', contractId);
+    this.logger.debug('Loading interactions for', { contractId, fromBlockHeight, toBlockHeight });
     const mainTransactionsVariables: ReqVariables = {
       tags: [
         {

@@ -141,9 +141,12 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     contractTxId: string,
     blockHeight: number
   ): Promise<BlockHeightCacheResult<EvalStateResult<State>> | null> {
+    this.cLogger.debug('Searching for', { contractTxId, blockHeight });
     const stateCache = (await this.cache.getLessOrEqual(contractTxId, blockHeight)) as BlockHeightCacheResult<
       StateCache<State>
     >;
+
+    this.cLogger.debug('Latest available state at', stateCache?.cachedHeight);
 
     if (stateCache == null) {
       return null;
