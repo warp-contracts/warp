@@ -15,7 +15,7 @@ interface ExampleContractState {
 
 /**
  * This integration test should verify whether the basic functions of the SmartWeave client
- * work properly when file-based cache is being used.
+ * work properly when Knex cache is being used.
  */
 describe('Testing the SmartWeave client', () => {
   let contractSrc: string;
