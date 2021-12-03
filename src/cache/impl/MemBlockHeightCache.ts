@@ -50,7 +50,11 @@ export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
   }
 
   async put({ cacheKey, blockHeight }: BlockHeightKey, value: V): Promise<void> {
-    if (!(await this.contains(cacheKey))) {
+    this.putSync({ cacheKey, blockHeight }, value);
+  }
+
+  protected putSync({ cacheKey, blockHeight }: BlockHeightKey, value: V): void {
+    if (!this.containsSync(cacheKey)) {
       this.storage[cacheKey] = new Map();
     }
     const cached = this.storage[cacheKey];
@@ -63,6 +67,10 @@ export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
   }
 
   async contains(key: string): Promise<boolean> {
+    return this.containsSync(key);
+  }
+
+  protected containsSync(key: string): boolean {
     return Object.prototype.hasOwnProperty.call(this.storage, key);
   }
 

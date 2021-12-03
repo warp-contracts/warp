@@ -11,6 +11,8 @@ import {
 } from '@smartweave/core';
 import { CacheableContractInteractionsLoader, CacheableExecutorFactory, Evolve } from '@smartweave/plugins';
 import { FileBlockHeightSwCache, MemBlockHeightSwCache, MemCache } from '@smartweave/cache';
+import { Knex } from 'knex';
+import { KnexStateCache } from '../../cache/impl/KnexStateCache';
 
 /**
  * A {@link SmartWeave} factory that can be safely used only in Node.js env.
@@ -53,6 +55,46 @@ export class SmartWeaveNodeFactory extends SmartWeaveWebFactory {
     const stateEvaluator = new CacheableStateEvaluator(
       arweave,
       new FileBlockHeightSwCache(cacheBasePath, maxStoredInMemoryBlockHeights),
+      [new Evolve(definitionLoader, executorFactory)]
+    );
+
+    const interactionsSorter = new LexicographicalInteractionsSorter(arweave);
+
+    return SmartWeave.builder(arweave)
+      .setDefinitionLoader(definitionLoader)
+      .setInteractionsLoader(interactionsLoader)
+      .setInteractionsSorter(interactionsSorter)
+      .setExecutorFactory(executorFactory)
+      .setStateEvaluator(stateEvaluator);
+  }
+
+  static async knexCached(
+    arweave: Arweave,
+    dbConnection: Knex,
+    maxStoredInMemoryBlockHeights = 10
+  ): Promise<SmartWeave> {
+    return (await this.knexCachedBased(arweave, dbConnection, maxStoredInMemoryBlockHeights)).build();
+  }
+
+  /**
+   */
+  static async knexCachedBased(
+    arweave: Arweave,
+    dbConnection: Knex,
+    maxStoredInMemoryBlockHeights = 10
+  ): Promise<SmartWeaveBuilder> {
+    const definitionLoader = new ContractDefinitionLoader(arweave, new MemCache());
+
+    const interactionsLoader = new CacheableContractInteractionsLoader(
+      new ContractInteractionsLoader(arweave),
+      new MemBlockHeightSwCache()
+    );
+
+    const executorFactory = new CacheableExecutorFactory(arweave, new HandlerExecutorFactory(arweave), new MemCache());
+
+    const stateEvaluator = new CacheableStateEvaluator(
+      arweave,
+      await KnexStateCache.init(dbConnection, maxStoredInMemoryBlockHeights),
       [new Evolve(definitionLoader, executorFactory)]
     );
 
