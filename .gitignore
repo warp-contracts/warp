@@ -19,4 +19,6 @@ yalc.lock
 
 .yalc/
 
-cache/
+/cache/
+
+/db/

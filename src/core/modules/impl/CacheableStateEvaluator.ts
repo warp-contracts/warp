@@ -5,14 +5,12 @@ import {
   ExecutionContext,
   ExecutionContextModifier,
   HandlerApi,
-  LexicographicalInteractionsSorter,
   StateCache
 } from '@smartweave/core';
 import Arweave from 'arweave';
 import { GQLNodeInterface } from '@smartweave/legacy';
 import { LoggerFactory } from '@smartweave/logging';
 import { CurrentTx } from '@smartweave/contract';
-import { mapReplacer } from '@smartweave/utils';
 
 /**
  * An implementation of DefaultStateEvaluator that adds caching capabilities.
