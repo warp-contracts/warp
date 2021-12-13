@@ -3,7 +3,14 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { LoggerFactory, PstContract, PstState, SmartWeave, SmartWeaveNodeFactory } from '@smartweave';
+import {
+  InteractionResult,
+  LoggerFactory,
+  PstContract,
+  PstState,
+  SmartWeave,
+  SmartWeaveNodeFactory
+} from '@smartweave';
 import path from 'path';
 import { addFunds, mineBlock } from './_helpers';
 
@@ -114,5 +121,30 @@ describe('Testing the Profit Sharing Token', () => {
 
     // note: the evolved balance always adds 555 to the result
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(555114 + 555);
+  });
+
+  it('should properly perform dry write with overwritten caller', async () => {
+    const newWallet = await arweave.wallets.generate();
+    const overwrittenCaller = await arweave.wallets.jwkToAddress(newWallet);
+    await pst.transfer({
+      target: overwrittenCaller,
+      qty: 1000
+    });
+
+    await mineBlock(arweave);
+
+    // note: transfer should be done from the "overwrittenCaller" address, not the "walletAddress"
+    const result: InteractionResult<PstState, unknown> = await pst.dryWrite(
+      {
+        function: 'transfer',
+        target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M',
+        qty: 333
+      },
+      overwrittenCaller
+    );
+
+    expect(result.state.balances[walletAddress]).toEqual(555114 - 1000);
+    expect(result.state.balances['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']).toEqual(10000000 + 555 + 333);
+    expect(result.state.balances[overwrittenCaller]).toEqual(1000 - 333);
   });
 });
