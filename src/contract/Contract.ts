@@ -100,8 +100,15 @@ export interface Contract<State = unknown> {
    * @param input - input to be applied on the current contract's state
    * @param tags - additional tags to be added to interaction transaction
    * @param transfer - additional {@link ArTransfer} data to be associated with the "dummy" transaction
+   * @param caller - an option to override the caller - if available, this value will overwrite the caller evaluated
+   * from the wallet connected to this contract.
    */
-  dryWrite<Input>(input: Input, tags?: Tags, transfer?: ArTransfer): Promise<InteractionResult<State, unknown>>;
+  dryWrite<Input>(
+    input: Input,
+    caller?: string,
+    tags?: Tags,
+    transfer?: ArTransfer
+  ): Promise<InteractionResult<State, unknown>>;
 
   dryWriteFromTx<Input>(
     input: Input,

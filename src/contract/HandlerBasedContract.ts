@@ -123,7 +123,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     transfer: ArTransfer = emptyTransfer
   ): Promise<InteractionResult<State, View>> {
     this.logger.info('View state for', this._contractTxId);
-    return await this.callContract<Input, View>(input, blockHeight, tags, transfer);
+    return await this.callContract<Input, View>(input, undefined, blockHeight, tags, transfer);
   }
 
   async viewStateForTx<Input, View>(
@@ -134,9 +134,14 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return await this.callContractForTx<Input, View>(input, interactionTx);
   }
 
-  async dryWrite<Input>(input: Input, tags?: Tags, transfer?: ArTransfer): Promise<InteractionResult<State, unknown>> {
+  async dryWrite<Input>(
+    input: Input,
+    caller?: string,
+    tags?: Tags,
+    transfer?: ArTransfer
+  ): Promise<InteractionResult<State, unknown>> {
     this.logger.info('Dry-write for', this._contractTxId);
-    return await this.callContract<Input>(input, undefined, tags, transfer);
+    return await this.callContract<Input>(input, caller, undefined, tags, transfer);
   }
 
   async dryWriteFromTx<Input>(
@@ -167,7 +172,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       // 3. Verify the callStack and search for any "internalWrites" transactions
       // 4. For each found "internalWrite" transaction - generate additional tag:
       // {name: 'InternalWrite', value: callingContractTxId}
-      const handlerResult = await this.callContract(input, undefined, tags, transfer);
+      const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer);
       if (strict && handlerResult.type !== 'ok') {
         throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
       }
@@ -186,7 +191,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       this.logger.debug('Tags with inner calls', tags);
     } else {
       if (strict) {
-        const handlerResult = await this.callContract(input, undefined, tags, transfer);
+        const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer);
         if (handlerResult.type !== 'ok') {
           throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
         }
@@ -411,6 +416,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   private async callContract<Input, View = unknown>(
     input: Input,
+    caller?: string,
     blockHeight?: number,
     tags: Tags = [],
     transfer: ArTransfer = emptyTransfer
@@ -438,10 +444,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
 
     // add caller info to execution context
-    const caller = this.wallet ? await arweave.wallets.jwkToAddress(this.wallet) : '';
+    const effectiveCaller = caller || (this.wallet ? await arweave.wallets.jwkToAddress(this.wallet) : '');
     executionContext = {
       ...executionContext,
-      caller
+      caller: effectiveCaller
     };
 
     // eval current state

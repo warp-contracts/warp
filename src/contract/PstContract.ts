@@ -70,7 +70,7 @@ export interface TransferInput {
  * A type of {@link Contract} designed specifically for the interaction with
  * Profit Sharing Token contract.
  */
-export interface PstContract extends Contract, EvolvingContract {
+export interface PstContract extends Contract<PstState>, EvolvingContract {
   /**
    * return the current balance for the given wallet
    * @param target - wallet address
