@@ -12,6 +12,7 @@ import {
 import Arweave from 'arweave';
 import { Contract, HandlerBasedContract, PstContract, PstContractImpl } from '@smartweave/contract';
 import { GQLNodeInterface } from '@smartweave/legacy';
+import { CacheableContractInteractionsLoader } from '@smartweave/plugins';
 
 /**
  * The SmartWeave "motherboard" ;-).
@@ -28,6 +29,7 @@ export class SmartWeave {
     readonly arweave: Arweave,
     readonly definitionLoader: DefinitionLoader,
     readonly interactionsLoader: InteractionsLoader,
+    readonly cacheableContractInteractionsLoader: CacheableContractInteractionsLoader,
     readonly interactionsSorter: InteractionsSorter,
     readonly executorFactory: ExecutorFactory<HandlerApi<unknown>>,
     readonly stateEvaluator: StateEvaluator

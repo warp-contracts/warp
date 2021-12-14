@@ -1,12 +1,13 @@
 import Arweave from 'arweave';
 import {
-  BlockHeightSwCache,
+  CacheableContractInteractionsLoader,
   DebuggableExecutorFactory,
   DefinitionLoader,
   ExecutorFactory,
   HandlerApi,
   InteractionsLoader,
   InteractionsSorter,
+  MemBlockHeightSwCache,
   SmartWeave,
   StateEvaluator
 } from '@smartweave';
@@ -14,6 +15,7 @@ import {
 export class SmartWeaveBuilder {
   private _definitionLoader?: DefinitionLoader;
   private _interactionsLoader?: InteractionsLoader;
+  private _cacheableContractInteractionsLoader?: CacheableContractInteractionsLoader;
   private _interactionsSorter?: InteractionsSorter;
   private _executorFactory?: ExecutorFactory<HandlerApi<unknown>>;
   private _stateEvaluator?: StateEvaluator;
@@ -27,6 +29,17 @@ export class SmartWeaveBuilder {
 
   public setInteractionsLoader(value: InteractionsLoader): SmartWeaveBuilder {
     this._interactionsLoader = value;
+    return this;
+  }
+
+  public setCacheableInteractionsLoader(
+    value: InteractionsLoader,
+    maxStoredInMemoryBlockHeights: number = Number.MAX_SAFE_INTEGER
+  ): SmartWeaveBuilder {
+    this._cacheableContractInteractionsLoader = new CacheableContractInteractionsLoader(
+      value,
+      new MemBlockHeightSwCache(maxStoredInMemoryBlockHeights)
+    );
     return this;
   }
 
@@ -58,6 +71,7 @@ export class SmartWeaveBuilder {
       this._arweave,
       this._definitionLoader,
       this._interactionsLoader,
+      this._cacheableContractInteractionsLoader,
       this._interactionsSorter,
       this._executorFactory,
       this._stateEvaluator

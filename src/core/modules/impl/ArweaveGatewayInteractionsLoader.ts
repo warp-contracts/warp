@@ -30,8 +30,8 @@ interface ReqVariables {
   after?: string;
 }
 
-export class ContractInteractionsLoader implements InteractionsLoader {
-  private readonly logger = LoggerFactory.INST.create('ContractInteractionsLoader');
+export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
+  private readonly logger = LoggerFactory.INST.create('ArweaveGatewayInteractionsLoader');
 
   private static readonly query = `query Transactions($tags: [TagFilter!]!, $blockFilter: BlockFilter!, $first: Int!, $after: String) {
     transactions(tags: $tags, block: $blockFilter, first: $first, sort: HEIGHT_ASC, after: $after) {
@@ -147,18 +147,18 @@ export class ContractInteractionsLoader implements InteractionsLoader {
   private async getNextPage(variables: ReqVariables): Promise<GQLTransactionsResultInterface> {
     const benchmark = Benchmark.measure();
     let response = await this.arweave.api.post('graphql', {
-      query: ContractInteractionsLoader.query,
+      query: ArweaveGatewayInteractionsLoader.query,
       variables
     });
     this.logger.debug('GQL page load:', benchmark.elapsed());
 
     while (response.status === 403) {
-      this.logger.warn(`GQL rate limiting, waiting ${ContractInteractionsLoader._30seconds}ms before next try.`);
+      this.logger.warn(`GQL rate limiting, waiting ${ArweaveGatewayInteractionsLoader._30seconds}ms before next try.`);
 
-      await sleep(ContractInteractionsLoader._30seconds);
+      await sleep(ArweaveGatewayInteractionsLoader._30seconds);
 
       response = await this.arweave.api.post('graphql', {
-        query: ContractInteractionsLoader.query,
+        query: ArweaveGatewayInteractionsLoader.query,
         variables
       });
     }
