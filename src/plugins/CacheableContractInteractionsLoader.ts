@@ -24,7 +24,7 @@ export class CacheableContractInteractionsLoader implements InteractionsLoader {
     contractId: string,
     fromBlockHeight: number,
     toBlockHeight: number,
-    evaluationOptions: EvaluationOptions
+    evaluationOptions?: EvaluationOptions
   ): Promise<GQLEdgeInterface[]> {
     this.logger.debug('Loading interactions', {
       contractId,

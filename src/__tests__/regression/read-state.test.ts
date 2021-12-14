@@ -4,7 +4,6 @@ import path from 'path';
 import { interactRead, readContract } from 'smartweave';
 import Arweave from 'arweave';
 import { LoggerFactory, SmartWeaveNodeFactory } from '@smartweave';
-import { TsLogFactory } from '../../logging/node/TsLogFactory';
 
 function* chunks(arr, n) {
   for (let i = 0; i < arr.length; i += n) {
@@ -23,7 +22,7 @@ const arweave = Arweave.init({
 
 LoggerFactory.INST.logLevel('fatal');
 
-const testCases: string[] = JSON.parse(fs.readFileSync(path.join(__dirname, 'test-cases.json'), 'utf-8'));
+const testCases: string[] = JSON.parse(fs.readFileSync(path.join(__dirname, 'test-cases/read-state.json'), 'utf-8'));
 
 const chunked: string[][][] = [...chunks(testCases, 10)];
 
@@ -39,7 +38,6 @@ describe.each(chunked)('.suite %#', (contracts: string[]) => {
       console.log('readState', contractTxId);
       const result2 = await SmartWeaveNodeFactory.memCached(arweave, 5).contract(contractTxId).readState();
       const result2String = JSON.stringify(result2.state).trim();
-
       expect(result2String).toEqual(resultString);
     },
     600000

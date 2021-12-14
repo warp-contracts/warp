@@ -3,7 +3,7 @@ import { CacheableContractInteractionsLoader, CacheableExecutorFactory, Evolve }
 import {
   CacheableStateEvaluator,
   ContractDefinitionLoader,
-  ContractInteractionsLoader,
+  ArweaveGatewayInteractionsLoader,
   HandlerExecutorFactory,
   LexicographicalInteractionsSorter,
   SmartWeave,
@@ -34,7 +34,7 @@ export class SmartWeaveWebFactory {
     const definitionLoader = new ContractDefinitionLoader(arweave, new MemCache());
 
     const interactionsLoader = new CacheableContractInteractionsLoader(
-      new ContractInteractionsLoader(arweave),
+      new ArweaveGatewayInteractionsLoader(arweave),
       new RemoteBlockHeightCache('INTERACTIONS', cacheBaseURL)
     );
 
@@ -74,10 +74,7 @@ export class SmartWeaveWebFactory {
   ): SmartWeaveBuilder {
     const definitionLoader = new ContractDefinitionLoader(arweave, new MemCache());
 
-    const interactionsLoader = new CacheableContractInteractionsLoader(
-      new ContractInteractionsLoader(arweave),
-      new MemBlockHeightSwCache(maxStoredBlockHeights)
-    );
+    const interactionsLoader = new ArweaveGatewayInteractionsLoader(arweave);
 
     const executorFactory = new CacheableExecutorFactory(arweave, new HandlerExecutorFactory(arweave), new MemCache());
 
@@ -91,7 +88,7 @@ export class SmartWeaveWebFactory {
 
     return SmartWeave.builder(arweave)
       .setDefinitionLoader(definitionLoader)
-      .setInteractionsLoader(interactionsLoader)
+      .setCacheableInteractionsLoader(interactionsLoader, maxStoredBlockHeights)
       .setInteractionsSorter(interactionsSorter)
       .setExecutorFactory(executorFactory)
       .setStateEvaluator(stateEvaluator);

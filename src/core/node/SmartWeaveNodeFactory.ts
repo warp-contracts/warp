@@ -2,15 +2,15 @@ import Arweave from 'arweave';
 import {
   CacheableStateEvaluator,
   ContractDefinitionLoader,
-  ContractInteractionsLoader,
+  ArweaveGatewayInteractionsLoader,
   HandlerExecutorFactory,
   LexicographicalInteractionsSorter,
   SmartWeave,
   SmartWeaveBuilder,
   SmartWeaveWebFactory
 } from '@smartweave/core';
-import { CacheableContractInteractionsLoader, CacheableExecutorFactory, Evolve } from '@smartweave/plugins';
-import { FileBlockHeightSwCache, MemBlockHeightSwCache, MemCache } from '@smartweave/cache';
+import { CacheableExecutorFactory, Evolve } from '@smartweave/plugins';
+import { FileBlockHeightSwCache, MemCache } from '@smartweave/cache';
 import { Knex } from 'knex';
 import { KnexStateCache } from '../../cache/impl/KnexStateCache';
 
@@ -45,10 +45,7 @@ export class SmartWeaveNodeFactory extends SmartWeaveWebFactory {
   ): SmartWeaveBuilder {
     const definitionLoader = new ContractDefinitionLoader(arweave, new MemCache());
 
-    const interactionsLoader = new CacheableContractInteractionsLoader(
-      new ContractInteractionsLoader(arweave),
-      new MemBlockHeightSwCache()
-    );
+    const gatewayInteractionsLoader = new ArweaveGatewayInteractionsLoader(arweave);
 
     const executorFactory = new CacheableExecutorFactory(arweave, new HandlerExecutorFactory(arweave), new MemCache());
 
@@ -62,7 +59,7 @@ export class SmartWeaveNodeFactory extends SmartWeaveWebFactory {
 
     return SmartWeave.builder(arweave)
       .setDefinitionLoader(definitionLoader)
-      .setInteractionsLoader(interactionsLoader)
+      .setCacheableInteractionsLoader(gatewayInteractionsLoader)
       .setInteractionsSorter(interactionsSorter)
       .setExecutorFactory(executorFactory)
       .setStateEvaluator(stateEvaluator);
@@ -85,10 +82,7 @@ export class SmartWeaveNodeFactory extends SmartWeaveWebFactory {
   ): Promise<SmartWeaveBuilder> {
     const definitionLoader = new ContractDefinitionLoader(arweave, new MemCache());
 
-    const interactionsLoader = new CacheableContractInteractionsLoader(
-      new ContractInteractionsLoader(arweave),
-      new MemBlockHeightSwCache()
-    );
+    const gatewayInteractionsLoader = new ArweaveGatewayInteractionsLoader(arweave);
 
     const executorFactory = new CacheableExecutorFactory(arweave, new HandlerExecutorFactory(arweave), new MemCache());
 
@@ -102,7 +96,7 @@ export class SmartWeaveNodeFactory extends SmartWeaveWebFactory {
 
     return SmartWeave.builder(arweave)
       .setDefinitionLoader(definitionLoader)
-      .setInteractionsLoader(interactionsLoader)
+      .setCacheableInteractionsLoader(gatewayInteractionsLoader)
       .setInteractionsSorter(interactionsSorter)
       .setExecutorFactory(executorFactory)
       .setStateEvaluator(stateEvaluator);
