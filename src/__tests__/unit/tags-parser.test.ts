@@ -24,10 +24,17 @@ describe('TagsParser', () => {
       // when
       const input1 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_1');
       const input2 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_2');
+      const allContracts = sut.getContractsWithInputs(interactionTx as GQLEdgeInterface);
 
       // then
       expect(input1.value).toEqual('contractTxId1_value');
       expect(input2.value).toEqual('contractTxId2_value');
+      expect(allContracts).toEqual(
+        new Map([
+          ['contractTxId_1', { name: 'Input', value: 'contractTxId1_value' }],
+          ['contractTxId_2', { name: 'Input', value: 'contractTxId2_value' }]
+        ])
+      );
     });
 
     it('should return input tag (2)', () => {
@@ -46,10 +53,17 @@ describe('TagsParser', () => {
       // when
       const input1 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_1');
       const input2 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_2');
+      const allContracts = sut.getContractsWithInputs(interactionTx as GQLEdgeInterface);
 
       // then
       expect(input1.value).toEqual('contractTxId11_value');
       expect(input2.value).toEqual('contractTxId22_value');
+      expect(allContracts).toEqual(
+        new Map([
+          ['contractTxId_1', { name: 'Input', value: 'contractTxId11_value' }],
+          ['contractTxId_2', { name: 'Input', value: 'contractTxId22_value' }]
+        ])
+      );
     });
 
     it('should return input tag (3)', () => {
@@ -75,12 +89,21 @@ describe('TagsParser', () => {
       const input2 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_2');
       const input3 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_3');
       const input4 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_4');
+      const allContracts = sut.getContractsWithInputs(interactionTx as GQLEdgeInterface);
 
       // then
       expect(input1.value).toEqual('contractTxId11_value');
       expect(input2.value).toEqual('contractTxId22_value');
       expect(input3.value).toEqual('contractTxId33_value');
       expect(input4.value).toEqual('contractTxId44_value');
+      expect(allContracts).toEqual(
+        new Map([
+          ['contractTxId_1', { name: 'Input', value: 'contractTxId11_value' }],
+          ['contractTxId_2', { name: 'Input', value: 'contractTxId22_value' }],
+          ['contractTxId_3', { name: 'Input', value: 'contractTxId33_value' }],
+          ['contractTxId_4', { name: 'Input', value: 'contractTxId44_value' }]
+        ])
+      );
     });
 
     it('should return undefined if ordering is not proper', () => {
@@ -104,11 +127,19 @@ describe('TagsParser', () => {
       const input1 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_1');
       const input2 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_2');
       const input3 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_3');
+      const allContracts = sut.getContractsWithInputs(interactionTx as GQLEdgeInterface);
 
       // then
       expect(input1).toBeUndefined();
       expect(input2).toBeUndefined();
       expect(input3.value).toEqual('contractTxId33_value');
+      expect(allContracts).toEqual(
+        new Map([
+          ['contractTxId_1', undefined],
+          ['contractTxId_2', undefined],
+          ['contractTxId_3', { name: 'Input', value: 'contractTxId33_value' }]
+        ])
+      );
     });
   });
 
@@ -130,9 +161,11 @@ describe('TagsParser', () => {
 
       // when
       const input1 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_1');
+      const allContracts = sut.getContractsWithInputs(interactionTx as GQLEdgeInterface);
 
       // then
       expect(input1.value).toEqual('contractTxId1_value');
+      expect(allContracts).toEqual(new Map([['contractTxId_1', { name: 'Input', value: 'contractTxId1_value' }]]));
     });
   });
 
@@ -150,9 +183,11 @@ describe('TagsParser', () => {
 
     // when
     const input1 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_1');
+    const allContracts = sut.getContractsWithInputs(interactionTx as GQLEdgeInterface);
 
     // then
     expect(input1.value).toEqual('contractTxId1_value');
+    expect(allContracts).toEqual(new Map());
   });
 
   it('should return the first occurrence of the input tag (3)', () => {
@@ -169,9 +204,11 @@ describe('TagsParser', () => {
 
     // when
     const input1 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_1');
+    const allContracts = sut.getContractsWithInputs(interactionTx as GQLEdgeInterface);
 
     // then
     expect(input1.value).toEqual('contractTxId1_value');
+    expect(allContracts).toEqual(new Map());
   });
 
   it('should return the first occurrence of the input tag (4)', () => {
@@ -190,9 +227,11 @@ describe('TagsParser', () => {
 
     // when
     const input1 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_1');
+    const allContracts = sut.getContractsWithInputs(interactionTx as GQLEdgeInterface);
 
     // then
     expect(input1.value).toEqual('contractTxId666_value');
+    expect(allContracts).toEqual(new Map([['contractTxId_1', { name: 'Input', value: 'contractTxId666_value' }]]));
   });
 
   it('should return undefined if no "Input" tag', () => {
@@ -209,8 +248,10 @@ describe('TagsParser', () => {
 
     // when
     const input1 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_1');
+    const allContracts = sut.getContractsWithInputs(interactionTx as GQLEdgeInterface);
 
     // then
     expect(input1).toBeUndefined();
+    expect(allContracts).toEqual(new Map());
   });
 });

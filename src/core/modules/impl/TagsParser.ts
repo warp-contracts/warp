@@ -36,7 +36,6 @@ export class TagsParser {
     } else {
       // the "old way" - i.e. tags ordering does not matter,
       // if there is at most one "Contract" tag
-      // (note: there might no "Contract" tag as well).
       // - so returning the first occurrence of "Input" tag.
       return interactionTransaction.node.tags.find((tag) => tag.name === SmartWeaveTags.INPUT);
     }
@@ -50,6 +49,18 @@ export class TagsParser {
 
   getContractTag(interactionTransaction: GQLEdgeInterface): string {
     return interactionTransaction.node.tags.find((tag) => tag.name === SmartWeaveTags.CONTRACT_TX_ID)?.value;
+  }
+
+  getContractsWithInputs(interactionTransaction: GQLEdgeInterface): Map<string, GQLTagInterface> {
+    const result = new Map<string, GQLTagInterface>();
+
+    const contractTags = interactionTransaction.node.tags.filter((tag) => tag.name === SmartWeaveTags.CONTRACT_TX_ID);
+
+    contractTags.forEach((contractTag) => {
+      result.set(contractTag.value, this.getInputTag(interactionTransaction, contractTag.value));
+    });
+
+    return result;
   }
 
   static hasMultipleInteractions(interactionTransaction): boolean {

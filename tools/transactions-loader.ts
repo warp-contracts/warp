@@ -5,7 +5,8 @@ import { TsLogFactory } from '../src/logging/node/TsLogFactory';
 import fs from 'fs';
 import path from 'path';
 import { ContractInteractionsLoader } from '../src/core/modules/impl/ContractInteractionsLoader';
-import { DefaultEvaluationOptions } from '../../smartweave-loot/.yalc/redstone-smartweave';
+import { DefaultEvaluationOptions } from '../src/core/modules/StateEvaluator';
+import {GQLEdgeInterface, GQLTagInterface} from "smartweave/lib/interfaces/gqlResult";
 
 async function main() {
   LoggerFactory.use(new TsLogFactory());
@@ -13,7 +14,7 @@ async function main() {
   LoggerFactory.INST.logLevel('debug');
 
   const arweave = Arweave.init({
-    host: 'arweave.live', // Hostname or IP address for a Arweave host
+    host: 'arweave.net', // Hostname or IP address for a Arweave host
     port: 443, // Port
     protocol: 'https', // Network protocol http or https
     timeout: 60000, // Network request timeouts in milliseconds
@@ -23,15 +24,38 @@ async function main() {
   const transactionsLoader = new ContractInteractionsLoader(arweave);
 
   const result = await transactionsLoader.load(
-    'Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY',
+    'Ym2i1XWBAuabbw0qcmSSsmjGtBJbJlDLDxxf277XtK8',
     0,
-    779820,
+    832649,
     new DefaultEvaluationOptions()
   );
 
-  console.log(result.length);
+  const ids = new Set<string>();
+
+  let withDoubleContract = 0;
+
+  result.forEach(r => {
+    const contractTags = findTag(r, "Contract");
+    if (contractTags.length > 1) {
+      withDoubleContract++;
+    }
+    ids.add(r.node.id);
+  });
+
+  console.log("all", result.length);
+  console.log("unique", ids.size);
+  console.log("with double contract tag", withDoubleContract);
 
   fs.writeFileSync(path.join(__dirname, 'data', 'transactions-live.json'), JSON.stringify(result));
 }
 
 main().catch((e) => console.error(e));
+
+function findTag(
+  interaction: GQLEdgeInterface,
+  tagName: string
+): GQLTagInterface[] {
+  return interaction.node.tags.filter((t) => {
+    return t.name === tagName;
+  });
+}
