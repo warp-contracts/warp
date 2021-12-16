@@ -43,6 +43,9 @@ export interface GQLNodeInterface {
   parent: {
     id: string;
   };
+  bundledIn: {
+    id: string;
+  }
   dry?: boolean;
   sortKey?: string; //added dynamically by the LexicographicalInteractionsSorter
 }

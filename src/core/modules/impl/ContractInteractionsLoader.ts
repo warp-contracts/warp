@@ -123,7 +123,11 @@ export class ContractInteractionsLoader implements InteractionsLoader {
   private async loadPages(variables: ReqVariables) {
     let transactions = await this.getNextPage(variables);
 
-    const txInfos: GQLEdgeInterface[] = transactions.edges.filter((tx) => !tx.node.parent || !tx.node.parent.id);
+    // note: according to https://discord.com/channels/357957786904166400/756557551234973696/920918240702660638
+    // protection against "bundledIn" should not be necessary..but..better safe than sorry :-)
+    const txInfos: GQLEdgeInterface[] = transactions.edges.filter(
+      (tx) => !tx.node.parent || !tx.node.parent.id || !tx.node.bundledIn || !tx.node.bundledIn.id
+    );
 
     while (transactions.pageInfo.hasNextPage) {
       const cursor = transactions.edges[MAX_REQUEST - 1].cursor;
