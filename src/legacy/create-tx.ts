@@ -82,7 +82,8 @@ export function createDummyTx(tx: Transaction, from: string, block: BlockData): 
     anchor: null,
     signature: null,
     data: null,
-    parent: null
+    parent: null,
+    bundledIn: null
   };
 }
 
