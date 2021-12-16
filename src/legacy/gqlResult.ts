@@ -45,7 +45,7 @@ export interface GQLNodeInterface {
   };
   bundledIn: {
     id: string;
-  }
+  };
   dry?: boolean;
   sortKey?: string; //added dynamically by the LexicographicalInteractionsSorter
 }
