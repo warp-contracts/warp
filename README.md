@@ -15,6 +15,7 @@ To further improve contract state evaluation time, one can additionally use AWS 
 - [State evaluation diagram](#state-evaluation-diagram)
 - [Development](#development)
   - [Installation and import](#installation-and-import)
+  - [Using the RedStone Gateway](#using-the-redstone-gateway)
   - [Examples](#examples)
   - [Migration guide](#migration-guide)
   - [Documentation](#documentation)
@@ -81,6 +82,37 @@ import { SmartWeave, Contract, ... } from 'redstone-smartweave'
 
 The SDK is available in both the ESM and CJS format - to make it possible for web bundlers (like webpack) to effectively
 perform tree-shaking.
+
+### Using the RedStone Gateway
+In order to use the [Redstone Gateway](https://github.com/redstone-finance/redstone-sw-gateway) for loading the contract interactions,
+configure the smartweave instance in the following way:
+```ts
+const smartweave = SmartWeaveNodeFactory.memCachedBased(arweave)
+    .setInteractionsLoader(new RedstoneGatewayInteractionsLoader(gatewayUrl))
+    .build();
+```
+The gateway is currently available under [https://gateway.redstone.finance](https://gateway.redstone.finance) url.   
+Full API reference is available [here](https://github.com/redstone-finance/redstone-sw-gateway#http-api-reference).
+
+Optionally - you can pass the second argument to the `RedstoneGatewayInteractionsLoader` that will determine which transactions will be loaded:
+1. no parameter - default mode, compatible with how the Arweave Gateway GQL endpoint works - returns
+all the interactions. There is a risk of returning [corrupted transactions](https://github.com/redstone-finance/redstone-sw-gateway#corrupted-transactions).
+2. `{confirmed: true}` - returns only confirmed transactions - the most safe mode, eg:
+```ts
+const smartweave = SmartWeaveNodeFactory.memCachedBased(arweave)
+    .setInteractionsLoader(new RedstoneGatewayInteractionsLoader(gatewayUrl, {confirmed: true}))
+    .build();
+```
+
+3. `{notCorrupted: true}` - returns both confirmed and not yet verified interactions (i.e. the latest ones).
+Not as safe as previous mode, but good if you want combine high level of safety with the most recent data.
+```ts
+const smartweave = SmartWeaveNodeFactory.memCachedBased(arweave)
+    .setInteractionsLoader(new RedstoneGatewayInteractionsLoader(gatewayUrl, {notCorrupted: true}))
+    .build();
+```
+
+More examples can be found [here](https://github.com/redstone-finance/redstone-smartcontracts-examples/blob/main/src/redstone-gateway-example.ts).
 
 ### Examples
 Usage examples can be found in
