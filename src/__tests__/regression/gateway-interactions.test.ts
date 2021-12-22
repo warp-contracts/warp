@@ -40,8 +40,8 @@ const testCases: string[] = JSON.parse(
  * and {@link RedstoneGatewayInteractionsLoader} return same results for given variables.
  */
 describe.each([750000, 775000, 800000, 825000, 850000])('testing for block height %d', (toBlockHeight) => {
-  fit('returns same amount of interactions for the same block height', async () => {
-    console.log("toBlockHeight", toBlockHeight);
+  it('returns same amount of interactions for the same block height', async () => {
+    console.log('toBlockHeight', toBlockHeight);
     const redstoneInteractionsLoader = new RedstoneGatewayInteractionsLoader(gatewayUrl);
     const arweaveInteractionsLoader = new ArweaveGatewayInteractionsLoader(arweave);
     const responseRedstoneInteractionsLoader: GQLEdgeInterface[] = await redstoneInteractionsLoader.load(
