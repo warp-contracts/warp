@@ -33,11 +33,22 @@ type ConfirmationStatus =
     };
 
 /**
- * The aim of this implementation of the {@link InteractionsLoader} is to make use of Redstone Gateway endpoint
- * and retrieve contracts' interactions. Optionally - it is possible to pass skipOrphans flag in the constructor
- * and therefore receive only these transactions which are confirmed. To learn more about Redstone Gateway please visit
- * {@link https://github.com/redstone-finance/redstone-sw-gateway}.
- * Please note that currently caching is switched off for RedstoneGatewayInteractionsLoader due to the issue mentioned in the
+ * The aim of this implementation of the {@link InteractionsLoader} is to make use of
+ * Redstone Gateway ({@link https://github.com/redstone-finance/redstone-sw-gateway})
+ * endpoint and retrieve contracts' interactions.
+ *
+ * Optionally - it is possible to pass:
+ * 1. {@link ConfirmationStatus.confirmed} flag - to receive only confirmed interactions - ie. interactions with
+ * enough confirmations, whose existence is confirmed by at least 3 Arweave peers.
+ * 2. {@link ConfirmationStatus.notCorrupted} flag - to receive both already confirmed and not yet confirmed (ie. latest)
+ * interactions.
+ *
+ * Passing no flag is the "backwards compatible" mode (ie. it will behave like the original Arweave GQL gateway endpoint).
+ * Note that this may result in returning corrupted and/or forked interactions
+ * - read more {@link https://github.com/redstone-finance/redstone-sw-gateway#corrupted-transactions}.
+ *
+ * Please note that currently caching (ie. {@link CacheableContractInteractionsLoader} is switched off
+ * for RedstoneGatewayInteractionsLoader due to the issue mentioned in the
  * following comment {@link https://github.com/redstone-finance/redstone-smartcontracts/pull/62#issuecomment-995249264}
  */
 export class RedstoneGatewayInteractionsLoader implements InteractionsLoader {
@@ -68,14 +79,7 @@ export class RedstoneGatewayInteractionsLoader implements InteractionsLoader {
         })}`
       )
         .then((res) => {
-          if (res.ok) {
-            return res.json();
-          } else {
-            return Promise.reject(res);
-          }
-        })
-        .then((data) => {
-          return data;
+          return res.ok ? res.json() : Promise.reject(res);
         })
         .catch((error) => {
           if (error.body?.message) {
@@ -83,11 +87,11 @@ export class RedstoneGatewayInteractionsLoader implements InteractionsLoader {
           }
           throw new Error(`Unable to retrieve transactions. Redstone gateway responded with status ${error.status}.`);
         });
-      this.logger.debug(`Loading interactions: page ${page}, time: `, benchmarkRequestTime.elapsed());
-
       totalPages = response.paging.pages;
 
-      this.logger.debug(`Loading interactions: page ${page} of ${totalPages} loaded`);
+      this.logger.debug(
+        `Loading interactions: page ${page} of ${totalPages} loaded in ${benchmarkRequestTime.elapsed()}`
+      );
 
       response.interactions.forEach((interaction) =>
         interactions.push({
@@ -99,7 +103,7 @@ export class RedstoneGatewayInteractionsLoader implements InteractionsLoader {
       this.logger.debug(`Loaded interactions length: ${interactions.length}`);
     } while (page < totalPages);
 
-    this.logger.debug(`Loading interactions for ${contractId}:`, benchmarkTotalTime.elapsed());
+    this.logger.debug(`Loading interactions for ${contractId}: ${benchmarkTotalTime.elapsed()}`);
 
     this.logger.debug('All loaded interactions:', {
       from: fromBlockHeight,

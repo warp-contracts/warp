@@ -5,7 +5,6 @@ the SmartWeave [Protocol](./docs/SMARTWEAVE_PROTOCOL.md).
 It has been built with performance (e.g. caching at multiple layers, Arweave calls optimization)
 and modularity (e.g. ability to use different types of caches, imported from external libraries) in mind.
 
-#### Warning: SDK is currently in alpha version.
 We're already using the new SDK on production, both in our webapp and nodes.
 However, if you'd like to use it in production as well, please contact us on [discord](https://discord.com/invite/PVxBZKFr46) to ensure a smooth transition and get help with testing.
 

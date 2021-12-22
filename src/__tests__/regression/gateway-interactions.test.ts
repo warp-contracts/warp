@@ -1,3 +1,4 @@
+/* eslint-disable */
 import fs from 'fs';
 import path from 'path';
 import Arweave from 'arweave';
@@ -5,9 +6,9 @@ import {
   LoggerFactory,
   RedstoneGatewayInteractionsLoader,
   ArweaveGatewayInteractionsLoader,
-  DefaultEvaluationOptions
+  DefaultEvaluationOptions,
+  GQLEdgeInterface
 } from '@smartweave';
-import { GQLEdgeInterface } from '../../legacy/gqlResult';
 
 /* 
 TODO: two test cases have been removed from the list - gateway-interaction test is failing due to the different
@@ -35,26 +36,9 @@ const testCases: string[] = JSON.parse(
 );
 
 /**
- * These regression tests should verify whether ArweaveGatewayInteractionsLoader and RedstoneGatewayInteractionsLoader
- * return same results for given variables
+ * These regression tests should verify whether {@link ArweaveGatewayInteractionsLoader}
+ * and {@link RedstoneGatewayInteractionsLoader} return same results for given variables.
  */
-
-describe.each(testCases)('testing for contract %#', (contractTxId) => {
-  it('returns same amount of interactions for RedstoneGatewayInteractionsLoader and ArweaveGatewayInteractionsLoader', async () => {
-    const redstoneInteractionsLoader = new RedstoneGatewayInteractionsLoader(gatewayUrl);
-    const arweaveInteractionsLoader = new ArweaveGatewayInteractionsLoader(arweave);
-    const responseRedstoneInteractionsLoader = await redstoneInteractionsLoader.load(contractTxId, 0, 8301901);
-    const responseArweaveInteractionsLoader = await arweaveInteractionsLoader.load(
-      contractTxId,
-      0,
-      8301901,
-      new DefaultEvaluationOptions()
-    );
-
-    expect(responseRedstoneInteractionsLoader.length).toEqual(responseArweaveInteractionsLoader.length);
-  }, 600000);
-});
-
 describe.each([750000, 775000, 800000, 825000, 850000])('testing for block height %#', (toBlockHeight) => {
   it('returns same amount of interactions for the same block height', async () => {
     const redstoneInteractionsLoader = new RedstoneGatewayInteractionsLoader(gatewayUrl);
@@ -90,6 +74,8 @@ describe.each(testCases)('testing contractId %#', (contractTxId) => {
       8301901,
       new DefaultEvaluationOptions()
     );
+
+    expect(responseRedstoneInteractionsLoader.length).toEqual(responseArweaveInteractionsLoader.length);
 
     let arr = [];
     responseRedstoneInteractionsLoader.forEach((resRedstone) => {
