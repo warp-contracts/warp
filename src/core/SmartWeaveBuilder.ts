@@ -15,7 +15,6 @@ import {
 export class SmartWeaveBuilder {
   private _definitionLoader?: DefinitionLoader;
   private _interactionsLoader?: InteractionsLoader;
-  private _cacheableContractInteractionsLoader?: CacheableContractInteractionsLoader;
   private _interactionsSorter?: InteractionsSorter;
   private _executorFactory?: ExecutorFactory<HandlerApi<unknown>>;
   private _stateEvaluator?: StateEvaluator;
@@ -36,7 +35,7 @@ export class SmartWeaveBuilder {
     value: InteractionsLoader,
     maxStoredInMemoryBlockHeights: number = Number.MAX_SAFE_INTEGER
   ): SmartWeaveBuilder {
-    this._cacheableContractInteractionsLoader = new CacheableContractInteractionsLoader(
+    this._interactionsLoader = new CacheableContractInteractionsLoader(
       value,
       new MemBlockHeightSwCache(maxStoredInMemoryBlockHeights)
     );
@@ -71,7 +70,6 @@ export class SmartWeaveBuilder {
       this._arweave,
       this._definitionLoader,
       this._interactionsLoader,
-      this._cacheableContractInteractionsLoader,
       this._interactionsSorter,
       this._executorFactory,
       this._stateEvaluator

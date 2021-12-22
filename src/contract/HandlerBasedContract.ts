@@ -273,14 +273,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     blockHeight?: number,
     forceDefinitionLoad = false
   ): Promise<ExecutionContext<State, HandlerApi<State>>> {
-    const {
-      arweave,
-      definitionLoader,
-      cacheableContractInteractionsLoader,
-      interactionsSorter,
-      executorFactory,
-      stateEvaluator
-    } = this.smartweave;
+    const { arweave, definitionLoader, interactionsLoader, interactionsSorter, executorFactory, stateEvaluator } =
+      this.smartweave;
 
     let currentNetworkInfo;
 
@@ -330,7 +324,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
         // (eg. if contract is calling different contracts on different block heights).
         // This basically limits the amount of interactions with Arweave GraphQL endpoint -
         // each such interaction takes at least ~500ms.
-        cacheableContractInteractionsLoader.load(
+        interactionsLoader.load(
           contractTxId,
           cachedBlockHeight + 1,
           this._rootBlockHeight || this._networkInfo.height,
@@ -368,13 +362,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     transaction: GQLNodeInterface
   ): Promise<ExecutionContext<State, HandlerApi<State>>> {
     const benchmark = Benchmark.measure();
-    const {
-      definitionLoader,
-      cacheableContractInteractionsLoader,
-      interactionsSorter,
-      executorFactory,
-      stateEvaluator
-    } = this.smartweave;
+    const { definitionLoader, interactionsLoader, interactionsSorter, executorFactory, stateEvaluator } =
+      this.smartweave;
     const blockHeight = transaction.block.height;
     const caller = transaction.owner.address;
 
@@ -391,7 +380,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     if (cachedBlockHeight != blockHeight) {
       [contractDefinition, interactions] = await Promise.all([
         definitionLoader.load<State>(contractTxId),
-        await cacheableContractInteractionsLoader.load(contractTxId, 0, blockHeight, this._evaluationOptions)
+        await interactionsLoader.load(contractTxId, 0, blockHeight, this._evaluationOptions)
       ]);
       sortedInteractions = await interactionsSorter.sort(interactions);
     } else {
