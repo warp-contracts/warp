@@ -5,7 +5,7 @@ import {
   GQLResultInterface,
   GQLTransactionsResultInterface,
   LoggerFactory
-} from "@smartweave";
+} from '@smartweave';
 import Arweave from 'arweave';
 import fs from 'fs';
 import path from 'path';
