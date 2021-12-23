@@ -4,7 +4,7 @@ import { LoggerFactory } from '../src';
 import { TsLogFactory } from '../src/logging/node/TsLogFactory';
 import fs from 'fs';
 import path from 'path';
-import { ContractInteractionsLoader } from '../src/core/modules/impl/ContractInteractionsLoader';
+import { ArweaveGatewayInteractionsLoader } from '../src/core/modules/impl/ArweaveGatewayInteractionsLoader';
 import { DefaultEvaluationOptions } from '../src/core/modules/StateEvaluator';
 import {GQLEdgeInterface, GQLTagInterface} from "smartweave/lib/interfaces/gqlResult";
 
@@ -21,7 +21,7 @@ async function main() {
     logging: false // Enable network request logging
   });
 
-  const transactionsLoader = new ContractInteractionsLoader(arweave);
+  const transactionsLoader = new ArweaveGatewayInteractionsLoader(arweave);
 
   const result = await transactionsLoader.load(
     'Ym2i1XWBAuabbw0qcmSSsmjGtBJbJlDLDxxf277XtK8',

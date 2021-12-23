@@ -1,6 +1,6 @@
 /* eslint-disable */
 import {
-  ContractInteractionsLoader,
+  ArweaveGatewayInteractionsLoader, DefaultEvaluationOptions,
   GQLEdgeInterface,
   GQLResultInterface,
   GQLTransactionsResultInterface,
@@ -83,9 +83,9 @@ async function main() {
 
   LoggerFactory.use(new TsLogFactory());
   LoggerFactory.INST.logLevel('info');
-  LoggerFactory.INST.logLevel('debug', 'ContractInteractionsLoader');
+  LoggerFactory.INST.logLevel('debug', 'ArweaveGatewayInteractionsLoader');
 
-  const transactionsLoader = new ContractInteractionsLoader(arweave);
+  const transactionsLoader = new ArweaveGatewayInteractionsLoader(arweave);
 
   let totalInteractions = 0;
   // loading
@@ -110,6 +110,7 @@ async function main() {
     console.log(
       `\n[${contractTxs.indexOf(contractTx) + 1} / ${contractTxs.length}] loading interactions of the ${contractTxId}`
     );
+    const evaluationOptions =new DefaultEvaluationOptions();
     const interactions = await transactionsLoader.load(contractTxId, 0, 779826, evaluationOptions);
     console.log(`${contractTxId}: ${interactions.length}`);
 
