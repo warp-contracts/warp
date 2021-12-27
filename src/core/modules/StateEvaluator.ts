@@ -2,7 +2,7 @@ import { BlockHeightCacheResult, CurrentTx, ExecutionContext, GQLNodeInterface }
 
 /**
  * Implementors of this class are responsible for evaluating contract's state
- * - based on the execution context.
+ * - based on the {@link ExecutionContext}.
  */
 export interface StateEvaluator {
   eval<State>(executionContext: ExecutionContext<State>, currentTx: CurrentTx[]): Promise<EvalStateResult<State>>;
@@ -60,11 +60,6 @@ export interface StateEvaluator {
     contractTxId: string,
     blockHeight: number
   ): Promise<BlockHeightCacheResult<EvalStateResult<State>> | null>;
-
-  transactionState<State>(
-    transaction: GQLNodeInterface,
-    contractTxId: string
-  ): Promise<EvalStateResult<State> | undefined>;
 }
 
 export class EvalStateResult<State> {
@@ -85,8 +80,6 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   ignoreExceptions = true;
 
   waitForConfirmation = false;
-
-  fcpOptimization = false;
 
   updateCacheForEachInteraction = true;
 
@@ -109,9 +102,6 @@ export interface EvaluationOptions {
   // allow to wait for confirmation of the interaction transaction - this way
   // you will know, when the new interaction is effectively available on the network
   waitForConfirmation: boolean;
-
-  // experimental optimization for contracts that utilize the Foreign Call Protocol
-  fcpOptimization: boolean;
 
   // whether cache should be updated after evaluating each interaction transaction.
   // this can be switched off to speed up cache writes (ie. for some contracts (with flat structure)

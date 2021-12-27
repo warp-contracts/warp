@@ -59,7 +59,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     const { contract, contractDefinition, sortedInteractions } = executionContext;
 
     let currentState = baseState.state;
-    let validity = deepCopy(baseState.validity);
+    const validity = baseState.validity;
 
     this.logger.info(
       `Evaluating state for ${contractDefinition.txId} [${missingInteractions.length} non-cached of ${sortedInteractions.length} all]`
@@ -82,7 +82,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       );
 
       // verifying whether state isn't already available for this exact interaction.
-      const state = await this.transactionState<State>(interactionTx, contractDefinition.txId);
       const isInteractWrite = this.tagsParser.isInteractWrite(missingInteraction, contractDefinition.txId);
 
       this.logger.debug('interactWrite?:', isInteractWrite);
@@ -107,10 +106,10 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         this.logger.debug('Reading state of the calling contract', interactionTx.block.height);
 
         /**
-        Reading the state of the writing contract.
-        This in turn will cause the state of THIS contract to be
-        updated in cache - see {@link ContractHandlerApi.assignWrite}
-        */
+         Reading the state of the writing contract.
+         This in turn will cause the state of THIS contract to be
+         updated in cache - see {@link ContractHandlerApi.assignWrite}
+         */
         await writingContract.readState(interactionTx.block.height, [
           ...(currentTx || []),
           {
@@ -164,7 +163,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           caller: interactionTx.owner.address
         };
 
-        let intermediaryCacheHit = false;
+        const intermediaryCacheHit = false;
 
         const interactionData = {
           interaction,
@@ -176,34 +175,27 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         const interactionCall: InteractionCall = contract.getCallStack().addInteractionData(interactionData);
 
-        if (state) {
-          this.logger.debug('Found in cache');
-          intermediaryCacheHit = true;
-          currentState = state.state;
-          validity = state.validity;
-        } else {
-          const result = await executionContext.handler.handle(
-            executionContext,
-            new EvalStateResult(currentState, validity),
-            interactionData
-          );
-          errorMessage = result.errorMessage;
+        const result = await executionContext.handler.handle(
+          executionContext,
+          new EvalStateResult(currentState, validity),
+          interactionData
+        );
+        errorMessage = result.errorMessage;
 
-          this.logResult<State>(result, interactionTx, executionContext);
+        this.logResult<State>(result, interactionTx, executionContext);
 
-          if (result.type === 'exception' && ignoreExceptions !== true) {
-            throw new Error(`Exception while processing ${JSON.stringify(interaction)}:\n${result.errorMessage}`);
-          }
-
-          validity[interactionTx.id] = result.type === 'ok';
-          currentState = result.state;
-
-          // cannot simply take last element of the missingInteractions
-          // as there is no certainty that it has been evaluated (e.g. issues with input tag).
-          lastEvaluatedInteraction = interactionTx;
-
-          this.logger.debug('Interaction evaluation', singleInteractionBenchmark.elapsed());
+        if (result.type === 'exception' && ignoreExceptions !== true) {
+          throw new Error(`Exception while processing ${JSON.stringify(interaction)}:\n${result.errorMessage}`);
         }
+
+        validity[interactionTx.id] = result.type === 'ok';
+        currentState = result.state;
+
+        // cannot simply take last element of the missingInteractions
+        // as there is no certainty that it has been evaluated (e.g. issues with input tag).
+        lastEvaluatedInteraction = interactionTx;
+
+        this.logger.debug('Interaction evaluation', singleInteractionBenchmark.elapsed());
 
         interactionCall.update({
           cacheHit: false,
@@ -223,7 +215,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         executionContext = await modify<State>(currentState, executionContext);
       }
     }
-    this.logger.debug('State evaluation total:', stateEvaluationBenchmark.elapsed());
+    this.logger.info('State evaluation total:', stateEvaluationBenchmark.elapsed());
     const evalStateResult = new EvalStateResult<State>(currentState, validity);
 
     // state could have been full retrieved from cache
@@ -291,9 +283,4 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>
   ): Promise<void>;
-
-  abstract transactionState<State>(
-    transaction: GQLNodeInterface,
-    contractTxId: string
-  ): Promise<EvalStateResult<State> | undefined>;
 }

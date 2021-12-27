@@ -1,11 +1,11 @@
 /* eslint-disable */
-import Arweave from 'arweave';
-import {LoggerFactory, RedstoneGatewayInteractionsLoader, SmartWeaveWebFactory} from '../src';
-import {TsLogFactory} from '../src/logging/node/TsLogFactory';
-import fs from 'fs';
-import path from 'path';
-import {FromFileInteractionsLoader} from './FromFileInteractionsLoader';
-import {SmartWeaveNodeFactory} from '../src/core/node/SmartWeaveNodeFactory';
+const Arweave = require('arweave');
+const { LoggerFactory } = require('../lib/cjs/logging/LoggerFactory');
+const { RedstoneGatewayInteractionsLoader } = require('../lib/cjs/core/modules/impl/RedstoneGatewayInteractionsLoader');
+const { SmartWeaveWebFactory } = require('../lib/cjs/core/web/SmartWeaveWebFactory');
+const {TsLogFactory} = require('../lib/cjs/logging/node/TsLogFactory');
+const fs = require('fs');
+const path =require('path');
 
 const logger = LoggerFactory.INST.create('Contract');
 

@@ -73,9 +73,11 @@ export class FileBlockHeightSwCache<V = any> extends MemBlockHeightSwCache<V> {
         const height = file.split('.')[0];
         // FIXME: "state" and "validity" should be probably split into separate json files
         const cacheValue = JSON.parse(fs.readFileSync(path.join(cacheFilePath), 'utf-8'));
-        this.storage[contract].set(+height, cacheValue);
+
+        this.putSync({ cacheKey: contract, blockHeight: +height }, cacheValue);
       });
       this.fLogger.info(`loading cache for ${contract}`, benchmark.elapsed());
+      this.fLogger.debug(`Amount of elements loaded for ${contract} to mem: ${this.storage[contract].size}`);
     });
     this.fLogger.debug('Storage keys', this.storage);
 
