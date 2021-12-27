@@ -1,4 +1,4 @@
-import { Benchmark, InteractionsLoader, LoggerFactory } from '@smartweave';
+import { Benchmark, InteractionsLoader, LoggerFactory, stripTrailingSlash } from '@smartweave';
 import { GQLEdgeInterface, GQLNodeInterface } from 'legacy/gqlResult';
 import 'isomorphic-fetch';
 interface Paging {
@@ -53,6 +53,7 @@ type ConfirmationStatus =
  */
 export class RedstoneGatewayInteractionsLoader implements InteractionsLoader {
   constructor(private readonly baseUrl: string, private readonly confirmationStatus: ConfirmationStatus = {}) {
+    this.baseUrl = stripTrailingSlash(baseUrl);
     Object.assign(this, confirmationStatus);
   }
 
