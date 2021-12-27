@@ -87,6 +87,11 @@ const fetchMock = jest
   );
 
 describe('RedstoneGatewayInteractionsLoader -> load', () => {
+  it('should be called with baseUrl devoid of trailing slashes', async () => {
+    const loader = new RedstoneGatewayInteractionsLoader('http://baseUrl/');
+
+    expect(loader['baseUrl']).toBe('http://baseUrl');
+  });
   it('should return correct number of interactions', async () => {
     const loader = new RedstoneGatewayInteractionsLoader('http://baseUrl');
     const response: GQLEdgeInterface[] = await loader.load(contractId, fromBlockHeight, toBlockHeight);

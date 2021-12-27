@@ -27,8 +27,6 @@ const arweave = Arweave.init({
   logging: false
 });
 
-const gatewayUrl = 'https://gateway.redstone.finance';
-
 LoggerFactory.INST.logLevel('fatal');
 
 const testCases: string[] = JSON.parse(
@@ -42,7 +40,7 @@ const testCases: string[] = JSON.parse(
 describe.each([750000, 775000, 800000, 825000, 850000])('testing for block height %d', (toBlockHeight) => {
   it('returns same amount of interactions for the same block height', async () => {
     console.log('toBlockHeight', toBlockHeight);
-    const redstoneInteractionsLoader = new RedstoneGatewayInteractionsLoader(gatewayUrl);
+    const redstoneInteractionsLoader = new RedstoneGatewayInteractionsLoader('https://gateway.redstone.finance/');
     const arweaveInteractionsLoader = new ArweaveGatewayInteractionsLoader(arweave);
     const responseRedstoneInteractionsLoader: GQLEdgeInterface[] = await redstoneInteractionsLoader.load(
       'Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY',
@@ -62,7 +60,7 @@ describe.each([750000, 775000, 800000, 825000, 850000])('testing for block heigh
 
 describe.each(testCases)('testing contractId %s', (contractTxId) => {
   it('returns same interactions ids for RedstoneGatewayLoader and ArweaveGatewayInteractionsLoader', async () => {
-    const redstoneInteractionsLoader = new RedstoneGatewayInteractionsLoader(gatewayUrl);
+    const redstoneInteractionsLoader = new RedstoneGatewayInteractionsLoader('https://gateway.redstone.finance');
     const arweaveInteractionsLoader = new ArweaveGatewayInteractionsLoader(arweave);
     const responseRedstoneInteractionsLoader: GQLEdgeInterface[] = await redstoneInteractionsLoader.load(
       contractTxId,
