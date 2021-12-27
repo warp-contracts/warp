@@ -33,7 +33,7 @@ export class SmartWeaveBuilder {
 
   public setCacheableInteractionsLoader(
     value: InteractionsLoader,
-    maxStoredInMemoryBlockHeights: number = Number.MAX_SAFE_INTEGER
+    maxStoredInMemoryBlockHeights = 1
   ): SmartWeaveBuilder {
     this._interactionsLoader = new CacheableContractInteractionsLoader(
       value,

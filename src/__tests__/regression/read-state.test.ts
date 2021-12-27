@@ -36,7 +36,7 @@ describe.each(chunked)('.suite %#', (contracts: string[]) => {
       const result = await readContract(arweave, contractTxId);
       const resultString = JSON.stringify(result).trim();
       console.log('readState', contractTxId);
-      const result2 = await SmartWeaveNodeFactory.memCached(arweave, 5).contract(contractTxId).readState();
+      const result2 = await SmartWeaveNodeFactory.memCached(arweave, 1).contract(contractTxId).readState();
       const result2String = JSON.stringify(result2.state).trim();
       expect(result2String).toEqual(resultString);
     },
@@ -51,7 +51,7 @@ describe('readState', () => {
     const result = await readContract(arweave, contractTxId, blockHeight);
     const resultString = JSON.stringify(result).trim();
 
-    const result2 = await SmartWeaveNodeFactory.memCached(arweave, 5)
+    const result2 = await SmartWeaveNodeFactory.memCached(arweave, 1)
       .contract(contractTxId)
       .setEvaluationOptions({ updateCacheForEachInteraction: false })
       .readState(blockHeight);
@@ -68,7 +68,7 @@ describe('readState', () => {
       target: '6Z-ifqgVi1jOwMvSNwKWs6ewUEQ0gU9eo4aHYC3rN1M'
     });
 
-    const v2Result = await SmartWeaveNodeFactory.memCached(arweave, 5)
+    const v2Result = await SmartWeaveNodeFactory.memCached(arweave, 1)
       .contract(contractTxId)
       .setEvaluationOptions({ updateCacheForEachInteraction: false })
       .connect(jwk)

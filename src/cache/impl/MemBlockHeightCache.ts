@@ -58,12 +58,14 @@ export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
       this.storage[cacheKey] = new Map();
     }
     const cached = this.storage[cacheKey];
-    if (cached.size == this.maxStoredBlockHeights) {
+    if (cached.size >= this.maxStoredBlockHeights) {
       const toRemove = [...cached.keys()].sort(asc).shift();
       cached.delete(toRemove);
     }
 
-    cached.set(blockHeight, deepCopy(value));
+    // note: "value" should be deep copied here for safety
+    // but it significantly degrades overall performance...
+    cached.set(blockHeight, value);
   }
 
   async contains(key: string): Promise<boolean> {

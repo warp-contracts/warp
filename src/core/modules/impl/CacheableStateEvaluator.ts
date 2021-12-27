@@ -150,10 +150,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       return null;
     }
 
-    return new BlockHeightCacheResult<EvalStateResult<State>>(
-      stateCache.cachedHeight,
-      [...stateCache.cachedValue].pop()
-    );
+    return new BlockHeightCacheResult<EvalStateResult<State>>(stateCache.cachedHeight, stateCache.cachedValue);
   }
 
   async onInternalWriteStateUpdate<State>(
@@ -178,23 +175,6 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     //await this.putInCache(executionContext.contractDefinition.txId, transaction, state);
   }
 
-  async transactionState<State>(
-    transaction: GQLNodeInterface,
-    contractTxId: string
-  ): Promise<EvalStateResult<State> | undefined> {
-    const stateCache = (await this.cache.get(contractTxId, transaction.block.height)) as BlockHeightCacheResult<
-      StateCache<State>
-    >;
-
-    if (stateCache == null) {
-      return undefined;
-    }
-
-    return stateCache.cachedValue.find((sc) => {
-      return sc.transactionId === transaction.id;
-    });
-  }
-
   protected async putInCache<State>(
     contractTxId: string,
     transaction: GQLNodeInterface,
@@ -205,19 +185,8 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     }
     const transactionId = transaction.id;
     const blockHeight = transaction.block.height;
-
     const stateToCache = new EvalStateResult(state.state, state.validity, transactionId, transaction.block.id);
 
-    // we do not return a deepCopy here - as this operation significantly (2-3x) degrades performance
-    // for contracts with multiple interactions on single block height
-    const stateCache = await this.cache.get(contractTxId, blockHeight, false);
-    if (stateCache != null) {
-      // note: since we're not returning deepCopy of the cached array in this case
-      // - there is no need to put the updated array in the cache manually (ie. calling this.cache.put())
-      // - as we're operating on the reference.
-      stateCache.cachedValue.push(stateToCache);
-    } else {
-      await this.cache.put(new BlockHeightKey(contractTxId, blockHeight), [stateToCache]);
-    }
+    await this.cache.put(new BlockHeightKey(contractTxId, blockHeight), stateToCache);
   }
 }
