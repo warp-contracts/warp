@@ -22,32 +22,36 @@ async function main() {
     logging: false // Enable network request logging
   });
 
-  const contractTxId = '-8A6RexFkpfWwuyVO98wzSFZh0d6VJuI-buTJvlwOJQ';
+  const contractTxId = 'Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY';
 
   //const interactionsLoader = new FromFileInteractionsLoader(path.join(__dirname, 'data', 'interactions.json'));
 
   // const smartweave = SmartWeaveWebFactory.memCachedBased(arweave).setInteractionsLoader(interactionsLoader).build();
-  const smartweave = SmartWeaveWebFactory
+  const smartweaveR = SmartWeaveWebFactory
     .memCachedBased(arweave, 1)
     .setInteractionsLoader(new RedstoneGatewayInteractionsLoader(
       'https://gateway.redstone.finance')
     ).build();
 
   const usedBefore = Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100
-  const lootContract = smartweave.contract(contractTxId)
-    .setEvaluationOptions({updateCacheForEachInteraction: true});
-  const {state, validity} = await lootContract.readState();
+  const contractR = smartweaveR.contract(contractTxId);
+  const {state, validity} = await contractR.readState();
   const usedAfter = Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100
   logger.warn("Heap used in MB", {
     usedBefore,
     usedAfter
   });
 
+  const smartweave = SmartWeaveWebFactory.memCached(arweave, 1);
+  const contract = smartweave.contract(contractTxId);
+  const result = await contract.readState();
+
 
   //fs.writeFileSync(path.join(__dirname, 'data', 'validity.json'), JSON.stringify(validity));
 
   //fs.writeFileSync(path.join(__dirname, 'data', 'validity_old.json'), JSON.stringify(result.validity));
-  fs.writeFileSync(path.join(__dirname, 'data', 'state.json'), JSON.stringify(state));
+  fs.writeFileSync(path.join(__dirname, 'data', 'state_redstone.json'), JSON.stringify(state));
+  fs.writeFileSync(path.join(__dirname, 'data', 'state_arweave.json'), JSON.stringify(result.state));
 
   // console.log('second read');
   // await lootContract.readState();
