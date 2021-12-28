@@ -1,5 +1,4 @@
-import { Benchmark, InteractionsLoader, LoggerFactory, stripTrailingSlash } from '@smartweave';
-import { GQLEdgeInterface, GQLNodeInterface } from 'legacy/gqlResult';
+import { Benchmark, InteractionsLoader, LoggerFactory, stripTrailingSlash, GQLEdgeInterface, GQLNodeInterface } from '@smartweave';
 import 'isomorphic-fetch';
 interface Paging {
   total: string;
