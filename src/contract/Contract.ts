@@ -146,7 +146,7 @@ export interface Contract<State = unknown> {
    * "root" contract network info - so that the whole execution is performed with the
    * same network info)
    */
-  getNetworkInfo(): NetworkInfoInterface;
+  getNetworkInfo(): Partial<NetworkInfoInterface>;
 
   /**
    * Get the block height requested by user for the given interaction with contract

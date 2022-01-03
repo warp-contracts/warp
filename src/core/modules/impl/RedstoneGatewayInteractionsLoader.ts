@@ -7,6 +7,7 @@ import {
   GQLNodeInterface
 } from '@smartweave';
 import 'isomorphic-fetch';
+
 interface Paging {
   total: string;
   limit: number;

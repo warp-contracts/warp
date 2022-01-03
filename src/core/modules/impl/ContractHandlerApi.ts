@@ -16,6 +16,7 @@ import {
 } from '@smartweave';
 import BigNumber from 'bignumber.js';
 import * as clarity from '@weavery/clarity';
+import * as v8 from "v8";
 
 export class ContractHandlerApi<State> implements HandlerApi<State> {
   private readonly contractLogger: RedStoneLogger;
@@ -63,11 +64,7 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
       this.assignWrite(executionContext, currentTx);
       this.assignRefreshState(executionContext);
 
-      // strangely - state is for some reason modified for some contracts (eg. YLVpmhSq5JmLltfg6R-5fL04rIRPrlSU22f6RQ6VyYE)
-      // when calling any async (even simple timeout) function here...
-      // that's (ie. deepCopy) a dumb workaround for this issue
-      // see https://github.com/ArweaveTeam/SmartWeave/pull/92 for more details
-      const handlerResult = deepCopy(await Promise.race([timeoutPromise, handler(stateCopy, interaction)]));
+      const handlerResult = await Promise.race([timeoutPromise, handler(stateCopy, interaction)]);
 
       if (handlerResult && (handlerResult.state || handlerResult.result)) {
         return {

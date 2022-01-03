@@ -1,4 +1,5 @@
 import {
+  Benchmark,
   BlockHeightKey,
   BlockHeightSwCache,
   EvaluationOptions,
@@ -26,6 +27,7 @@ export class CacheableContractInteractionsLoader implements InteractionsLoader {
     toBlockHeight: number,
     evaluationOptions?: EvaluationOptions
   ): Promise<GQLEdgeInterface[]> {
+    const benchmark = Benchmark.measure();
     this.logger.debug('Loading interactions', {
       contractId,
       fromBlockHeight,
@@ -72,6 +74,8 @@ export class CacheableContractInteractionsLoader implements InteractionsLoader {
     // note: interactions in cache should be always saved from the "0" block
     // - that's why "result" variable is not used here
     await this.cache.put(new BlockHeightKey(contractId, toBlockHeight), valueToCache);
+
+    this.logger.debug(`Interactions loaded in ${benchmark.elapsed()}`);
 
     return result;
   }

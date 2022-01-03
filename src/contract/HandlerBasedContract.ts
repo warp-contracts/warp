@@ -45,7 +45,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
    * Only the 'root' contract call should read this data from Arweave - all the inner calls ("child" contracts)
    * should reuse this data from the parent ("calling") contract.
    */
-  private _networkInfo?: NetworkInfoInterface = null;
+  private _networkInfo?: Partial<NetworkInfoInterface> = null;
 
   private _rootBlockHeight: number = null;
 
@@ -98,10 +98,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
       contractTxId: this._contractTxId,
       currentTx
     });
+    const initBenchmark = Benchmark.measure();
     this.maybeResetRootContract(blockHeight);
 
     const { stateEvaluator } = this.smartweave;
-    const benchmark = Benchmark.measure();
     const executionContext = await this.createExecutionContext(this._contractTxId, blockHeight);
     this.logger.info('Execution Context', {
       blockHeight: executionContext.blockHeight,
@@ -109,10 +109,16 @@ export class HandlerBasedContract<State> implements Contract<State> {
       missingInteractions: executionContext.sortedInteractions.length,
       cachedStateHeight: executionContext.cachedState?.cachedHeight
     });
-    this.logger.debug('context', benchmark.elapsed());
-    benchmark.reset();
+    initBenchmark.stop();
+
+    const stateBenchmark = Benchmark.measure();
     const result = await stateEvaluator.eval(executionContext, currentTx || []);
-    this.logger.debug('state', benchmark.elapsed());
+    stateBenchmark.stop();
+
+    this.logger.info('Benchmark', {
+      'init time': initBenchmark.elapsed(),
+      'evaluation time': stateBenchmark.elapsed()
+    });
     return result as EvalStateResult<State>;
   }
 
@@ -232,7 +238,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return this._callStack;
   }
 
-  getNetworkInfo(): NetworkInfoInterface {
+  getNetworkInfo(): Partial<NetworkInfoInterface> {
     return this._networkInfo;
   }
 
@@ -281,9 +287,15 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const benchmark = Benchmark.measure();
     // if this is a "root" call (ie. original call from SmartWeave's client)
     if (this._parentContract == null) {
-      this.logger.debug('Reading network info for root call');
-      currentNetworkInfo = await arweave.network.getInfo();
-      this._networkInfo = currentNetworkInfo;
+      if (blockHeight) {
+        this._networkInfo = {
+          height: blockHeight
+        };
+      } else {
+        this.logger.debug('Reading network info for root call');
+        currentNetworkInfo = await arweave.network.getInfo();
+        this._networkInfo = currentNetworkInfo;
+      }
     } else {
       // if that's a call from within contract's source code
       this.logger.debug('Reusing network info from the calling contract');
@@ -300,7 +312,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
       blockHeight = currentNetworkInfo.height;
     }
     this.logger.debug('network info', benchmark.elapsed());
-
     benchmark.reset();
 
     const cachedState = await stateEvaluator.latestAvailableState<State>(contractTxId, blockHeight);
@@ -308,6 +319,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
     if (cachedState != null) {
       cachedBlockHeight = cachedState.cachedHeight;
     }
+
+    this.logger.debug('cache lookup', benchmark.elapsed());
+    benchmark.reset();
 
     let contractDefinition,
       interactions = [],

@@ -1,4 +1,12 @@
-import { ContractDefinition, DefinitionLoader, getTag, LoggerFactory, SmartWeaveTags, SwCache } from '@smartweave';
+import {
+  Benchmark,
+  ContractDefinition,
+  DefinitionLoader,
+  getTag,
+  LoggerFactory,
+  SmartWeaveTags,
+  SwCache
+} from '@smartweave';
 import Arweave from 'arweave';
 import Transaction from 'arweave/web/lib/transaction';
 
@@ -8,7 +16,7 @@ export class ContractDefinitionLoader implements DefinitionLoader {
   constructor(
     private readonly arweave: Arweave,
     // TODO: cache should be removed from the core layer and implemented in a wrapper of the core implementation
-    private readonly cache?: SwCache<string, ContractDefinition<unknown>>
+    protected readonly cache?: SwCache<string, ContractDefinition<unknown>>
   ) {}
 
   async load<State>(contractTxId: string, forcedSrcTxId?: string): Promise<ContractDefinition<State>> {
@@ -16,23 +24,33 @@ export class ContractDefinitionLoader implements DefinitionLoader {
       this.logger.debug('ContractDefinitionLoader: Hit from cache!');
       return Promise.resolve(this.cache?.get(contractTxId) as ContractDefinition<State>);
     }
-
+    const benchmark = Benchmark.measure();
     const contract = await this.doLoad<State>(contractTxId, forcedSrcTxId);
+    this.logger.info(`Contract definition loaded in: ${benchmark.elapsed()}`);
     this.cache?.put(contractTxId, contract);
 
     return contract;
   }
 
   async doLoad<State>(contractTxId: string, forcedSrcTxId?: string): Promise<ContractDefinition<State>> {
+    const benchmark = Benchmark.measure();
     const contractTx = await this.arweave.transactions.get(contractTxId);
     const owner = await this.arweave.wallets.ownerToAddress(contractTx.owner);
+    this.logger.debug('Contract tx and owner', benchmark.elapsed());
+    benchmark.reset();
 
     const contractSrcTxId = forcedSrcTxId ? forcedSrcTxId : getTag(contractTx, SmartWeaveTags.CONTRACT_SRC_TX_ID);
-
     const minFee = getTag(contractTx, SmartWeaveTags.MIN_FEE);
+    this.logger.debug('Tags decoding', benchmark.elapsed());
+    benchmark.reset();
+
     const contractSrcTx = await this.arweave.transactions.get(contractSrcTxId);
+    this.logger.debug('Contract src tx load', benchmark.elapsed());
+    benchmark.reset();
+
     const src = contractSrcTx.get('data', { decode: true, string: true });
     const initState = JSON.parse(await this.evalInitialState(contractTx));
+    this.logger.debug('Parsing src and init state', benchmark.elapsed());
 
     return {
       txId: contractTxId,
