@@ -11,6 +11,7 @@ import {
 import { NetworkInfoInterface } from 'arweave/node/network';
 
 export type CurrentTx = { interactionTxId: string; contractTxId: string };
+export type BenchmarkStats = { gatewayCommunication: number; stateEvaluation: number; total: number };
 
 /**
  * A base interface to be implemented by SmartWeave Contracts clients
@@ -175,4 +176,9 @@ export interface Contract<State = unknown> {
    * the same as the evaluation options of the root contract.
    */
   evaluationOptions(): EvaluationOptions;
+
+  /**
+   * returns benchmark results for the last performed readState call
+   */
+  lastReadStateStats(): BenchmarkStats;
 }
