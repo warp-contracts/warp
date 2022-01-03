@@ -36,8 +36,8 @@ async function main() {
     logging: false // Enable network request logging
   });
 
-  //const contractTxId = 'Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY';
-  const contractTxId = 't9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE'; //749180
+  const contractTxId = 'Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY';
+  //const contractTxId = 't9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE'; //749180
 
   //const interactionsLoader = new FromFileInteractionsLoader(path.join(__dirname, 'data', 'interactions.json'));
 
@@ -60,19 +60,19 @@ async function main() {
   });*/
 
   const smartweave = SmartWeaveWebFactory.memCached(arweave);
-  const contract = smartweave.contract(contractTxId).setEvaluationOptions({
-    updateCacheForEachInteraction: false
+  const contract = smartweaveR.contract(contractTxId).setEvaluationOptions({
+    updateCacheForEachInteraction: true
   });
   const result = await contract.readState();
 
-  const result2 = await readContract(arweave, "t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE")
+  //const result2 = await readContract(arweave, "t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE")
 
 
   //fs.writeFileSync(path.join(__dirname, 'data', 'validity.json'), JSON.stringify(validity));
 
   //fs.writeFileSync(path.join(__dirname, 'data', 'validity_old.json'), JSON.stringify(result.validity));
   fs.writeFileSync(path.join(__dirname, 'data', 'state_new.json'), stringify(result.state).trim());
-  fs.writeFileSync(path.join(__dirname, 'data', 'state_old.json'), stringify(result2).trim());
+  //fs.writeFileSync(path.join(__dirname, 'data', 'state_old.json'), stringify(result2).trim());
   //fs.writeFileSync(path.join(__dirname, 'data', 'state_arweave.json'), JSON.stringify(result.state));
 
   // console.log('second read');

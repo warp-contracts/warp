@@ -16,6 +16,7 @@ To further improve contract state evaluation time, one can additionally use AWS 
 - [Development](#development)
   - [Installation and import](#installation-and-import)
   - [Using the RedStone Gateway](#using-the-redstone-gateway)
+  - [Performance - best practices](#performance---best-practices)
   - [Examples](#examples)
   - [Migration guide](#migration-guide)
   - [Documentation](#documentation)
@@ -113,6 +114,46 @@ const smartweave = SmartWeaveNodeFactory.memCachedBased(arweave)
 ```
 
 More examples can be found [here](https://github.com/redstone-finance/redstone-smartcontracts-examples/blob/main/src/redstone-gateway-example.ts).
+
+### Performance - best practices
+In order to get the best performance on production environment (or while performing benchmarks ;-)), please follow these simple rules:
+1. Do NOT use the `TsLoggerFactory` - it is good for development, as it formats the logs nicely, but might slow down the state evaluation
+by a factor of 2 or 3 (depending on the logging level).
+2. Use `fatal` or `error` log level, e.g.:
+```ts
+// configure the logging first
+LoggerFactory.INST.logLevel("fatal");
+// or
+LoggerFactory.INST.logLevel("error");
+
+// then create an instance of smartweave sdk
+const smartweave = SmartWeaveWebFactory.memCached(arweave);
+```
+Logging on `info` or `debug` level is good for development, but turning it on globally might slow down the evaluation by a factor of 2.  
+Keep in mind that you can fine tune the log level of each module separately. For example you can switch the `fatal` globally, but `debug`
+for the `ArweaveGatewayInteractionsLoader` (in order to verify the load times from Arweave GQL endpoint). The names of the modules are derived from the
+names of TypeScript classes, e.g.:
+```ts
+// configure the logging first
+LoggerFactory.INST.logLevel("fatal");
+LoggerFactory.INST.logLevel("debug", "ArweaveGatewayInteractionsLoader");
+
+// then create an instance of smartweave sdk
+const smartweave = SmartWeaveWebFactory.memCached(arweave);
+```
+
+3. If your contract does not make any `readContractState` calls (i.e. it is not reading other contracts' state), you can switch the 
+`updateCacheForEachInteraction` flag to `false` - this will limit the amounts of writes to the state cache (and therefore decrease the execution time for such contracts), e.g.:
+```ts
+// create an instance of smartweave sdk
+const smartweave = SmartWeaveWebFactory.memCached(arweave);
+
+// then connect it to a given contract with "updateCacheForEachInteraction" set to "false"
+const contract = smartweave.contract(contractTxId).setEvaluationOptions({
+    updateCacheForEachInteraction: false
+  });
+```
+
 
 ### Examples
 Usage examples can be found in

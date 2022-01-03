@@ -63,8 +63,6 @@ export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
       cached.delete(toRemove);
     }
 
-    // note: "value" should be deep copied here for safety
-    // but it significantly degrades overall performance...
     cached.set(blockHeight, value);
   }
 
