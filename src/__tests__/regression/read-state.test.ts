@@ -4,13 +4,15 @@ import path from 'path';
 import { interactRead, readContract } from 'smartweave';
 import Arweave from 'arweave';
 import {
-  LoggerFactory, MemCache, RedstoneGatewayContractDefinitionLoader,
+  LoggerFactory,
+  MemCache,
+  RedstoneGatewayContractDefinitionLoader,
   RedstoneGatewayInteractionsLoader,
   SmartWeaveNodeFactory,
   SmartWeaveWebFactory
 } from '@smartweave';
 
-const stringify = require('safe-stable-stringify')
+const stringify = require('safe-stable-stringify');
 
 function* chunks(arr, n) {
   for (let i = 0; i < arr.length; i += n) {
@@ -60,17 +62,16 @@ describe.each(chunkedGw)('.suite %#', (contracts: string[]) => {
     '.test %# %o',
     async (contractTxId: string) => {
       console.log('readState Redstone Gateway', contractTxId);
-      const smartweaveR = SmartWeaveWebFactory
-        .memCachedBased(arweave, 1)
-        .setInteractionsLoader(
-          new RedstoneGatewayInteractionsLoader("https://gateway.redstone.finance"))
+      const smartweaveR = SmartWeaveWebFactory.memCachedBased(arweave, 1)
+        .setInteractionsLoader(new RedstoneGatewayInteractionsLoader('https://gateway.redstone.finance'))
         .setDefinitionLoader(
-          new RedstoneGatewayContractDefinitionLoader("https://gateway.redstone.finance", arweave, new MemCache()))
+          new RedstoneGatewayContractDefinitionLoader('https://gateway.redstone.finance', arweave, new MemCache())
+        )
         .build();
       const result = await smartweaveR.contract(contractTxId).readState();
       const resultString = stringify(result.state).trim();
 
-      console.log('readState Arweave Gateway', contractTxId)
+      console.log('readState Arweave Gateway', contractTxId);
       const result2 = await SmartWeaveNodeFactory.memCached(arweave, 1).contract(contractTxId).readState();
       const result2String = stringify(result2.state).trim();
       expect(result2String).toEqual(resultString);
