@@ -115,9 +115,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const result = await stateEvaluator.eval(executionContext, currentTx || []);
     stateBenchmark.stop();
 
+    const total = (initBenchmark.elapsed(true) as number) + (stateBenchmark.elapsed(true) as number);
+
     this.logger.info('Benchmark', {
-      'init time': initBenchmark.elapsed(),
-      'evaluation time': stateBenchmark.elapsed()
+      'Gateway communication  ': initBenchmark.elapsed(),
+      'Contract evaluation    ': stateBenchmark.elapsed(),
+      'Total:                 ': `${total.toFixed(0)}ms`
     });
     return result as EvalStateResult<State>;
   }
