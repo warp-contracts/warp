@@ -15,6 +15,10 @@ export class Benchmark {
     this.end = null;
   }
 
+  public stop() {
+    this.end = Date.now();
+  }
+
   public elapsed(rawValue = false): string | number {
     if (this.end === null) {
       this.end = Date.now();

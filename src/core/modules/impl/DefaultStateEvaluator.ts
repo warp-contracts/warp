@@ -70,7 +70,9 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     let lastEvaluatedInteraction = null;
     let errorMessage = null;
 
-    for (const missingInteraction of missingInteractions) {
+    const missingInteractionsLength = missingInteractions.length;
+    for (let i = 0; i < missingInteractionsLength; i++) {
+      const missingInteraction = missingInteractions[i];
       const singleInteractionBenchmark = Benchmark.measure();
 
       const interactionTx: GQLNodeInterface = missingInteraction.node;
@@ -81,7 +83,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         }/${missingInteractions.length} [of all:${sortedInteractions.length}]`
       );
 
-      // verifying whether state isn't already available for this exact interaction.
       const isInteractWrite = this.tagsParser.isInteractWrite(missingInteraction, contractDefinition.txId);
 
       this.logger.debug('interactWrite?:', isInteractWrite);
@@ -163,8 +164,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           caller: interactionTx.owner.address
         };
 
-        const intermediaryCacheHit = false;
-
         const interactionData = {
           interaction,
           interactionTx,
@@ -199,7 +198,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         interactionCall.update({
           cacheHit: false,
-          intermediaryCacheHit,
+          intermediaryCacheHit: false,
           outputState: stackTrace.saveState ? currentState : undefined,
           executionTime: singleInteractionBenchmark.elapsed(true) as number,
           valid: validity[interactionTx.id],

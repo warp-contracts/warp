@@ -1,11 +1,21 @@
 /* eslint-disable */
 import cloneDeep from 'lodash/cloneDeep';
 
+const isNode = new Function('try {return this===global;}catch(e){return false;}');
+
+let v8 = null;
+if (isNode()) {
+  v8 = require('v8');
+}
+
 export const sleep = (ms: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
 export const deepCopy = (input: unknown): any => {
+  if (v8) {
+    return v8.deserialize(v8.serialize(input));
+  }
   return cloneDeep(input);
   // note: parse/stringify combination is slooow: https://jsben.ch/bWfk9
   //return JSON.parse(JSON.stringify(input, mapReplacer), mapReviver);
