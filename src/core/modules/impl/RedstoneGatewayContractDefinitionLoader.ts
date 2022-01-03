@@ -12,7 +12,7 @@ import { ContractDefinitionLoader } from './ContractDefinitionLoader';
  * in {@link ContractDefinitionLoader} - i.e. loads the definition from Arweave gateway.
  */
 export class RedstoneGatewayContractDefinitionLoader extends ContractDefinitionLoader {
-  private readonly rLogger = LoggerFactory.INST.create('ContractDefinitionLoader');
+  private readonly rLogger = LoggerFactory.INST.create('RedstoneGatewayContractDefinitionLoader');
 
   constructor(
     private readonly baseUrl: string,
