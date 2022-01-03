@@ -7,6 +7,7 @@ export * from './modules/CreateContract';
 
 export * from './modules/impl/BlockHeightInteractionsSorter';
 export * from './modules/impl/ContractDefinitionLoader';
+export * from './modules/impl/RedstoneGatewayContractDefinitionLoader';
 export * from './modules/impl/ArweaveGatewayInteractionsLoader';
 export * from './modules/impl/RedstoneGatewayInteractionsLoader';
 export * from './modules/impl/DefaultStateEvaluator';
