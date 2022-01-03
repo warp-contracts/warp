@@ -2,6 +2,7 @@ import {
   ArTransfer,
   ArWallet,
   Benchmark,
+  BenchmarkStats,
   Contract,
   ContractCallStack,
   ContractInteraction,
@@ -52,6 +53,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
   private readonly _innerWritesEvaluator = new InnerWritesEvaluator();
 
   private readonly _callDepth: number;
+
+  private _benchmarkStats: BenchmarkStats = null;
 
   /**
    * wallet connected to this contract
@@ -116,6 +119,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
     stateBenchmark.stop();
 
     const total = (initBenchmark.elapsed(true) as number) + (stateBenchmark.elapsed(true) as number);
+
+    this._benchmarkStats = {
+      gatewayCommunication: initBenchmark.elapsed(true) as number,
+      stateEvaluation: stateBenchmark.elapsed(true) as number,
+      total
+    };
 
     this.logger.info('Benchmark', {
       'Gateway communication  ': initBenchmark.elapsed(),
@@ -573,5 +582,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   evaluationOptions(): EvaluationOptions {
     return this._evaluationOptions;
+  }
+
+  lastReadStateStats(): BenchmarkStats {
+    return this._benchmarkStats;
   }
 }
