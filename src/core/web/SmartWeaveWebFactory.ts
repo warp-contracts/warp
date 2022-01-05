@@ -59,7 +59,7 @@ export class SmartWeaveWebFactory {
   /**
    * Returns a fully configured {@link SmartWeave} that is using mem cache for all layers.
    */
-  static memCached(arweave: Arweave, maxStoredBlockHeights: number = Number.MAX_SAFE_INTEGER): SmartWeave {
+  static memCached(arweave: Arweave, maxStoredBlockHeights: number = 10): SmartWeave {
     return this.memCachedBased(arweave, maxStoredBlockHeights).build();
   }
 
@@ -69,7 +69,7 @@ export class SmartWeaveWebFactory {
    */
   static memCachedBased(
     arweave: Arweave,
-    maxStoredBlockHeights: number = Number.MAX_SAFE_INTEGER,
+    maxStoredBlockHeights: number = 10,
     stateCache?: MemBlockHeightSwCache<StateCache<unknown>>
   ): SmartWeaveBuilder {
     const definitionLoader = new ContractDefinitionLoader(arweave, new MemCache());

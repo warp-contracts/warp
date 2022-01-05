@@ -10,9 +10,8 @@ import {
   StateEvaluator
 } from '@smartweave/core';
 import Arweave from 'arweave';
-import { Contract, HandlerBasedContract, PstContract, PstContractImpl } from '@smartweave/contract';
-import { GQLNodeInterface } from '@smartweave/legacy';
-import { CacheableContractInteractionsLoader } from '@smartweave/plugins';
+import {Contract, HandlerBasedContract, PstContract, PstContractImpl} from '@smartweave/contract';
+import {GQLNodeInterface} from '@smartweave/legacy';
 
 /**
  * The SmartWeave "motherboard" ;-).
