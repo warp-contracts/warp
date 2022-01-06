@@ -1,6 +1,5 @@
 import { ContractDefinition, LoggerFactory, stripTrailingSlash, SwCache } from '@smartweave';
 import Arweave from 'arweave';
-import 'isomorphic-fetch';
 import { ContractDefinitionLoader } from './ContractDefinitionLoader';
 
 /**

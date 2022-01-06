@@ -1,6 +1,6 @@
 import {
   ArTransfer,
-  ArWallet,
+  ArWallet, ArweaveWrapper,
   Benchmark,
   BenchmarkStats,
   Contract,
@@ -56,6 +56,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   private _benchmarkStats: BenchmarkStats = null;
 
+  private readonly _arweaveWrapper: ArweaveWrapper;
+
   /**
    * wallet connected to this contract
    */
@@ -68,6 +70,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     private readonly _callingInteraction: GQLNodeInterface = null
   ) {
     this.waitForConfirmation = this.waitForConfirmation.bind(this);
+    this._arweaveWrapper = new ArweaveWrapper(smartweave.arweave);
     if (_parentContract != null) {
       this._networkInfo = _parentContract.getNetworkInfo();
       this._rootBlockHeight = _parentContract.getRootBlockHeight();
@@ -305,7 +308,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
         };
       } else {
         this.logger.debug('Reading network info for root call');
-        currentNetworkInfo = await arweave.network.getInfo();
+        currentNetworkInfo = await this._arweaveWrapper.info();
         this._networkInfo = currentNetworkInfo;
       }
     } else {
@@ -458,7 +461,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     // add block data to execution context
     if (!executionContext.currentBlockData) {
-      const currentBlockData = executionContext.currentNetworkInfo
+      const currentBlockData = executionContext.currentNetworkInfo?.current
         ? // trying to optimise calls to arweave as much as possible...
           await arweave.blocks.get(executionContext.currentNetworkInfo.current)
         : await arweave.blocks.getCurrent();
@@ -534,7 +537,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     const interaction: ContractInteraction<Input> = {
       input,
-      caller: this._parentContract.txId() //executionContext.caller
+      caller: this._parentContract.txId()
     };
 
     const interactionData: InteractionData<Input> = {

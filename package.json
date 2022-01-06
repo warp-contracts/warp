@@ -7,7 +7,7 @@
   "types": "./lib/types/index.d.ts",
   "sideEffects": false,
   "engines": {
-    "node": ">=12"
+    "node": ">=16"
   },
   "scripts": {
     "build:cjs": "tsc -b tsconfig.json && tsc-alias -p tsconfig.json",
@@ -56,11 +56,11 @@
     "arweave-multihost": "^0.1.0",
     "axios": "^0.21.4",
     "bignumber.js": "^9.0.1",
-    "isomorphic-fetch": "^3.0.0",
     "json-beautify": "^1.1.1",
     "knex": "^0.95.14",
     "lodash": "^4.17.21",
-    "tslog": "^3.2.2"
+    "tslog": "^3.2.2",
+    "undici": "^4.12.1"
   },
   "devDependencies": {
     "@types/cheerio": "^0.22.30",
@@ -77,8 +77,8 @@
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^3.4.1",
     "express": "^4.17.1",
-    "got": "^11.8.2",
     "jest": "^27.4.3",
+    "pg": "^8.7.1",
     "prettier": "^2.3.2",
     "rimraf": "^3.0.2",
     "safe-stable-stringify": "2.3.1",

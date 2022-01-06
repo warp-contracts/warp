@@ -6,7 +6,6 @@ import {
   GQLEdgeInterface,
   GQLNodeInterface
 } from '@smartweave';
-import 'isomorphic-fetch';
 
 interface Paging {
   total: string;
@@ -111,12 +110,11 @@ export class RedstoneGatewayInteractionsLoader implements InteractionsLoader {
       this.logger.debug(`Loaded interactions length: ${interactions.length}`);
     } while (page < totalPages);
 
-    this.logger.debug(`Loading interactions for ${contractId}: ${benchmarkTotalTime.elapsed()}`);
-
     this.logger.debug('All loaded interactions:', {
       from: fromBlockHeight,
       to: toBlockHeight,
-      loaded: interactions.length
+      loaded: interactions.length,
+      time: benchmarkTotalTime.elapsed()
     });
 
     return interactions;
