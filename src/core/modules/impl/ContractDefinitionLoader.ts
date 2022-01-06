@@ -34,6 +34,8 @@ export class ContractDefinitionLoader implements DefinitionLoader {
 
   async doLoad<State>(contractTxId: string, forcedSrcTxId?: string): Promise<ContractDefinition<State>> {
     const benchmark = Benchmark.measure();
+    const arweaveUrl = `${this.arweave.api.config.protocol}://${this.arweave.api.config.host}:${this.arweave.api.config.port}`;
+
     const contractTx = await this.arweave.transactions.get(contractTxId);
     const owner = await this.arweave.wallets.ownerToAddress(contractTx.owner);
     this.logger.debug('Contract tx and owner', benchmark.elapsed());

@@ -1,7 +1,7 @@
 /* eslint-disable */
 import cloneDeep from 'lodash/cloneDeep';
 
-const isNode = new Function('try {return this===global;}catch(e){return false;}');
+export const isNode = new Function('try {return this===global;}catch(e){return false;}');
 
 let v8 = null;
 if (isNode()) {
