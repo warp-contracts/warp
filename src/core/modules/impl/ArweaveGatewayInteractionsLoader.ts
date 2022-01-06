@@ -1,4 +1,5 @@
 import {
+  ArweaveWrapper,
   Benchmark,
   EvaluationOptions,
   GQLEdgeInterface,
@@ -23,7 +24,7 @@ interface BlockFilter {
   max: number;
 }
 
-interface ReqVariables {
+export interface GqlReqVariables {
   tags: TagFilter[];
   blockFilter: BlockFilter;
   first: number;
@@ -63,7 +64,11 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
 
   private static readonly _30seconds = 30 * 1000;
 
-  constructor(private readonly arweave: Arweave) {}
+  private readonly arweaveWrapper: ArweaveWrapper;
+
+  constructor(private readonly arweave: Arweave) {
+    this.arweaveWrapper = new ArweaveWrapper(arweave);
+  }
 
   async load(
     contractId: string,
@@ -72,7 +77,7 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
     evaluationOptions: EvaluationOptions
   ): Promise<GQLEdgeInterface[]> {
     this.logger.debug('Loading interactions for', { contractId, fromBlockHeight, toBlockHeight });
-    const mainTransactionsVariables: ReqVariables = {
+    const mainTransactionsVariables: GqlReqVariables = {
       tags: [
         {
           name: SmartWeaveTags.APP_NAME,
@@ -90,10 +95,12 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
       first: MAX_REQUEST
     };
 
+    const loadingBenchmark = Benchmark.measure();
     let interactions = await this.loadPages(mainTransactionsVariables);
+    loadingBenchmark.stop();
 
     if (evaluationOptions.internalWrites) {
-      const innerWritesVariables: ReqVariables = {
+      const innerWritesVariables: GqlReqVariables = {
         tags: [
           {
             name: SmartWeaveTags.INTERACT_WRITE,
@@ -111,16 +118,17 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
       interactions = interactions.concat(innerWritesInteractions);
     }
 
-    this.logger.debug('All loaded interactions:', {
+    this.logger.info('All loaded interactions:', {
       from: fromBlockHeight,
       to: toBlockHeight,
-      loaded: interactions.length
+      loaded: interactions.length,
+      time: loadingBenchmark.elapsed()
     });
 
     return interactions;
   }
 
-  private async loadPages(variables: ReqVariables) {
+  private async loadPages(variables: GqlReqVariables) {
     let transactions = await this.getNextPage(variables);
 
     // note: according to https://discord.com/channels/357957786904166400/756557551234973696/920918240702660638
@@ -144,12 +152,9 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
     return txInfos;
   }
 
-  private async getNextPage(variables: ReqVariables): Promise<GQLTransactionsResultInterface> {
+  private async getNextPage(variables: GqlReqVariables): Promise<GQLTransactionsResultInterface> {
     const benchmark = Benchmark.measure();
-    let response = await this.arweave.api.post('graphql', {
-      query: ArweaveGatewayInteractionsLoader.query,
-      variables
-    });
+    let response = await this.arweaveWrapper.gql(ArweaveGatewayInteractionsLoader.query, variables);
     this.logger.debug('GQL page load:', benchmark.elapsed());
 
     while (response.status === 403) {
@@ -157,10 +162,7 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
 
       await sleep(ArweaveGatewayInteractionsLoader._30seconds);
 
-      response = await this.arweave.api.post('graphql', {
-        query: ArweaveGatewayInteractionsLoader.query,
-        variables
-      });
+      response = await this.arweaveWrapper.gql(ArweaveGatewayInteractionsLoader.query, variables);
     }
 
     if (response.status !== 200) {

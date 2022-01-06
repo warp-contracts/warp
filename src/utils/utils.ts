@@ -1,19 +1,25 @@
 /* eslint-disable */
 import cloneDeep from 'lodash/cloneDeep';
 
-const isNode = new Function('try {return this===global;}catch(e){return false;}');
+// TODO: requires setting "external" in webpack
+import v8 from 'v8';
+import Undici from "undici";
 
-let v8 = null;
+export const isNode = new Function('try {return this===global;}catch(e){return false;}');
+
 if (isNode()) {
-  v8 = require('v8');
+  global.fetch = async function(input, init): Promise<Response> {
+    return await Undici.fetch.call(this, input, init);
+  }
 }
 
 export const sleep = (ms: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
+
 export const deepCopy = (input: unknown): any => {
-  if (v8) {
+  if (isNode()) {
     return v8.deserialize(v8.serialize(input));
   }
   return cloneDeep(input);

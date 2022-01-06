@@ -9,8 +9,10 @@ import {
 import Arweave from 'arweave';
 import fs from 'fs';
 import path from 'path';
-import { TsLogFactory } from '../src/logging/node/TsLogFactory';
+import {TsLogFactory} from '../src/logging/node/TsLogFactory';
 import Transaction from 'arweave/node/lib/transaction';
+import ArweaveWrapper from "../src/utils/ArweaveWrapper";
+import knex from "knex";
 
 // max number of results returned from single query.
 // If set more, arweave.net/graphql will still limit to 100 (not sure if that's a bug or feature).
@@ -35,22 +37,36 @@ query Transactions($tags: [TagFilter!]!, $after: String) {
     }
   }`;
 
-const toSkip = [
-  'C_1uo08qRuQAeDi9Y1I8fkaWYUC9IWkOrKDNe9EphJo',
-  'B1SRLyFzWJjeA0ywW41Qu1j7ZpBLHsXSSrWLrT3ebd8',
-  'LkfzZvdl_vfjRXZOPjnov18cGnnK3aDKj0qSQCgkCX8',
-  'l6S4oMyzw_rggjt4yt4LrnRmggHQ2CdM1hna2MK4o_c',
-  'aMPlul_sA2TjcBOGpJndgZAcApZLMvFhUGYAPkZ3uLA'
-];
-
-const sourcesBlacklist = [
-  'MjrjR6qCFcld0VO83tt3NcpZs2FIuLscvo7ya64afbY',
-  'C_1uo08qRuQAeDi9Y1I8fkaWYUC9IWkOrKDNe9EphJo',
-  'Z3Arb_sfuLpFxyLfolLClLfe89BFgrbbgJM2rKsebEY',
-  'slRfB7WKAEQb5SiO7e-G_FWoAZ4LkoyAYE31ToPXTV8'
-];
 
 async function main() {
+  const db = knex({
+    client: 'pg',
+    connection: 'postgresql://postgres:@localhost:5432/stats',
+    useNullAsDefault: true,
+    pool: {
+      "min": 5,
+      "max": 30,
+      "createTimeoutMillis": 3000,
+      "acquireTimeoutMillis": 30000,
+      "idleTimeoutMillis": 30000,
+      "reapIntervalMillis": 1000,
+      "createRetryIntervalMillis": 100,
+      "propagateCreateError": false
+    },
+  });
+
+  if (!(await db.schema.hasTable('transactions'))) {
+    await db.schema.createTable('transactions', (table) => {
+      table.string('id', 64).notNullable().index();
+    });
+
+    await db.schema.createTable('tags', (table) => {
+      table.string('transaction_id', 64).notNullable().index();
+      table.string('name').notNullable().index();
+      table.text('value').notNullable().index();
+    });
+  }
+
   const arweave = Arweave.init({
     host: 'arweave.net', // Hostname or IP address for a Arweave host
     port: 443, // Port
@@ -59,86 +75,49 @@ async function main() {
     logging: false // Enable network request logging
   });
 
-  const contractTxs = await sendQuery(
+  /*const contractTxs = await sendQuery(
     arweave,
     {
       tags: [
         {
           name: 'App-Name',
           values: ['SmartWeaveContract']
-        },
-        {
-          name: 'Content-Type',
-          values: ['application/json']
         }
       ],
       after: undefined
     },
     transactionsQuery
-  );
+  );*/
 
-  console.log(`Checking ${contractTxs.length} contracts`);
+  /**
+   select ts.value as "Content-Type", count(ts.value) as Amount
+   from transactions t
+   join tags ts on ts.transaction_id = t.id
+   where ts.name = 'Content-Type'
+   group by ts.value
+   order by count(ts.value) desc;
+   */
 
-  const result = {};
 
-  LoggerFactory.use(new TsLogFactory());
-  LoggerFactory.INST.logLevel('info');
-  LoggerFactory.INST.logLevel('debug', 'ArweaveGatewayInteractionsLoader');
 
-  const transactionsLoader = new ArweaveGatewayInteractionsLoader(arweave);
+  const file = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', `swc-stats.json`), 'utf-8'));
+  console.log(`Checking ${file.length} contracts`);
 
-  let totalInteractions = 0;
-  // loading
-  for (const contractTx of contractTxs) {
-    const contractTxId = contractTx.node.id;
-    if (toSkip.indexOf(contractTxId) !== -1) {
-      continue;
+  for (let row of file) {
+    console.log('inserting', row.node.id);
+    await db('transactions').insert({
+      id: row.node.id,
+    });
+    for (let tag of row.node.tags) {
+      await db('tags').insert({
+        transaction_id: row.node.id,
+        name: tag.name,
+        value: tag.value
+      });
     }
-
-    const tags = contractTx.node.tags;
-    if (
-      tags.some((tag) => {
-        const key = tag.name;
-        const value = tag.value;
-        return key.localeCompare('Contract-Src') === 0 && sourcesBlacklist.includes(value);
-      })
-    ) {
-      console.log("Skipping blacklisted contract's source");
-      continue;
-    }
-
-    console.log(
-      `\n[${contractTxs.indexOf(contractTx) + 1} / ${contractTxs.length}] loading interactions of the ${contractTxId}`
-    );
-    const evaluationOptions =new DefaultEvaluationOptions();
-    const interactions = await transactionsLoader.load(contractTxId, 0, 779826, evaluationOptions);
-    console.log(`${contractTxId}: ${interactions.length}`);
-
-    result[contractTxId] = interactions.length;
-    totalInteractions += interactions.length;
-    console.log('Total:', totalInteractions);
-    fs.writeFileSync(path.join(__dirname, 'data', `swc-stats.json`), JSON.stringify(result));
   }
 
-  // fs.writeFileSync(path.join(__dirname, 'data', `swc-stats.json`), JSON.stringify(result));
 
-  // sorting
-  console.log('Sorting...');
-
-  const contracts = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', `swc-stats.json`), 'utf-8'));
-
-  const sortable = [];
-  // tslint:disable-next-line:forin
-  for (const contract in contracts) {
-    sortable.push([contract, contracts[contract]]);
-  }
-  sortable.sort((a, b) => b[1] - a[1]);
-  const sortedContracts = {};
-  sortable.forEach((item) => (sortedContracts[item[0]] = item[1]));
-
-  console.log(sortedContracts);
-
-  fs.writeFileSync(path.join(__dirname, 'data', `swc-sorted-stats.json`), JSON.stringify(sortedContracts));
 }
 
 main().then(() => {
@@ -166,10 +145,15 @@ async function sendQuery(arweave: Arweave, variables: any, query: string) {
 }
 
 async function getNextPage(arweave, variables, query: string): Promise<GQLTransactionsResultInterface | null> {
-  const response = await arweave.api.post('graphql', {
+
+  console.log("loading page after", variables.after);
+
+
+  const wrapper = new ArweaveWrapper(arweave);
+  const response = await wrapper.gql(query, variables);/*await arweave.api.post('graphql', {
     query,
     variables
-  });
+  });*/
 
   if (response.status !== 200) {
     console.error(response);
