@@ -115,9 +115,6 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>
   ): Promise<void> {
-    if (transaction.dry) {
-      return;
-    }
     const contractTxId = executionContext.contractDefinition.txId;
 
     this.cLogger.debug(`onStateEvaluated: cache update for contract ${contractTxId} [${transaction.block.height}]`);
@@ -181,6 +178,9 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     state: EvalStateResult<State>
   ): Promise<void> {
     if (transaction.dry) {
+      return;
+    }
+    if (transaction.confirmationStatus !== undefined && transaction.confirmationStatus !== 'confirmed') {
       return;
     }
     const transactionId = transaction.id;

@@ -2,6 +2,7 @@ import Arweave from 'arweave';
 import { NetworkInfoInterface } from 'arweave/node/network';
 import { GqlReqVariables, LoggerFactory } from '@smartweave';
 import { AxiosResponse } from 'axios';
+import Transaction from 'arweave/node/lib/transaction';
 
 export class ArweaveWrapper {
   private readonly logger = LoggerFactory.INST.create('ArweaveWrapper');
@@ -67,5 +68,28 @@ export class ArweaveWrapper {
       this.logger.error('Error while loading gql', e);
       throw e;
     }
+  }
+
+  async tx(id: string): Promise<Transaction> {
+    const response = await fetch(`${this.baseUrl}/tx/${id}`)
+      .then((res) => {
+        return res.ok ? res.json() : Promise.reject(res);
+      })
+      .catch((error) => {
+        if (error.body?.message) {
+          this.logger.error(error.body.message);
+        }
+        throw new Error(`Unable to retrieve info. ${error.status}.`);
+      });
+
+    return new Transaction({
+      ...response
+    });
+  }
+
+  async txData(id: string): Promise<string> {
+    const response = await fetch(`${this.baseUrl}/${id}`);
+    const buffer = await response.arrayBuffer();
+    return Arweave.utils.bufferToString(buffer);
   }
 }

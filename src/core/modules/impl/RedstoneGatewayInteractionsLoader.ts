@@ -103,7 +103,10 @@ export class RedstoneGatewayInteractionsLoader implements InteractionsLoader {
       response.interactions.forEach((interaction) =>
         interactions.push({
           cursor: '',
-          node: interaction.interaction
+          node: {
+            ...interaction.interaction,
+            confirmationStatus: interaction.status
+          }
         })
       );
 
