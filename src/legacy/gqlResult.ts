@@ -48,6 +48,7 @@ export interface GQLNodeInterface {
   };
   dry?: boolean;
   sortKey?: string; //added dynamically by the LexicographicalInteractionsSorter
+  confirmationStatus?: string;
 }
 
 export interface GQLEdgeInterface {
