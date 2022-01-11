@@ -54,35 +54,23 @@ export class Evolve implements ExecutionContextModifier {
   ): Promise<ExecutionContext<State, HandlerApi<State>>> {
     const contractTxId = executionContext.contractDefinition.txId;
     this.logger.debug(`trying to evolve for: ${contractTxId}`);
-    if (!isEvolveCompatible(state)) {
-      this.logger.debug('State is not evolve compatible');
-      return executionContext;
-    }
+
+    const evolvedSrcTxId = Evolve.evolvedSrcTxId(state);
+
     const currentSrcTxId = executionContext.contractDefinition.srcTxId;
 
-    const settings = evalSettings(state);
-
-    // note: from my understanding - this variable holds the id of the transaction with updated source code.
-    const evolve: string = state.evolve || settings.get('evolve');
-
-    let canEvolve: boolean = state.canEvolve || settings.get('canEvolve');
-
-    // By default, contracts can evolve if there's not an explicit `false`.
-    if (canEvolve === undefined || canEvolve === null) {
-      canEvolve = true;
-    }
-    if (evolve && /[a-z0-9_-]{43}/i.test(evolve) && canEvolve) {
+    if (evolvedSrcTxId) {
       this.logger.debug('Checking evolve:', {
         current: currentSrcTxId,
-        evolve
+        evolvedSrcTxId
       });
 
-      if (currentSrcTxId !== evolve) {
+      if (currentSrcTxId !== evolvedSrcTxId) {
         try {
           // note: that's really nasty IMO - loading original contract definition,
           // but forcing different sourceTxId...
-          this.logger.info('Evolving to: ', evolve);
-          const newContractDefinition = await this.definitionLoader.load<State>(contractTxId, evolve);
+          this.logger.info('Evolving to: ', evolvedSrcTxId);
+          const newContractDefinition = await this.definitionLoader.load<State>(contractTxId, evolvedSrcTxId);
           const newHandler = (await this.executorFactory.create<State>(newContractDefinition)) as HandlerApi<State>;
 
           //FIXME: side-effect...
@@ -90,7 +78,7 @@ export class Evolve implements ExecutionContextModifier {
           executionContext.handler = newHandler;
 
           this.logger.debug('evolved to:', {
-            evolve: evolve,
+            evolve: evolvedSrcTxId,
             newSrcTxId: executionContext.contractDefinition.srcTxId,
             current: currentSrcTxId,
             txId: executionContext.contractDefinition.txId
@@ -107,6 +95,30 @@ export class Evolve implements ExecutionContextModifier {
     }
 
     return executionContext;
+  }
+
+  static evolvedSrcTxId(state: unknown): string | undefined {
+    if (!isEvolveCompatible(state)) {
+      return undefined;
+    }
+
+    const settings = evalSettings(state);
+
+    // note: from my understanding - this variable holds the id of the transaction with updated source code.
+    const evolve: string = state.evolve || settings.get('evolve');
+
+    let canEvolve: boolean = state.canEvolve || settings.get('canEvolve');
+
+    // By default, contracts can evolve if there's not an explicit `false`.
+    if (canEvolve === undefined || canEvolve === null) {
+      canEvolve = true;
+    }
+
+    if (evolve && /[a-z0-9_-]{43}/i.test(evolve) && canEvolve) {
+      return evolve;
+    }
+
+    return undefined;
   }
 }
 
