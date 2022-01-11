@@ -14,6 +14,7 @@ import {
   emptyTransfer,
   EvalStateResult,
   EvaluationOptions,
+  Evolve,
   ExecutionContext,
   GQLNodeInterface,
   HandlerApi,
@@ -339,13 +340,15 @@ export class HandlerBasedContract<State> implements Contract<State> {
     this.logger.debug('cache lookup', benchmark.elapsed());
     benchmark.reset();
 
+    const evolvedSrcTxId = Evolve.evolvedSrcTxId(cachedState?.cachedValue?.state);
+
     let contractDefinition,
       interactions = [],
       sortedInteractions = [],
       handler;
     if (cachedBlockHeight != blockHeight) {
       [contractDefinition, interactions] = await Promise.all([
-        definitionLoader.load<State>(contractTxId),
+        definitionLoader.load<State>(contractTxId, evolvedSrcTxId),
         // note: "eagerly" loading all of the interactions up to the originally requested block height
         // (instead of the blockHeight requested for this specific read state call).
         // as dumb as it may seem - this in fact significantly speeds up the processing
@@ -367,8 +370,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
       handler = (await executorFactory.create(contractDefinition)) as HandlerApi<State>;
     } else {
       this.logger.debug('State fully cached, not loading interactions.');
-      if (forceDefinitionLoad) {
-        contractDefinition = await definitionLoader.load<State>(contractTxId);
+      if (forceDefinitionLoad || evolvedSrcTxId) {
+        contractDefinition = await definitionLoader.load<State>(contractTxId, evolvedSrcTxId);
         handler = (await executorFactory.create(contractDefinition)) as HandlerApi<State>;
       }
     }

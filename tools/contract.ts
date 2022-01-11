@@ -69,7 +69,7 @@ async function main() {
       .memCachedBased(arweave, 1)
       .build();
 
-    const contract = smartweaveR.contract("Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY");
+    const contract = smartweaveR.contract("Ar1RAJDSAJdAGCI22nkAveDbtgtcMx1bNXopk2pfENs");
     const readResult = await contract.readState();
 
     const result = contract.lastReadStateStats();

@@ -57,7 +57,7 @@ export class ArweaveWrapper {
           if (error.body?.message) {
             this.logger.error(error.body.message);
           }
-          throw new Error(`Unable to retrieve info. ${error.status}.`);
+          throw new Error(`Unable to retrieve gql page. ${error.status}.`);
         });
 
       return {
@@ -79,7 +79,7 @@ export class ArweaveWrapper {
         if (error.body?.message) {
           this.logger.error(error.body.message);
         }
-        throw new Error(`Unable to retrieve info. ${error.status}.`);
+        throw new Error(`Unable to retrieve tx. ${error.status}.`);
       });
 
     return new Transaction({
@@ -89,6 +89,9 @@ export class ArweaveWrapper {
 
   async txData(id: string): Promise<string> {
     const response = await fetch(`${this.baseUrl}/${id}`);
+    if (!response.ok) {
+      throw new Error(`Unable to load tx data ${id}`);
+    }
     const buffer = await response.arrayBuffer();
     return Arweave.utils.bufferToString(buffer);
   }
