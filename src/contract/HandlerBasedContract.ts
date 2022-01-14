@@ -291,7 +291,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
   }
 
-  private async  createExecutionContext(
+  private async createExecutionContext(
     contractTxId: string,
     blockHeight?: number,
     forceDefinitionLoad = false
