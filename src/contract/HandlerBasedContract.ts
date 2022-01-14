@@ -291,12 +291,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
   }
 
-  private async createExecutionContext(
+  private async  createExecutionContext(
     contractTxId: string,
     blockHeight?: number,
     forceDefinitionLoad = false
   ): Promise<ExecutionContext<State, HandlerApi<State>>> {
-    const { arweave, definitionLoader, interactionsLoader, interactionsSorter, executorFactory, stateEvaluator } =
+    const { definitionLoader, interactionsLoader, interactionsSorter, executorFactory, stateEvaluator } =
       this.smartweave;
 
     let currentNetworkInfo;

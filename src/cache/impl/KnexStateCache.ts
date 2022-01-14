@@ -59,9 +59,9 @@ export class KnexStateCache extends MemBlockHeightSwCache<StateCache<any>> {
     if (!(await knex.schema.hasTable('states'))) {
       await knex.schema.createTable('states', (table) => {
         table.string('contract_id', 64).notNullable().index();
-        table.bigInteger('height').notNullable().index();
+        table.integer('height').notNullable().index();
         table.string('hash').notNullable().unique();
-        table.json('state').notNullable();
+        table.text('state').notNullable();
         table.unique(['contract_id', 'height', 'hash'], { indexName: 'states_composite_index' });
       });
     }
@@ -70,7 +70,7 @@ export class KnexStateCache extends MemBlockHeightSwCache<StateCache<any>> {
       .select(['contract_id', 'height', 'state'])
       .from('states')
       .max('height')
-      .groupBy('contract_id')
+      .groupBy(['contract_id', 'height', 'state'])
       .orderBy('height', 'desc');
 
     return new KnexStateCache(knex, maxStoredInMemoryBlockHeights, cache);
