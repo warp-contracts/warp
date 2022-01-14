@@ -233,13 +233,13 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
   ) {
     if (result.type === 'exception') {
       this.logger.error(
-        `Executing of interaction: [${executionContext.contractDefinition.srcTxId} -> ${currentTx.id}] threw exception:`,
+        `Executing of interaction: [${executionContext.contractDefinition.txId} -> ${currentTx.id}] threw exception:`,
         `${result.errorMessage}`
       );
     }
     if (result.type === 'error') {
       this.logger.warn(
-        `Executing of interaction: [${executionContext.contractDefinition.srcTxId} -> ${currentTx.id}] returned error:`,
+        `Executing of interaction: [${executionContext.contractDefinition.txId} -> ${currentTx.id}] returned error:`,
         result.errorMessage
       );
     }
