@@ -18,9 +18,9 @@ export const sleep = (ms: number): Promise<void> => {
 };
 
 export const deepCopy = (input: unknown): any => {
-  if (isNode()) {
-    return v8.deserialize(v8.serialize(input));
-  }
+  //if (isNode()) {
+  //  return v8.deserialize(v8.serialize(input));
+  //}
   return cloneDeep(input);
   // note: parse/stringify combination is slooow: https://jsben.ch/bWfk9
   //return JSON.parse(JSON.stringify(input, mapReplacer), mapReviver);

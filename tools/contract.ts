@@ -18,7 +18,7 @@ LoggerFactory.INST.logLevel('info', 'Contract');
 
 async function main() {
   printTestInfo();
-  
+
   const PIANITY_CONTRACT = 'SJ3l7474UHh3Dw6dWVT1bzsJ-8JvOewtGoDdOecWIZo';
   const PIANITY_COMMUNITY_CONTRACT = 'n05LTiuWcAYjizXAu-ghegaWjL89anZ6VdvuHcU6dno';
   const CACHE_PATH = 'cache.sqlite.db';
