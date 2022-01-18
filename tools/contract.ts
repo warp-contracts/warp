@@ -1,29 +1,31 @@
 /* eslint-disable */
 import Arweave from 'arweave';
 import {
-  BenchmarkStats,
   LoggerFactory,
   MemCache,
   RedstoneGatewayContractDefinitionLoader,
   RedstoneGatewayInteractionsLoader,
-  SmartWeaveNodeFactory,
-  SmartWeaveWebFactory
+  SmartWeaveNodeFactory
 } from '../src';
-
-import { max, mean, median, min, standardDeviation, variance } from 'simple-statistics';
-import * as path from 'path';
 import * as fs from 'fs';
 import knex from 'knex';
-
+import os from "os";
 
 const logger = LoggerFactory.INST.create('Contract');
 
 LoggerFactory.INST.logLevel('fatal');
-LoggerFactory.INST.logLevel('info', 'ArweaveGatewayInteractionsLoader');
-LoggerFactory.INST.logLevel('debug', 'ArweaveWrapper');
 LoggerFactory.INST.logLevel('info', 'Contract');
 
 async function main() {
+  printTestInfo();
+  
+  const PIANITY_CONTRACT = 'SJ3l7474UHh3Dw6dWVT1bzsJ-8JvOewtGoDdOecWIZo';
+  const PIANITY_COMMUNITY_CONTRACT = 'n05LTiuWcAYjizXAu-ghegaWjL89anZ6VdvuHcU6dno';
+  const CACHE_PATH = 'cache.sqlite.db';
+
+  const heapUsedBefore = Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100;
+  const rssUsedBefore = Math.round((process.memoryUsage().rss / 1024 / 1024) * 100) / 100;
+
   const arweave = Arweave.init({
     host: 'arweave.net', // Hostname or IP address for a Arweave host
     port: 443, // Port
@@ -32,80 +34,73 @@ async function main() {
     logging: false // Enable network request logging
   });
 
-  //const contractTxId = 'Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY'; //844916
-  const contractTxId = 't9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE'; //749180
+  if (fs.existsSync(CACHE_PATH)) {
+    fs.rmSync(CACHE_PATH);
+  }
 
-  //const interactionsLoader = new FromFileInteractionsLoader(path.join(__dirname, 'data', 'interactions.json'));
-
-  // const smartweave = SmartWeaveWebFactory.memCachedBased(arweave).setInteractionsLoader(interactionsLoader).build();
-
-  /* const usedBefore = Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100
-   const contractR = smartweaveR.contract(contractTxId);
-   const {state, validity} = await contractR.readState();
-   const usedAfter = Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100
-   logger.warn("Heap used in MB", {
-     usedBefore,
-     usedAfter
-   });*/
-
-  const smartweave = (await SmartWeaveNodeFactory.knexCachedBased(
-    arweave,
-    knex({
-      client: 'pg',
-      connection: 'postgresql://postgres:wip3out1@localhost:5432/smartweave',
-      useNullAsDefault: true,
-      pool: {
-        min: 5,
-        max: 30,
-        createTimeoutMillis: 3000,
-        acquireTimeoutMillis: 30000,
-        idleTimeoutMillis: 30000,
-        reapIntervalMillis: 1000,
-        createRetryIntervalMillis: 100,
-        propagateCreateError: false
-      }
-    })
-  )).setInteractionsLoader(
-    new RedstoneGatewayInteractionsLoader(
-      "https://gateway.redstone.finance",
-      {notCorrupted: true}
+  const smartweave = (
+    await SmartWeaveNodeFactory.knexCachedBased(
+      arweave,
+      knex({
+        client: 'sqlite3',
+        connection: {
+          filename: CACHE_PATH
+        },
+        useNullAsDefault: true
+      })
     )
   )
+    .setInteractionsLoader(
+      new RedstoneGatewayInteractionsLoader('https://gateway.redstone.finance', { notCorrupted: true })
+    )
     .setDefinitionLoader(
-      new RedstoneGatewayContractDefinitionLoader(
-        "https://gateway.redstone.finance",
-        arweave,
-        new MemCache()
-      )
-    ).build();
+      new RedstoneGatewayContractDefinitionLoader('https://gateway.redstone.finance', arweave, new MemCache())
+    )
+    .build();
 
+  const contract = smartweave.contract(PIANITY_CONTRACT);
+  await contract.readState();
 
-  /*const smartweaveR = SmartWeaveWebFactory
-    .memCachedBased(arweave, 1)
-    .build();*/
+  const contract2 = smartweave.contract(PIANITY_COMMUNITY_CONTRACT);
+  await contract2.readState();
 
-  const contract = smartweave.contract(contractTxId);
-  const readResult = await contract.readState();
+  const heapUsedAfter = Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100;
+  const rssUsedAfter = Math.round((process.memoryUsage().rss / 1024 / 1024) * 100) / 100;
+  logger.warn('Heap used in MB', {
+    usedBefore: heapUsedBefore,
+    usedAfter: heapUsedAfter
+  });
+
+  logger.warn('RSS used in MB', {
+    usedBefore: rssUsedBefore,
+    usedAfter: rssUsedAfter
+  });
 
   const result = contract.lastReadStateStats();
 
-  //fs.writeFileSync(path.join(__dirname, 'data', 'state.json'), stringify(readResult.state).trim());
+  logger.warn('total evaluation: ', result);
+}
 
-  console.log('total evaluation: ' + result.total + 'ms');
+function printTestInfo() {
+  console.log("Test info  ");
+  console.log("===============");
+  console.log("  ", "OS       ", os.type() + " " + os.release() + " " + os.arch());
+  console.log("  ", "Node.JS  ", process.versions.node);
+  console.log("  ", "V8       ", process.versions.v8);
+  let cpus = os.cpus().map(function (cpu) {
+    return cpu.model;
+  }).reduce(function (o, model) {
+    if (!o[model]) o[model] = 0;
+    o[model]++;
+    return o;
+  }, {});
 
-  console.log(readResult.state);
-
-  //const result2 = await readContract(arweave, "t9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE")
-
-  //fs.writeFileSync(path.join(__dirname, 'data', 'validity.json'), JSON.stringify(validity));
-
-  //fs.writeFileSync(path.join(__dirname, 'data', 'validity_old.json'), JSON.stringify(result.validity));
-
-  //fs.writeFileSync(path.join(__dirname, 'data', 'state_old.json'), stringify(result2).trim());
-  //fs.writeFileSync(path.join(__dirname, 'data', 'state_arweave.json'), JSON.stringify(result.state));
-
-  // console.log('second read');
-  // await lootContract.readState();
+  cpus = Object.keys(cpus).map(function (key) {
+    return key + " \u00d7 " + cpus[key];
+  }).join("\n");
+  console.log("  ", "CPU      ", cpus);
+  console.log("  ", "Memory   ", (os.totalmem() / 1024 / 1024 / 1024).toFixed(0), "GB");
+  console.log("===============");
 }
 
 main().catch((e) => console.error(e));

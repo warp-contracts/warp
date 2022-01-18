@@ -1,0 +1,106 @@
+{
+  "ticker": "ATR",
+  "name": "AttentionReward",
+  "owner": "D3lK6_xXvBUXMUyA2RJz3soqmLlztkv-gVpEP5AlVUo",
+  "registeredRecords": {},
+  "validBundlers": [
+    "WL32qc-jsTxCe8m8RRQfS3b3MacsTQySDmJklvtkGFc",
+    "FeSD9TV8aB0GK0yby8A40KEX1N-3wrJQTDbRW4uUiEA",
+    "D3lK6_xXvBUXMUyA2RJz3soqmLlztkv-gVpEP5AlVUo",
+    "fWjYZQ2SAP7OPTv6_OiI2AtKilORFQ0MdjbmDJ2biHk"
+  ],
+  "votes": [
+    {
+      "id": 0,
+      "type": "trafficLogs",
+      "status": "passed",
+      "voted": [
+        "D3lK6_xXvBUXMUyA2RJz3soqmLlztkv-gVpEP5AlVUo"
+      ],
+      "stakeAmount": 2,
+      "yays": 1,
+      "nays": 0,
+      "bundlers": {},
+      "start": 722309,
+      "end": 722999
+    },
+    {
+      "id": 1,
+      "type": "trafficLogs",
+      "status": "passed",
+      "voted": [
+        "D3lK6_xXvBUXMUyA2RJz3soqmLlztkv-gVpEP5AlVUo"
+      ],
+      "stakeAmount": 2,
+      "yays": 1,
+      "nays": 0,
+      "bundlers": {},
+      "start": 722692,
+      "end": 723412
+    }
+  ],
+  "task": {
+    "open": 722783,
+    "close": 723503,
+    "partcipatesRate": {},
+    "rewardReport": [
+      {
+        "dailyTrafficBlock": 722486,
+        "logsSummary": {},
+        "distribution": {},
+        "distributer": "D3lK6_xXvBUXMUyA2RJz3soqmLlztkv-gVpEP5AlVUo",
+        "distributed": true,
+        "distributionBlock": 722692,
+        "rewardPerAttention": 0
+      },
+      {
+        "dailyTrafficBlock": 722692,
+        "logsSummary": {},
+        "distribution": {},
+        "distributer": "D3lK6_xXvBUXMUyA2RJz3soqmLlztkv-gVpEP5AlVUo",
+        "distributed": false,
+        "distributionBlock": 722783,
+        "rewardPerAttention": 0
+      }
+    ],
+    "dailyPayload": [
+      {
+        "block": 722486,
+        "payloads": [
+          {
+            "TLTxId": "GssBaGLwAlvS2BScBfenJY0puAdWuww5-YDVpHlSVFc",
+            "owner": "D3lK6_xXvBUXMUyA2RJz3soqmLlztkv-gVpEP5AlVUo",
+            "gateWayId": "https://gateway.koi.rocks/logs",
+            "voteId": 0,
+            "blockHeight": 722309,
+            "won": true
+          }
+        ],
+        "isRanked": true,
+        "isDistributed": true
+      },
+      {
+        "block": 722692,
+        "payloads": [
+          {
+            "TLTxId": "9vexnUIYwqRYZ-q-4HCtZkZk9h3MDaYtn9EOT_GDi7Q",
+            "owner": "D3lK6_xXvBUXMUyA2RJz3soqmLlztkv-gVpEP5AlVUo",
+            "gateWayId": "https://gateway.koi.rocks/logs",
+            "voteId": 1,
+            "blockHeight": 722692,
+            "won": true
+          }
+        ],
+        "isRanked": true,
+        "isDistributed": true
+      },
+      {
+        "block": 722783,
+        "payloads": [],
+        "isRanked": false,
+        "isDistributed": false
+      }
+    ]
+  },
+  "blackList": []
+}
