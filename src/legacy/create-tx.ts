@@ -1,5 +1,5 @@
 import Arweave from 'arweave';
-import { ArWallet, GQLNodeInterface } from '@smartweave';
+import { ArWallet, GQLNodeInterface, GQLTagInterface } from '@smartweave';
 import Transaction from 'arweave/node/lib/transaction';
 import { CreateTransactionInterface } from 'arweave/node/common';
 import { BlockData } from 'arweave/node/blocks';
@@ -46,6 +46,11 @@ export async function createTx(
 }
 
 export function createDummyTx(tx: Transaction, from: string, block: BlockData): GQLNodeInterface {
+  // transactions loaded from gateway (either arweave.net GQL or RedStone) have the tags decoded
+  // - so to be consistent, the "dummy" tx, which is used for viewState and dryWrites, also has to have
+  // the tags decoded.
+  const decodedTags = unpackTags(tx);
+
   return {
     id: tx.id,
     owner: {
@@ -53,7 +58,7 @@ export function createDummyTx(tx: Transaction, from: string, block: BlockData): 
       key: ''
     },
     recipient: tx.target,
-    tags: tx.tags,
+    tags: decodedTags,
     fee: {
       winston: tx.reward,
       ar: ''
@@ -87,19 +92,16 @@ export function createDummyTx(tx: Transaction, from: string, block: BlockData): 
   };
 }
 
-export function unpackTags(tx: Transaction): Record<string, string | string[]> {
+export function unpackTags(tx: Transaction): GQLTagInterface[] {
   const tags = tx.get('tags') as any;
-  const result: Record<string, string | string[]> = {};
+  const result: GQLTagInterface[] = [];
 
   for (const tag of tags) {
     try {
       const name = tag.get('name', { decode: true, string: true }) as string;
       const value = tag.get('value', { decode: true, string: true }) as string;
-      if (!Object.prototype.hasOwnProperty.call(result, name)) {
-        result[name] = value;
-        continue;
-      }
-      result[name] = [...result[name], value];
+
+      result.push({ name, value });
     } catch (e) {
       // ignore tags with invalid utf-8 strings in key or value.
     }
