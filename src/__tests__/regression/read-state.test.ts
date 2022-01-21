@@ -43,11 +43,12 @@ describe.each(chunked)('.suite %#', (contracts: string[]) => {
   it.concurrent.each(contracts)(
     '.test %# %o',
     async (contractTxId: string) => {
+      const blockHeight = 850127;
       console.log('readContract', contractTxId);
-      const result = await readContract(arweave, contractTxId);
+      const result = await readContract(arweave, contractTxId, blockHeight);
       const resultString = stringify(result).trim();
       console.log('readState', contractTxId);
-      const result2 = await SmartWeaveNodeFactory.memCached(arweave, 1).contract(contractTxId).readState();
+      const result2 = await SmartWeaveNodeFactory.memCached(arweave, 1).contract(contractTxId).readState(blockHeight);
       const result2String = stringify(result2.state).trim();
       expect(result2String).toEqual(resultString);
     },
@@ -61,6 +62,7 @@ describe.each(chunkedGw)('.suite %#', (contracts: string[]) => {
   it.concurrent.each(contracts)(
     '.test %# %o',
     async (contractTxId: string) => {
+      const blockHeight = 855134;
       console.log('readState Redstone Gateway', contractTxId);
       const smartweaveR = SmartWeaveWebFactory.memCachedBased(arweave, 1)
         .setInteractionsLoader(new RedstoneGatewayInteractionsLoader('https://gateway.redstone.finance'))
@@ -68,11 +70,11 @@ describe.each(chunkedGw)('.suite %#', (contracts: string[]) => {
           new RedstoneGatewayContractDefinitionLoader('https://gateway.redstone.finance', arweave, new MemCache())
         )
         .build();
-      const result = await smartweaveR.contract(contractTxId).readState();
+      const result = await smartweaveR.contract(contractTxId).readState(blockHeight);
       const resultString = stringify(result.state).trim();
 
       console.log('readState Arweave Gateway', contractTxId);
-      const result2 = await SmartWeaveNodeFactory.memCached(arweave, 1).contract(contractTxId).readState();
+      const result2 = await SmartWeaveNodeFactory.memCached(arweave, 1).contract(contractTxId).readState(blockHeight);
       const result2String = stringify(result2.state).trim();
       expect(result2String).toEqual(resultString);
     },
