@@ -94,7 +94,7 @@ describe('readState', () => {
     const result2String = stringify(result2.state).trim();
 
     expect(result2String).toEqual(resultString);
-  });
+  }, 600000);
 
   it('should properly check balance of a PST contract', async () => {
     const jwk = await arweave.wallets.generate();
