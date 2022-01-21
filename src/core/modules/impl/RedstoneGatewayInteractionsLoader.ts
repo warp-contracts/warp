@@ -6,7 +6,7 @@ import {
   GQLEdgeInterface,
   GQLNodeInterface
 } from '@smartweave';
-
+import 'redstone-isomorphic';
 interface Paging {
   total: string;
   limit: number;

@@ -1,6 +1,7 @@
 import { ContractDefinition, LoggerFactory, stripTrailingSlash, SwCache } from '@smartweave';
 import Arweave from 'arweave';
 import { ContractDefinitionLoader } from './ContractDefinitionLoader';
+import 'redstone-isomorphic';
 
 /**
  * An extension to {@link ContractDefinitionLoader} that makes use of

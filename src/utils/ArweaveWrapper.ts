@@ -3,6 +3,7 @@ import { NetworkInfoInterface } from 'arweave/node/network';
 import { GqlReqVariables, LoggerFactory } from '@smartweave';
 import { AxiosResponse } from 'axios';
 import Transaction from 'arweave/node/lib/transaction';
+import 'redstone-isomorphic';
 
 export class ArweaveWrapper {
   private readonly logger = LoggerFactory.INST.create('ArweaveWrapper');

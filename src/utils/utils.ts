@@ -1,24 +1,13 @@
 /* eslint-disable */
 import cloneDeep from 'lodash/cloneDeep';
-
-// TODO: requires setting "external" in webpack
-import v8 from 'v8';
-import Undici from 'undici';
-
-export const isNode = new Function('try {return this===global;}catch(e){return false;}');
-
-if (isNode()) {
-  global.fetch = async function (input, init): Promise<Response> {
-    return await Undici.fetch.call(this, input, init);
-  };
-}
+import { v8 } from 'redstone-isomorphic';
 
 export const sleep = (ms: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
 export const deepCopy = (input: unknown): any => {
-  if (isNode()) {
+  if (!!v8) {
     return v8.deserialize(v8.serialize(input));
   }
   return cloneDeep(input);
