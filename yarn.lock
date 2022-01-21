@@ -5667,6 +5667,11 @@ rechoir@0.7.0:
   dependencies:
     resolve "^1.9.0"
 
+redstone-isomorphic-fetch@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/redstone-isomorphic-fetch/-/redstone-isomorphic-fetch-1.0.1.tgz#ff435d2815a76407db195105783bcfd30e114856"
+  integrity sha512-Q2G7MmyknBoOa/S3KIkm5AsNzw80f5nF/+K49KPn7qMb6GLaSHzykcIaMdX2TYIW+DFSA6wDEr4ZkwpC9b0byg==
+
 regexpp@^3.1.0:
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/regexpp/-/regexpp-3.2.0.tgz#0425a2768d8f23bad70ca4b90461fa2f1213e1b2"
