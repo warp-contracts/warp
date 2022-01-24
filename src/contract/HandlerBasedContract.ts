@@ -188,6 +188,60 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
     const { arweave } = this.smartweave;
 
+    const interactionTx = await this.createInteraction(input, tags, transfer, strict);
+    const response = await arweave.transactions.post(interactionTx);
+
+    if (response.status !== 200) {
+      this.logger.error('Error while posting transaction', response);
+      return null;
+    }
+
+    if (this._evaluationOptions.waitForConfirmation) {
+      this.logger.info('Waiting for confirmation of', interactionTx.id);
+      const benchmark = Benchmark.measure();
+      await this.waitForConfirmation(interactionTx.id);
+      this.logger.info('Transaction confirmed after', benchmark.elapsed());
+    }
+    return interactionTx.id;
+  }
+
+  async bundleInteraction<Input>(
+    input: Input,
+    tags: Tags = [],
+    transfer: ArTransfer = emptyTransfer,
+    strict = false
+  ): Promise<any | null> {
+    this.logger.info('Bundle interaction input', input);
+    if (!this.wallet) {
+      throw new Error("Wallet not connected. Use 'connect' method first.");
+    }
+    const interactionTx = await this.createInteraction(input, tags, transfer, strict);
+
+    const response = await fetch(`${this._evaluationOptions.sequencerAddress}gateway/sequencer/register`, {
+      method: 'POST',
+      body: JSON.stringify(interactionTx),
+      headers: {
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Content-Type': 'application/json',
+        Accept: 'application/json'
+      }
+    })
+      .then((res) => {
+        this.logger.debug(res);
+        return res.ok ? res.json() : Promise.reject(res);
+      })
+      .catch((error) => {
+        this.logger.error(error);
+        if (error.body?.message) {
+          this.logger.error(error.body.message);
+        }
+        throw new Error(`Unable to bundle interaction: ${JSON.stringify(error)}`);
+      });
+
+    return response;
+  }
+
+  private async createInteraction<Input>(input: Input, tags: { name: string; value: string }[], transfer: ArTransfer, strict: boolean) {
     if (this._evaluationOptions.internalWrites) {
       // Call contract and verify if there are any internal writes:
       // 1. Evaluate current contract state
@@ -230,21 +284,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       transfer.target,
       transfer.winstonQty
     );
-
-    const response = await arweave.transactions.post(interactionTx);
-
-    if (response.status !== 200) {
-      this.logger.error('Error while posting transaction', response);
-      return null;
-    }
-
-    if (this._evaluationOptions.waitForConfirmation) {
-      this.logger.info('Waiting for confirmation of', interactionTx.id);
-      const benchmark = Benchmark.measure();
-      await this.waitForConfirmation(interactionTx.id);
-      this.logger.info('Transaction confirmed after', benchmark.elapsed());
-    }
-    return interactionTx.id;
+    return interactionTx;
   }
 
   txId(): string {

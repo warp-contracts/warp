@@ -10,17 +10,23 @@ import {
 import * as fs from 'fs';
 import knex from 'knex';
 import os from "os";
+import {readJSON} from "../../redstone-smartweave-examples/src/_utils";
+import {TsLogFactory} from '../src/logging/node/TsLogFactory';
 
 const logger = LoggerFactory.INST.create('Contract');
 
+LoggerFactory.use(new TsLogFactory());
 LoggerFactory.INST.logLevel('fatal');
 LoggerFactory.INST.logLevel('info', 'Contract');
+LoggerFactory.INST.logLevel('debug', 'RedstoneGatewayInteractionsLoader');
+LoggerFactory.INST.logLevel('error', 'DefaultStateEvaluator');
 
 async function main() {
   printTestInfo();
-  
+
   const PIANITY_CONTRACT = 'SJ3l7474UHh3Dw6dWVT1bzsJ-8JvOewtGoDdOecWIZo';
   const PIANITY_COMMUNITY_CONTRACT = 'n05LTiuWcAYjizXAu-ghegaWjL89anZ6VdvuHcU6dno';
+  const LOOT_CONTRACT = 'Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY';
   const CACHE_PATH = 'cache.sqlite.db';
 
   const heapUsedBefore = Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100;
@@ -51,18 +57,28 @@ async function main() {
     )
   )
     .setInteractionsLoader(
-      new RedstoneGatewayInteractionsLoader('https://gateway.redstone.finance', { notCorrupted: true })
+      new RedstoneGatewayInteractionsLoader('https://gateway.redstone.finance', {notCorrupted: true})
     )
     .setDefinitionLoader(
       new RedstoneGatewayContractDefinitionLoader('https://gateway.redstone.finance', arweave, new MemCache())
     )
     .build();
 
-  const contract = smartweave.contract(PIANITY_CONTRACT);
-  await contract.readState();
+  const jwk = readJSON("../redstone-node/.secrets/redstone-jwk.json");
+  const contract = smartweave.contract(LOOT_CONTRACT)
+    /*.setEvaluationOptions({
+      sequencerAddress: "http://localhost:5666/"
+    })*/
+    .connect(jwk);
+  const bundledInteraction = await contract.bundleInteraction({
+    function: "generate"
+  });
 
-  const contract2 = smartweave.contract(PIANITY_COMMUNITY_CONTRACT);
-  await contract2.readState();
+  logger.info("Bundled interaction", bundledInteraction);
+
+  // bundlr balance I-5rWUehEv-MjdK9gFw09RxfSLQX9DIHxG614Wf8qo0 -h https://node1.bundlr.network/ -c arweave
+
+  //await contract.readState();
 
   const heapUsedAfter = Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100;
   const rssUsedAfter = Math.round((process.memoryUsage().rss / 1024 / 1024) * 100) / 100;
@@ -79,6 +95,7 @@ async function main() {
   const result = contract.lastReadStateStats();
 
   logger.warn('total evaluation: ', result);
+  return;
 }
 
 function printTestInfo() {
