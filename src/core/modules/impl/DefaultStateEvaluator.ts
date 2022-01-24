@@ -77,7 +77,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
       const interactionTx: GQLNodeInterface = missingInteraction.node;
 
-      this.logger.debug(
+      this.logger.error(
         `[${contractDefinition.txId}][${missingInteraction.node.id}][${missingInteraction.node.block.height}]: ${
           missingInteractions.indexOf(missingInteraction) + 1
         }/${missingInteractions.length} [of all:${sortedInteractions.length}]`
