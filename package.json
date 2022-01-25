@@ -59,6 +59,7 @@
     "json-beautify": "^1.1.1",
     "knex": "^0.95.14",
     "lodash": "^4.17.21",
+    "redstone-isomorphic": "^1.0.0",
     "tslog": "^3.2.2",
     "undici": "^4.12.1"
   },
@@ -80,7 +81,6 @@
     "jest": "^27.4.3",
     "pg": "^8.7.1",
     "prettier": "^2.3.2",
-    "redstone-isomorphic": "^1.0.0",
     "rimraf": "^3.0.2",
     "safe-stable-stringify": "2.3.1",
     "simple-statistics": "^7.7.0",
