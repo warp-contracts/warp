@@ -35,10 +35,6 @@ export type ExecutionContext<State, Api = unknown> = {
    */
   blockHeight: number;
   /**
-   * all the interactions registered for this contract
-   */
-  interactions: GQLEdgeInterface[];
-  /**
    * interaction sorted using either {@link LexicographicalInteractionsSorter} or {@link BlockHeightInteractionsSorter}
    * - crucial for proper and deterministic state evaluation
    */
@@ -57,4 +53,9 @@ export type ExecutionContext<State, Api = unknown> = {
   currentBlockData?: BlockData;
   caller?: string; // note: this is only set for "viewState" operations
   cachedState?: BlockHeightCacheResult<EvalStateResult<State>>;
+
+  // if the interactions list contains interactions from sequencer
+  // we cannot cache at requested block height - as it may happen that after this state
+  // evaluation - new transactions will be available on the same block height.
+  containsInteractionsFromSequencer: boolean;
 };

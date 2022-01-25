@@ -16,9 +16,10 @@ import {TsLogFactory} from '../src/logging/node/TsLogFactory';
 const logger = LoggerFactory.INST.create('Contract');
 
 LoggerFactory.use(new TsLogFactory());
-LoggerFactory.INST.logLevel('fatal');
+LoggerFactory.INST.logLevel('error');
 LoggerFactory.INST.logLevel('info', 'Contract');
 LoggerFactory.INST.logLevel('debug', 'RedstoneGatewayInteractionsLoader');
+LoggerFactory.INST.logLevel('error', 'DefaultStateEvaluator');
 LoggerFactory.INST.logLevel('error', 'DefaultStateEvaluator');
 
 async function main() {
@@ -66,9 +67,9 @@ async function main() {
 
   const jwk = readJSON("../redstone-node/.secrets/redstone-jwk.json");
   const contract = smartweave.contract(LOOT_CONTRACT)
-    /*.setEvaluationOptions({
+    .setEvaluationOptions({
       sequencerAddress: "http://localhost:5666/"
-    })*/
+    })
     .connect(jwk);
   const bundledInteraction = await contract.bundleInteraction({
     function: "generate"
@@ -78,7 +79,7 @@ async function main() {
 
   // bundlr balance I-5rWUehEv-MjdK9gFw09RxfSLQX9DIHxG614Wf8qo0 -h https://node1.bundlr.network/ -c arweave
 
-  //await contract.readState();
+  await contract.readState();
 
   const heapUsedAfter = Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100;
   const rssUsedAfter = Math.round((process.memoryUsage().rss / 1024 / 1024) * 100) / 100;

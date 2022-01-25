@@ -16,6 +16,7 @@ import {
   EvaluationOptions,
   Evolve,
   ExecutionContext,
+  GQLEdgeInterface,
   GQLNodeInterface,
   HandlerApi,
   InnerWritesEvaluator,
@@ -26,6 +27,7 @@ import {
   sleep,
   SmartWeave,
   SmartWeaveTags,
+  SourceType,
   Tags
 } from '@smartweave';
 import { TransactionStatusResponse } from 'arweave/node/transactions';
@@ -388,8 +390,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const evolvedSrcTxId = Evolve.evolvedSrcTxId(cachedState?.cachedValue?.state);
 
     let contractDefinition,
-      interactions = [],
-      sortedInteractions = [],
+      interactions: GQLEdgeInterface[] = [],
+      sortedInteractions: GQLEdgeInterface[] = [],
       handler;
     if (cachedBlockHeight != blockHeight) {
       [contractDefinition, interactions] = await Promise.all([
@@ -421,17 +423,20 @@ export class HandlerBasedContract<State> implements Contract<State> {
       }
     }
 
+    const containsInteractionsFromSequencer = interactions.some((i) => i.node.source == SourceType.REDSTONE_SEQUENCER);
+    this.logger.debug('containsInteractionsFromSequencer', containsInteractionsFromSequencer);
+
     return {
       contractDefinition,
       blockHeight,
-      interactions,
       sortedInteractions,
       handler,
       smartweave: this.smartweave,
       contract: this,
       evaluationOptions: this._evaluationOptions,
       currentNetworkInfo,
-      cachedState
+      cachedState,
+      containsInteractionsFromSequencer
     };
   }
 
@@ -469,17 +474,19 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     this.logger.debug('Creating execution context from tx:', benchmark.elapsed());
 
+    const containsInteractionsFromSequencer = interactions.some((i) => i.node.source == SourceType.REDSTONE_SEQUENCER);
+
     return {
       contractDefinition,
       blockHeight,
-      interactions,
       sortedInteractions,
       handler,
       smartweave: this.smartweave,
       contract: this,
       evaluationOptions: this._evaluationOptions,
       caller,
-      cachedState
+      cachedState,
+      containsInteractionsFromSequencer
     };
   }
 

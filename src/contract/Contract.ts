@@ -146,7 +146,7 @@ export interface Contract<State = unknown> {
     tags?: Tags,
     transfer?: ArTransfer,
     strict?: boolean
-  ): Promise<string | null>;
+  ): Promise<any | null>;
 
   /**
    * Returns the full call tree report the last
