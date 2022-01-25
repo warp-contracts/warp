@@ -59,7 +59,7 @@
     "json-beautify": "^1.1.1",
     "knex": "^0.95.14",
     "lodash": "^4.17.21",
-    "redstone-isomorphic": "^1.0.0",
+    "redstone-isomorphic": "^1.0.2",
     "tslog": "^3.2.2",
     "undici": "^4.12.1"
   },
