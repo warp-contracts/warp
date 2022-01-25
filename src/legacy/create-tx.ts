@@ -1,5 +1,5 @@
 import Arweave from 'arweave';
-import { ArWallet, GQLNodeInterface, GQLTagInterface } from '@smartweave';
+import { ArWallet, GQLNodeInterface, GQLTagInterface, SmartWeaveTags } from '@smartweave';
 import Transaction from 'arweave/node/lib/transaction';
 import { CreateTransactionInterface } from 'arweave/node/common';
 import { BlockData } from 'arweave/node/blocks';
@@ -35,11 +35,12 @@ export async function createTx(
       interactionTx.addTag(tag.name.toString(), tag.value.toString());
     }
   }
-  interactionTx.addTag('App-Name', 'SmartWeaveAction');
+  interactionTx.addTag(SmartWeaveTags.APP_NAME, 'SmartWeaveAction');
   // use real SDK version here?
-  interactionTx.addTag('App-Version', '0.3.0');
-  interactionTx.addTag('Contract', contractId);
-  interactionTx.addTag('Input', JSON.stringify(input));
+  interactionTx.addTag(SmartWeaveTags.APP_VERSION, '0.3.0');
+  interactionTx.addTag(SmartWeaveTags.SDK, 'RedStone');
+  interactionTx.addTag(SmartWeaveTags.CONTRACT_TX_ID, contractId);
+  interactionTx.addTag(SmartWeaveTags.INPUT, JSON.stringify(input));
 
   await arweave.transactions.sign(interactionTx, wallet);
   return interactionTx;

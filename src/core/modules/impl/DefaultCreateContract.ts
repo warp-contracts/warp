@@ -66,6 +66,7 @@ export class DefaultCreateContract implements CreateContract {
     contractTX.addTag(SmartWeaveTags.APP_NAME, 'SmartWeaveContract');
     contractTX.addTag(SmartWeaveTags.APP_VERSION, '0.3.0');
     contractTX.addTag(SmartWeaveTags.CONTRACT_SRC_TX_ID, srcTxId);
+    contractTX.addTag(SmartWeaveTags.SDK, 'RedStone');
     contractTX.addTag('Content-Type', 'application/json');
 
     await this.arweave.transactions.sign(contractTX, wallet);
@@ -76,9 +77,5 @@ export class DefaultCreateContract implements CreateContract {
     } else {
       throw new Error('Unable to write Contract Initial State');
     }
-  }
-
-  update(contractTxId: string, contractData: ContractData): Promise<void> {
-    throw new Error('Not implemented yet');
   }
 }

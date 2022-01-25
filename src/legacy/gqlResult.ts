@@ -47,11 +47,14 @@ export interface GQLNodeInterface {
     id: string;
   };
   dry?: boolean;
-  sortKey?: string; //added dynamically by the LexicographicalInteractionsSorter
+  sortKey?: string; // added dynamically by RedStone Sequencer
   confirmationStatus?: string;
+  source?: string;
 }
 
 export interface GQLEdgeInterface {
+  // added dynamically by the LexicographicalInteractionsSorter
+  // or rewritten from GQLNodeInterface.sortKey (if added there by RedStone Sequencer)
   sortKey?: string;
   cursor: string;
   node: GQLNodeInterface;

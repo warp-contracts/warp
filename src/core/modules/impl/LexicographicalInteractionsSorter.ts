@@ -1,10 +1,12 @@
-import { arrayToHex, GQLEdgeInterface, InteractionsSorter } from '@smartweave';
+import { arrayToHex, GQLEdgeInterface, InteractionsSorter, LoggerFactory, SourceType } from '@smartweave';
 import Arweave from 'arweave';
 
 /**
- * implementation that is based on current's SDK sorting alg. (which seems to be wrong ;-))
+ * implementation that is based on current's SDK sorting alg.
  */
 export class LexicographicalInteractionsSorter implements InteractionsSorter {
+  private readonly logger = LoggerFactory.INST.create('LexicographicalInteractionsSorter');
+
   constructor(private readonly arweave: Arweave) {}
 
   async sort(transactions: GQLEdgeInterface[]): Promise<GQLEdgeInterface[]> {
@@ -19,11 +21,12 @@ export class LexicographicalInteractionsSorter implements InteractionsSorter {
     const { node } = txInfo;
 
     // might have been already set by the RedStone Sequencer
-    if (txInfo.sortKey !== undefined) {
-      return;
+    if (txInfo.node.sortKey !== undefined && txInfo.node.source == SourceType.REDSTONE_SEQUENCER) {
+      this.logger.debug('Using sortkey from sequencer', txInfo.node.sortKey);
+      txInfo.sortKey = txInfo.node.sortKey;
+    } else {
+      txInfo.sortKey = await this.createSortKey(node.block.id, node.id, node.block.height);
     }
-
-    txInfo.sortKey = await this.createSortKey(node.block.id, node.id, node.block.height);
   }
 
   public async createSortKey(blockId: string, transactionId: string, blockHeight: number) {
@@ -31,7 +34,7 @@ export class LexicographicalInteractionsSorter implements InteractionsSorter {
     const txIdBytes = this.arweave.utils.b64UrlToBuffer(transactionId);
     const concatenated = this.arweave.utils.concatBuffers([blockHashBytes, txIdBytes]);
     const hashed = arrayToHex(await this.arweave.crypto.hash(concatenated));
-    const blockHeightString = `000000${blockHeight}`.slice(-12);
+    const blockHeightString = `${blockHeight}`.padStart(12, '0');
 
     return `${blockHeightString},${hashed}`;
   }

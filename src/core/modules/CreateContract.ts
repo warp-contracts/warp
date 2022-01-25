@@ -33,12 +33,4 @@ export interface CreateContract {
   deploy(contractData: ContractData): Promise<string>;
 
   deployFromSourceTx(contractData: FromSrcTxContractData): Promise<string>;
-
-  /**
-   * TODO: I would like to add the contract upgrade feature here
-   * -  as an "evolution" of the current "evolve" ;-)
-   * @param contractTxId
-   * @param contractData
-   */
-  update(contractTxId: string, contractData: ContractData): Promise<void>;
 }
