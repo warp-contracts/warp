@@ -93,7 +93,7 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
     saveState: false
   };
 
-  sequencerAddress = "https://gateway.redstone.finance/";
+  sequencerAddress = 'https://gateway.redstone.finance/';
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some of the features.

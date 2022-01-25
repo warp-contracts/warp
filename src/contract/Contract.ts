@@ -132,7 +132,6 @@ export interface Contract<State = unknown> {
     strict?: boolean
   ): Promise<string | null>;
 
-
   /**
    * Creates a new "interaction" transaction using RedStone Sequencer - this, with combination with
    * RedStone Gateway, gives instant transaction availability and finality guaranteed by Bundlr.

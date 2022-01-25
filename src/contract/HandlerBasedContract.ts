@@ -241,7 +241,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return response;
   }
 
-  private async createInteraction<Input>(input: Input, tags: { name: string; value: string }[], transfer: ArTransfer, strict: boolean) {
+  private async createInteraction<Input>(
+    input: Input,
+    tags: { name: string; value: string }[],
+    transfer: ArTransfer,
+    strict: boolean
+  ) {
     if (this._evaluationOptions.internalWrites) {
       // Call contract and verify if there are any internal writes:
       // 1. Evaluate current contract state
