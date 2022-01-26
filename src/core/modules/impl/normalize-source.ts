@@ -9,19 +9,17 @@ export function normalizeContractSource(contractSrc: string): string {
   // We then use `new Function()` which we can call and get back the returned handle function
   // which has access to the per-instance globals.
 
-  const firstLastLineRegexp = /^(?:(?<![\f\n\r])(?:.*))(?=[\f\n\r])|^.*(?![\f\n\r])$/gm;
-  const search = contractSrc.match(firstLastLineRegexp);
+  const lines = contractSrc.trim().split('\n');
+  const first = lines[0];
+  const last = lines[lines.length - 1];
 
-  if (search.length == 2) {
-    if (
-      (/\(\s*\(\)\s*=>\s*{/g.test(search[0]) || /\s*\(\s*function\s*\(\)\s*{/g.test(search[0])) &&
-      /}\s*\)\s*\(\)\s*;/g.test(search[1])
-    ) {
-      const lines = contractSrc.split('\n');
-      lines.shift();
-      lines.pop();
-      contractSrc = lines.join('\n');
-    }
+  if (
+    (/\(\s*\(\)\s*=>\s*{/g.test(first) || /\s*\(\s*function\s*\(\)\s*{/g.test(first)) &&
+    /}\s*\)\s*\(\)\s*;/g.test(last)
+  ) {
+    lines.shift();
+    lines.pop();
+    contractSrc = lines.join('\n');
   }
 
   contractSrc = contractSrc
