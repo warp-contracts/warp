@@ -1,6 +1,9 @@
 import { arrayToHex, GQLEdgeInterface, InteractionsSorter, LoggerFactory, SourceType } from '@smartweave';
 import Arweave from 'arweave';
 
+// note: this (i.e. padding to 13 digits) should be safe between years ~1966 and ~2286
+const defaultArweaveMs = "".padEnd(13, "9");
+
 /**
  * implementation that is based on current's SDK sorting alg.
  */
@@ -36,6 +39,6 @@ export class LexicographicalInteractionsSorter implements InteractionsSorter {
     const hashed = arrayToHex(await this.arweave.crypto.hash(concatenated));
     const blockHeightString = `${blockHeight}`.padStart(12, '0');
 
-    return `${blockHeightString},${hashed}`;
+    return `${blockHeightString},${defaultArweaveMs},${hashed}`;
   }
 }
