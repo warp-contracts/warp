@@ -9,7 +9,8 @@ import {
   RedstoneGatewayContractDefinitionLoader,
   RedstoneGatewayInteractionsLoader,
   SmartWeaveNodeFactory,
-  SmartWeaveWebFactory
+  SmartWeaveWebFactory,
+  SourceType
 } from '@smartweave';
 
 const stringify = require('safe-stable-stringify');
@@ -65,7 +66,9 @@ describe.each(chunkedGw)('.suite %#', (contracts: string[]) => {
       const blockHeight = 855134;
       console.log('readState Redstone Gateway', contractTxId);
       const smartweaveR = SmartWeaveWebFactory.memCachedBased(arweave, 1)
-        .setInteractionsLoader(new RedstoneGatewayInteractionsLoader('https://gateway.redstone.finance'))
+        .setInteractionsLoader(
+          new RedstoneGatewayInteractionsLoader('https://gateway.redstone.finance', null, SourceType.ARWEAVE)
+        )
         .setDefinitionLoader(
           new RedstoneGatewayContractDefinitionLoader('https://gateway.redstone.finance', arweave, new MemCache())
         )

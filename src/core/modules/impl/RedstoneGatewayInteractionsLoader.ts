@@ -38,6 +38,11 @@ type ConfirmationStatus =
       confirmed?: boolean;
     };
 
+export const enum SourceType {
+  ARWEAVE = 'arweave',
+  REDSTONE_SEQUENCER = 'redstone-sequencer'
+}
+
 /**
  * The aim of this implementation of the {@link InteractionsLoader} is to make use of
  * Redstone Gateway ({@link https://github.com/redstone-finance/redstone-sw-gateway})
@@ -48,6 +53,8 @@ type ConfirmationStatus =
  * enough confirmations, whose existence is confirmed by at least 3 Arweave peers.
  * 2. {@link ConfirmationStatus.notCorrupted} flag - to receive both already confirmed and not yet confirmed (ie. latest)
  * interactions.
+ * 3. {@link SourceType} - to receive interactions based on their origin ({@link SourceType.ARWEAVE} or {@link SourceType.REDSTONE_SEQUENCER}).
+ * If not set, interactions from all sources will be loaded.
  *
  * Passing no flag is the "backwards compatible" mode (ie. it will behave like the original Arweave GQL gateway endpoint).
  * Note that this may result in returning corrupted and/or forked interactions
@@ -58,9 +65,14 @@ type ConfirmationStatus =
  * following comment {@link https://github.com/redstone-finance/redstone-smartcontracts/pull/62#issuecomment-995249264}
  */
 export class RedstoneGatewayInteractionsLoader implements InteractionsLoader {
-  constructor(private readonly baseUrl: string, private readonly confirmationStatus: ConfirmationStatus = {}) {
+  constructor(
+    private readonly baseUrl: string,
+    private readonly confirmationStatus: ConfirmationStatus = null,
+    private readonly source: SourceType = null
+  ) {
     this.baseUrl = stripTrailingSlash(baseUrl);
     Object.assign(this, confirmationStatus);
+    this.source = source;
   }
 
   private readonly logger = LoggerFactory.INST.create('RedstoneGatewayInteractionsLoader');
@@ -81,8 +93,11 @@ export class RedstoneGatewayInteractionsLoader implements InteractionsLoader {
           from: fromBlockHeight.toString(),
           to: toBlockHeight.toString(),
           page: (++page).toString(),
-          ...(this.confirmationStatus.confirmed ? { confirmationStatus: 'confirmed' } : ''),
-          ...(this.confirmationStatus.notCorrupted ? { confirmationStatus: 'not_corrupted' } : '')
+          ...(this.confirmationStatus && this.confirmationStatus.confirmed ? { confirmationStatus: 'confirmed' } : ''),
+          ...(this.confirmationStatus && this.confirmationStatus.notCorrupted
+            ? { confirmationStatus: 'not_corrupted' }
+            : ''),
+          ...(this.source ? { source: this.source } : '')
         })}`
       )
         .then((res) => {
