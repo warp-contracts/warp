@@ -31,6 +31,10 @@ export interface GqlReqVariables {
   after?: string;
 }
 
+export function bundledTxsFilter(tx: GQLEdgeInterface) {
+  return !tx.node.parent?.id && !tx.node.bundledIn?.id;
+}
+
 export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
   private readonly logger = LoggerFactory.INST.create('ArweaveGatewayInteractionsLoader');
 
@@ -56,6 +60,7 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
           fee { winston }
           quantity { winston }
           parent { id }
+          bundledIn { id }
         }
         cursor
       }
@@ -133,8 +138,9 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
 
     // note: according to https://discord.com/channels/357957786904166400/756557551234973696/920918240702660638
     // protection against "bundledIn" should not be necessary..but..better safe than sorry :-)
+    // note: it will be now necessary - with RedStone Sequencer
     const txInfos: GQLEdgeInterface[] = transactions.edges.filter(
-      (tx) => !tx.node.parent || !tx.node.parent.id || !tx.node.bundledIn || !tx.node.bundledIn.id
+      (tx) => bundledTxsFilter(tx)
     );
 
     while (transactions.pageInfo.hasNextPage) {
@@ -147,7 +153,7 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
 
       transactions = await this.getNextPage(variables);
 
-      txInfos.push(...transactions.edges.filter((tx) => !tx.node.parent || !tx.node.parent.id));
+      txInfos.push(...transactions.edges.filter((tx) => bundledTxsFilter(tx)));
     }
     return txInfos;
   }
