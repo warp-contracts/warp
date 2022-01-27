@@ -139,9 +139,7 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
     // note: according to https://discord.com/channels/357957786904166400/756557551234973696/920918240702660638
     // protection against "bundledIn" should not be necessary..but..better safe than sorry :-)
     // note: it will be now necessary - with RedStone Sequencer
-    const txInfos: GQLEdgeInterface[] = transactions.edges.filter(
-      (tx) => bundledTxsFilter(tx)
-    );
+    const txInfos: GQLEdgeInterface[] = transactions.edges.filter((tx) => bundledTxsFilter(tx));
 
     while (transactions.pageInfo.hasNextPage) {
       const cursor = transactions.edges[MAX_REQUEST - 1].cursor;

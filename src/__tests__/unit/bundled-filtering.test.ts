@@ -1,7 +1,6 @@
-import {bundledTxsFilter, GQLEdgeInterface} from '@smartweave';
+import { bundledTxsFilter, GQLEdgeInterface } from '@smartweave';
 
 describe('Bundled transactions filtering', () => {
-
   it('should properly filter bundled transaction if only "parent" field available', async () => {
     // given
     const tx = {
@@ -19,7 +18,6 @@ describe('Bundled transactions filtering', () => {
     // then
     expect(result).toBeFalsy();
   });
-
 
   it('should properly filter bundled transaction if only "bundledIn" field available', async () => {
     // given
@@ -60,13 +58,11 @@ describe('Bundled transactions filtering', () => {
     expect(result).toBeFalsy();
   });
 
-
-
   it('should not filter transaction if "bundledIn" and "parent" not available', async () => {
     // given
     const tx = {
       node: {
-        id: 'DSan2S2AwuyZZwragrI_5L8RiraWjOsgMxaEpiYN2BY',
+        id: 'DSan2S2AwuyZZwragrI_5L8RiraWjOsgMxaEpiYN2BY'
       }
     };
 
@@ -77,14 +73,12 @@ describe('Bundled transactions filtering', () => {
     expect(result).toBeTruthy();
   });
 
-
   it('should not filter bundled transaction if "parent" field available and no id', async () => {
     // given
     const tx = {
       node: {
         id: 'DSan2S2AwuyZZwragrI_5L8RiraWjOsgMxaEpiYN2BY',
-        parent: {
-        }
+        parent: {}
       }
     };
 
@@ -100,8 +94,7 @@ describe('Bundled transactions filtering', () => {
     const tx = {
       node: {
         id: 'DSan2S2AwuyZZwragrI_5L8RiraWjOsgMxaEpiYN2BY',
-        bundledIn: {
-        }
+        bundledIn: {}
       }
     };
 
@@ -117,10 +110,8 @@ describe('Bundled transactions filtering', () => {
     const tx = {
       node: {
         id: 'DSan2S2AwuyZZwragrI_5L8RiraWjOsgMxaEpiYN2BY',
-        parent: {
-        },
-        bundledIn: {
-        }
+        parent: {},
+        bundledIn: {}
       }
     };
 
