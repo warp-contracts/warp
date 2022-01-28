@@ -7,6 +7,7 @@ import {
   GQLNodeInterface
 } from '@smartweave';
 import 'redstone-isomorphic';
+import { Readable } from 'stream';
 interface Paging {
   total: string;
   limit: number;
@@ -77,7 +78,11 @@ export class RedstoneGatewayInteractionsLoader implements InteractionsLoader {
 
   private readonly logger = LoggerFactory.INST.create('RedstoneGatewayInteractionsLoader');
 
-  async load(contractId: string, fromBlockHeight: number, toBlockHeight: number): Promise<GQLEdgeInterface[]> {
+  async load(
+    contractId: string,
+    fromBlockHeight: number,
+    toBlockHeight: number
+  ): Promise<GQLEdgeInterface[] | Readable> {
     this.logger.debug('Loading interactions: for ', { contractId, fromBlockHeight, toBlockHeight });
 
     const interactions: GQLEdgeInterface[] = [];

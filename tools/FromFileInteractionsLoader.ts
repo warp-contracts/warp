@@ -4,6 +4,7 @@ import { GQLEdgeInterface } from '../src/legacy/gqlResult';
 import * as fs from 'fs';
 import { LoggerFactory } from '../src';
 import { EvaluationOptions } from '../src/core/modules/StateEvaluator';
+import {Readable} from "stream";
 
 const brokenTransactions = [
   '3O5Nvfbj72BDJT2bDC5EUm6gmkManJADsn93vKzQISU',
@@ -54,7 +55,7 @@ export class FromFileInteractionsLoader implements InteractionsLoader {
     fromBlockHeight: number,
     toBlockHeight: number,
     evaluationOptions: EvaluationOptions
-  ): Promise<GQLEdgeInterface[]> {
+  ): Promise<GQLEdgeInterface[] | Readable> {
     return this.transactions;
   }
 }

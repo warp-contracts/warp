@@ -11,6 +11,8 @@ import Arweave from 'arweave';
 import { GQLNodeInterface } from '@smartweave/legacy';
 import { LoggerFactory } from '@smartweave/logging';
 import { CurrentTx } from '@smartweave/contract';
+import { Stream } from 'stream';
+import { sleep } from '../../../../../smartweave-tags-encoding/.yalc/redstone-smartweave';
 
 /**
  * An implementation of DefaultStateEvaluator that adds caching capabilities.
@@ -46,50 +48,51 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
 
     this.cLogger.debug('executionContext.sortedInteractions', executionContext.sortedInteractions.length);
 
-    const sortedInteractionsUpToBlock = executionContext.sortedInteractions.filter((tx) => {
-      return tx.node.block.height <= executionContext.blockHeight;
-    });
-
-    let missingInteractions = sortedInteractionsUpToBlock.slice();
-
-    this.cLogger.debug('missingInteractions', missingInteractions.length);
-
-    // if there was anything to cache...
-    if (sortedInteractionsUpToBlock.length > 0) {
-      if (cachedState != null) {
-        this.cLogger.debug(`Cached state for ${executionContext.contractDefinition.txId}`, {
-          cachedHeight: cachedState.cachedHeight,
-          requestedBlockHeight
-        });
-
-        // verify if for the requested block height there are any interactions
-        // with higher block height than latest value stored in cache - basically if there are any non-cached interactions.
-        missingInteractions = sortedInteractionsUpToBlock.filter(
-          ({ node }) => node.block.height > cachedState.cachedHeight && node.block.height <= requestedBlockHeight
-        );
-      }
-
-      this.cLogger.debug(`Interactions until [${requestedBlockHeight}]`, {
-        total: sortedInteractionsUpToBlock.length,
-        cached: sortedInteractionsUpToBlock.length - missingInteractions.length
+    if (executionContext.interactionsStream === null) {
+      const sortedInteractionsUpToBlock = executionContext.sortedInteractions.filter((tx) => {
+        return tx.node.block.height <= executionContext.blockHeight;
       });
 
-      // TODO: this is tricky part, needs proper description
-      // for now: it prevents from infinite loop calls between calls that are making
-      // internal interact writes.
-      for (const entry of currentTx || []) {
-        if (entry.contractTxId === executionContext.contractDefinition.txId) {
-          const index = missingInteractions.findIndex((tx) => tx.node.id === entry.interactionTxId);
-          if (index !== -1) {
-            this.cLogger.debug('Inf. Loop fix - removing interaction', {
-              height: missingInteractions[index].node.block.height,
-              contractTxId: entry.contractTxId,
-              interactionTxId: entry.interactionTxId
-            });
-            missingInteractions.splice(index);
+      let missingInteractions = sortedInteractionsUpToBlock.slice();
+
+      this.cLogger.debug('missingInteractions', missingInteractions.length);
+
+      // if there was anything to cache...
+      if (sortedInteractionsUpToBlock.length > 0) {
+        if (cachedState != null) {
+          this.cLogger.debug(`Cached state for ${executionContext.contractDefinition.txId}`, {
+            cachedHeight: cachedState.cachedHeight,
+            requestedBlockHeight
+          });
+
+          // verify if for the requested block height there are any interactions
+          // with higher block height than latest value stored in cache - basically if there are any non-cached interactions.
+          missingInteractions = sortedInteractionsUpToBlock.filter(
+            ({ node }) => node.block.height > cachedState.cachedHeight && node.block.height <= requestedBlockHeight
+          );
+        }
+
+        this.cLogger.debug(`Interactions until [${requestedBlockHeight}]`, {
+          total: sortedInteractionsUpToBlock.length,
+          cached: sortedInteractionsUpToBlock.length - missingInteractions.length
+        });
+
+        // TODO: this is tricky part, needs proper description
+        // for now: it prevents from infinite loop calls between calls that are making
+        // internal interact writes.
+        for (const entry of currentTx || []) {
+          if (entry.contractTxId === executionContext.contractDefinition.txId) {
+            const index = missingInteractions.findIndex((tx) => tx.node.id === entry.interactionTxId);
+            if (index !== -1) {
+              this.cLogger.debug('Inf. Loop fix - removing interaction', {
+                height: missingInteractions[index].node.block.height,
+                contractTxId: entry.contractTxId,
+                interactionTxId: entry.interactionTxId
+              });
+              missingInteractions.splice(index);
+            }
           }
         }
-      }
 
       // if cache is up-to date - return immediately to speed-up the whole process
       if (missingInteractions.length === 0 && cachedState) {
@@ -99,17 +102,49 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       }
     }
 
-    const baseState =
-      cachedState == null ? executionContext.contractDefinition.initState : cachedState.cachedValue.state;
-    const baseValidity = cachedState == null ? {} : cachedState.cachedValue.validity;
+      const baseState =
+        cachedState == null ? executionContext.contractDefinition.initState : cachedState.cachedValue.state;
+      const baseValidity = cachedState == null ? {} : cachedState.cachedValue.validity;
 
-    // eval state for the missing transactions - starting from latest value from cache.
-    return await this.doReadState(
-      missingInteractions,
-      new EvalStateResult(baseState, baseValidity),
-      executionContext,
-      currentTx
-    );
+      // eval state for the missing transactions - starting from latest value from cache.
+      return await this.doReadState(
+        missingInteractions,
+        new EvalStateResult(baseState, baseValidity),
+        executionContext,
+        currentTx
+      );
+    } else {
+      const writable = new Stream.Writable({ objectMode: true });
+      executionContext.interactionsStream.pipe(writable);
+      let prevState =
+        cachedState == null ? executionContext.contractDefinition.initState : cachedState.cachedValue.state;
+      let prevValidity = cachedState == null ? {} : cachedState.cachedValue.validity;
+
+      const logger = this.cLogger;
+
+      const finishPromise = new Promise<EvalStateResult<State>>(function (resolve, reject) {
+        // resolve with location of saved file
+        writable.on('finish', () => resolve(new EvalStateResult(prevState, prevValidity)));
+      });
+
+      writable._write = async (interactions, encoding, done) => {
+        logger.debug('Calculating state for interactions chunk', interactions.length);
+        const sorted = await executionContext.smartweave.interactionsSorter.sort(interactions);
+        const evalStateResult = await this.doReadState(
+          sorted,
+          new EvalStateResult(prevState, prevValidity),
+          executionContext,
+          currentTx
+        );
+
+        prevState = evalStateResult.state;
+        prevValidity = evalStateResult.validity;
+
+        done();
+      };
+
+      return finishPromise;
+    }
   }
 
   async onStateEvaluated<State>(

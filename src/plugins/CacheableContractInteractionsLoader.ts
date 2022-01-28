@@ -7,6 +7,7 @@ import {
   InteractionsLoader,
   LoggerFactory
 } from '@smartweave';
+import { Readable } from 'stream';
 
 /**
  * This implementation of the {@link InteractionsLoader} tries to limit the amount of interactions
@@ -26,7 +27,7 @@ export class CacheableContractInteractionsLoader implements InteractionsLoader {
     fromBlockHeight: number,
     toBlockHeight: number,
     evaluationOptions?: EvaluationOptions
-  ): Promise<GQLEdgeInterface[]> {
+  ): Promise<GQLEdgeInterface[] | Readable> {
     const benchmark = Benchmark.measure();
     this.logger.debug('Loading interactions', {
       contractId,
@@ -52,12 +53,12 @@ export class CacheableContractInteractionsLoader implements InteractionsLoader {
       cachedValue
     });
 
-    const missingInteractions = await this.baseImplementation.load(
+    const missingInteractions = (await this.baseImplementation.load(
       contractId,
       Math.max(cachedHeight + 1, fromBlockHeight),
       toBlockHeight,
       evaluationOptions
-    );
+    )) as GQLEdgeInterface[];
 
     const result = cachedValue
       .filter((interaction: GQLEdgeInterface) => interaction.node.block.height >= fromBlockHeight)

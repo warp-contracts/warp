@@ -32,6 +32,7 @@ import {
 } from '@smartweave';
 import { TransactionStatusResponse } from 'arweave/node/transactions';
 import { NetworkInfoInterface } from 'arweave/node/network';
+import { Readable } from 'stream';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -393,9 +394,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const evolvedSrcTxId = Evolve.evolvedSrcTxId(cachedState?.cachedValue?.state);
 
     let contractDefinition,
-      interactions: GQLEdgeInterface[] = [],
+      interactions: GQLEdgeInterface[] | Readable = [],
       sortedInteractions: GQLEdgeInterface[] = [],
       handler;
+
+    let interactionsStream = null;
+
     if (cachedBlockHeight != blockHeight) {
       [contractDefinition, interactions] = await Promise.all([
         definitionLoader.load<State>(contractTxId, evolvedSrcTxId),
@@ -415,7 +419,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
         )
       ]);
       this.logger.debug('contract and interactions load', benchmark.elapsed());
-      sortedInteractions = await interactionsSorter.sort(interactions);
+      if (interactions instanceof Readable) {
+        interactionsStream = interactions;
+      } else {
+        sortedInteractions = await interactionsSorter.sort(interactions as GQLEdgeInterface[]);
+      }
       this.logger.trace('Sorted interactions', sortedInteractions);
       handler = (await executorFactory.create(contractDefinition)) as HandlerApi<State>;
     } else {
@@ -426,8 +434,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
       }
     }
 
-    const containsInteractionsFromSequencer = interactions.some((i) => i.node.source == SourceType.REDSTONE_SEQUENCER);
-    this.logger.debug('containsInteractionsFromSequencer', containsInteractionsFromSequencer);
+    let containsInteractionsFromSequencer = null;
+    if (!(interactions instanceof Readable)) {
+      containsInteractionsFromSequencer = (interactions as GQLEdgeInterface[]).some(
+        (i) => i.node.source == SourceType.REDSTONE_SEQUENCER
+      );
+      this.logger.debug('containsInteractionsFromSequencer', containsInteractionsFromSequencer);
+    }
 
     return {
       contractDefinition,
@@ -439,7 +452,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
       evaluationOptions: this._evaluationOptions,
       currentNetworkInfo,
       cachedState,
-      containsInteractionsFromSequencer
+      containsInteractionsFromSequencer,
+      interactionsStream
     };
   }
 
@@ -460,7 +474,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
 
     let contractDefinition,
-      interactions = [],
+      interactions: GQLEdgeInterface[] | Readable = [],
       sortedInteractions = [];
 
     if (cachedBlockHeight != blockHeight) {
@@ -468,7 +482,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
         definitionLoader.load<State>(contractTxId),
         await interactionsLoader.load(contractTxId, 0, blockHeight, this._evaluationOptions)
       ]);
-      sortedInteractions = await interactionsSorter.sort(interactions);
+      sortedInteractions = await interactionsSorter.sort(interactions as GQLEdgeInterface[]);
     } else {
       this.logger.debug('State fully cached, not loading interactions.');
       contractDefinition = await definitionLoader.load<State>(contractTxId);
@@ -477,7 +491,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     this.logger.debug('Creating execution context from tx:', benchmark.elapsed());
 
-    const containsInteractionsFromSequencer = interactions.some((i) => i.node.source == SourceType.REDSTONE_SEQUENCER);
+    const containsInteractionsFromSequencer = (interactions as GQLEdgeInterface[]).some(
+      (i) => i.node.source == SourceType.REDSTONE_SEQUENCER
+    );
 
     return {
       contractDefinition,
@@ -489,7 +505,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
       evaluationOptions: this._evaluationOptions,
       caller,
       cachedState,
-      containsInteractionsFromSequencer
+      containsInteractionsFromSequencer,
+      interactionsStream: null
     };
   }
 
