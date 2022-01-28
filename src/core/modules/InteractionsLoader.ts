@@ -1,4 +1,5 @@
 import { EvaluationOptions, GQLEdgeInterface } from '@smartweave';
+import { Readable, Stream } from 'stream';
 
 /**
  * Implementors of this interface add functionality of loading contract's interaction transactions.
@@ -12,5 +13,5 @@ export interface InteractionsLoader {
     fromBlockHeight: number,
     toBlockHeight: number,
     evaluationOptions?: EvaluationOptions
-  ): Promise<GQLEdgeInterface[]>;
+  ): Promise<GQLEdgeInterface[] | Readable>;
 }

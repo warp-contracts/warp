@@ -5308,6 +5308,11 @@ parent-module@^1.0.0:
   dependencies:
     callsites "^3.0.0"
 
+parse-json-stream@^2.2.5:
+  version "2.2.5"
+  resolved "https://registry.yarnpkg.com/parse-json-stream/-/parse-json-stream-2.2.5.tgz#341713961f15321a202905a8f3c70d600236c2f3"
+  integrity sha512-AzEByjHWsCxdwMQu4XxEzOpnl0KubVl8gG3yezGWBhpSmFk4+puQrVpJEgyqUkNSt5A1lORyItjBswXakCeHUA==
+
 parse-passwd@^1.0.0:
   version "1.0.0"
   resolved "https://registry.npmjs.org/parse-passwd/-/parse-passwd-1.0.0.tgz"
@@ -6662,6 +6667,11 @@ undici@^4.12.2:
   version "4.13.0"
   resolved "https://registry.yarnpkg.com/undici/-/undici-4.13.0.tgz#7d10fe150c3241a6b3b0eba80eff59c9fb40f359"
   integrity sha512-8lk8S/f2V0VUNGf2scU2b+KI2JSzEQLdCyRNRF3XmHu+5jectlSDaPSBCXAHFaUlt1rzngzOBVDgJS9/Gue/KA==
+
+undici@^4.12.2:
+  version "4.12.2"
+  resolved "https://registry.yarnpkg.com/undici/-/undici-4.12.2.tgz#f2fc50ca77a774ed8c0e7067c9361ee18a2f422b"
+  integrity sha512-RZj6SbkQFs5O/pJCboGEo6l5DTCe3Zg4r/8Z/0/2qnIv08+s6zL4akohOPMYWKc3mzwv15WTvsfMWaafZcvYoQ==
 
 universalify@^0.1.2:
   version "0.1.2"
