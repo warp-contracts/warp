@@ -240,7 +240,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
         throw new Error(`Unable to bundle interaction: ${JSON.stringify(error)}`);
       });
 
-    return response;
+    return {
+      bundlrResponse: response,
+      originalTxId: interactionTx.id
+    };
   }
 
   private async createInteraction<Input>(

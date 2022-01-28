@@ -30,7 +30,7 @@ async function main() {
 
   const smartweave = SmartWeaveNodeFactory.memCachedBased(arweave)
     .setInteractionsLoader(
-      new RedstoneGatewayInteractionsLoader('http://localhost:5666', { notCorrupted: true })
+      new RedstoneGatewayInteractionsLoader('https://gateway.redstone.finance', { notCorrupted: true })
     )
     .setDefinitionLoader(
       new RedstoneGatewayContractDefinitionLoader('https://gateway.redstone.finance', arweave, new MemCache())
@@ -42,7 +42,7 @@ async function main() {
   const token = smartweave
     .contract("OrO8n453N6bx921wtsEs-0OCImBLCItNU5oSbFKlFuU")
     .setEvaluationOptions({
-      sequencerAddress: "http://localhost:5666/"
+      sequencerAddress: "https://gateway.redstone.finance/"
     })
     // connecting wallet to a contract. It is required before performing any "writeInteraction"
     // calling "writeInteraction" without connecting to a wallet first will cause a runtime error.
@@ -60,7 +60,7 @@ async function main() {
     },
   });
 
-  logger.info("Result from the sequencer", result.id);
+  logger.info("Result from the sequencer", result);
 
   // the new transaction is instantly available - ie. during the state read operation
   const result2 = await token.readState();
