@@ -67,7 +67,7 @@ export const enum SourceType {
 export class RedstoneGatewayInteractionsLoader implements InteractionsLoader {
   constructor(
     private readonly baseUrl: string,
-    private readonly confirmationStatus: ConfirmationStatus = null,
+    private readonly confirmationStatus: ConfirmationStatus | null = null,
     private readonly source: SourceType = null
   ) {
     this.baseUrl = stripTrailingSlash(baseUrl);
