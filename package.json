@@ -7,7 +7,7 @@
   "types": "./lib/types/index.d.ts",
   "sideEffects": false,
   "engines": {
-    "node": ">=14"
+    "node": ">=16.5"
   },
   "scripts": {
     "build:cjs": "tsc -b tsconfig.json && tsc-alias -p tsconfig.json",
@@ -61,7 +61,7 @@
     "lodash": "^4.17.21",
     "redstone-isomorphic": "^1.0.2",
     "tslog": "^3.2.2",
-    "undici": "^4.12.1"
+    "undici": "^4.12.2"
   },
   "devDependencies": {
     "@types/cheerio": "^0.22.30",

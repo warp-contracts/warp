@@ -12,8 +12,8 @@ import { TsLogFactory } from '../src/logging/node/TsLogFactory';
 
 const logger = LoggerFactory.INST.create('Contract');
 
-LoggerFactory.use(new TsLogFactory());
-LoggerFactory.INST.logLevel('error');
+//LoggerFactory.use(new TsLogFactory());
+//LoggerFactory.INST.logLevel('error');
 LoggerFactory.INST.logLevel('info', 'Contract');
 LoggerFactory.INST.logLevel('debug', 'RedstoneGatewayInteractionsLoader');
 LoggerFactory.INST.logLevel('error', 'DefaultStateEvaluator');
@@ -30,7 +30,7 @@ async function main() {
 
   const smartweave = SmartWeaveNodeFactory.memCachedBased(arweave)
     .setInteractionsLoader(
-      new RedstoneGatewayInteractionsLoader('https://gateway.redstone.finance', { notCorrupted: true })
+      new RedstoneGatewayInteractionsLoader('https://gateway.redstone.finance/', { notCorrupted: true })
     )
     .setDefinitionLoader(
       new RedstoneGatewayContractDefinitionLoader('https://gateway.redstone.finance', arweave, new MemCache())

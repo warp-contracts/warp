@@ -64,6 +64,7 @@ PRs are welcome! :-) Also, feel free to submit [issues](https://github.com/redst
 In case of creating a PR - please use [semantic commit messages](https://gist.github.com/joshbuchea/6f47e86d2510bce28f8e7f42ae84c716).
 
 ### Installation and import
+SDK requires node.js version 16.5+.
 
 #### Using npm
 `npm install redstone-smartweave`
