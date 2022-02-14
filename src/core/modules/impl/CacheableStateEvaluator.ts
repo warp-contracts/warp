@@ -11,8 +11,6 @@ import Arweave from 'arweave';
 import { GQLNodeInterface } from '@smartweave/legacy';
 import { LoggerFactory } from '@smartweave/logging';
 import { CurrentTx } from '@smartweave/contract';
-import { Stream } from 'stream';
-import { sleep } from '../../../../../smartweave-tags-encoding/.yalc/redstone-smartweave';
 
 /**
  * An implementation of DefaultStateEvaluator that adds caching capabilities.
@@ -49,7 +47,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
 
     if (executionContext.interactionsStream === null) {
       const sortedInteractionsUpToBlock = executionContext.sortedInteractions.filter((tx) => {
-        return tx.node.block.height <= executionContext.blockHeight;
+        return tx.node.block.height <= requestedBlockHeight;
       });
 
       let missingInteractions = sortedInteractionsUpToBlock.slice();
@@ -66,6 +64,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
 
           // verify if for the requested block height there are any interactions
           // with higher block height than latest value stored in cache - basically if there are any non-cached interactions.
+          // FIXME: no longer necessary
           missingInteractions = sortedInteractionsUpToBlock.filter(
             ({ node }) => node.block.height > cachedState.cachedHeight && node.block.height <= requestedBlockHeight
           );
@@ -112,34 +111,42 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
         currentTx
       );
     } else {
-      const writable = new Stream.Writable({ objectMode: true });
-      executionContext.interactionsStream.pipe(writable);
       let prevState =
         cachedState == null ? executionContext.contractDefinition.initState : cachedState.cachedValue.state;
       let prevValidity = cachedState == null ? {} : cachedState.cachedValue.validity;
 
       const logger = this.cLogger;
+      const evaluator = this.doReadState.bind(this);
 
+      const reader = executionContext.interactionsStream.getReader();
+
+      let resolvePromise;
       const finishPromise = new Promise<EvalStateResult<State>>(function (resolve, reject) {
-        // resolve with location of saved file
-        writable.on('finish', () => resolve(new EvalStateResult(prevState, prevValidity)));
+        resolvePromise = resolve;
       });
 
-      writable._write = async (interactions, encoding, done) => {
-        logger.debug('Calculating state for interactions chunk', interactions.length);
-        const sorted = await executionContext.smartweave.interactionsSorter.sort(interactions);
-        const evalStateResult = await this.doReadState(
-          sorted,
-          new EvalStateResult(prevState, prevValidity),
-          executionContext,
-          currentTx
-        );
+      reader.read().then(async function process({ done, value }) {
+        if (done) {
+          logger.debug("Stream complete");
+          resolvePromise(new EvalStateResult(prevState, prevValidity));
+          return;
+        }
+        if (value) {
+          logger.debug('Calculating state for interactions chunk', value.length);
+          const sorted = await executionContext.smartweave.interactionsSorter.sort(value);
+          const evalStateResult = await evaluator(
+            sorted,
+            new EvalStateResult(prevState, prevValidity),
+            executionContext,
+            currentTx
+          );
 
-        prevState = evalStateResult.state;
-        prevValidity = evalStateResult.validity;
+          prevState = evalStateResult.state;
+          prevValidity = evalStateResult.validity;
+        }
 
-        done();
-      };
+        return reader.read().then(process);
+      });
 
       return finishPromise;
     }

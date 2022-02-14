@@ -1,18 +1,18 @@
 /* eslint-disable */
-import { GQLEdgeInterface, InteractionsLoader, LoggerFactory, SourceType, stripTrailingSlash } from '@smartweave';
+import {GQLEdgeInterface, InteractionsLoader, LoggerFactory, sleep, SourceType, stripTrailingSlash} from '@smartweave';
 import 'redstone-isomorphic';
-import { Readable } from 'stream';
 import Parser from 'parse-json-stream';
+import {ReadableStream} from 'node:stream/web';
 
 type ConfirmationStatus =
   | {
-      notCorrupted?: boolean;
-      confirmed?: null;
-    }
+  notCorrupted?: boolean;
+  confirmed?: null;
+}
   | {
-      notCorrupted?: null;
-      confirmed?: boolean;
-    };
+  notCorrupted?: null;
+  confirmed?: boolean;
+};
 
 const MIN_INTERACTIONS_PER_CHUNK = 500;
 
@@ -33,30 +33,39 @@ export class RedStoneStreamableInteractionsLoader implements InteractionsLoader 
     contractId: string,
     fromBlockHeight: number,
     toBlockHeight: number
-  ): Promise<GQLEdgeInterface[] | Readable> {
-    this.logger.debug('Streaming interactions: for ', { contractId, fromBlockHeight, toBlockHeight });
+  ): Promise<GQLEdgeInterface[] | ReadableStream<GQLEdgeInterface[]>> {
+    this.logger.debug('Streaming interactions: for ', {contractId, fromBlockHeight, toBlockHeight});
 
-    const stream = new Readable({
-      objectMode: true,
-      read() {
-        // noop
+    let streamController = null;
+
+    const stream = new ReadableStream<GQLEdgeInterface[]>({
+      start(controller) {
+        streamController = controller;
       }
     });
 
-    this.loadData(stream, contractId, fromBlockHeight, toBlockHeight).finally();
+    this.loadData(streamController, contractId, fromBlockHeight, toBlockHeight).finally();
+
+    this.logger.debug("Returning stream");
 
     return stream;
   }
 
-  private async loadData(stream: Readable, contractId: string, fromBlockHeight: number, toBlockHeight: number) {
+  private async loadData(
+    streamController: ReadableStreamController<GQLEdgeInterface[]>,
+    contractId: string,
+    fromBlockHeight: number,
+    toBlockHeight: number) {
     const result = [];
     let resultChunk = [];
     let chunkBlockHeight = null;
     const logger = this.logger;
-    logger.trace(Parser);
+
     const parser = new Parser(function (error, object) {
       if (error) {
         logger.error(error.message);
+        streamController.error(error);
+        streamController.close();
       } else if (object) {
         const blockHeight = object.interaction.block.height;
         if (chunkBlockHeight != null) {
@@ -75,7 +84,7 @@ export class RedStoneStreamableInteractionsLoader implements InteractionsLoader 
             });
           } else if (blockHeight > chunkBlockHeight) {
             result.push(resultChunk);
-            stream.push(resultChunk);
+            streamController.enqueue(resultChunk);
             resultChunk = [];
             resultChunk.push({
               cursor: '',
@@ -101,9 +110,9 @@ export class RedStoneStreamableInteractionsLoader implements InteractionsLoader 
       } else {
         if (resultChunk.length) {
           result.push(resultChunk);
-          stream.push(resultChunk);
+          streamController.enqueue(resultChunk);
         }
-        stream.push(null); // end of stream
+        streamController.enqueue(null); // marks end of stream
         logger.debug('Chunks', result.length);
         let totalLength = 0;
 
@@ -123,11 +132,11 @@ export class RedStoneStreamableInteractionsLoader implements InteractionsLoader 
         contractId: contractId,
         from: fromBlockHeight.toString(),
         to: toBlockHeight.toString(),
-        ...(this.confirmationStatus && this.confirmationStatus.confirmed ? { confirmationStatus: 'confirmed' } : ''),
+        ...(this.confirmationStatus && this.confirmationStatus.confirmed ? {confirmationStatus: 'confirmed'} : ''),
         ...(this.confirmationStatus && this.confirmationStatus.notCorrupted
-          ? { confirmationStatus: 'not_corrupted' }
+          ? {confirmationStatus: 'not_corrupted'}
           : ''),
-        ...(this.source ? { source: this.source } : '')
+        ...(this.source ? {source: this.source} : '')
       })}`
     );
 

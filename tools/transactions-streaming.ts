@@ -1,8 +1,6 @@
 /* eslint-disable */
-import {LoggerFactory, RedStoneStreamableInteractionsLoader} from '../src';
+import {GQLEdgeInterface, LoggerFactory, RedStoneStreamableInteractionsLoader} from '../src';
 import {TsLogFactory} from '../src/logging/node/TsLogFactory';
-import {DefaultEvaluationOptions} from '../src/core/modules/StateEvaluator';
-import {Readable, Stream} from "stream";
 import {sleep} from "../../smartweave-tags-encoding/.yalc/redstone-smartweave";
 
 async function main() {
@@ -16,18 +14,29 @@ async function main() {
     'Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY',
     0,
     866666
-  )) as Readable;
+  )) as ReadableStream<GQLEdgeInterface[]>;
 
-  const writable = new Stream.Writable({objectMode: true});
-  stream.pipe(writable)
-  writable._write = async (object, encoding, done) => {
-    console.log("New chunk in writable: ", object.length);
+  const reader = stream.getReader();
+
+  reader.read().then(async function process({ done, value }) {
+    // Result objects contain two properties:
+    // done  - true if the stream has already given you all its data.
+    // value - some data. Always undefined when done is true.
+    if (done) {
+      console.log("Stream complete");
+      return;
+    }
+
+    console.log("New chunk in writable: ", value?.length);
 
     // simulates state evaluation
-    await sleep(100);
+    await sleep(5);
 
-    done();
-  }
+    // Read some more, and call this function again
+    return reader.read().then(process);
+  });
+
+
 
 }
 

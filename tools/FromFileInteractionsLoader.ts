@@ -1,10 +1,10 @@
 /* eslint-disable */
-import { InteractionsLoader } from '../src/core/modules/InteractionsLoader';
-import { GQLEdgeInterface } from '../src/legacy/gqlResult';
+import {InteractionsLoader} from '../src/core/modules/InteractionsLoader';
+import {GQLEdgeInterface} from '../src/legacy/gqlResult';
 import * as fs from 'fs';
-import { LoggerFactory } from '../src';
-import { EvaluationOptions } from '../src/core/modules/StateEvaluator';
-import {Readable} from "stream";
+import {LoggerFactory} from '../src';
+import {EvaluationOptions} from '../src/core/modules/StateEvaluator';
+import {ReadableStream} from "isomorphic-streams";
 
 const brokenTransactions = [
   '3O5Nvfbj72BDJT2bDC5EUm6gmkManJADsn93vKzQISU',
@@ -55,7 +55,7 @@ export class FromFileInteractionsLoader implements InteractionsLoader {
     fromBlockHeight: number,
     toBlockHeight: number,
     evaluationOptions: EvaluationOptions
-  ): Promise<GQLEdgeInterface[] | Readable> {
+  ): Promise<GQLEdgeInterface[] | ReadableStream<GQLEdgeInterface[]>> {
     return this.transactions;
   }
 }

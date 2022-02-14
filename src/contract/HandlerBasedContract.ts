@@ -30,9 +30,9 @@ import {
   SourceType,
   Tags
 } from '@smartweave';
-import { TransactionStatusResponse } from 'arweave/node/transactions';
-import { NetworkInfoInterface } from 'arweave/node/network';
-import { Readable } from 'stream';
+import {TransactionStatusResponse} from 'arweave/node/transactions';
+import {NetworkInfoInterface} from 'arweave/node/network';
+import {ReadableStream} from 'node:stream/web';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -394,7 +394,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const evolvedSrcTxId = Evolve.evolvedSrcTxId(cachedState?.cachedValue?.state);
 
     let contractDefinition,
-      interactions: GQLEdgeInterface[] | Readable = [],
+      interactions: GQLEdgeInterface[] | ReadableStream<GQLEdgeInterface[]> = [],
       sortedInteractions: GQLEdgeInterface[] = [],
       handler;
 
@@ -419,8 +419,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
         )
       ]);
       this.logger.debug('contract and interactions load', benchmark.elapsed());
-      if (interactions instanceof Readable) {
+      if (interactions instanceof ReadableStream) {
         interactionsStream = interactions;
+        this.logger.error('Streamed interactions');
       } else {
         sortedInteractions = await interactionsSorter.sort(interactions as GQLEdgeInterface[]);
       }
@@ -435,7 +436,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
 
     let containsInteractionsFromSequencer = null;
-    if (!(interactions instanceof Readable)) {
+    if (!(interactions instanceof ReadableStream)) {
       containsInteractionsFromSequencer = (interactions as GQLEdgeInterface[]).some(
         (i) => i.node.source == SourceType.REDSTONE_SEQUENCER
       );
@@ -474,7 +475,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
 
     let contractDefinition,
-      interactions: GQLEdgeInterface[] | Readable = [],
+      interactions: GQLEdgeInterface[] | ReadableStream<GQLEdgeInterface[]> = [],
       sortedInteractions = [];
 
     if (cachedBlockHeight != blockHeight) {

@@ -7,7 +7,7 @@ import {
   InteractionsLoader,
   LoggerFactory
 } from '@smartweave';
-import { Readable } from 'stream';
+import {ReadableStream} from 'node:stream/web';
 
 /**
  * This implementation of the {@link InteractionsLoader} tries to limit the amount of interactions
@@ -27,7 +27,7 @@ export class CacheableContractInteractionsLoader implements InteractionsLoader {
     fromBlockHeight: number,
     toBlockHeight: number,
     evaluationOptions?: EvaluationOptions
-  ): Promise<GQLEdgeInterface[] | Readable> {
+  ): Promise<GQLEdgeInterface[] | ReadableStream<GQLEdgeInterface[]>> {
     const benchmark = Benchmark.measure();
     this.logger.debug('Loading interactions', {
       contractId,

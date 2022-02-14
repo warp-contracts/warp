@@ -1,13 +1,14 @@
 import {
   Benchmark,
+  GQLEdgeInterface,
+  GQLNodeInterface,
   InteractionsLoader,
   LoggerFactory,
-  stripTrailingSlash,
-  GQLEdgeInterface,
-  GQLNodeInterface
+  stripTrailingSlash
 } from '@smartweave';
 import 'redstone-isomorphic';
-import { Readable } from 'stream';
+import {ReadableStream} from 'node:stream/web';
+
 interface Paging {
   total: string;
   limit: number;
@@ -82,7 +83,7 @@ export class RedstoneGatewayInteractionsLoader implements InteractionsLoader {
     contractId: string,
     fromBlockHeight: number,
     toBlockHeight: number
-  ): Promise<GQLEdgeInterface[] | Readable> {
+  ): Promise<GQLEdgeInterface[] | ReadableStream<GQLEdgeInterface[]>> {
     this.logger.debug('Loading interactions: for ', { contractId, fromBlockHeight, toBlockHeight });
 
     const interactions: GQLEdgeInterface[] = [];

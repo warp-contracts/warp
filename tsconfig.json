@@ -2,7 +2,7 @@
   "$schema": "http://json.schemastore.org/tsconfig",
   "compileOnSave": false,
   "compilerOptions": {
-    "target": "es2019",
+    "target": "es2020",
     "module": "commonjs",
     "types": ["jest", "node"],
     "moduleResolution": "node",

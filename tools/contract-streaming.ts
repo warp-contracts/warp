@@ -4,19 +4,20 @@ import {
   LoggerFactory,
   MemCache,
   RedstoneGatewayContractDefinitionLoader,
-  RedstoneGatewayInteractionsLoader, RedStoneStreamableInteractionsLoader,
+  RedStoneStreamableInteractionsLoader,
   SmartWeaveNodeFactory
 } from '../src';
 import * as fs from 'fs';
-import knex from 'knex';
 import os from "os";
-import {readJSON} from "../../redstone-smartweave-examples/src/_utils";
 import {TsLogFactory} from '../src/logging/node/TsLogFactory';
 
 const logger = LoggerFactory.INST.create('Contract');
 
 //LoggerFactory.use(new TsLogFactory());
 LoggerFactory.INST.logLevel('error');
+//LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
+//LoggerFactory.INST.logLevel('debug', 'RedStoneStreamableInteractionsLoader');
+
 /*LoggerFactory.INST.logLevel('info', 'Contract');
 LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
 LoggerFactory.INST.logLevel('debug', 'RedStoneStreamableInteractionsLoader');*/
@@ -42,32 +43,16 @@ async function main() {
     fs.rmSync(CACHE_PATH);
   }
 
-  const smartweave = SmartWeaveNodeFactory.memCachedBased(arweave)/*(
-    await SmartWeaveNodeFactory.knexCachedBased(
-      arweave,
-      knex({
-        client: 'sqlite3',
-        connection: {
-          filename: CACHE_PATH
-        },
-        useNullAsDefault: true
-      })
-    )
-  )*/
+  const smartweave = SmartWeaveNodeFactory.memCachedBased(arweave)
     .setInteractionsLoader(
-      new RedStoneStreamableInteractionsLoader('https://gateway.redstone.finance', {notCorrupted: true})
+      new RedStoneStreamableInteractionsLoader('http://localhost:5666', {notCorrupted: true})
     )
     .setDefinitionLoader(
-      new RedstoneGatewayContractDefinitionLoader('https://gateway.redstone.finance', arweave, new MemCache())
+      new RedstoneGatewayContractDefinitionLoader('http://localhost:5666', arweave, new MemCache())
     )
     .build();
 
-  const jwk = readJSON("../redstone-node/.secrets/redstone-jwk.json");
-  const contract = smartweave.contract(LOOT_CONTRACT)
-    /*.setEvaluationOptions({
-      sequencerAddress: "http://localhost:5666/"
-    })*/
-    .connect(jwk);
+  const contract = smartweave.contract(LOOT_CONTRACT);
 
   await contract.readState(844916);
 
@@ -85,7 +70,7 @@ async function main() {
 
   const result = contract.lastReadStateStats();
 
-  logger.warn('total evaluation: ', result);
+  logger.error('total evaluation: ', result);
   return;
 }
 
