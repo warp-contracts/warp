@@ -11,7 +11,7 @@ import {
   SmartWeaveTags
 } from '@smartweave';
 import Arweave from 'arweave';
-import { Readable } from 'stream';
+import {ReadableStream} from 'node:stream/web';
 
 const MAX_REQUEST = 100;
 
@@ -81,7 +81,7 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
     fromBlockHeight: number,
     toBlockHeight: number,
     evaluationOptions: EvaluationOptions
-  ): Promise<GQLEdgeInterface[] | Readable> {
+  ): Promise<GQLEdgeInterface[] | ReadableStream<GQLEdgeInterface[]>> {
     this.logger.debug('Loading interactions for', { contractId, fromBlockHeight, toBlockHeight });
     const mainTransactionsVariables: GqlReqVariables = {
       tags: [

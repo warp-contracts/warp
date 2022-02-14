@@ -9,7 +9,6 @@ import {
 } from '@smartweave';
 import { NetworkInfoInterface } from 'arweave/node/network';
 import { BlockData } from 'arweave/node/blocks';
-import { Readable } from 'stream';
 
 /**
  * current execution context of the contract - contains all elements
@@ -60,5 +59,5 @@ export type ExecutionContext<State, Api = unknown> = {
   // evaluation - new transactions will be available on the same block height.
   containsInteractionsFromSequencer: boolean;
 
-  interactionsStream: Readable | null;
+  interactionsStream: ReadableStream<GQLEdgeInterface[]> | null;
 };
