@@ -8,6 +8,7 @@ import {
   MemCache,
   RedstoneGatewayContractDefinitionLoader,
   RedstoneGatewayInteractionsLoader,
+  RedstoneStreamableInteractionsLoader,
   SmartWeaveNodeFactory,
   SmartWeaveWebFactory,
   SourceType
@@ -34,11 +35,13 @@ LoggerFactory.INST.logLevel('fatal');
 
 const testCases: string[] = JSON.parse(fs.readFileSync(path.join(__dirname, 'test-cases/read-state.json'), 'utf-8'));
 const testCasesGw: string[] = JSON.parse(fs.readFileSync(path.join(__dirname, 'test-cases/gateways.json'), 'utf-8'));
+const testCasesStreaming: string[] = JSON.parse(fs.readFileSync(path.join(__dirname, 'test-cases/streaming.json'), 'utf-8'));
 
 const chunked: string[][][] = [...chunks(testCases, 10)];
 const chunkedGw: string[][][] = [...chunks(testCasesGw, 10)];
+const chunkedStreaming: string[][][] = [...chunks(testCasesStreaming, 10)];
 
-describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
+describe.each(chunked)('compareSDK.suite %#', (contracts: string[]) => {
   // note: concurrent doesn't seem to be working here, duh...
   // will probably need to manually split all the test cases to separate test files
   it.concurrent.each(contracts)(
@@ -67,7 +70,7 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
   );
 });
 
-describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
+describe.each(chunkedGw)('compareGateways.suite %#', (contracts: string[]) => {
   // note: concurrent doesn't seem to be working here, duh...
   // will probably need to manually split all the test cases to separate test files
   it.concurrent.each(contracts)(
@@ -92,6 +95,42 @@ describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
       expect(result2String).toEqual(resultString);
     },
     800000
+  );
+});
+
+describe.each(chunkedStreaming)('compareStreaming.suite %#', (contracts: string[]) => {
+  // note: concurrent doesn't seem to be working here, duh...
+  // will probably need to manually split all the test cases to separate test files
+  it.concurrent.each(contracts)(
+    '.test %# %o',
+    async (contractTxId: string) => {
+      const blockHeight = 855134;
+      console.log('readState streaming', contractTxId);
+      const smartweaveStreaming = SmartWeaveWebFactory.memCachedBased(arweave, 1)
+        .setInteractionsLoader(
+          new RedstoneStreamableInteractionsLoader('https://gateway.redstone.finance')
+        )
+        .setDefinitionLoader(
+          new RedstoneGatewayContractDefinitionLoader('https://gateway.redstone.finance', arweave, new MemCache())
+        )
+        .build();
+      const result = await smartweaveStreaming.contract(contractTxId).readState(blockHeight);
+      const resultString = stringify(result.state).trim();
+
+      console.log('readState non-streaming', contractTxId);
+      const smartweave = SmartWeaveWebFactory.memCachedBased(arweave, 1)
+        .setInteractionsLoader(
+          new RedstoneGatewayInteractionsLoader('https://gateway.redstone.finance')
+        )
+        .setDefinitionLoader(
+          new RedstoneGatewayContractDefinitionLoader('https://gateway.redstone.finance', arweave, new MemCache())
+        )
+        .build();
+      const result2 = await smartweave.contract(contractTxId).readState(blockHeight);
+      const result2String = stringify(result2.state).trim();
+      expect(result2String).toEqual(resultString);
+    },
+    600000
   );
 });
 

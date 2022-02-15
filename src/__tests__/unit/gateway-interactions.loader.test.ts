@@ -94,7 +94,7 @@ describe('RedstoneGatewayInteractionsLoader -> load', () => {
   });
   it('should return correct number of interactions', async () => {
     const loader = new RedstoneGatewayInteractionsLoader('http://baseUrl');
-    const response: GQLEdgeInterface[] = await loader.load(contractId, fromBlockHeight, toBlockHeight);
+    const response = (await loader.load(contractId, fromBlockHeight, toBlockHeight)) as GQLEdgeInterface[];
     expect(fetchMock).toHaveBeenCalled();
     expect(response.length).toEqual(2);
   });

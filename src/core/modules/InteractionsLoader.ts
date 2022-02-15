@@ -1,5 +1,5 @@
 import { EvaluationOptions, GQLEdgeInterface } from '@smartweave';
-import {ReadableStream} from 'node:stream/web';
+import { ReadableStream } from 'node:stream/web';
 /**
  * Implementors of this interface add functionality of loading contract's interaction transactions.
  * These transactions are then used to evaluate contract's state to a required block height.

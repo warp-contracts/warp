@@ -93,13 +93,13 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
           }
         }
 
-      // if cache is up-to date - return immediately to speed-up the whole process
-      if (missingInteractions.length === 0 && cachedState) {
-        this.cLogger.debug(`State up to requested height [${requestedBlockHeight}] fully cached!`);
-        executionContext.handler?.initState(cachedState.cachedValue.state);
-        return cachedState.cachedValue;
+        // if cache is up-to date - return immediately to speed-up the whole process
+        if (missingInteractions.length === 0 && cachedState) {
+          this.cLogger.debug(`State up to requested height [${requestedBlockHeight}] fully cached!`);
+          executionContext.handler?.initState(cachedState.cachedValue.state);
+          return cachedState.cachedValue;
+        }
       }
-    }
 
       const baseState =
         cachedState == null ? executionContext.contractDefinition.initState : cachedState.cachedValue.state;
@@ -129,7 +129,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
 
       reader.read().then(async function process({ done, value }) {
         if (done) {
-          logger.debug("Stream complete");
+          logger.debug('Stream complete');
           resolvePromise(new EvalStateResult(prevState, prevValidity));
           return;
         }

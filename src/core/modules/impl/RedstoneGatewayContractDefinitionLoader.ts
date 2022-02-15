@@ -1,4 +1,4 @@
-import { ContractDefinition, LoggerFactory, stripTrailingSlash, SwCache } from '@smartweave';
+import { Benchmark, ContractDefinition, LoggerFactory, stripTrailingSlash, SwCache } from '@smartweave';
 import Arweave from 'arweave';
 import { ContractDefinitionLoader } from './ContractDefinitionLoader';
 import 'redstone-isomorphic';
@@ -30,7 +30,8 @@ export class RedstoneGatewayContractDefinitionLoader extends ContractDefinitionL
     }
 
     try {
-      const result: ContractDefinition<State> = await fetch(`${this.baseUrl}/gateway/contracts/${contractTxId}`)
+      const benchmark = Benchmark.measure();
+      const result = await fetch(`${this.baseUrl}/gateway/contracts/${contractTxId}`)
         .then((res) => {
           return res.ok ? res.json() : Promise.reject(res);
         })
@@ -46,6 +47,7 @@ export class RedstoneGatewayContractDefinitionLoader extends ContractDefinitionL
       /* if (result.srcBinary != null && !(result.srcBinary instanceof Buffer)) {
         result.srcBinary = Buffer.from((result.srcBinary as any).data);
       }*/
+      this.rLogger.debug(`Contract ${contractTxId} metadata loaded in ${benchmark.elapsed()}`);
       return result;
     } catch (e) {
       this.rLogger.warn('Falling back to default contracts loader', e);

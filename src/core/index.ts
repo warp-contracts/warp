@@ -10,7 +10,7 @@ export * from './modules/impl/ContractDefinitionLoader';
 export * from './modules/impl/RedstoneGatewayContractDefinitionLoader';
 export * from './modules/impl/ArweaveGatewayInteractionsLoader';
 export * from './modules/impl/RedstoneGatewayInteractionsLoader';
-export * from './modules/impl/RedStoneStreamableInteractionsLoader';
+export * from './modules/impl/RedstoneStreamableInteractionsLoader';
 export * from './modules/impl/DefaultStateEvaluator';
 export * from './modules/impl/CacheableStateEvaluator';
 export * from './modules/impl/HandlerExecutorFactory';
