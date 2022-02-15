@@ -1,5 +1,5 @@
 /* eslint-disable */
-import {GQLEdgeInterface, LoggerFactory, RedStoneStreamableInteractionsLoader} from '../src';
+import {GQLEdgeInterface, LoggerFactory, RedstoneStreamableInteractionsLoader} from '../src';
 import {TsLogFactory} from '../src/logging/node/TsLogFactory';
 import {sleep} from "../../smartweave-tags-encoding/.yalc/redstone-smartweave";
 
@@ -8,7 +8,7 @@ async function main() {
 
   LoggerFactory.INST.logLevel('debug');
 
-  const streamer = new RedStoneStreamableInteractionsLoader("http://localhost:5666");
+  const streamer = new RedstoneStreamableInteractionsLoader("http://localhost:5666");
 
   const stream = (await streamer.load(
     'Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY',

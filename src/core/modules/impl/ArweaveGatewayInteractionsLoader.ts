@@ -11,7 +11,7 @@ import {
   SmartWeaveTags
 } from '@smartweave';
 import Arweave from 'arweave';
-import {ReadableStream} from 'node:stream/web';
+import { ReadableStream } from 'node:stream/web';
 
 const MAX_REQUEST = 100;
 

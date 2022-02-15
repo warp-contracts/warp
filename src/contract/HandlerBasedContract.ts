@@ -30,9 +30,9 @@ import {
   SourceType,
   Tags
 } from '@smartweave';
-import {TransactionStatusResponse} from 'arweave/node/transactions';
-import {NetworkInfoInterface} from 'arweave/node/network';
-import {ReadableStream} from 'node:stream/web';
+import { TransactionStatusResponse } from 'arweave/node/transactions';
+import { NetworkInfoInterface } from 'arweave/node/network';
+import { ReadableStream } from 'node:stream/web';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -421,7 +421,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       this.logger.debug('contract and interactions load', benchmark.elapsed());
       if (interactions instanceof ReadableStream) {
         interactionsStream = interactions;
-        this.logger.error('Streamed interactions');
+        this.logger.debug('Using streamed interactions');
       } else {
         sortedInteractions = await interactionsSorter.sort(interactions as GQLEdgeInterface[]);
       }

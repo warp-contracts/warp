@@ -7,7 +7,7 @@ import {
   InteractionsLoader,
   LoggerFactory
 } from '@smartweave';
-import {ReadableStream} from 'node:stream/web';
+import { ReadableStream } from 'node:stream/web';
 
 /**
  * This implementation of the {@link InteractionsLoader} tries to limit the amount of interactions

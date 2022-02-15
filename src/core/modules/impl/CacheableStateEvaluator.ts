@@ -5,6 +5,7 @@ import {
   ExecutionContext,
   ExecutionContextModifier,
   HandlerApi,
+  LexicographicalInteractionsSorter,
   StateCache
 } from '@smartweave/core';
 import Arweave from 'arweave';
@@ -127,7 +128,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
 
       reader.read().then(async function process({ done, value }) {
         if (done) {
-          logger.debug("Stream complete");
+          logger.debug('Stream complete');
           resolvePromise(new EvalStateResult(prevState, prevValidity));
           return;
         }

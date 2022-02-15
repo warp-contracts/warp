@@ -4,17 +4,22 @@ import {
   LoggerFactory,
   MemCache,
   RedstoneGatewayContractDefinitionLoader,
-  RedStoneStreamableInteractionsLoader,
+  RedstoneStreamableInteractionsLoader,
   SmartWeaveNodeFactory
 } from '../src';
 import * as fs from 'fs';
 import os from "os";
 import {TsLogFactory} from '../src/logging/node/TsLogFactory';
-
-const logger = LoggerFactory.INST.create('Contract');
+import {ArweaveGatewayInteractionsLoader, RedstoneGatewayInteractionsLoader} from "../../smartweave-tags-encoding/.yalc/redstone-smartweave";
+import {readContract} from "smartweave";
 
 //LoggerFactory.use(new TsLogFactory());
 LoggerFactory.INST.logLevel('error');
+LoggerFactory.INST.logLevel('debug', 'Contract');
+//LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
+LoggerFactory.INST.logLevel('debug', 'RedStoneStreamableInteractionsLoader');
+LoggerFactory.INST.logLevel('debug', 'RedstoneGatewayContractDefinitionLoader');
+//LoggerFactory.INST.logLevel('debug', 'DefaultStateEvaluator');
 //LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
 //LoggerFactory.INST.logLevel('debug', 'RedStoneStreamableInteractionsLoader');
 
@@ -23,9 +28,15 @@ LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
 LoggerFactory.INST.logLevel('debug', 'RedStoneStreamableInteractionsLoader');*/
 
 async function main() {
+  const logger = LoggerFactory.INST.create('Contract');
+
+  const stringify = require('safe-stable-stringify');
+
   printTestInfo();
 
   const LOOT_CONTRACT = 'Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY';
+  const P_CONTRACT = 'SJ3l7474UHh3Dw6dWVT1bzsJ-8JvOewtGoDdOecWIZo';
+  const DUH = 'w27141UQGgrCFhkiw9tL7A0-qWMQjbapU3mq2TfI4Cg';
   const CACHE_PATH = 'cache.sqlite.db';
 
   const heapUsedBefore = Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100;
@@ -44,17 +55,15 @@ async function main() {
   }
 
   const smartweave = SmartWeaveNodeFactory.memCachedBased(arweave)
-    .setInteractionsLoader(
-      new RedStoneStreamableInteractionsLoader('http://localhost:5666', {notCorrupted: true})
-    )
+    /*.setInteractionsLoader(
+      new RedstoneGatewayInteractionsLoader('https://gateway.redstone.finance')
+    )*/
     .setDefinitionLoader(
-      new RedstoneGatewayContractDefinitionLoader('http://localhost:5666', arweave, new MemCache())
+      new RedstoneGatewayContractDefinitionLoader('https://gateway.redstone.finance', arweave, new MemCache())
     )
     .build();
 
-  const contract = smartweave.contract(LOOT_CONTRACT);
-
-  await contract.readState(844916);
+  const contract = smartweave.contract(DUH);
 
   const heapUsedAfter = Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100;
   const rssUsedAfter = Math.round((process.memoryUsage().rss / 1024 / 1024) * 100) / 100;
@@ -68,9 +77,16 @@ async function main() {
     usedAfter: rssUsedAfter
   });
 
-  const result = contract.lastReadStateStats();
+  const result = await contract.readState(850127);
 
-  logger.error('total evaluation: ', result);
+  //const result2 = await readContract(arweave, DUH, 850127);
+
+  const stats = contract.lastReadStateStats();
+
+  logger.error('total evaluation: ', stats);
+
+  logger.info(stringify(result.state));
+  //logger.info(stringify(result2));
   return;
 }
 

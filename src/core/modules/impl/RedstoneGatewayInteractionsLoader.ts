@@ -7,7 +7,7 @@ import {
   stripTrailingSlash
 } from '@smartweave';
 import 'redstone-isomorphic';
-import {ReadableStream} from 'node:stream/web';
+import { ReadableStream } from 'node:stream/web';
 
 interface Paging {
   total: string;

@@ -16,7 +16,7 @@ type ConfirmationStatus =
 
 const MIN_INTERACTIONS_PER_CHUNK = 500;
 
-export class RedStoneStreamableInteractionsLoader implements InteractionsLoader {
+export class RedstoneStreamableInteractionsLoader implements InteractionsLoader {
   constructor(
     private readonly baseUrl: string,
     private readonly confirmationStatus: ConfirmationStatus = null,
@@ -36,15 +36,13 @@ export class RedStoneStreamableInteractionsLoader implements InteractionsLoader 
   ): Promise<GQLEdgeInterface[] | ReadableStream<GQLEdgeInterface[]>> {
     this.logger.debug('Streaming interactions: for ', {contractId, fromBlockHeight, toBlockHeight});
 
-    let streamController = null;
+    const loadData = this.loadData.bind(this);
 
     const stream = new ReadableStream<GQLEdgeInterface[]>({
       start(controller) {
-        streamController = controller;
+        loadData(controller, contractId, fromBlockHeight, toBlockHeight).finally();
       }
     });
-
-    this.loadData(streamController, contractId, fromBlockHeight, toBlockHeight).finally();
 
     this.logger.debug("Returning stream");
 
@@ -112,14 +110,11 @@ export class RedStoneStreamableInteractionsLoader implements InteractionsLoader 
           result.push(resultChunk);
           streamController.enqueue(resultChunk);
         }
-        streamController.enqueue(null); // marks end of stream
+        streamController.close(); // marks end of stream
         logger.debug('Chunks', result.length);
         let totalLength = 0;
 
         for (const r of result) {
-          /*logger.debug(
-            r[0].node.block.height + ' - ' + [...r].pop().node.block.height + ' | ' + r.length
-          );*/
           totalLength += r.length;
         }
 
