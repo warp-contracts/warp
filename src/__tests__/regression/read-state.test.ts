@@ -49,8 +49,7 @@ describe.each(chunked)('compareSDK.suite %#', (contracts: string[]) => {
     async (contractTxId: string) => {
       const blockHeight = 850127;
       console.log('readContract', contractTxId);
-      const result = await readContract(arweave, contractTxId, blockHeight);
-      const resultString = stringify(result).trim();
+      const resultString = fs.readFileSync(path.join(__dirname, 'test-cases', 'contracts', `${contractTxId}.json`), 'utf-8').trim();
       console.log('readState', contractTxId);
       const result2 = await SmartWeaveNodeFactory.memCached(arweave, 1).contract(contractTxId).readState(blockHeight);
       const result2String = stringify(result2.state).trim();
