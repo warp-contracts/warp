@@ -4,6 +4,8 @@ export type Tags = { name: string; value: string }[];
 
 export type ArWallet = JWKInterface | 'use_wallet';
 
+export type ContractType = 'js' | 'wasm';
+
 export type ArTransfer = {
   target: string;
   winstonQty: string;
@@ -22,7 +24,7 @@ export interface CommonContractData {
 }
 
 export interface ContractData extends CommonContractData {
-  src: string;
+  src: string | Buffer;
 }
 
 export interface FromSrcTxContractData extends CommonContractData {

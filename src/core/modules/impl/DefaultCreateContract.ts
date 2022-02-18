@@ -1,4 +1,4 @@
-import { ContractData, CreateContract, FromSrcTxContractData, SmartWeaveTags } from '@smartweave/core';
+import {ContractData, ContractType, CreateContract, FromSrcTxContractData, SmartWeaveTags} from '@smartweave/core';
 import Arweave from 'arweave';
 import { LoggerFactory } from '@smartweave/logging';
 
@@ -16,10 +16,13 @@ export class DefaultCreateContract implements CreateContract {
 
     const srcTx = await this.arweave.createTransaction({ data: src }, wallet);
 
+    const contractType: ContractType = src instanceof Buffer ? 'wasm' : 'js';
+
     srcTx.addTag(SmartWeaveTags.APP_NAME, 'SmartWeaveContractSource');
     // TODO: version should be taken from the current package.json version.
     srcTx.addTag(SmartWeaveTags.APP_VERSION, '0.3.0');
-    srcTx.addTag('Content-Type', 'application/javascript');
+    srcTx.addTag(SmartWeaveTags.SDK, 'RedStone');
+    srcTx.addTag(SmartWeaveTags.CONTENT_TYPE, contractType == 'js' ? 'application/javascript' : 'application/wasm');
 
     await this.arweave.transactions.sign(srcTx, wallet);
 
@@ -67,7 +70,7 @@ export class DefaultCreateContract implements CreateContract {
     contractTX.addTag(SmartWeaveTags.APP_VERSION, '0.3.0');
     contractTX.addTag(SmartWeaveTags.CONTRACT_SRC_TX_ID, srcTxId);
     contractTX.addTag(SmartWeaveTags.SDK, 'RedStone');
-    contractTX.addTag('Content-Type', 'application/json');
+    contractTX.addTag(SmartWeaveTags.CONTENT_TYPE, 'application/json');
 
     await this.arweave.transactions.sign(contractTX, wallet);
 
