@@ -16,9 +16,11 @@ export class DebuggableExecutorFactory<Api> implements ExecutorFactory<Api> {
 
   async create<State>(contractDefinition: ContractDefinition<State>): Promise<Api> {
     if (Object.prototype.hasOwnProperty.call(this.sourceCode, contractDefinition.txId)) {
+      const enc = new TextEncoder(); // always utf-8
+
       contractDefinition = {
         ...contractDefinition,
-        src: this.sourceCode[contractDefinition.txId]
+        src: enc.encode(this.sourceCode[contractDefinition.txId])
       };
     }
 

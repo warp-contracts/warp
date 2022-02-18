@@ -2,6 +2,7 @@ import {
   ArweaveWrapper,
   Benchmark,
   ContractDefinition,
+  ContractType,
   DefinitionLoader,
   getTag,
   LoggerFactory,
@@ -50,6 +51,10 @@ export class ContractDefinitionLoader implements DefinitionLoader {
     this.logger.debug('Tags decoding', benchmark.elapsed());
     benchmark.reset();
 
+    const contractSrcTx = await this.arweaveWrapper.tx(contractSrcTxId);
+    const contractType: ContractType =
+      getTag(contractSrcTx, SmartWeaveTags.CONTENT_TYPE) == 'application/javascript' ? 'js' : 'wasm';
+
     const src = await this.arweaveWrapper.txData(contractSrcTxId);
     this.logger.debug('Contract src tx load', benchmark.elapsed());
     benchmark.reset();
@@ -63,18 +68,19 @@ export class ContractDefinitionLoader implements DefinitionLoader {
       src,
       initState,
       minFee,
-      owner
+      owner,
+      contractType
     };
   }
 
-  private async evalInitialState(contractTx: Transaction) {
+  private async evalInitialState(contractTx: Transaction): Promise<string> {
     if (getTag(contractTx, SmartWeaveTags.INIT_STATE)) {
       return getTag(contractTx, SmartWeaveTags.INIT_STATE);
     } else if (getTag(contractTx, SmartWeaveTags.INIT_STATE_TX)) {
       const stateTX = getTag(contractTx, SmartWeaveTags.INIT_STATE_TX);
-      return this.arweaveWrapper.txData(stateTX);
+      return this.arweaveWrapper.txDataString(stateTX);
     } else {
-      return this.arweaveWrapper.txData(contractTx.id);
+      return this.arweaveWrapper.txDataString(contractTx.id);
     }
   }
 }

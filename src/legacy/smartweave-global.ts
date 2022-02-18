@@ -28,6 +28,8 @@ import { GQLNodeInterface, GQLTagInterface } from './gqlResult';
  *
  */
 export class SmartWeaveGlobal {
+  gasUsed: number;
+  gasLimit: number;
   transaction: Transaction;
   block: Block;
   arweave: Pick<Arweave, 'ar' | 'wallets' | 'utils' | 'crypto'>;
@@ -46,7 +48,9 @@ export class SmartWeaveGlobal {
 
   _activeTx?: GQLNodeInterface;
 
-  constructor(arweave: Arweave, contract: { id: string; owner: string }) {
+  constructor(arweave: Arweave, contract: { id: string; owner: string }, gasLimit = Number.MAX_SAFE_INTEGER) {
+    this.gasUsed = 0;
+    this.gasLimit = gasLimit;
     this.unsafeClient = arweave;
     this.arweave = {
       ar: arweave.ar,
