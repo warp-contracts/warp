@@ -61,6 +61,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     let currentState = baseState.state;
     const validity = baseState.validity;
 
+    executionContext.handler.initState(currentState);
+
     this.logger.info(
       `Evaluating state for ${contractDefinition.txId} [${missingInteractions.length} non-cached of ${sortedInteractions.length} all]`
     );

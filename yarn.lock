@@ -51,6 +51,11 @@
     http-errors "^1.7.3"
     object-path "^0.11.4"
 
+"@assemblyscript/loader@^0.19.23":
+  version "0.19.23"
+  resolved "https://registry.yarnpkg.com/@assemblyscript/loader/-/loader-0.19.23.tgz#7fccae28d0a2692869f1d1219d36093bc24d5e72"
+  integrity sha512-ulkCYfFbYj01ie1MDOyxv2F6SpRN1TOj7fQxbP07D6HmeR+gr2JLSmINKjga2emB+b1L2KGrFKBTc+e00p54nw==
+
 "@babel/code-frame@7.12.11":
   version "7.12.11"
   resolved "https://registry.npmjs.org/@babel/code-frame/-/code-frame-7.12.11.tgz"
@@ -1769,7 +1774,7 @@ bluebird@^2.6.2, bluebird@^2.8.1:
   resolved "https://registry.npmjs.org/bluebird/-/bluebird-2.11.0.tgz"
   integrity sha1-U0uQM8AiyVecVro7Plpcqvu2UOE=
 
-bn.js@^4.0.0, bn.js@^4.11.8, bn.js@^4.11.9:
+bn.js@^4.0.0, bn.js@^4.11.6, bn.js@^4.11.8, bn.js@^4.11.9:
   version "4.12.0"
   resolved "https://registry.npmjs.org/bn.js/-/bn.js-4.12.0.tgz"
   integrity sha512-c98Bf3tPniI+scsdk237ku1Dc3ujXQTSgyiPUDEOe7tRkhrqridvh8klBv0HCEso1OLOYcHuCv/cS6DNxKH+ZA==
@@ -1861,6 +1866,20 @@ buffer-from@^1.0.0:
   version "1.1.2"
   resolved "https://registry.npmjs.org/buffer-from/-/buffer-from-1.1.2.tgz"
   integrity sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==
+
+buffer-pipe@0.0.0:
+  version "0.0.0"
+  resolved "https://registry.yarnpkg.com/buffer-pipe/-/buffer-pipe-0.0.0.tgz#186ec257d696e8e74c3051160a0e9e9a9811a387"
+  integrity sha512-PvKbsvQOH4dcUyUEvQQSs3CIkkuPcOHt3gKnXwf4HsPKFDxSN7bkmICVIWgOmW/jx/fAEGGn4mIayIJPLs7G8g==
+  dependencies:
+    safe-buffer "^5.1.1"
+
+buffer-pipe@0.0.2:
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/buffer-pipe/-/buffer-pipe-0.0.2.tgz#960678ab517ca926dc1bfe231f402cbe2fe74442"
+  integrity sha512-YlqzbWVqMv+xEeRyg0OXAJym3zAFTAIuku9l7okwxOXNDxbmSlL5o3QaF5k6IQ2iHO9o1OCo6tT4UkrQkI5VbQ==
+  dependencies:
+    safe-buffer "^5.1.1"
 
 buffer-writer@2.0.0:
   version "2.0.0"
@@ -4693,6 +4712,14 @@ koa@^2.13.1:
     type-is "^1.6.16"
     vary "^1.1.2"
 
+leb128@0.0.4, leb128@^0.0.4:
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/leb128/-/leb128-0.0.4.tgz#f96d698cf3ba5b677423abfe50b7e9b2df1463ff"
+  integrity sha512-2zejk0fCIgY8RVcc/KzvyfpDio5Oo8HgPZmkrOmdwmbk0KpKpgD+JKwikxKk8cZYkANIhwHK50SNukkCm3XkCQ==
+  dependencies:
+    bn.js "^4.11.6"
+    buffer-pipe "0.0.0"
+
 leven@^3.1.0:
   version "3.1.0"
   resolved "https://registry.npmjs.org/leven/-/leven-3.1.0.tgz"
@@ -6759,6 +6786,24 @@ walker@^1.0.7:
   integrity sha512-ts/8E8l5b7kY0vlWLewOkDXMmPdLcVV4GmOQLyxuSswIJsweeFZtAsMF7k1Nszz+TYBQrlYRmzOnr398y1JemQ==
   dependencies:
     makeerror "1.0.12"
+
+wasm-json-toolkit@0.2.3:
+  version "0.2.3"
+  resolved "https://registry.yarnpkg.com/wasm-json-toolkit/-/wasm-json-toolkit-0.2.3.tgz#51207da907a343152b02d0e97ee30c4a6e9f2308"
+  integrity sha512-W0pESOST9hHFEmHq9kzMxAEhcPYuASdYCDw4FavKSyQKh3uOmH2slRXR/MhTKJY+gp1AauUDNd9DeE0cS4bV4A==
+  dependencies:
+    bn.js "^4.11.8"
+    buffer-pipe "0.0.2"
+    leb128 "0.0.4"
+    safe-buffer "^5.1.1"
+
+wasm-metering@^0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/wasm-metering/-/wasm-metering-0.2.1.tgz#08220896e5e74b4ee3286636fd31d84e40544083"
+  integrity sha512-YDlTPY4jspknNyDaVBQhLTuTYBh+39qI0P9F0grmR88NR4oh7qfgpTwZ2ly4oX2hHCj9KlIwhy2Yyez+3/wY2Q==
+  dependencies:
+    leb128 "^0.0.4"
+    wasm-json-toolkit "0.2.3"
 
 wcwidth@^1.0.1:
   version "1.0.1"

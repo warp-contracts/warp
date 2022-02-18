@@ -36,6 +36,7 @@ describe('Testing the SmartWeave client for WASM contract', () => {
     });
 
     LoggerFactory.INST.logLevel('error');
+    LoggerFactory.INST.logLevel('debug', 'WasmContractHandlerApi');
 
     smartweave = SmartWeaveNodeFactory.memCached(arweave);
 
@@ -62,35 +63,29 @@ describe('Testing the SmartWeave client for WASM contract', () => {
     await arlocal.stop();
   });
 
-  it('should properly deploy contract with initial state', async () => {
+  it('should properly deploy contract', async () => {
     const contractTx = await arweave.transactions.get(contractTxId);
-
     expect(contractTx).not.toBeNull();
   });
 
-
-  /*
-  it('should properly add new interaction', async () => {
-    await contract.writeInteraction({ function: 'add' });
-
-    await mineBlock(arweave);
-
-    expect((await contract.readState()).state.counter).toEqual(556);
+  it('should properly read initial state', async () => {
+    expect((await contract.readState()).state.counter).toEqual(0);
   });
 
-  it('should properly add another interactions', async () => {
-    await contract.writeInteraction({ function: 'add' });
+  it('should properly read state after adding interactions', async () => {
+    await contract.writeInteraction({ function: 'increment' });
     await mineBlock(arweave);
-    await contract.writeInteraction({ function: 'add' });
+    await contract.writeInteraction({ function: 'increment' });
     await mineBlock(arweave);
-    await contract.writeInteraction({ function: 'add' });
+    await contract.writeInteraction({ function: 'increment' });
     await mineBlock(arweave);
 
-    expect((await contract.readState()).state.counter).toEqual(559);
+    expect((await contract.readState()).state.counter).toEqual(3);
   });
 
   it('should properly view contract state', async () => {
-    const interactionResult = await contract.viewState<unknown, number>({ function: 'value' });
-    expect(interactionResult.result).toEqual(559);
-  });*/
+    const interactionResult = await contract.viewState<unknown, any>({ function: 'fullName' });
+
+    expect(interactionResult.result.fullName).toEqual("first_ppe last_ppe");
+  });
 });

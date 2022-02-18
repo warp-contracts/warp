@@ -219,4 +219,8 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
       return result?.cachedValue.state;
     };
   }
+
+  initState(state: State): void {
+    // nth to do in this impl...
+  }
 }
