@@ -71,6 +71,8 @@ export class ArweaveWrapper {
     }
   }
 
+  // DO NOT USE - it is probably not safe - see discord question from
+  // https://github.com/redstone-finance/redstone-smartcontracts/issues/97
   async tx(id: string): Promise<Transaction> {
     const response = await fetch(`${this.baseUrl}/tx/${id}`)
       .then((res) => {

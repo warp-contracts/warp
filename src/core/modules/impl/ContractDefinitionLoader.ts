@@ -40,7 +40,7 @@ export class ContractDefinitionLoader implements DefinitionLoader {
   async doLoad<State>(contractTxId: string, forcedSrcTxId?: string): Promise<ContractDefinition<State>> {
     const benchmark = Benchmark.measure();
 
-    const contractTx = await this.arweaveWrapper.tx(contractTxId);
+    const contractTx = await this.arweave.transactions.get(contractTxId); //await this.arweaveWrapper.tx(contractTxId);
     const owner = await this.arweave.wallets.ownerToAddress(contractTx.owner);
     this.logger.debug('Contract tx and owner', benchmark.elapsed());
     benchmark.reset();
@@ -50,10 +50,11 @@ export class ContractDefinitionLoader implements DefinitionLoader {
     this.logger.debug('Tags decoding', benchmark.elapsed());
     benchmark.reset();
 
-    const src = await this.arweaveWrapper.txData(contractSrcTxId);
+    const contractSrcTx = await this.arweave.transactions.get(contractSrcTxId);
     this.logger.debug('Contract src tx load', benchmark.elapsed());
     benchmark.reset();
 
+    const src = contractSrcTx.get('data', { decode: true, string: true });
     const initState = JSON.parse(await this.evalInitialState(contractTx));
     this.logger.debug('Parsing src and init state', benchmark.elapsed());
 
@@ -71,10 +72,10 @@ export class ContractDefinitionLoader implements DefinitionLoader {
     if (getTag(contractTx, SmartWeaveTags.INIT_STATE)) {
       return getTag(contractTx, SmartWeaveTags.INIT_STATE);
     } else if (getTag(contractTx, SmartWeaveTags.INIT_STATE_TX)) {
-      const stateTX = getTag(contractTx, SmartWeaveTags.INIT_STATE_TX);
-      return this.arweaveWrapper.txData(stateTX);
+      const stateTX = await this.arweave.transactions.get(getTag(contractTx, SmartWeaveTags.INIT_STATE_TX));
+      return stateTX.get('data', { decode: true, string: true });
     } else {
-      return this.arweaveWrapper.txData(contractTx.id);
+      return contractTx.get('data', { decode: true, string: true });
     }
   }
 }
