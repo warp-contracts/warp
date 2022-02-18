@@ -58,7 +58,7 @@ export class ArweaveWrapper {
           if (error.body?.message) {
             this.logger.error(error.body.message);
           }
-          throw new Error(`Unable to retrieve gql page. ${error.status}.`);
+          throw new Error(`Unable to retrieve gql page. ${error.status}. ${error.body?.message}`);
         });
 
       return {

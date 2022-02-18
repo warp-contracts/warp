@@ -38,7 +38,7 @@ const testCasesGw: string[] = JSON.parse(fs.readFileSync(path.join(__dirname, 't
 const chunked: string[][][] = [...chunks(testCases, 10)];
 const chunkedGw: string[][][] = [...chunks(testCasesGw, 10)];
 
-describe.each(chunked)('.suite %#', (contracts: string[]) => {
+fdescribe.each(chunked)('.suite %#', (contracts: string[]) => {
   // note: concurrent doesn't seem to be working here, duh...
   // will probably need to manually split all the test cases to separate test files
   it.concurrent.each(contracts)(
