@@ -34,9 +34,6 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
     currentResult: EvalStateResult<State>,
     interactionData: InteractionData<Input>
   ): Promise<InteractionResult<State, Result>> {
-    const contractLogger = LoggerFactory.INST.create('Contract');
-
-
     try {
       const {interaction, interactionTx, currentTx} = interactionData;
 

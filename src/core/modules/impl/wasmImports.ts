@@ -1,6 +1,7 @@
-import {SmartWeaveGlobal} from "@smartweave";
+import {LoggerFactory, SmartWeaveGlobal} from "@smartweave";
 
 export const imports = (swGlobal: SmartWeaveGlobal, wasmModule: any): any => {
+  const wasmLogger = LoggerFactory.INST.create('WASM');
   return {
     metering: {
       usegas: (gas) => {
@@ -15,45 +16,45 @@ export const imports = (swGlobal: SmartWeaveGlobal, wasmModule: any): any => {
     },
     console: {
       "console.log": function (msgPtr) {
-        console.log(`Contract: ${wasmModule.exports.__getString(msgPtr)}`);
+        wasmLogger.debug(`${swGlobal.contract.id}: ${wasmModule.exports.__getString(msgPtr)}`);
       },
       "console.logO": function (msgPtr, objPtr) {
-        console.log(`Contract: ${wasmModule.exports.__getString(msgPtr)}`, JSON.parse(wasmModule.exports.__getString(objPtr)));
+        wasmLogger.debug(`${swGlobal.contract.id}: ${wasmModule.exports.__getString(msgPtr)}`, JSON.parse(wasmModule.exports.__getString(objPtr)));
       },
     },
     block: {
       "Block.height": function () {
-        return 875290;
+        return swGlobal.block.height;
       },
       "Block.indep_hash": function () {
-        return wasmModule.exports.__newString("iIMsQJ1819NtkEUEMBRl6-7I6xkeDipn1tK4w_cDFczRuD91oAZx5qlgSDcqq1J1");
+        return wasmModule.exports.__newString(swGlobal.block.indep_hash);
       },
       "Block.timestamp": function () {
-        return 123123123;
+        return swGlobal.block.timestamp;
       },
     },
     transaction: {
       "Transaction.id": function () {
-        return wasmModule.exports.__newString("Transaction.id");
+        return wasmModule.exports.__newString(swGlobal.transaction.id);
       },
       "Transaction.owner": function () {
-        return wasmModule.exports.__newString("Transaction.owner");
+        return wasmModule.exports.__newString(swGlobal.transaction.owner);
       },
       "Transaction.target": function () {
-        return wasmModule.exports.__newString("Transaction.target");
+        return wasmModule.exports.__newString(swGlobal.transaction.target);
       },
     },
     contract: {
       "Contract.id": function () {
-        return wasmModule.exports.__newString("Contract.id");
+        return wasmModule.exports.__newString(swGlobal.contract.id);
       },
       "Contract.owner": function () {
-        return wasmModule.exports.__newString("Contract.owner");
+        return wasmModule.exports.__newString(swGlobal.contract.owner);
       },
     },
     msg: {
       "msg.sender": function () {
-        return wasmModule.exports.__newString("msg.sender");
+        return wasmModule.exports.__newString(swGlobal.transaction.owner);
       },
     },
     api: {
