@@ -1,6 +1,6 @@
 import {SmartWeaveGlobal} from "@smartweave";
 
-export function imports(swGlobal: SmartWeaveGlobal, wasmExports: any): any {
+export const imports = (swGlobal: SmartWeaveGlobal, wasmModule: any): any => {
   return {
     metering: {
       usegas: (gas) => {
@@ -15,10 +15,10 @@ export function imports(swGlobal: SmartWeaveGlobal, wasmExports: any): any {
     },
     console: {
       "console.log": function (msgPtr) {
-        console.log(`Contract: ${wasmExports.__getString(msgPtr)}`);
+        console.log(`Contract: ${wasmModule.exports.__getString(msgPtr)}`);
       },
       "console.logO": function (msgPtr, objPtr) {
-        console.log(`Contract: ${wasmExports.__getString(msgPtr)}`, JSON.parse(wasmExports.__getString(objPtr)));
+        console.log(`Contract: ${wasmModule.exports.__getString(msgPtr)}`, JSON.parse(wasmModule.exports.__getString(objPtr)));
       },
     },
     block: {
@@ -26,7 +26,7 @@ export function imports(swGlobal: SmartWeaveGlobal, wasmExports: any): any {
         return 875290;
       },
       "Block.indep_hash": function () {
-        return wasmExports.__newString("iIMsQJ1819NtkEUEMBRl6-7I6xkeDipn1tK4w_cDFczRuD91oAZx5qlgSDcqq1J1");
+        return wasmModule.exports.__newString("iIMsQJ1819NtkEUEMBRl6-7I6xkeDipn1tK4w_cDFczRuD91oAZx5qlgSDcqq1J1");
       },
       "Block.timestamp": function () {
         return 123123123;
@@ -34,36 +34,36 @@ export function imports(swGlobal: SmartWeaveGlobal, wasmExports: any): any {
     },
     transaction: {
       "Transaction.id": function () {
-        return wasmExports.__newString("Transaction.id");
+        return wasmModule.exports.__newString("Transaction.id");
       },
       "Transaction.owner": function () {
-        return wasmExports.__newString("Transaction.owner");
+        return wasmModule.exports.__newString("Transaction.owner");
       },
       "Transaction.target": function () {
-        return wasmExports.__newString("Transaction.target");
+        return wasmModule.exports.__newString("Transaction.target");
       },
     },
     contract: {
       "Contract.id": function () {
-        return wasmExports.__newString("Contract.id");
+        return wasmModule.exports.__newString("Contract.id");
       },
       "Contract.owner": function () {
-        return wasmExports.__newString("Contract.owner");
+        return wasmModule.exports.__newString("Contract.owner");
       },
     },
     msg: {
       "msg.sender": function () {
-        return wasmExports.__newString("msg.sender");
+        return wasmModule.exports.__newString("msg.sender");
       },
     },
     api: {
       _readContractState: (fnIndex, contractTxIdPtr) => {
-        const contractTxId = wasmExports.__getString(contractTxIdPtr);
+        const contractTxId = wasmModule.exports.__getString(contractTxIdPtr);
         const callbackFn = getFn(fnIndex);
         console.log("Simulating read state of", contractTxId);
         return setTimeout(() => {
           console.log('calling callback');
-          callbackFn(wasmExports.__newString(JSON.stringify({
+          callbackFn(wasmModule.exports.__newString(JSON.stringify({
             contractTxId
           })));
         }, 1000);
@@ -73,9 +73,9 @@ export function imports(swGlobal: SmartWeaveGlobal, wasmExports: any): any {
     env: {
       abort(messagePtr, fileNamePtr, line, column) {
         console.error("--------------------- Error message from AssemblyScript ----------------------");
-        console.error("  " + wasmExports.__getString(messagePtr));
+        console.error("  " + wasmModule.exports.__getString(messagePtr));
         console.error(
-          '    In file "' + wasmExports.__getString(fileNamePtr) + '"'
+          '    In file "' + wasmModule.exports.__getString(fileNamePtr) + '"'
         );
         console.error(`    on line ${line}, column ${column}.`);
         console.error("------------------------------------------------------------------------------\n");
@@ -84,9 +84,9 @@ export function imports(swGlobal: SmartWeaveGlobal, wasmExports: any): any {
   }
 
   function getFn(idx) {
-    return wasmExports.table.get(idx);
+    return wasmModule.exports.table.get(idx);
   }
-}
+};
 
 function formatGas(gas) {
   return gas * 1e-4;

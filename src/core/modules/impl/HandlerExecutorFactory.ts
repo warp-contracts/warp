@@ -9,11 +9,12 @@ import {
   normalizeContractSource,
   SmartWeaveGlobal
 } from '@smartweave';
-import { ContractHandlerApi } from './ContractHandlerApi';
+import {ContractHandlerApi} from './ContractHandlerApi';
 import loader from '@assemblyscript/loader/umd';
-import { imports } from './wasmImports';
-import { WasmContractHandlerApi } from './WasmContractHandlerApi';
+import {imports} from './wasmImports';
+import {WasmContractHandlerApi} from './WasmContractHandlerApi';
 
+const metering = require('wasm-metering');
 /**
  * A factory that produces handlers that are compatible with the "current" style of
  * writing SW contracts (ie. using "handle" function).
@@ -30,111 +31,28 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
     });
 
     if (contractDefinition.contractType == 'js') {
+      this.logger.info("Creating handler for js contract", contractDefinition.txId);
       const normalizedSource = normalizeContractSource(this.arweave.utils.bufferToString(contractDefinition.src));
 
       const contractFunction = new Function(normalizedSource);
 
       return new ContractHandlerApi(swGlobal, contractFunction, contractDefinition);
     } else {
-      let wasmExports;
+      this.logger.info("Creating handler for wasm contract", contractDefinition.txId);
 
-      const wasmModule = loader.instantiateSync(contractDefinition.src, {
-        metering: {
-          usegas: (gas) => {
-            if (gas < 0) {
-              return;
-            }
-            swGlobal.gasUsed += gas;
-            if (swGlobal.gasUsed > swGlobal.gasLimit) {
-              throw new Error(
-                `[RE:OOG] Out of gas! Limit: ${formatGas(swGlobal.gasUsed)}, used: ${formatGas(swGlobal.gasLimit)}`
-              );
-            }
-          }
-        },
-        console: {
-          'console.log': function (msgPtr) {
-            console.log(`Contract: ${wasmExports.__getString(msgPtr)}`);
-          },
-          'console.logO': function (msgPtr, objPtr) {
-            console.log(`Contract: ${wasmExports.__getString(msgPtr)}`, JSON.parse(wasmExports.__getString(objPtr)));
-          }
-        },
-        block: {
-          'Block.height': function () {
-            return 875290;
-          },
-          'Block.indep_hash': function () {
-            return wasmExports.__newString('iIMsQJ1819NtkEUEMBRl6-7I6xkeDipn1tK4w_cDFczRuD91oAZx5qlgSDcqq1J1');
-          },
-          'Block.timestamp': function () {
-            return 123123123;
-          }
-        },
-        transaction: {
-          'Transaction.id': function () {
-            return wasmExports.__newString('Transaction.id');
-          },
-          'Transaction.owner': function () {
-            return wasmExports.__newString('Transaction.owner');
-          },
-          'Transaction.target': function () {
-            return wasmExports.__newString('Transaction.target');
-          }
-        },
-        contract: {
-          'Contract.id': function () {
-            return wasmExports.__newString('Contract.id');
-          },
-          'Contract.owner': function () {
-            return wasmExports.__newString('Contract.owner');
-          }
-        },
-        msg: {
-          'msg.sender': function () {
-            return wasmExports.__newString('msg.sender');
-          }
-        },
-        api: {
-          _readContractState: (fnIndex, contractTxIdPtr) => {
-            const contractTxId = wasmExports.__getString(contractTxIdPtr);
-            const callbackFn = getFn(fnIndex);
-            console.log('Simulating read state of', contractTxId);
-            return setTimeout(() => {
-              console.log('calling callback');
-              callbackFn(
-                wasmExports.__newString(
-                  JSON.stringify({
-                    contractTxId
-                  })
-                )
-              );
-            }, 1000);
-          },
-          clearTimeout
-        },
-        env: {
-          abort(messagePtr, fileNamePtr, line, column) {
-            console.error('--------------------- Error message from AssemblyScript ----------------------');
-            console.error('  ' + wasmExports.__getString(messagePtr));
-            console.error('    In file "' + wasmExports.__getString(fileNamePtr) + '"');
-            console.error(`    on line ${line}, column ${column}.`);
-            console.error('------------------------------------------------------------------------------\n');
-          }
-        }
+      let wasmModuleData = {
+        exports: null
+      };
+
+      const meteredWasmBinary = metering.meterWASM(contractDefinition.src, {
+        meterType: 'i32'
       });
 
-      function getFn(idx) {
-        return wasmExports.table.get(idx);
-      }
+      const wasmModule = loader.instantiateSync(meteredWasmBinary, imports(swGlobal, wasmModuleData));
 
-      function formatGas(gas) {
-        return gas * 1e-4;
-      }
+      wasmModuleData.exports = wasmModule.exports;
 
-      wasmExports = wasmModule.exports;
-
-      return new WasmContractHandlerApi(swGlobal, contractDefinition, wasmExports);
+      return new WasmContractHandlerApi(swGlobal, contractDefinition, wasmModule.exports);
     }
   }
 }

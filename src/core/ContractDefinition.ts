@@ -6,7 +6,7 @@ import {ContractType} from "./modules/CreateContract";
 export type ContractDefinition<State> = {
   txId: string;
   srcTxId: string;
-  src: ArrayBuffer;
+  src: Buffer;
   initState: State;
   minFee: string;
   owner: string;

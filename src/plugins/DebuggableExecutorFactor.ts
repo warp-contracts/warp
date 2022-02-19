@@ -20,7 +20,7 @@ export class DebuggableExecutorFactory<Api> implements ExecutorFactory<Api> {
 
       contractDefinition = {
         ...contractDefinition,
-        src: enc.encode(this.sourceCode[contractDefinition.txId])
+        src: Buffer.from(enc.encode(this.sourceCode[contractDefinition.txId]))
       };
     }
 
