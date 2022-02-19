@@ -37,6 +37,7 @@ describe('Testing the SmartWeave client for WASM contract', () => {
 
     LoggerFactory.INST.logLevel('error');
     LoggerFactory.INST.logLevel('debug', 'WasmContractHandlerApi');
+    LoggerFactory.INST.logLevel('debug', 'WASM');
 
     smartweave = SmartWeaveNodeFactory.memCached(arweave);
 
