@@ -62,7 +62,8 @@
     "lodash": "^4.17.21",
     "redstone-isomorphic": "^1.0.2",
     "tslog": "^3.2.2",
-    "undici": "^4.12.2"
+    "undici": "^4.12.2",
+    "wasm-metering": "^0.2.1"
   },
   "devDependencies": {
     "@types/cheerio": "^0.22.30",

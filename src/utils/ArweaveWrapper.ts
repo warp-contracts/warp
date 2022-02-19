@@ -88,13 +88,13 @@ export class ArweaveWrapper {
     });
   }
 
-  async txData(id: string): Promise<ArrayBuffer> {
+  async txData(id: string): Promise<Buffer> {
     const response = await fetch(`${this.baseUrl}/${id}`);
     if (!response.ok) {
       throw new Error(`Unable to load tx data ${id}`);
     }
     const buffer = await response.arrayBuffer();
-    return buffer;
+    return Buffer.from(buffer);
   }
 
   async txDataString(id: string): Promise<string> {
