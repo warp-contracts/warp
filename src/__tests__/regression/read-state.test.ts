@@ -26,7 +26,7 @@ const arweave = Arweave.init({
   host: 'arweave.net',
   port: 443,
   protocol: 'https',
-  timeout: 60000,
+  timeout: 20000,
   logging: false
 });
 
@@ -38,7 +38,7 @@ const testCasesGw: string[] = JSON.parse(fs.readFileSync(path.join(__dirname, 't
 const chunked: string[][][] = [...chunks(testCases, 10)];
 const chunkedGw: string[][][] = [...chunks(testCasesGw, 10)];
 
-describe.each(chunked)('.suite %#', (contracts: string[]) => {
+describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
   // note: concurrent doesn't seem to be working here, duh...
   // will probably need to manually split all the test cases to separate test files
   it.concurrent.each(contracts)(
@@ -57,7 +57,7 @@ describe.each(chunked)('.suite %#', (contracts: string[]) => {
   );
 });
 
-describe.each(chunkedGw)('.suite %#', (contracts: string[]) => {
+describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
   // note: concurrent doesn't seem to be working here, duh...
   // will probably need to manually split all the test cases to separate test files
   it.concurrent.each(contracts)(

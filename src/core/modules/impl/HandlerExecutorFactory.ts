@@ -9,10 +9,10 @@ import {
   normalizeContractSource,
   SmartWeaveGlobal
 } from '@smartweave';
-import {ContractHandlerApi} from './ContractHandlerApi';
+import { ContractHandlerApi } from './ContractHandlerApi';
 import loader from '@assemblyscript/loader';
-import {imports} from './wasmImports';
-import {WasmContractHandlerApi} from './WasmContractHandlerApi';
+import { imports } from './wasmImports';
+import { WasmContractHandlerApi } from './WasmContractHandlerApi';
 
 const metering = require('wasm-metering');
 /**
@@ -27,18 +27,21 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
   async create<State>(contractDefinition: ContractDefinition<State>): Promise<HandlerApi<State>> {
     const swGlobal = new SmartWeaveGlobal(this.arweave, {
       id: contractDefinition.txId,
-      owner: contractDefinition.owner,
+      owner: contractDefinition.owner
     });
 
     if (contractDefinition.contractType == 'js') {
-      this.logger.info("Creating handler for js contract", contractDefinition.txId);
-      const normalizedSource = normalizeContractSource(this.arweave.utils.bufferToString(contractDefinition.src));
+      this.logger.info('Creating handler for js contract', contractDefinition.txId);
+      let normalizedSource =
+        contractDefinition.src instanceof Buffer
+          ? normalizeContractSource(this.arweave.utils.bufferToString(contractDefinition.src))
+          : normalizeContractSource(contractDefinition.src);
 
       const contractFunction = new Function(normalizedSource);
 
       return new ContractHandlerApi(swGlobal, contractFunction, contractDefinition);
     } else {
-      this.logger.info("Creating handler for wasm contract", contractDefinition.txId);
+      this.logger.info('Creating handler for wasm contract', contractDefinition.txId);
 
       let wasmModuleData = {
         exports: null
