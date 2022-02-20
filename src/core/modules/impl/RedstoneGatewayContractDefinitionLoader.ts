@@ -30,7 +30,7 @@ export class RedstoneGatewayContractDefinitionLoader extends ContractDefinitionL
     }
 
     try {
-      return await fetch(`${this.baseUrl}/gateway/contracts/${contractTxId}`)
+      const result: ContractDefinition<State> = await fetch(`${this.baseUrl}/gateway/contracts/${contractTxId}`)
         .then((res) => {
           return res.ok ? res.json() : Promise.reject(res);
         })
@@ -40,6 +40,8 @@ export class RedstoneGatewayContractDefinitionLoader extends ContractDefinitionL
           }
           throw new Error(`Unable to retrieve contract data. Redstone gateway responded with status ${error.status}.`);
         });
+      result.contractType = "js"; // TODO: Add support in redstone gateway
+      return result;
     } catch (e) {
       this.rLogger.warn('Falling back to default contracts loader');
       return await super.doLoad(contractTxId, forcedSrcTxId);
