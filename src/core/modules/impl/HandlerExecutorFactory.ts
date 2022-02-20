@@ -10,7 +10,7 @@ import {
   SmartWeaveGlobal
 } from '@smartweave';
 import {ContractHandlerApi} from './ContractHandlerApi';
-import loader from '@assemblyscript/loader/umd';
+import loader from '@assemblyscript/loader';
 import {imports} from './wasmImports';
 import {WasmContractHandlerApi} from './WasmContractHandlerApi';
 

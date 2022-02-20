@@ -22,16 +22,14 @@ module.exports = {
     "/_helpers",
   ],
 
-  extensionsToTreatAsEsm: ['.ts'],
-  globals: {
-    'ts-jest': {
-      useESM: true,
-    },
-  },
-
   testEnvironment: 'node',
 
+  "transformIgnorePatterns": [
+    "<rootDir>/node_modules/(?!@assemblyscript/.*)"
+  ],
+
+
   transform: {
-    '^.+\\.(ts)$': 'ts-jest'
+    '^.+\\.(ts|js)$': 'ts-jest'
   }
 };
