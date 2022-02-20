@@ -15,6 +15,7 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "baseUrl": "./src",
+    "allowJs": true,
     "paths": {
       "@smartweave/cache": ["cache/index"],
       "@smartweave/contract": ["contract/index"],
