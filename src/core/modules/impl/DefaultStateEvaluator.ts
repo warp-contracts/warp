@@ -144,7 +144,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           outputState: stackTrace.saveState ? currentState : undefined,
           executionTime: singleInteractionBenchmark.elapsed(true) as number,
           valid: validity[interactionTx.id],
-          errorMessage: errorMessage
+          errorMessage: errorMessage,
+          gasUsed: 0 // TODO...
         });
 
         this.logger.debug('New state after internal write', { contractTxId: contractDefinition.txId, newState });
@@ -185,6 +186,18 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         this.logResult<State>(result, interactionTx, executionContext);
 
+        this.logger.debug('Interaction evaluation', singleInteractionBenchmark.elapsed());
+
+        interactionCall.update({
+          cacheHit: false,
+          intermediaryCacheHit: false,
+          outputState: stackTrace.saveState ? currentState : undefined,
+          executionTime: singleInteractionBenchmark.elapsed(true) as number,
+          valid: validity[interactionTx.id],
+          errorMessage: errorMessage,
+          gasUsed: result.gasUsed
+        });
+
         if (result.type === 'exception' && ignoreExceptions !== true) {
           throw new Error(`Exception while processing ${JSON.stringify(interaction)}:\n${result.errorMessage}`);
         }
@@ -195,17 +208,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         // cannot simply take last element of the missingInteractions
         // as there is no certainty that it has been evaluated (e.g. issues with input tag).
         lastEvaluatedInteraction = interactionTx;
-
-        this.logger.debug('Interaction evaluation', singleInteractionBenchmark.elapsed());
-
-        interactionCall.update({
-          cacheHit: false,
-          intermediaryCacheHit: false,
-          outputState: stackTrace.saveState ? currentState : undefined,
-          executionTime: singleInteractionBenchmark.elapsed(true) as number,
-          valid: validity[interactionTx.id],
-          errorMessage: errorMessage
-        });
 
         await this.onStateUpdate<State>(interactionTx, executionContext, new EvalStateResult(currentState, validity));
       }

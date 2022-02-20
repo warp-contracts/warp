@@ -38,13 +38,18 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
       const {interaction, interactionTx, currentTx} = interactionData;
 
       this.swGlobal._activeTx = interactionTx;
+      // TODO: this should be rather set on the HandlerFactory level..
+      //  but currently no access evaluationOptions there
+      this.swGlobal.gasLimit = executionContext.evaluationOptions.gasLimit;
+      this.swGlobal.gasUsed = 0;
 
       const handlerResult = this.doHandle(interaction);
 
       return {
         type: 'ok',
         result: handlerResult,
-        state: this.doGetCurrentState()
+        state: this.doGetCurrentState(),
+        gasUsed: this.swGlobal.gasUsed
       };
     } catch (e) {
       // note: as exceptions handling in WASM is currently somewhat non-existent
@@ -58,26 +63,28 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
       // exception with prefix [CE:] ("Contract Exceptions") should be logged, but should not break
       // the state evaluation - as they are considered as contracts' business exception (eg. validation errors)
       // - eg: [CE:WTF] - [ContractException: WhatTheFunction] ;-)
+      const result = {
+        errorMessage: e.message,
+        state: currentResult.state,
+        result: null
+      }
       if (e.message.startsWith('[RE:')) {
+        this.logger.fatal(e);
         return {
+          ...result,
           type: 'exception',
-          errorMessage: e.message,
-          state: currentResult.state,
-          result: null
         };
       } else {
         return {
+          ...result,
           type: 'error',
-          errorMessage: e.message,
-          state: currentResult.state,
-          result: null
         };
       }
     }
   }
 
   private doHandle(action: any): any {
-    this.logger.info("Action", action.input);
+    this.logger.debug("Action", action.input);
     const actionPtr = this.wasmExports.__newString(stringify(action.input));
     const resultPtr = this.wasmExports.handle(actionPtr);
     const result = this.wasmExports.__getString(resultPtr);

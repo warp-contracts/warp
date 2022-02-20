@@ -27,7 +27,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
   async create<State>(contractDefinition: ContractDefinition<State>): Promise<HandlerApi<State>> {
     const swGlobal = new SmartWeaveGlobal(this.arweave, {
       id: contractDefinition.txId,
-      owner: contractDefinition.owner
+      owner: contractDefinition.owner,
     });
 
     if (contractDefinition.contractType == 'js') {
@@ -85,6 +85,7 @@ export type HandlerFunction<State, Input, Result> = (
 export type HandlerResult<State, Result> = {
   result: Result;
   state: State;
+  gasUsed?: number;
 };
 
 export type InteractionResult<State, Result> = HandlerResult<State, Result> & {

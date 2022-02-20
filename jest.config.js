@@ -22,6 +22,13 @@ module.exports = {
     "/_helpers",
   ],
 
+  extensionsToTreatAsEsm: ['.ts'],
+  globals: {
+    'ts-jest': {
+      useESM: true,
+    },
+  },
+
   testEnvironment: 'node',
 
   transform: {

@@ -628,7 +628,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
       outputState: this._evaluationOptions.stackTrace.saveState ? result.state : undefined,
       executionTime: benchmark.elapsed(true) as number,
       valid: result.type === 'ok',
-      errorMessage: result.errorMessage
+      errorMessage: result.errorMessage,
+      gasUsed: result.gasUsed
     });
 
     return result;
