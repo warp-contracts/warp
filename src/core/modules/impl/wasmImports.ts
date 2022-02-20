@@ -2,17 +2,10 @@ import {LoggerFactory, SmartWeaveGlobal} from "@smartweave";
 
 export const imports = (swGlobal: SmartWeaveGlobal, wasmModule: any): any => {
   const wasmLogger = LoggerFactory.INST.create('WASM');
+
   return {
     metering: {
-      usegas: (gas) => {
-        if (gas < 0) {
-          return;
-        }
-        swGlobal.gasUsed += gas;
-        if (swGlobal.gasUsed > swGlobal.gasLimit) {
-          throw new Error(`[RE:OOG] Out of gas! Limit: ${formatGas(swGlobal.gasUsed)}, used: ${formatGas(swGlobal.gasLimit)}`);
-        }
-      }
+      usegas: swGlobal.useGas
     },
     console: {
       "console.log": function (msgPtr) {
@@ -88,7 +81,3 @@ export const imports = (swGlobal: SmartWeaveGlobal, wasmModule: any): any => {
     return wasmModule.exports.table.get(idx);
   }
 };
-
-function formatGas(gas) {
-  return gas * 1e-4;
-}

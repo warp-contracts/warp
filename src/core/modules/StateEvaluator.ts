@@ -94,6 +94,8 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   };
 
   sequencerAddress = 'https://gateway.redstone.finance/';
+
+  gasLimit = Number.MAX_SAFE_INTEGER;
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some of the features.
@@ -137,4 +139,6 @@ export interface EvaluationOptions {
   };
 
   sequencerAddress: string;
+
+  gasLimit: number;
 }
