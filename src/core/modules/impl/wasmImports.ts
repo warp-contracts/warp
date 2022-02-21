@@ -45,11 +45,6 @@ export const imports = (swGlobal: SmartWeaveGlobal, wasmModule: any): any => {
         return wasmModule.exports.__newString(swGlobal.contract.owner);
       },
     },
-    msg: {
-      "msg.sender": function () {
-        return wasmModule.exports.__newString(swGlobal.transaction.owner);
-      },
-    },
     api: {
       _readContractState: (fnIndex, contractTxIdPtr) => {
         const contractTxId = wasmModule.exports.__getString(contractTxIdPtr);

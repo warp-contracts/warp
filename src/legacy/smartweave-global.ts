@@ -28,12 +28,6 @@ import { GQLNodeInterface, GQLTagInterface } from './gqlResult';
  *
  */
 
-
-function formatGas(gas) {
-  return gas * 1e-4;
-}
-
-
 export class SmartWeaveGlobal {
   gasUsed: number;
   gasLimit: number;
@@ -91,12 +85,16 @@ export class SmartWeaveGlobal {
 
   useGas(gas: number) {
     if (gas < 0) {
-      return;
+      throw new Error(`[RE:GNE] Gas number exception - gas < 0.`);
     }
     this.gasUsed += gas;
     if (this.gasUsed > this.gasLimit) {
-      throw new Error(`[RE:OOG] Out of gas! Limit: ${formatGas(this.gasUsed)}, used: ${formatGas(this.gasLimit)}`);
+      throw new Error(`[RE:OOG] Out of gas! Limit: ${this.formatGas(this.gasUsed)}, used: ${this.formatGas(this.gasLimit)}`);
     }
+  }
+
+  private formatGas(gas) {
+    return gas * 1e-4;
   }
 }
 
