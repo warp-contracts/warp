@@ -1,0 +1,13 @@
+{
+  "name": "WARP_9",
+  "owner": "GH2IY_3vtE2c0KfQve9_BHoIPjZCS8s5YmSFS_fppKI",
+  "ticker": "WARP_9",
+  "balances": {
+    "33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA": 12345678,
+    "GH2IY_3vtE2c0KfQve9_BHoIPjZCS8s5YmSFS_fppKI": 99999999,
+    "I-5rWUehEv-MjdK9gFw09RxfSLQX9DIHxG614Wf8qo0": 10000000,
+    "Yba8IVc_01bFxutKNJAZ7CmTD5AVi2GcWXf1NajPAsc": 30000000,
+    "zYqPZuALSPa_f5Agvf8g2JHv94cqMn9aBtnH7GFHbuA": 23111222
+  },
+  "canEvolve": true
+}

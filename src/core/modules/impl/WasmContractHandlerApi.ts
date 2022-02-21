@@ -68,6 +68,7 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
         state: currentResult.state,
         result: null
       }
+      console.log("Error in tx: " + interactionData.interactionTx.id);
       if (e.message.startsWith('[RE:')) {
         this.logger.fatal(e);
         return {
