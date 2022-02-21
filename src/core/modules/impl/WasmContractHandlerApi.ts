@@ -89,9 +89,6 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
     const resultPtr = this.wasmExports.handle(actionPtr);
     const result = this.wasmExports.__getString(resultPtr);
 
-    this.logger.info("Result", result);
-    this.logger.info("State", this.doGetCurrentState());
-
     return JSON.parse(result);
   }
 

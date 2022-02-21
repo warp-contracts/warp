@@ -12,6 +12,10 @@ import {
 import Arweave from 'arweave';
 import Transaction from 'arweave/web/lib/transaction';
 
+const supportedSrcContentTypes = [
+  'application/javascript', 'application/wasm'
+];
+
 export class ContractDefinitionLoader implements DefinitionLoader {
   private readonly logger = LoggerFactory.INST.create('ContractDefinitionLoader');
 
@@ -52,8 +56,11 @@ export class ContractDefinitionLoader implements DefinitionLoader {
     benchmark.reset();
 
     const contractSrcTx = await this.arweaveWrapper.tx(contractSrcTxId);
-    const contractType: ContractType =
-      getTag(contractSrcTx, SmartWeaveTags.CONTENT_TYPE) == 'application/javascript' ? 'js' : 'wasm';
+    const srcContentType = getTag(contractSrcTx, SmartWeaveTags.CONTENT_TYPE);
+    if (supportedSrcContentTypes.indexOf(srcContentType) == -1) {
+      throw new Error(`Contract source content type ${srcContentType} not supported`);
+    }
+    const contractType: ContractType = srcContentType == 'application/javascript' ? 'js' : 'wasm';
 
     const src = await this.arweaveWrapper.txData(contractSrcTxId);
     this.logger.debug('Contract src tx load', benchmark.elapsed());

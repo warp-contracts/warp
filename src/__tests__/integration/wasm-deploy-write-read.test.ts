@@ -98,7 +98,7 @@ describe('Testing the SmartWeave client for WASM contract', () => {
       function: 'increment'
     });
 
-    expect(result.gasUsed).toEqual(11090335);
+    expect(result.gasUsed).toEqual(9079017);
   });
 
   it('should return stable gas results', async () => {
@@ -113,7 +113,7 @@ describe('Testing the SmartWeave client for WASM contract', () => {
     }
 
     results.forEach((result) => {
-      expect(result.gasUsed).toEqual(11090335);
+      expect(result.gasUsed).toEqual(9079017);
     });
   });
 
