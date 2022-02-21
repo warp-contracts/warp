@@ -12,9 +12,7 @@ import {
 import Arweave from 'arweave';
 import Transaction from 'arweave/web/lib/transaction';
 
-const supportedSrcContentTypes = [
-  'application/javascript', 'application/wasm'
-];
+const supportedSrcContentTypes = ['application/javascript', 'application/wasm'];
 
 export class ContractDefinitionLoader implements DefinitionLoader {
   private readonly logger = LoggerFactory.INST.create('ContractDefinitionLoader');

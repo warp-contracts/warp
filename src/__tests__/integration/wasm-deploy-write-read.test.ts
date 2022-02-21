@@ -3,7 +3,7 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory } from '@smartweave';
+import {Contract, getTag, LoggerFactory, SmartWeave, SmartWeaveNodeFactory, SmartWeaveTags} from '@smartweave';
 import path from 'path';
 import { addFunds, mineBlock } from './_helpers';
 
@@ -68,7 +68,14 @@ describe('Testing the SmartWeave client for WASM contract', () => {
 
   it('should properly deploy contract', async () => {
     const contractTx = await arweave.transactions.get(contractTxId);
+
     expect(contractTx).not.toBeNull();
+    expect(getTag(contractTx, SmartWeaveTags.CONTRACT_TYPE)).toEqual('wasm');
+    expect(getTag(contractTx, SmartWeaveTags.WASM_LANG)).toEqual('assemblyscript');
+
+    const contractSrcTx = await arweave.transactions.get(getTag(contractTx, SmartWeaveTags.CONTRACT_SRC_TX_ID));
+    expect(getTag(contractSrcTx, SmartWeaveTags.CONTENT_TYPE)).toEqual('application/wasm');
+    expect(getTag(contractSrcTx, SmartWeaveTags.WASM_LANG)).toEqual('assemblyscript');
   });
 
   it('should properly read initial state', async () => {
@@ -122,8 +129,8 @@ describe('Testing the SmartWeave client for WASM contract', () => {
       function: 'infLoop'
     });
 
-    expect(result.type).toEqual("exception");
-    expect(result.errorMessage.startsWith("[RE:OOG")).toBeTruthy();
+    expect(result.type).toEqual('exception');
+    expect(result.errorMessage.startsWith('[RE:OOG')).toBeTruthy();
   });
 
   /*it('should skip interaction during contract state read if gas limit exceeded', async () => {
@@ -139,6 +146,4 @@ describe('Testing the SmartWeave client for WASM contract', () => {
 
     expect(callStack.getInteraction(txId)).toEqual({});
   });*/
-
-
 });

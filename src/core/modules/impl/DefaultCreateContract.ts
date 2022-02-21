@@ -1,6 +1,15 @@
-import {ContractData, ContractType, CreateContract, FromSrcTxContractData, SmartWeaveTags} from '@smartweave/core';
+import { ContractData, ContractType, CreateContract, FromSrcTxContractData, SmartWeaveTags } from '@smartweave/core';
 import Arweave from 'arweave';
 import { LoggerFactory } from '@smartweave/logging';
+import { imports } from './wasmImports';
+
+const wasmTypeMapping: Map<number, string> = new Map([
+  [1, 'assemblyscript'],
+  [2, 'rust'],
+  [3, 'go'],
+  [4, 'swift'],
+  [5, 'c']
+]);
 
 export class DefaultCreateContract implements CreateContract {
   private readonly logger = LoggerFactory.INST.create('DefaultCreateContract');
@@ -24,6 +33,27 @@ export class DefaultCreateContract implements CreateContract {
     srcTx.addTag(SmartWeaveTags.SDK, 'RedStone');
     srcTx.addTag(SmartWeaveTags.CONTENT_TYPE, contractType == 'js' ? 'application/javascript' : 'application/wasm');
 
+    let wasmLang = null;
+
+    if (contractType == 'wasm') {
+      // note: instantiating wasm module for a while just to check
+      // the exported "type" value - which holds info about source lang.
+      const module = await WebAssembly.instantiate(src, dummyImports());
+      // @ts-ignore
+      if (!module.instance.exports.type) {
+        throw new Error(`No info about source type in wasm binary. Did you forget to export global "type" value`);
+      }
+      // @ts-ignore
+      const type = module.instance.exports.type.value;
+      if (!wasmTypeMapping.has(type)) {
+        throw new Error(`Unknown wasm source type ${type}`);
+      }
+
+      wasmLang = wasmTypeMapping.get(type);
+
+      srcTx.addTag(SmartWeaveTags.WASM_LANG, wasmLang);
+    }
+
     await this.arweave.transactions.sign(srcTx, wallet);
 
     this.logger.debug('Posting transaction with source');
@@ -34,6 +64,8 @@ export class DefaultCreateContract implements CreateContract {
         srcTxId: srcTx.id,
         wallet,
         initState,
+        contractType,
+        wasmLang,
         tags,
         transfer
       });
@@ -71,6 +103,10 @@ export class DefaultCreateContract implements CreateContract {
     contractTX.addTag(SmartWeaveTags.CONTRACT_SRC_TX_ID, srcTxId);
     contractTX.addTag(SmartWeaveTags.SDK, 'RedStone');
     contractTX.addTag(SmartWeaveTags.CONTENT_TYPE, 'application/json');
+    contractTX.addTag(SmartWeaveTags.CONTRACT_TYPE, contractData.contractType);
+    if (contractData.contractType == 'wasm') {
+      contractTX.addTag(SmartWeaveTags.WASM_LANG, contractData.wasmLang);
+    }
 
     await this.arweave.transactions.sign(contractTX, wallet);
 
@@ -81,4 +117,13 @@ export class DefaultCreateContract implements CreateContract {
       throw new Error('Unable to write Contract Initial State');
     }
   }
+}
+
+function dummyImports() {
+  return imports(
+    {
+      useGas: function () {}
+    } as any,
+    null
+  );
 }
