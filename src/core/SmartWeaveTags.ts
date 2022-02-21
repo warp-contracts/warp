@@ -12,5 +12,7 @@ export enum SmartWeaveTags {
   MIN_FEE = 'Min-Fee',
   INIT_STATE = 'Init-State',
   INIT_STATE_TX = 'Init-State-TX',
-  INTERACT_WRITE = 'Interact-Write'
+  INTERACT_WRITE = 'Interact-Write',
+  WASM_LANG = 'Wasm-Lang',
+  CONTRACT_TYPE = 'Contract-Type'
 }

@@ -13,8 +13,8 @@ import { ContractHandlerApi } from './ContractHandlerApi';
 import loader from '@assemblyscript/loader';
 import { imports } from './wasmImports';
 import { WasmContractHandlerApi } from './WasmContractHandlerApi';
+import metering from 'wasm-metering';
 
-const metering = require('wasm-metering');
 /**
  * A factory that produces handlers that are compatible with the "current" style of
  * writing SW contracts (ie. using "handle" function).
@@ -32,7 +32,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
 
     if (contractDefinition.contractType == 'js') {
       this.logger.info('Creating handler for js contract', contractDefinition.txId);
-      let normalizedSource =
+      const normalizedSource =
         contractDefinition.src instanceof Buffer
           ? normalizeContractSource(this.arweave.utils.bufferToString(contractDefinition.src))
           : normalizeContractSource(contractDefinition.src);
@@ -43,7 +43,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
     } else {
       this.logger.info('Creating handler for wasm contract', contractDefinition.txId);
 
-      let wasmModuleData = {
+      const wasmModuleData = {
         exports: null
       };
 

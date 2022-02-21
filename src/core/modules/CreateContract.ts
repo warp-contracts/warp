@@ -29,6 +29,8 @@ export interface ContractData extends CommonContractData {
 
 export interface FromSrcTxContractData extends CommonContractData {
   srcTxId: string;
+  contractType: ContractType;
+  wasmLang: string | null;
 }
 
 export interface CreateContract {
