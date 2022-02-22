@@ -31,7 +31,7 @@ LoggerFactory.INST.logLevel('fatal');
 
 const WARP_PST = "KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY";
 
-const END_BLOCK = 863867;
+const END_BLOCK = 870424;
 
 class MockDefinitionLoader implements DefinitionLoader {
 
@@ -64,7 +64,7 @@ describe('readState', () => {
         new RedstoneGatewayContractDefinitionLoader('https://gateway.redstone.finance', arweave, new MemCache())
       )
       .build();
-    const jsResult = await smartweaveR.contract(WARP_PST).readState(END_BLOCK);
+    const jsResult = await smartweaveR.contract(WARP_PST).readState();
 
     const smartweaveR2 = SmartWeaveWebFactory.memCachedBased(arweave, 1)
       .setInteractionsLoader(
@@ -74,7 +74,7 @@ describe('readState', () => {
         new MockDefinitionLoader()
       )
       .build();
-    const wasmResult = await smartweaveR2.contract(WARP_PST).readState(END_BLOCK);
+    const wasmResult = await smartweaveR2.contract(WARP_PST).readState();
 
     expect(wasmResult).toEqual(jsResult);
 
