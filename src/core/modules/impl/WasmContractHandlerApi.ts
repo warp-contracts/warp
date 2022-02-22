@@ -10,7 +10,7 @@ import {
   RedStoneLogger,
   SmartWeaveGlobal
 } from '@smartweave';
-import stringify from "safe-stable-stringify";
+import stringify from 'safe-stable-stringify';
 
 export class WasmContractHandlerApi<State> implements HandlerApi<State> {
   private readonly contractLogger: RedStoneLogger;
@@ -35,7 +35,7 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
     interactionData: InteractionData<Input>
   ): Promise<InteractionResult<State, Result>> {
     try {
-      const {interaction, interactionTx, currentTx} = interactionData;
+      const { interaction, interactionTx, currentTx } = interactionData;
 
       this.swGlobal._activeTx = interactionTx;
       // TODO: this should be rather set on the HandlerFactory level..
@@ -67,24 +67,24 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
         errorMessage: e.message,
         state: currentResult.state,
         result: null
-      }
+      };
       if (e.message.startsWith('[RE:')) {
         this.logger.fatal(e);
         return {
           ...result,
-          type: 'exception',
+          type: 'exception'
         };
       } else {
         return {
           ...result,
-          type: 'error',
+          type: 'error'
         };
       }
     }
   }
 
   private doHandle(action: any): any {
-    this.logger.debug("Action", action.input);
+    this.logger.debug('Action', action.input);
     const actionPtr = this.wasmExports.__newString(stringify(action.input));
     const resultPtr = this.wasmExports.handle(actionPtr);
     const result = this.wasmExports.__getString(resultPtr);
