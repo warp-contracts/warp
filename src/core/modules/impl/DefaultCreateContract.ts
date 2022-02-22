@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { ContractData, ContractType, CreateContract, FromSrcTxContractData, SmartWeaveTags } from '@smartweave/core';
 import Arweave from 'arweave';
 import { LoggerFactory } from '@smartweave/logging';
@@ -41,7 +42,7 @@ export class DefaultCreateContract implements CreateContract {
       const module = await WebAssembly.instantiate(src, dummyImports());
       // @ts-ignore
       if (!module.instance.exports.type) {
-        throw new Error(`No info about source type in wasm binary. Did you forget to export global "type" value`);
+        throw new Error(`No info about source type in wasm binary. Did you forget to export global "type" value?`);
       }
       // @ts-ignore
       const type = module.instance.exports.type.value;
