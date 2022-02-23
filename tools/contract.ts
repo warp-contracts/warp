@@ -9,9 +9,9 @@ import {
 } from '../src';
 import * as fs from 'fs';
 import knex from 'knex';
-import os from "os";
-import {readJSON} from "../../redstone-smartweave-examples/src/_utils";
-import {TsLogFactory} from '../src/logging/node/TsLogFactory';
+import os from 'os';
+import { readJSON } from '../../redstone-smartweave-examples/src/_utils';
+import { TsLogFactory } from '../src/logging/node/TsLogFactory';
 
 const logger = LoggerFactory.INST.create('Contract');
 
@@ -19,6 +19,7 @@ LoggerFactory.use(new TsLogFactory());
 LoggerFactory.INST.logLevel('error');
 LoggerFactory.INST.logLevel('info', 'Contract');
 LoggerFactory.INST.logLevel('debug', 'RedstoneGatewayInteractionsLoader');
+LoggerFactory.INST.logLevel('debug', 'RedstoneGatewayContractDefinitionLoader');
 LoggerFactory.INST.logLevel('error', 'DefaultStateEvaluator');
 LoggerFactory.INST.logLevel('error', 'DefaultStateEvaluator');
 
@@ -45,37 +46,27 @@ async function main() {
     fs.rmSync(CACHE_PATH);
   }
 
-  const smartweave = (
-    await SmartWeaveNodeFactory.knexCachedBased(
-      arweave,
-      knex({
-        client: 'sqlite3',
-        connection: {
-          filename: CACHE_PATH
-        },
-        useNullAsDefault: true
-      })
-    )
-  )
+  const smartweave = SmartWeaveNodeFactory.memCachedBased(arweave)
     .setInteractionsLoader(
-      new RedstoneGatewayInteractionsLoader('https://gateway.redstone.finance', {notCorrupted: true})
+      new RedstoneGatewayInteractionsLoader('https://gateway.redstone.finance', { notCorrupted: true })
     )
     .setDefinitionLoader(
       new RedstoneGatewayContractDefinitionLoader('https://gateway.redstone.finance', arweave, new MemCache())
     )
     .build();
 
-  const jwk = readJSON("../redstone-node/.secrets/redstone-jwk.json");
-  const contract = smartweave.contract(LOOT_CONTRACT)
+  const jwk = readJSON('../redstone-node/.secrets/redstone-jwk.json');
+  const contract = smartweave
+    .contract(LOOT_CONTRACT)
     .setEvaluationOptions({
-      sequencerAddress: "http://localhost:5666/"
+      sequencerAddress: 'http://localhost:5666/'
     })
     .connect(jwk);
-  const bundledInteraction = await contract.bundleInteraction({
-    function: "generate"
+ /* const bundledInteraction = await contract.bundleInteraction({
+    function: 'generate'
   });
 
-  logger.info("Bundled interaction", bundledInteraction);
+  logger.info('Bundled interaction', bundledInteraction);*/
 
   // bundlr balance I-5rWUehEv-MjdK9gFw09RxfSLQX9DIHxG614Wf8qo0 -h https://node1.bundlr.network/ -c arweave
 
@@ -100,25 +91,30 @@ async function main() {
 }
 
 function printTestInfo() {
-  console.log("Test info  ");
-  console.log("===============");
-  console.log("  ", "OS       ", os.type() + " " + os.release() + " " + os.arch());
-  console.log("  ", "Node.JS  ", process.versions.node);
-  console.log("  ", "V8       ", process.versions.v8);
-  let cpus = os.cpus().map(function (cpu) {
-    return cpu.model;
-  }).reduce(function (o, model) {
-    if (!o[model]) o[model] = 0;
-    o[model]++;
-    return o;
-  }, {});
+  console.log('Test info  ');
+  console.log('===============');
+  console.log('  ', 'OS       ', os.type() + ' ' + os.release() + ' ' + os.arch());
+  console.log('  ', 'Node.JS  ', process.versions.node);
+  console.log('  ', 'V8       ', process.versions.v8);
+  let cpus = os
+    .cpus()
+    .map(function (cpu) {
+      return cpu.model;
+    })
+    .reduce(function (o, model) {
+      if (!o[model]) o[model] = 0;
+      o[model]++;
+      return o;
+    }, {});
 
-  cpus = Object.keys(cpus).map(function (key) {
-    return key + " \u00d7 " + cpus[key];
-  }).join("\n");
-  console.log("  ", "CPU      ", cpus);
-  console.log("  ", "Memory   ", (os.totalmem() / 1024 / 1024 / 1024).toFixed(0), "GB");
-  console.log("===============");
+  cpus = Object.keys(cpus)
+    .map(function (key) {
+      return key + ' \u00d7 ' + cpus[key];
+    })
+    .join('\n');
+  console.log('  ', 'CPU      ', cpus);
+  console.log('  ', 'Memory   ', (os.totalmem() / 1024 / 1024 / 1024).toFixed(0), 'GB');
+  console.log('===============');
 }
 
 main().catch((e) => console.error(e));

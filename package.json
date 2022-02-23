@@ -61,6 +61,7 @@
     "knex": "^0.95.14",
     "lodash": "^4.17.21",
     "redstone-isomorphic": "^1.0.2",
+    "safe-stable-stringify": "2.3.1",
     "tslog": "^3.2.2",
     "undici": "^4.12.2",
     "wasm-metering": "^0.2.1"
@@ -84,7 +85,6 @@
     "pg": "^8.7.1",
     "prettier": "^2.3.2",
     "rimraf": "^3.0.2",
-    "safe-stable-stringify": "2.3.1",
     "simple-statistics": "^7.7.0",
     "smartweave": "0.4.46",
     "sqlite3": "^5.0.2",

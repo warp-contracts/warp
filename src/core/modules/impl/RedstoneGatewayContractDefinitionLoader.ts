@@ -38,12 +38,12 @@ export class RedstoneGatewayContractDefinitionLoader extends ContractDefinitionL
           if (error.body?.message) {
             this.rLogger.error(error.body.message);
           }
-          throw new Error(`Unable to retrieve contract data. Redstone gateway responded with status ${error.status}.`);
+          throw new Error(`Unable to retrieve contract data. Redstone gateway responded with status ${error.status}:${error.body?.message}`);
         });
       result.contractType = 'js'; // TODO: Add support in redstone gateway
       return result;
     } catch (e) {
-      this.rLogger.warn('Falling back to default contracts loader');
+      this.rLogger.warn('Falling back to default contracts loader', e);
       return await super.doLoad(contractTxId, forcedSrcTxId);
     }
   }
