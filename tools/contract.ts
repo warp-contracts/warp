@@ -23,6 +23,7 @@ LoggerFactory.INST.logLevel('debug', 'RedstoneGatewayContractDefinitionLoader');
 LoggerFactory.INST.logLevel('error', 'DefaultStateEvaluator');
 LoggerFactory.INST.logLevel('debug', 'ArweaveWrapper');
 LoggerFactory.INST.logLevel('debug', 'ContractDefinitionLoader');
+LoggerFactory.INST.logLevel('debug', 'HandlerExecutorFactory');
 
 async function main() {
   printTestInfo();
@@ -30,6 +31,8 @@ async function main() {
   const PIANITY_CONTRACT = 'SJ3l7474UHh3Dw6dWVT1bzsJ-8JvOewtGoDdOecWIZo';
   const PIANITY_COMMUNITY_CONTRACT = 'n05LTiuWcAYjizXAu-ghegaWjL89anZ6VdvuHcU6dno';
   const LOOT_CONTRACT = 'Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY';
+
+  const localC = "iwlOHr4oM37YGKyQOWxZ-CUiEUKNtiFEaRNwz8Pwx_k";
   const CACHE_PATH = 'cache.sqlite.db';
 
   const heapUsedBefore = Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100;
@@ -51,9 +54,9 @@ async function main() {
     .setInteractionsLoader(
       new RedstoneGatewayInteractionsLoader('https://gateway.redstone.finance', { notCorrupted: true })
     )
-    .setDefinitionLoader(
-      new RedstoneGatewayContractDefinitionLoader('https://gateway.redstone.finance', arweave, new MemCache())
-    )
+    /*.setDefinitionLoader(
+      new RedstoneGatewayContractDefinitionLoader('http://localhost:5666', arweave, new MemCache())
+    )*/
     .build();
 
   const jwk = readJSON('../redstone-node/.secrets/redstone-jwk.json');
@@ -71,7 +74,9 @@ async function main() {
 
   // bundlr balance I-5rWUehEv-MjdK9gFw09RxfSLQX9DIHxG614Wf8qo0 -h https://node1.bundlr.network/ -c arweave
 
-  await contract.readState();
+  const {state, validity} = await contract.readState();
+
+  logger.info("State", state);
 
   const heapUsedAfter = Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100;
   const rssUsedAfter = Math.round((process.memoryUsage().rss / 1024 / 1024) * 100) / 100;
