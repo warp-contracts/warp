@@ -21,7 +21,8 @@ LoggerFactory.INST.logLevel('info', 'Contract');
 LoggerFactory.INST.logLevel('debug', 'RedstoneGatewayInteractionsLoader');
 LoggerFactory.INST.logLevel('debug', 'RedstoneGatewayContractDefinitionLoader');
 LoggerFactory.INST.logLevel('error', 'DefaultStateEvaluator');
-LoggerFactory.INST.logLevel('error', 'DefaultStateEvaluator');
+LoggerFactory.INST.logLevel('debug', 'ArweaveWrapper');
+LoggerFactory.INST.logLevel('debug', 'ContractDefinitionLoader');
 
 async function main() {
   printTestInfo();

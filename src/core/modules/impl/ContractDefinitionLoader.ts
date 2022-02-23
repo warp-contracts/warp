@@ -60,10 +60,23 @@ export class ContractDefinitionLoader implements DefinitionLoader {
     }
     const contractType: ContractType = srcContentType == 'application/javascript' ? 'js' : 'wasm';
 
-    const src = await this.arweaveWrapper.txData(contractSrcTxId);
+    const src =
+      contractType == 'js'
+        ? await this.arweaveWrapper.txDataString(contractSrcTxId)
+        : await this.arweaveWrapper.txData(contractSrcTxId);
+
+    let srcWasmLang;
+    if (contractType == 'wasm') {
+      srcWasmLang = getTag(contractSrcTx, SmartWeaveTags.WASM_LANG);
+      if (!srcWasmLang) {
+        this.logger.warn('Wasm lang not set for wasm contract src', contractSrcTxId);
+      }
+    }
+
     this.logger.debug('Contract src tx load', benchmark.elapsed());
     benchmark.reset();
-
+    const s = await this.evalInitialState(contractTx);
+    this.logger.debug('init state', s);
     const initState = JSON.parse(await this.evalInitialState(contractTx));
     this.logger.debug('Parsing src and init state', benchmark.elapsed());
 
@@ -71,6 +84,7 @@ export class ContractDefinitionLoader implements DefinitionLoader {
       txId: contractTxId,
       srcTxId: contractSrcTxId,
       src,
+      srcWasmLang,
       initState,
       minFee,
       owner,
