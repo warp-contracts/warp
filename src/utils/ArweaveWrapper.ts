@@ -89,12 +89,20 @@ export class ArweaveWrapper {
   }
 
   async txData(id: string): Promise<Buffer> {
+    // note: this is using arweave.net cache -
+    // not very safe and clever, but fast...
     const response = await fetch(`${this.baseUrl}/${id}`);
     if (!response.ok) {
-      throw new Error(`Unable to load tx data ${id}`);
+      this.logger.warn(`Unable to load data from arweave.net/${id} endpoint, falling back to arweave.js`);
+      // fallback to arweave-js as a last resort..
+      const txData = (await this.arweave.transactions.getData(id, {
+        decode: true
+      })) as Uint8Array;
+      return Buffer.from(txData);
+    } else {
+      const buffer = await response.arrayBuffer();
+      return Buffer.from(buffer);
     }
-    const buffer = await response.arrayBuffer();
-    return Buffer.from(buffer);
   }
 
   async txDataString(id: string): Promise<string> {
