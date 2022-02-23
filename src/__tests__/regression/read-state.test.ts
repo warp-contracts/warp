@@ -26,7 +26,7 @@ const arweave = Arweave.init({
   host: 'arweave.net',
   port: 443,
   protocol: 'https',
-  timeout: 20000,
+  timeout: 30000,
   logging: false
 });
 
@@ -54,7 +54,7 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
       const result2String = stringify(result2.state).trim();
       expect(result2String).toEqual(resultString);
     },
-    600000
+    800000
   );
 });
 
@@ -82,7 +82,7 @@ describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
       const result2String = stringify(result2.state).trim();
       expect(result2String).toEqual(resultString);
     },
-    600000
+    800000
   );
 });
 
@@ -100,7 +100,7 @@ describe('readState', () => {
     const result2String = stringify(result2.state).trim();
 
     expect(result2String).toEqual(resultString);
-  }, 600000);
+  }, 800000);
 
   it('should properly check balance of a PST contract', async () => {
     const jwk = await arweave.wallets.generate();
@@ -120,5 +120,5 @@ describe('readState', () => {
       });
 
     expect(v1Result).toEqual(v2Result.result);
-  }, 600000);
+  }, 800000);
 });
