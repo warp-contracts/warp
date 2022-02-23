@@ -32,10 +32,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
 
     if (contractDefinition.contractType == 'js') {
       this.logger.info('Creating handler for js contract', contractDefinition.txId);
-      const normalizedSource =
-        contractDefinition.src instanceof Buffer
-          ? normalizeContractSource(this.arweave.utils.bufferToString(contractDefinition.src))
-          : normalizeContractSource(contractDefinition.src);
+      const normalizedSource = normalizeContractSource(contractDefinition.src);
 
       const contractFunction = new Function(normalizedSource);
 
@@ -47,7 +44,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
         exports: null
       };
 
-      const meteredWasmBinary = metering.meterWASM(contractDefinition.src, {
+      const meteredWasmBinary = metering.meterWASM(contractDefinition.srcBinary, {
         meterType: 'i32'
       });
 

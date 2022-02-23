@@ -1,6 +1,6 @@
-import { ContractDefinition, LoggerFactory, stripTrailingSlash, SwCache } from '@smartweave';
+import {ContractDefinition, LoggerFactory, stripTrailingSlash, SwCache} from '@smartweave';
 import Arweave from 'arweave';
-import { ContractDefinitionLoader } from './ContractDefinitionLoader';
+import {ContractDefinitionLoader} from './ContractDefinitionLoader';
 import 'redstone-isomorphic';
 
 /**
@@ -42,7 +42,9 @@ export class RedstoneGatewayContractDefinitionLoader extends ContractDefinitionL
             `Unable to retrieve contract data. Redstone gateway responded with status ${error.status}:${error.body?.message}`
           );
         });
-      result.contractType = 'js'; // TODO: Add support in redstone gateway
+      if (result.srcBinary != null && !(result.srcBinary instanceof Buffer)) {
+        result.srcBinary = Buffer.from((result.srcBinary as any).data);
+      }
       return result;
     } catch (e) {
       this.rLogger.warn('Falling back to default contracts loader', e);

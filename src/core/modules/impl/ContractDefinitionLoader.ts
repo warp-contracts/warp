@@ -83,7 +83,8 @@ export class ContractDefinitionLoader implements DefinitionLoader {
     return {
       txId: contractTxId,
       srcTxId: contractSrcTxId,
-      src,
+      src: contractType == 'js' ? src as string : null,
+      srcBinary: contractType == 'wasm' ? src as Buffer : null,
       srcWasmLang,
       initState,
       minFee,
