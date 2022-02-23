@@ -15,7 +15,7 @@ import { TsLogFactory } from '../src/logging/node/TsLogFactory';
 
 const logger = LoggerFactory.INST.create('Contract');
 
-LoggerFactory.use(new TsLogFactory());
+//LoggerFactory.use(new TsLogFactory());
 LoggerFactory.INST.logLevel('error');
 LoggerFactory.INST.logLevel('info', 'Contract');
 LoggerFactory.INST.logLevel('debug', 'RedstoneGatewayInteractionsLoader');
