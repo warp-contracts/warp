@@ -1,8 +1,9 @@
 /* eslint-disable */
-import { ContractData, ContractType, CreateContract, FromSrcTxContractData, SmartWeaveTags } from '@smartweave/core';
+import {ContractData, ContractType, CreateContract, FromSrcTxContractData, SmartWeaveTags} from '@smartweave/core';
 import Arweave from 'arweave';
-import { LoggerFactory } from '@smartweave/logging';
-import { imports } from './wasmImports';
+import {LoggerFactory} from '@smartweave/logging';
+import {asWasmImports} from './wasm/as-wasm-imports';
+import {rustWasmImports} from "./wasm/rust-wasm-imports";
 
 const wasmTypeMapping: Map<number, string> = new Map([
   [1, 'assemblyscript'],
@@ -22,9 +23,9 @@ export class DefaultCreateContract implements CreateContract {
   async deploy(contractData: ContractData): Promise<string> {
     this.logger.debug('Creating new contract');
 
-    const { wallet, src, initState, tags, transfer } = contractData;
+    const {wallet, src, initState, tags, transfer} = contractData;
 
-    const srcTx = await this.arweave.createTransaction({ data: src }, wallet);
+    const srcTx = await this.arweave.createTransaction({data: src}, wallet);
 
     const contractType: ContractType = src instanceof Buffer ? 'wasm' : 'js';
 
@@ -42,7 +43,7 @@ export class DefaultCreateContract implements CreateContract {
       const module = await WebAssembly.instantiate(src, dummyImports());
       // @ts-ignore
       if (!module.instance.exports.type) {
-        throw new Error(`No info about source type in wasm binary. Did you forget to export global "type" value?`);
+        throw new Error(`No info about source type in wasm binary. Did you forget to export "type" function?`);
       }
       // @ts-ignore
       const type = module.instance.exports.type();
@@ -78,9 +79,9 @@ export class DefaultCreateContract implements CreateContract {
   async deployFromSourceTx(contractData: FromSrcTxContractData): Promise<string> {
     this.logger.debug('Creating new contract from src tx');
 
-    const { wallet, srcTxId, initState, tags, transfer } = contractData;
+    const {wallet, srcTxId, initState, tags, transfer} = contractData;
 
-    let contractTX = await this.arweave.createTransaction({ data: initState }, wallet);
+    let contractTX = await this.arweave.createTransaction({data: initState}, wallet);
 
     if (+transfer?.winstonQty > 0 && transfer.target.length) {
       this.logger.debug('Creating additional transaction with AR transfer', transfer);
@@ -121,10 +122,17 @@ export class DefaultCreateContract implements CreateContract {
 }
 
 function dummyImports() {
-  return imports(
-    {
-      useGas: function () {}
-    } as any,
-    null
-  );
+  const dummySwGlobal = {
+    useGas: function () {
+    }
+  } as any;
+
+  const dummyModuleInstance = {
+    exports: {}
+  }
+
+  return {
+    ...rustWasmImports(dummySwGlobal, dummyModuleInstance).imports,
+    ...asWasmImports(dummySwGlobal, dummyModuleInstance)
+  }
 }

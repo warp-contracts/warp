@@ -24,11 +24,6 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
     this.contractLogger = LoggerFactory.INST.create(swGlobal.contract.id);
   }
 
-  initState(state: State): void {
-    const statePtr = this.wasmExports.__newString(stringify(state));
-    this.wasmExports.initState(statePtr);
-  }
-
   async handle<Input, Result>(
     executionContext: ExecutionContext<State>,
     currentResult: EvalStateResult<State>,
@@ -43,7 +38,7 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
       this.swGlobal.gasLimit = executionContext.evaluationOptions.gasLimit;
       this.swGlobal.gasUsed = 0;
 
-      const handlerResult = this.doHandle(interaction);
+      const handlerResult = await this.doHandle(interaction);
 
       return {
         type: 'ok',
@@ -83,17 +78,70 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
     }
   }
 
-  private doHandle(action: any): any {
-    this.logger.debug('Action', action.input);
-    const actionPtr = this.wasmExports.__newString(stringify(action.input));
-    const resultPtr = this.wasmExports.handle(actionPtr);
-    const result = this.wasmExports.__getString(resultPtr);
+  initState(state: State): void {
+    switch (this.contractDefinition.srcWasmLang) {
+      case "assemblyscript": {
+        const statePtr = this.wasmExports.__newString(stringify(state));
+        this.wasmExports.initState(statePtr);
+        break;
+      }
+      case "rust": {
+        this.logger.debug('Before init state', this.wasmExports);
+        this.wasmExports.initState(state);
+        this.logger.debug('After init state');
+        break;
+      }
+      default: {
+        throw new Error(`Support for ${this.contractDefinition.srcWasmLang} not implemented yet.`);
+      }
+    }
+  }
 
-    return JSON.parse(result);
+  private async doHandle(action: any): Promise<any> {
+    switch (this.contractDefinition.srcWasmLang) {
+      case "assemblyscript": {
+        this.logger.debug('Action', action.input);
+        const actionPtr = this.wasmExports.__newString(stringify(action.input));
+        const resultPtr = this.wasmExports.handle(actionPtr);
+        const result = this.wasmExports.__getString(resultPtr);
+
+        return JSON.parse(result);
+      }
+      case "rust": {
+        this.logger.debug("exports", this.wasmExports);
+        let handleResult = await this.wasmExports.handle(action.input);
+        this.logger.debug("handleResult", handleResult);
+        if (!handleResult) {
+          return;
+        }
+        this.logger.debug("handleResult.ok", handleResult.Ok);
+        if (Object.prototype.hasOwnProperty.call(handleResult, 'Ok')) {
+          return handleResult.Ok;
+        } else {
+          throw new Error(handleResult.Err)
+        }
+      }
+      default: {
+        throw new Error(`Support for ${this.contractDefinition.srcWasmLang} not implemented yet.`);
+      }
+    }
   }
 
   private doGetCurrentState(): State {
-    const currentStatePtr = this.wasmExports.currentState();
-    return JSON.parse(this.wasmExports.__getString(currentStatePtr));
+    switch (this.contractDefinition.srcWasmLang) {
+      case "assemblyscript": {
+        const currentStatePtr = this.wasmExports.currentState();
+        return JSON.parse(this.wasmExports.__getString(currentStatePtr));
+      }
+      case "rust": {
+        return this.wasmExports.currentState();
+      }
+      default: {
+        throw new Error(`Support for ${this.contractDefinition.srcWasmLang} not implemented yet.`);
+      }
+
+    }
+
+
   }
 }

@@ -11,9 +11,10 @@ import {
 } from '@smartweave';
 import { ContractHandlerApi } from './ContractHandlerApi';
 import loader from '@assemblyscript/loader';
-import { imports } from './wasmImports';
 import { WasmContractHandlerApi } from './WasmContractHandlerApi';
 import metering from 'redstone-wasm-metering';
+import { asWasmImports } from './wasm/as-wasm-imports';
+import { rustWasmImports } from './wasm/rust-wasm-imports';
 
 /**
  * A factory that produces handlers that are compatible with the "current" style of
@@ -30,29 +31,56 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
       owner: contractDefinition.owner
     });
 
-    if (contractDefinition.contractType == 'js') {
+    if (contractDefinition.contractType == 'wasm') {
+      this.logger.info('Creating handler for wasm contract', contractDefinition.txId);
+
+      const meteredWasmBinary = metering.meterWASM(contractDefinition.srcBinary, {
+        meterType: 'i32'
+      });
+
+      let wasmInstance;
+
+      let jsExports = null;
+
+      switch (contractDefinition.srcWasmLang) {
+        case 'assemblyscript': {
+          const wasmInstanceExports = {
+            exports: null
+          };
+          wasmInstance = loader.instantiateSync(meteredWasmBinary, asWasmImports(swGlobal, wasmInstanceExports));
+          // note: well, exports are required by some imports
+          // - e.g. those that use wasmModule.exports.__newString underneath (like Block.indep_hash)
+          wasmInstanceExports.exports = wasmInstance.exports;
+          break;
+        }
+        case 'rust': {
+          const wasmInstanceExports = {
+            exports: null
+          };
+          const wasmModule = new WebAssembly.Module(meteredWasmBinary);
+
+          const { imports, exports } = rustWasmImports(swGlobal, wasmInstanceExports);
+          jsExports = exports;
+
+          this.logger.debug('Imports', imports);
+
+          wasmInstance = new WebAssembly.Instance(wasmModule, imports);
+          wasmInstanceExports.exports = wasmInstance.exports;
+          break;
+        }
+        default: {
+          throw new Error(`Support for ${contractDefinition.srcWasmLang} not implemented yet.`);
+        }
+      }
+
+      return new WasmContractHandlerApi(swGlobal, contractDefinition, jsExports || wasmInstance.exports);
+    } else {
       this.logger.info('Creating handler for js contract', contractDefinition.txId);
       const normalizedSource = normalizeContractSource(contractDefinition.src);
 
       const contractFunction = new Function(normalizedSource);
 
       return new ContractHandlerApi(swGlobal, contractFunction, contractDefinition);
-    } else {
-      this.logger.info('Creating handler for wasm contract', contractDefinition.txId);
-
-      const wasmModuleData = {
-        exports: null
-      };
-
-      const meteredWasmBinary = metering.meterWASM(contractDefinition.srcBinary, {
-        meterType: 'i32'
-      });
-
-      const wasmModule = loader.instantiateSync(meteredWasmBinary, imports(swGlobal, wasmModuleData));
-
-      wasmModuleData.exports = wasmModule.exports;
-
-      return new WasmContractHandlerApi(swGlobal, contractDefinition, wasmModule.exports);
     }
   }
 }
