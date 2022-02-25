@@ -5,7 +5,7 @@ import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import { Contract, getTag, LoggerFactory, SmartWeave, SmartWeaveNodeFactory, SmartWeaveTags } from '@smartweave';
 import path from 'path';
-import { addFunds, mineBlock } from './_helpers';
+import { addFunds, mineBlock } from '../_helpers';
 
 interface ExampleContractState {
   counter: number;
@@ -13,7 +13,7 @@ interface ExampleContractState {
   lastName: string;
 }
 
-describe('Testing the SmartWeave client for WASM contract', () => {
+describe('Testing the SmartWeave client for AssemblyScript WASM contract', () => {
   let contractSrc: Buffer;
   let initialState: string;
   let contractTxId: string;
@@ -44,8 +44,8 @@ describe('Testing the SmartWeave client for WASM contract', () => {
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
 
-    contractSrc = fs.readFileSync(path.join(__dirname, 'data/wasm/counter.wasm'));
-    initialState = fs.readFileSync(path.join(__dirname, 'data/wasm/counter-init-state.json'), 'utf8');
+    contractSrc = fs.readFileSync(path.join(__dirname, '../data/wasm/assemblyscript-counter.wasm'));
+    initialState = fs.readFileSync(path.join(__dirname, '../data/wasm/counter-init-state.json'), 'utf8');
 
     // deploying contract using the new SDK.
     contractTxId = await smartweave.createContract.deploy({
@@ -69,6 +69,8 @@ describe('Testing the SmartWeave client for WASM contract', () => {
   it('should properly deploy contract', async () => {
     const contractTx = await arweave.transactions.get(contractTxId);
 
+    console.log(contractTx.id);
+
     expect(contractTx).not.toBeNull();
     expect(getTag(contractTx, SmartWeaveTags.CONTRACT_TYPE)).toEqual('wasm');
     expect(getTag(contractTx, SmartWeaveTags.WASM_LANG)).toEqual('assemblyscript');
@@ -89,7 +91,7 @@ describe('Testing the SmartWeave client for WASM contract', () => {
     for (let i = 0; i < 100; i++) {
       await contract.writeInteraction({ function: 'increment' });
     }
-  });
+  }, 10000);
 
   it('should properly read state after adding interactions', async () => {
     await mineBlock(arweave);

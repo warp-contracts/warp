@@ -101,6 +101,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
 
     const baseState =
       cachedState == null ? executionContext.contractDefinition.initState : cachedState.cachedValue.state;
+
     const baseValidity = cachedState == null ? {} : cachedState.cachedValue.validity;
 
     // eval state for the missing transactions - starting from latest value from cache.
