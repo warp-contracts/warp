@@ -57,12 +57,31 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
           const wasmInstanceExports = {
             exports: null
           };
-          const wasmModule = new WebAssembly.Module(meteredWasmBinary);
 
-          const { imports, exports } = rustWasmImports(swGlobal, wasmInstanceExports);
+          /**
+           * wasm-bindgen mangles import function names (adds some random number after "base name")
+           * - that's why we cannot statically build the imports in the SDK.
+           * Instead - we need to first compile the module and check the generated
+           * import function names (all imports from the "__wbindgen_placeholder__" import module).
+           * Having those generated function names - we need to then map them to import functions -
+           * see {@link rustWasmImports}
+           *
+           * That's probably a temporary solution - it would be the best to force the wasm-bindgen
+           * to NOT mangle the import function names - unfortunately that is not currently possible
+           * - https://github.com/rustwasm/wasm-bindgen/issues/1128
+           */
+          const wasmModule = await WebAssembly.compile(meteredWasmBinary);
+          const moduleImports = WebAssembly.Module.imports(wasmModule);
+          this.logger.debug('Imports', moduleImports);
+
+          const wbindgenImports = moduleImports
+            .filter((imp) => {
+              return imp.module === '__wbindgen_placeholder__';
+            })
+            .map((imp) => imp.name);
+
+          const { imports, exports } = rustWasmImports(swGlobal, wbindgenImports, wasmInstanceExports);
           jsExports = exports;
-
-          this.logger.debug('Imports', imports);
 
           wasmInstance = new WebAssembly.Instance(wasmModule, imports);
           wasmInstanceExports.exports = wasmInstance.exports;
