@@ -1,9 +1,9 @@
 /* eslint-disable */
-import {ContractData, ContractType, CreateContract, FromSrcTxContractData, SmartWeaveTags} from '@smartweave/core';
+import { ContractData, ContractType, CreateContract, FromSrcTxContractData, SmartWeaveTags } from '@smartweave/core';
 import Arweave from 'arweave';
-import {LoggerFactory} from '@smartweave/logging';
-import {asWasmImports} from './wasm/as-wasm-imports';
-import {rustWasmImports} from "./wasm/rust-wasm-imports";
+import { LoggerFactory } from '@smartweave/logging';
+import { asWasmImports } from './wasm/as-wasm-imports';
+import { rustWasmImports } from './wasm/rust-wasm-imports';
 
 const wasmTypeMapping: Map<number, string> = new Map([
   [1, 'assemblyscript'],
@@ -23,9 +23,9 @@ export class DefaultCreateContract implements CreateContract {
   async deploy(contractData: ContractData): Promise<string> {
     this.logger.debug('Creating new contract');
 
-    const {wallet, src, initState, tags, transfer} = contractData;
+    const { wallet, src, initState, tags, transfer } = contractData;
 
-    const srcTx = await this.arweave.createTransaction({data: src}, wallet);
+    const srcTx = await this.arweave.createTransaction({ data: src }, wallet);
 
     const contractType: ContractType = src instanceof Buffer ? 'wasm' : 'js';
 
@@ -38,9 +38,11 @@ export class DefaultCreateContract implements CreateContract {
     let wasmLang = null;
 
     if (contractType == 'wasm') {
-      // note: instantiating wasm module for a while just to check
-      // the exported "type" value - which holds info about source lang.
-      const module = await WebAssembly.instantiate(src, dummyImports());
+      const wasmModule = await WebAssembly.compile(src as Buffer);
+      const moduleImports = WebAssembly.Module.imports(wasmModule);
+      this.logger.debug('Imports', moduleImports);
+
+      const module = await WebAssembly.instantiate(src, dummyImports(moduleImports));
       // @ts-ignore
       if (!module.instance.exports.type) {
         throw new Error(`No info about source type in wasm binary. Did you forget to export "type" function?`);
@@ -79,9 +81,9 @@ export class DefaultCreateContract implements CreateContract {
   async deployFromSourceTx(contractData: FromSrcTxContractData): Promise<string> {
     this.logger.debug('Creating new contract from src tx');
 
-    const {wallet, srcTxId, initState, tags, transfer} = contractData;
+    const { wallet, srcTxId, initState, tags, transfer } = contractData;
 
-    let contractTX = await this.arweave.createTransaction({data: initState}, wallet);
+    let contractTX = await this.arweave.createTransaction({ data: initState }, wallet);
 
     if (+transfer?.winstonQty > 0 && transfer.target.length) {
       this.logger.debug('Creating additional transaction with AR transfer', transfer);
@@ -121,18 +123,15 @@ export class DefaultCreateContract implements CreateContract {
   }
 }
 
-function dummyImports() {
-  const dummySwGlobal = {
-    useGas: function () {
+function dummyImports(moduleImports: WebAssembly.ModuleImportDescriptor[]) {
+  const imports = {};
+
+  moduleImports.forEach((moduleImport) => {
+    if (!Object.prototype.hasOwnProperty.call(imports, moduleImport.module)) {
+      imports[moduleImport.module] = {};
     }
-  } as any;
+    imports[moduleImport.module][moduleImport.name] = function () {};
+  });
 
-  const dummyModuleInstance = {
-    exports: {}
-  }
-
-  return {
-    ...rustWasmImports(dummySwGlobal, dummyModuleInstance).imports,
-    ...asWasmImports(dummySwGlobal, dummyModuleInstance)
-  }
+  return imports;
 }

@@ -64,19 +64,19 @@ export class SmartWeaveGlobal {
     this.block = new Block(this);
     this.contracts = {
       readContractState: (contractId: string, height?: number, returnValidity?: boolean) => {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented - should be set by HandlerApi implementor');
       },
 
       viewContractState: (contractId: string, input: any) => {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented - should be set by HandlerApi implementor');
       },
 
       write: (contractId: string, input: any) => {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented - should be set by HandlerApi implementor');
       },
 
       refreshState: () => {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented - should be set by HandlerApi implementor');
       }
     };
 

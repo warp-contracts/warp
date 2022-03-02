@@ -2,7 +2,7 @@ import fs from 'fs';
 
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
-import {JWKInterface} from 'arweave/node/lib/wallet';
+import { JWKInterface } from 'arweave/node/lib/wallet';
 import {
   getTag,
   InteractionResult,
@@ -10,10 +10,11 @@ import {
   PstContract,
   PstState,
   SmartWeave,
-  SmartWeaveNodeFactory, SmartWeaveTags
+  SmartWeaveNodeFactory,
+  SmartWeaveTags
 } from '@smartweave';
 import path from 'path';
-import {addFunds, mineBlock} from "../_helpers";
+import { addFunds, mineBlock } from '../_helpers';
 
 describe('Testing the Rust WASM Profit Sharing Token', () => {
   let contractSrc: string;
@@ -100,10 +101,9 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
   it('should read pst state and balance data', async () => {
     expect(await pst.currentState()).toEqual(initialState);
 
-    expect((await pst.currentBalance('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M'))).toEqual(10000000);
-    expect((await pst.currentBalance('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA'))).toEqual(23111222);
-    expect((await pst.currentBalance(walletAddress))).toEqual(555669);
-
+    expect(await pst.currentBalance('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M')).toEqual(10000000);
+    expect(await pst.currentBalance('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA')).toEqual(23111222);
+    expect(await pst.currentBalance(walletAddress)).toEqual(555669);
   });
 
   it('should properly transfer tokens', async () => {
@@ -118,10 +118,8 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     expect((await pst.currentState()).balances['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']).toEqual(10000000 + 555);
   });
 
-
- it('should properly view contract state', async () => {
-   const result = await pst.currentBalance('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M');
-   expect(result).toEqual(10000000 + 555);
- });
-
+  it('should properly view contract state', async () => {
+    const result = await pst.currentBalance('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M');
+    expect(result).toEqual(10000000 + 555);
+  });
 });
