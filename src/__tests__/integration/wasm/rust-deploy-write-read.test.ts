@@ -17,8 +17,6 @@ import path from 'path';
 import { addFunds, mineBlock } from '../_helpers';
 
 describe('Testing the Rust WASM Profit Sharing Token', () => {
-  let contractSrc: string;
-
   let wallet: JWKInterface;
   let walletAddress: string;
 
@@ -30,6 +28,10 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
   let pst: PstContract;
 
   let contractTxId: string;
+
+  let properForeignContractTxId: string;
+  let wrongForeignContractTxId: string;
+
   beforeAll(async () => {
     // note: each tests suit (i.e. file with tests that Jest is running concurrently
     // with another files has to have ArLocal set to a different port!)
@@ -43,6 +45,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     });
 
     LoggerFactory.INST.logLevel('error');
+    LoggerFactory.INST.logLevel('debug', 'WASM');
 
     smartweave = SmartWeaveNodeFactory.memCached(arweave);
 
@@ -50,7 +53,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     await addFunds(arweave, wallet);
     walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
-    const contractSrc = fs.readFileSync(path.join(__dirname, '../data/wasm/smartweave_contract_bg.wasm'));
+    const contractSrc = fs.readFileSync(path.join(__dirname, '../data/wasm/rust-pst_bg.wasm'));
     const stateFromFile: PstState = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/token-pst.json'), 'utf8'));
 
     initialState = {
@@ -70,6 +73,31 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
       initState: JSON.stringify(initialState),
       src: contractSrc
     });
+
+    properForeignContractTxId = await smartweave.createContract.deploy({
+      wallet,
+      initState: JSON.stringify({
+       ...initialState,
+       ...{
+         ticker: 'FOREIGN_PST',
+         name: 'foreign contract'
+       }
+      }),
+      src: contractSrc
+    });
+
+    wrongForeignContractTxId = await smartweave.createContract.deploy({
+      wallet,
+      initState: JSON.stringify({
+        ...initialState,
+        ...{
+          ticker: 'FOREIGN_PST_2',
+          name: 'foreign contract 2'
+        }
+      }),
+      src: contractSrc
+    });
+
 
     // connecting to the PST contract
     pst = smartweave.pst(contractTxId);
@@ -121,5 +149,26 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
   it('should properly view contract state', async () => {
     const result = await pst.currentBalance('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M');
     expect(result).toEqual(10000000 + 555);
+  });
+
+
+  // note: the dummy logic on the test contract should add 1000 tokens
+  // to each address, if the foreign contract state 'ticker' field = 'FOREIGN_PST'
+  it('should properly read foreign contract state', async () => {
+    await pst.writeInteraction({
+      function: "foreignCall",
+      contract_tx_id: wrongForeignContractTxId
+    });
+    await mineBlock(arweave);
+    expect((await pst.currentState()).balances[walletAddress]).toEqual(555669 - 555);
+    expect((await pst.currentState()).balances['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']).toEqual(10000000 + 555);
+
+    await pst.writeInteraction({
+      function: "foreignCall",
+      contract_tx_id: properForeignContractTxId
+    });
+    await mineBlock(arweave);
+    expect((await pst.currentState()).balances[walletAddress]).toEqual(555669 - 555 + 1000);
+    expect((await pst.currentState()).balances['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']).toEqual(10000000 + 555 + 1000);
   });
 });
