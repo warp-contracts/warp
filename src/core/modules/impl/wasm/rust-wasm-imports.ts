@@ -51,13 +51,7 @@ export const rustWasmImports = (swGlobal, wbindgenImports,  wasmInstance): any =
     },
     "SmartWeave": {
       readContractState: async function (contractTxId) {
-        return swGlobal.contracts.readContractState(contractTxId);
-        /*console.log('js: readContractState before timeout');
-        await timeout(1000);
-        console.log('js: readContractState after timeout');
-        return {
-          value: contractTxId
-        }*/
+        return await swGlobal.contracts.readContractState(contractTxId);
       }
     }
   }

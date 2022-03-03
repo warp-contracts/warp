@@ -1,8 +1,8 @@
 /* eslint-disable */
 import {
-  ContractDefinition,
+  ContractDefinition, CurrentTx, deepCopy,
   EvalStateResult,
-  ExecutionContext,
+  ExecutionContext, GQLNodeInterface,
   HandlerApi,
   InteractionData,
   InteractionResult,
@@ -37,6 +37,9 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
       //  but currently no access evaluationOptions there
       this.swGlobal.gasLimit = executionContext.evaluationOptions.gasLimit;
       this.swGlobal.gasUsed = 0;
+
+      this.assignReadContractState<Input>(executionContext, currentTx, currentResult, interactionTx);
+
 
       const handlerResult = await this.doHandle(interaction);
 
@@ -139,9 +142,51 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
       default: {
         throw new Error(`Support for ${this.contractDefinition.srcWasmLang} not implemented yet.`);
       }
-
     }
+  }
 
+  // TODO: c/p...
+  private assignReadContractState<Input>(
+    executionContext: ExecutionContext<State>,
+    currentTx: CurrentTx[],
+    currentResult: EvalStateResult<State>,
+    interactionTx: GQLNodeInterface
+  ) {
+    this.swGlobal.contracts.readContractState = async (
+      contractTxId: string,
+      height?: number,
+      returnValidity?: boolean
+    ) => {
+      const requestedHeight = height || this.swGlobal.block.height;
+      this.logger.debug('swGlobal.readContractState call:', {
+        from: this.contractDefinition.txId,
+        to: contractTxId,
+        height: requestedHeight,
+        transaction: this.swGlobal.transaction.id
+      });
 
+      const { stateEvaluator } = executionContext.smartweave;
+      const childContract = executionContext.smartweave.contract(
+        contractTxId,
+        executionContext.contract,
+        interactionTx
+      );
+
+      await stateEvaluator.onContractCall(interactionTx, executionContext, currentResult);
+
+      const stateWithValidity = await childContract.readState(requestedHeight, [
+        ...(currentTx || []),
+        {
+          contractTxId: this.contractDefinition.txId,
+          interactionTxId: this.swGlobal.transaction.id
+        }
+      ]);
+
+      // TODO: it should be up to the client's code to decide which part of the result to use
+      // (by simply using destructuring operator)...
+      // but this (i.e. returning always stateWithValidity from here) would break backwards compatibility
+      // in current contract's source code..:/
+      return returnValidity ? deepCopy(stateWithValidity) : deepCopy(stateWithValidity.state);
+    };
   }
 }
