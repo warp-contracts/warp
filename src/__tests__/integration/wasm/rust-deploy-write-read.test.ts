@@ -209,4 +209,20 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     expect(result.type).toEqual("error");
     expect(result.errorMessage).toEqual("[CE:TransferAmountMustBeHigherThanZero]");
   });
+
+
+  it('should honor gas limits', async () => {
+    pst.setEvaluationOptions({
+      gasLimit: 9000000
+    })
+
+    const result = await pst.dryWrite({
+      function: 'transfer',
+      target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M',
+      qty: 555
+    });
+
+    expect(result.type).toEqual("exception");
+    expect(result.errorMessage).toEqual("[RE:OOG] Out of gas! Used: 9000868, limit: 9000000");
+  });
 });

@@ -90,13 +90,9 @@ export class SmartWeaveGlobal {
     this.gasUsed += gas;
     if (this.gasUsed > this.gasLimit) {
       throw new Error(
-        `[RE:OOG] Out of gas! Limit: ${this.formatGas(this.gasUsed)}, used: ${this.formatGas(this.gasLimit)}`
+        `[RE:OOG] Out of gas! Used: ${this.gasUsed}, limit: ${this.gasLimit}`
       );
     }
-  }
-
-  private formatGas(gas) {
-    return gas * 1e-4;
   }
 }
 
