@@ -193,6 +193,10 @@ export const rustWasmImports = (swGlobal, wbindgenImports,  wasmInstance): any =
     '__wbindgen_closure_wrapper': function (arg0, arg1, arg2) {
       var ret = makeMutClosure(arg0, arg1, 75, __wbg_adapter_14);
       return addHeapObject(ret);
+    },
+    '__wbindgen_string_new': function(arg0, arg1) {
+      var ret = getStringFromWasm0(arg0, arg1);
+      return addHeapObject(ret);
     }
   }
 

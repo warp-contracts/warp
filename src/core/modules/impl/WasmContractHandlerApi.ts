@@ -30,7 +30,7 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
     interactionData: InteractionData<Input>
   ): Promise<InteractionResult<State, Result>> {
     try {
-      const { interaction, interactionTx, currentTx } = interactionData;
+      const {interaction, interactionTx, currentTx} = interactionData;
 
       this.swGlobal._activeTx = interactionTx;
       // TODO: this should be rather set on the HandlerFactory level..
@@ -46,7 +46,7 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
       return {
         type: 'ok',
         result: handlerResult,
-        state: this.doGetCurrentState(),
+        state: this.doGetCurrentState(), // TODO: return only at the end of evaluation and when caching is required
         gasUsed: this.swGlobal.gasUsed
       };
     } catch (e) {
@@ -60,7 +60,7 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
 
       // exception with prefix [CE:] ("Contract Exceptions") should be logged, but should not break
       // the state evaluation - as they are considered as contracts' business exception (eg. validation errors)
-      // - eg: [CE:WTF] - [ContractException: WhatTheFunction] ;-)
+      // - eg: [CE:ITT] - [ContractException: InvalidTokenTransfer]
       const result = {
         errorMessage: e.message,
         state: currentResult.state,
@@ -89,9 +89,7 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
         break;
       }
       case "rust": {
-        this.logger.debug('Before init state', this.wasmExports);
         this.wasmExports.initState(state);
-        this.logger.debug('After init state');
         break;
       }
       default: {
@@ -103,7 +101,6 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
   private async doHandle(action: any): Promise<any> {
     switch (this.contractDefinition.srcWasmLang) {
       case "assemblyscript": {
-        this.logger.debug('Action', action.input);
         const actionPtr = this.wasmExports.__newString(stringify(action.input));
         const resultPtr = this.wasmExports.handle(actionPtr);
         const result = this.wasmExports.__getString(resultPtr);
@@ -111,17 +108,28 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
         return JSON.parse(result);
       }
       case "rust": {
-        this.logger.debug("exports", this.wasmExports);
         let handleResult = await this.wasmExports.handle(action.input);
-        this.logger.debug("handleResult", handleResult);
         if (!handleResult) {
           return;
         }
-        this.logger.debug("handleResult.ok", handleResult.Ok);
         if (Object.prototype.hasOwnProperty.call(handleResult, 'Ok')) {
           return handleResult.Ok;
         } else {
-          throw new Error(handleResult.Err)
+          this.logger.debug("Error from rust", handleResult.Err);
+          let errorKey;
+          let errorArgs = "";
+          if (typeof handleResult.Err === 'string' || handleResult.Err instanceof String) {
+            errorKey = handleResult.Err;
+          } else {
+            errorKey = Object.keys(handleResult.Err)[0];
+            errorArgs = " " + handleResult.Err[errorKey];
+          }
+
+          if (errorKey == "RuntimeError") {
+            throw new Error(`[RE:RE]${errorArgs}`);
+          } else {
+            throw new Error(`[CE:${errorKey}${errorArgs}]`);
+          }
         }
       }
       default: {
@@ -165,7 +173,7 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
         transaction: this.swGlobal.transaction.id
       });
 
-      const { stateEvaluator } = executionContext.smartweave;
+      const {stateEvaluator} = executionContext.smartweave;
       const childContract = executionContext.smartweave.contract(
         contractTxId,
         executionContext.contract,
