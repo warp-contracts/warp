@@ -2,7 +2,7 @@ import fs from 'fs';
 
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
-import { JWKInterface } from 'arweave/node/lib/wallet';
+import {JWKInterface} from 'arweave/node/lib/wallet';
 import {
   getTag,
   InteractionResult,
@@ -14,7 +14,7 @@ import {
   SmartWeaveTags
 } from '@smartweave';
 import path from 'path';
-import { addFunds, mineBlock } from '../_helpers';
+import {addFunds, mineBlock} from '../_helpers';
 
 describe('Testing the Rust WASM Profit Sharing Token', () => {
   let wallet: JWKInterface;
@@ -46,6 +46,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
 
     LoggerFactory.INST.logLevel('error');
     LoggerFactory.INST.logLevel('debug', 'WASM');
+    LoggerFactory.INST.logLevel('debug', 'WasmContractHandlerApi');
 
     smartweave = SmartWeaveNodeFactory.memCached(arweave);
 
@@ -77,11 +78,11 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     properForeignContractTxId = await smartweave.createContract.deploy({
       wallet,
       initState: JSON.stringify({
-       ...initialState,
-       ...{
-         ticker: 'FOREIGN_PST',
-         name: 'foreign contract'
-       }
+        ...initialState,
+        ...{
+          ticker: 'FOREIGN_PST',
+          name: 'foreign contract'
+        }
       }),
       src: contractSrc
     });
@@ -170,5 +171,42 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(555669 - 555 + 1000);
     expect((await pst.currentState()).balances['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']).toEqual(10000000 + 555 + 1000);
+  });
+
+  it('should return stable gas results', async () => {
+    const results = [];
+
+    for (let i = 0; i < 10; i++) {
+      const result = await pst.dryWrite({
+        function: 'transfer',
+        target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M',
+        qty: 555
+      });
+    }
+
+    results.forEach((result) => {
+      expect(result.gasUsed).toEqual(9360178);
+    });
+  });
+
+  it('should properly handle runtime errors', async () => {
+    const result = await pst.dryWrite({
+      target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M',
+      qty: 555
+    });
+
+    expect(result.type).toEqual("exception");
+    expect(result.errorMessage).toEqual("[RE:RE] Error while parsing input");
+  });
+
+  it('should properly handle contract errors', async () => {
+    const result = await pst.dryWrite({
+      function: 'transfer',
+      target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M',
+      qty: 0
+    });
+
+    expect(result.type).toEqual("error");
+    expect(result.errorMessage).toEqual("[CE:TransferAmountMustBeHigherThanZero]");
   });
 });
