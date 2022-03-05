@@ -34,7 +34,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
   protected constructor(
     protected readonly arweave: Arweave,
     private readonly executionContextModifiers: ExecutionContextModifier[] = []
-  ) {}
+  ) {
+  }
 
   async eval<State>(
     executionContext: ExecutionContext<State, HandlerApi<State>>,
@@ -55,8 +56,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     currentTx: CurrentTx[]
   ): Promise<EvalStateResult<State>> {
     const stateEvaluationBenchmark = Benchmark.measure();
-    const { ignoreExceptions, stackTrace, internalWrites } = executionContext.evaluationOptions;
-    const { contract, contractDefinition, sortedInteractions } = executionContext;
+    const {ignoreExceptions, stackTrace, internalWrites} = executionContext.evaluationOptions;
+    const {contract, contractDefinition, sortedInteractions} = executionContext;
 
     let currentState = baseState.state;
     const validity = baseState.validity;
@@ -79,17 +80,14 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
       const interactionTx: GQLNodeInterface = missingInteraction.node;
 
-      if (contractDefinition.txId == '38TR3D8BxlPTc89NOW67IkQQUPR8jDLaJNdYv-4wWfM') {
-        this.logger.debug(
-          `[${contractDefinition.txId}][${missingInteraction.node.id}][${missingInteraction.node.block.height}]: ${
-            missingInteractions.indexOf(missingInteraction) + 1
-          }/${missingInteractions.length} [of all:${sortedInteractions.length}]`
-        );
-      }
+      this.logger.debug(
+        `[${contractDefinition.txId}][${missingInteraction.node.id}][${missingInteraction.node.block.height}]: ${
+          missingInteractions.indexOf(missingInteraction) + 1
+        }/${missingInteractions.length} [of all:${sortedInteractions.length}]`
+      );
 
       const isInteractWrite = this.tagsParser.isInteractWrite(missingInteraction, contractDefinition.txId);
 
-      //this.logger.debug('interactWrite?:', isInteractWrite);
 
       // other contract makes write ("writing contract") on THIS contract
       if (isInteractWrite && internalWrites) {
@@ -99,7 +97,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         const interactionCall: InteractionCall = contract
           .getCallStack()
-          .addInteractionData({ interaction: null, interactionTx, currentTx });
+          .addInteractionData({interaction: null, interactionTx, currentTx});
 
         // creating a Contract instance for the "writing" contract
         const writingContract = executionContext.smartweave.contract(
@@ -150,7 +148,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           gasUsed: 0 // TODO...
         });
 
-        this.logger.debug('New state after internal write', { contractTxId: contractDefinition.txId, newState });
+        this.logger.debug('New state after internal write', {contractTxId: contractDefinition.txId, newState});
       } else {
         // "direct" interaction with this contract - "standard" processing
         const inputTag = this.tagsParser.getInputTag(missingInteraction, executionContext.contractDefinition.txId);
@@ -175,10 +173,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           currentTx
         };
 
-        if (contractDefinition.txId == '38TR3D8BxlPTc89NOW67IkQQUPR8jDLaJNdYv-4wWfM') {
-          this.logger.debug('Interaction:', interaction);
-          this.logger.debug('Interaction tx:', interactionTx);
-        }
+        this.logger.debug('Interaction:', interaction);
 
         const interactionCall: InteractionCall = contract.getCallStack().addInteractionData(interactionData);
 
@@ -191,7 +186,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         this.logResult<State>(result, interactionTx, executionContext);
 
-        // this.logger.debug('Interaction evaluation', singleInteractionBenchmark.elapsed());
+        this.logger.debug('Interaction evaluation', singleInteractionBenchmark.elapsed());
 
         interactionCall.update({
           cacheHit: false,
@@ -219,7 +214,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
       // I'm really NOT a fan of this "modify" feature, but I don't have idea how to better
       // implement the "evolve" feature
-      for (const { modify } of this.executionContextModifiers) {
+      for (const {modify} of this.executionContextModifiers) {
         executionContext = await modify<State>(currentState, executionContext);
       }
     }
