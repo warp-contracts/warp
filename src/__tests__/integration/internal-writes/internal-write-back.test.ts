@@ -289,8 +289,6 @@ describe('Testing internal writes', () => {
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
 
-      LoggerFactory.INST.logLevel('debug');
-
       expect((await contractA2.readState()).state.counter).toEqual(-805);
       expect((await contractB2.readState()).state.counter).toEqual(2060);
     });
