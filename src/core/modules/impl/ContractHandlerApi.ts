@@ -223,5 +223,4 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
   initState(state: State): void {
     // nth to do in this impl...
   }
-
 }

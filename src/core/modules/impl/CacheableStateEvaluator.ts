@@ -135,8 +135,10 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>
   ): Promise<void> {
-    if (executionContext.evaluationOptions.updateCacheForEachInteraction
-     || executionContext.evaluationOptions.internalWrites) {
+    if (
+      executionContext.evaluationOptions.updateCacheForEachInteraction ||
+      executionContext.evaluationOptions.internalWrites
+    ) {
       await this.putInCache(
         executionContext.contractDefinition.txId,
         transaction,

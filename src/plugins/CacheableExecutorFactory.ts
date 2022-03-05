@@ -1,8 +1,8 @@
 import Arweave from 'arweave';
-import {ContractDefinition, ExecutorFactory, HandlerApi} from '@smartweave/core';
-import {SwCache} from '@smartweave/cache';
-import {LoggerFactory} from '@smartweave/logging';
-import {SmartWeaveGlobal} from '@smartweave/legacy';
+import { ContractDefinition, ExecutorFactory, HandlerApi } from '@smartweave/core';
+import { SwCache } from '@smartweave/cache';
+import { LoggerFactory } from '@smartweave/logging';
+import { SmartWeaveGlobal } from '@smartweave/legacy';
 
 /**
  * An implementation of ExecutorFactory that adds caching capabilities
@@ -14,8 +14,7 @@ export class CacheableExecutorFactory<Api> implements ExecutorFactory<Api> {
     private readonly arweave: Arweave,
     private readonly baseImplementation: ExecutorFactory<Api>,
     private readonly cache: SwCache<string, Api>
-  ) {
-  }
+  ) {}
 
   async create<State>(contractDefinition: ContractDefinition<State>): Promise<Api> {
     return await this.baseImplementation.create(contractDefinition);
