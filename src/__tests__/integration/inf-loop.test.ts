@@ -15,6 +15,7 @@ let contract: Contract<ExampleContractState>;
 interface ExampleContractState {
   counter: number;
 }
+
 describe('Testing the SmartWeave client', () => {
   let contractSrc: string;
 

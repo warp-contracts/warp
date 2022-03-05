@@ -9,6 +9,8 @@ import { addFunds, mineBlock } from './_helpers';
 
 interface ExampleContractState {
   counter: number;
+  firstName: string;
+  lastName: string;
 }
 
 describe('Testing the SmartWeave client for WASM contract', () => {
@@ -36,8 +38,6 @@ describe('Testing the SmartWeave client for WASM contract', () => {
     });
 
     LoggerFactory.INST.logLevel('error');
-    LoggerFactory.INST.logLevel('debug', 'WasmContractHandlerApi');
-    LoggerFactory.INST.logLevel('debug', 'WASM');
 
     smartweave = SmartWeaveNodeFactory.memCached(arweave);
 
@@ -79,7 +79,10 @@ describe('Testing the SmartWeave client for WASM contract', () => {
   });
 
   it('should properly read initial state', async () => {
-    expect((await contract.readState()).state.counter).toEqual(0);
+    const contractState = (await contract.readState()).state;
+    expect(contractState.counter).toEqual(0);
+    expect(contractState.firstName).toEqual("first_ppe");
+    expect(contractState.lastName).toEqual("last_ppe");
   });
 
   it('should properly register interactions', async () => {
@@ -105,7 +108,7 @@ describe('Testing the SmartWeave client for WASM contract', () => {
       function: 'increment'
     });
 
-    expect(result.gasUsed).toEqual(9079017);
+    expect(result.gasUsed).toEqual(9053274);
   });
 
   it('should return stable gas results', async () => {
@@ -120,7 +123,7 @@ describe('Testing the SmartWeave client for WASM contract', () => {
     }
 
     results.forEach((result) => {
-      expect(result.gasUsed).toEqual(9079017);
+      expect(result.gasUsed).toEqual(9053274);
     });
   });
 

@@ -45,7 +45,7 @@ export class DefaultCreateContract implements CreateContract {
         throw new Error(`No info about source type in wasm binary. Did you forget to export global "type" value?`);
       }
       // @ts-ignore
-      const type = module.instance.exports.type.value;
+      const type = module.instance.exports.type();
       if (!wasmTypeMapping.has(type)) {
         throw new Error(`Unknown wasm source type ${type}`);
       }
