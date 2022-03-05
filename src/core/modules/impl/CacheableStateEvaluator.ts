@@ -135,7 +135,8 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>
   ): Promise<void> {
-    if (executionContext.evaluationOptions.updateCacheForEachInteraction) {
+    if (executionContext.evaluationOptions.updateCacheForEachInteraction
+     || executionContext.evaluationOptions.internalWrites) {
       await this.putInCache(
         executionContext.contractDefinition.txId,
         transaction,
@@ -182,8 +183,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>
   ): Promise<void> {
-    //FIXME: https://github.com/redstone-finance/redstone-smartcontracts/issues/53
-    //await this.putInCache(executionContext.contractDefinition.txId, transaction, state);
+    await this.putInCache(executionContext.contractDefinition.txId, transaction, state);
   }
 
   protected async putInCache<State>(

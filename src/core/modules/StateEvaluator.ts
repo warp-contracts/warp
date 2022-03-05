@@ -81,7 +81,7 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
 
   waitForConfirmation = false;
 
-  updateCacheForEachInteraction = true;
+  updateCacheForEachInteraction = false;
 
   internalWrites = false;
 
@@ -107,13 +107,15 @@ export interface EvaluationOptions {
   // you will know, when the new interaction is effectively available on the network
   waitForConfirmation: boolean;
 
-  // whether cache should be updated after evaluating each interaction transaction.
-  // this can be switched off to speed up cache writes (ie. for some contracts (with flat structure)
-  // and caches it maybe more suitable to cache only after state has been fully evaluated)
-  // NOTE: currently safe for contracts that don't make any reads from other contracts
-  // (eg. basic PSTs, community contracts, etc.)
-  // If used with contracts that make reads from other contracts - may cause issues with state evaluation
-  // - eg contracts: w27141UQGgrCFhkiw9tL7A0-qWMQjbapU3mq2TfI4Cg, 38TR3D8BxlPTc89NOW67IkQQUPR8jDLaJNdYv-4wWfM
+  // whether the state cache should be updated after evaluating each interaction transaction.
+  // currently, defaults to false. Setting to true might in some scenarios increase evaluation performance
+  // - but at a cost of higher memory usage.
+  // It is also currently required by the "internalWrites" feature.
+  // By default, the state cache is updated
+  // 1. before calling "read" on other contract (as the calling contract might require callee contract state
+  // - quite often scenario in FCP)
+  // 2. after evaluating all the contract interactions.
+
   // https://github.com/redstone-finance/redstone-smartcontracts/issues/53
   updateCacheForEachInteraction: boolean;
 

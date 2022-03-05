@@ -1,0 +1,83 @@
+{
+  input: {
+    function: 'submitPayload',
+    gateWayUrl: 'https://gateway.koi.rocks/logs',
+    batchTxId: 'GssBaGLwAlvS2BScBfenJY0puAdWuww5-YDVpHlSVFc',
+    stakeAmount: 2
+  },
+  caller: 'D3lK6_xXvBUXMUyA2RJz3soqmLlztkv-gVpEP5AlVUo'
+}
+722309
+======================
+
+{
+  input: {
+    function: 'submitPayload',
+    gateWayUrl: 'https://gateway.koi.rocks/logs',
+    batchTxId: 'GssBaGLwAlvS2BScBfenJY0puAdWuww5-YDVpHlSVFc',
+    stakeAmount: 2
+  },
+  caller: 'D3lK6_xXvBUXMUyA2RJz3soqmLlztkv-gVpEP5AlVUo'
+}
+722309
+======================
+
+{
+  input: {
+    function: 'submitPayload',
+    gateWayUrl: 'https://gateway.koi.rocks/logs',
+    batchTxId: '9vexnUIYwqRYZ-q-4HCtZkZk9h3MDaYtn9EOT_GDi7Q',
+    stakeAmount: 2
+  },
+  caller: 'D3lK6_xXvBUXMUyA2RJz3soqmLlztkv-gVpEP5AlVUo'
+}
+722727
+======================
+
+{
+  input: {
+    function: 'submitPayload',
+    gateWayUrl: 'https://gateway.koi.rocks/logs',
+    batchTxId: 'GssBaGLwAlvS2BScBfenJY0puAdWuww5-YDVpHlSVFc',
+    stakeAmount: 2
+  },
+  caller: 'D3lK6_xXvBUXMUyA2RJz3soqmLlztkv-gVpEP5AlVUo'
+}
+722309
+======================
+
+{
+  input: {
+    function: 'submitPayload',
+    gateWayUrl: 'https://gateway.koi.rocks/logs',
+    batchTxId: 'GssBaGLwAlvS2BScBfenJY0puAdWuww5-YDVpHlSVFc',
+    stakeAmount: 2
+  },
+  caller: 'D3lK6_xXvBUXMUyA2RJz3soqmLlztkv-gVpEP5AlVUo'
+}
+722309
+======================
+
+{
+  input: {
+    function: 'submitPayload',
+    gateWayUrl: 'https://gateway.koi.rocks/logs',
+    batchTxId: 'GssBaGLwAlvS2BScBfenJY0puAdWuww5-YDVpHlSVFc',
+    stakeAmount: 2
+  },
+  caller: 'D3lK6_xXvBUXMUyA2RJz3soqmLlztkv-gVpEP5AlVUo'
+}
+722309
+======================
+
+{
+  input: {
+    function: 'submitPayload',
+    gateWayUrl: 'https://gateway.koi.rocks/logs',
+    batchTxId: '9vexnUIYwqRYZ-q-4HCtZkZk9h3MDaYtn9EOT_GDi7Q',
+    stakeAmount: 2
+  },
+  caller: 'D3lK6_xXvBUXMUyA2RJz3soqmLlztkv-gVpEP5AlVUo'
+}
+722727
+======================
