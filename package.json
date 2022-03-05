@@ -52,6 +52,7 @@
   "homepage": "https://github.com/redstone-finance/redstone-smartweave#readme",
   "dependencies": {
     "@assemblyscript/loader": "^0.19.23",
+    "@ungap/structured-clone": "^0.3.4",
     "@weavery/clarity": "^0.1.5",
     "arweave": "1.10.23",
     "arweave-multihost": "^0.1.0",

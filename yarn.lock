@@ -1561,6 +1561,11 @@
     "@typescript-eslint/types" "4.33.0"
     eslint-visitor-keys "^2.0.0"
 
+"@ungap/structured-clone@^0.3.4":
+  version "0.3.4"
+  resolved "https://registry.yarnpkg.com/@ungap/structured-clone/-/structured-clone-0.3.4.tgz#f6d804e185591373992781361e4aa5bb81ffba35"
+  integrity sha512-TSVh8CpnwNAsPC5wXcIyh92Bv1gq6E9cNDeeLu7Z4h8V4/qWtXJp7y42qljRkqcpmsve1iozwv1wr+3BNdILCg==
+
 "@weavery/clarity@^0.1.5":
   version "0.1.5"
   resolved "https://registry.yarnpkg.com/@weavery/clarity/-/clarity-0.1.5.tgz#f06bbb0dac7c63c6e2ccd76cda3e8b32b57f82c2"
