@@ -24,9 +24,9 @@ async function main() {
   const transactionsLoader = new ArweaveGatewayInteractionsLoader(arweave);
 
   const result = await transactionsLoader.load(
-    'Ym2i1XWBAuabbw0qcmSSsmjGtBJbJlDLDxxf277XtK8',
+    '5pSyVjFI07z8mbLeQhYBMsQ4M_MPidXIGX6T77rnF2s',
     0,
-    832649,
+    886399,
     new DefaultEvaluationOptions()
   );
 
