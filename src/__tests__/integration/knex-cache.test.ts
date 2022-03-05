@@ -53,7 +53,7 @@ describe('Testing the SmartWeave client', () => {
       protocol: 'http'
     });
 
-    LoggerFactory.INST.logLevel('debug');
+    LoggerFactory.INST.logLevel('error');
 
     smartweave = await SmartWeaveNodeFactory.knexCached(arweave, knexConfig);
 
