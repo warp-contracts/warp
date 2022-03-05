@@ -50,7 +50,13 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
         .readFileSync(path.join(__dirname, 'test-cases', 'contracts', `${contractTxId}.json`), 'utf-8')
         .trim();
       console.log('readState', contractTxId);
-      const result2 = await SmartWeaveNodeFactory.memCached(arweave, 1).contract(contractTxId).readState(blockHeight);
+      const result2 = await SmartWeaveNodeFactory.memCachedBased(arweave, 1)
+        .setInteractionsLoader(
+          new RedstoneGatewayInteractionsLoader('https://gateway.redstone.finance', null, SourceType.ARWEAVE)
+        )
+        .build()
+        .contract(contractTxId)
+        .readState(blockHeight);
       const result2String = stringify(result2.state).trim();
       expect(result2String).toEqual(resultString);
     },
