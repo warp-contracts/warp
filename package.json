@@ -27,7 +27,7 @@
     "test": "jest",
     "test:unit": "jest ./src/__tests__/unit",
     "test:integration": "jest ./src/__tests__/integration",
-    "test:regression": "node --expose-gc --max_old_space_size=6000 ./node_modules/.bin/jest ./src/__tests__/regression"
+    "test:regression": "node ./node_modules/.bin/jest ./src/__tests__/regression"
   },
   "license": "MIT",
   "author": "Redstone Team <dev@redstone.finance>",
