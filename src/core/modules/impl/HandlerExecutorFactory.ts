@@ -17,7 +17,7 @@ import metering from 'wasm-metering';
 
 /**
  * A factory that produces handlers that are compatible with the "current" style of
- * writing SW contracts (ie. using "handle" function).
+ * writing SW contracts (i.e. using "handle" function).
  */
 export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknown>> {
   private readonly logger = LoggerFactory.INST.create('HandlerExecutorFactory');

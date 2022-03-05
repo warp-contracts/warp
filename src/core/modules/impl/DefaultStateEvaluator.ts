@@ -79,15 +79,17 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
       const interactionTx: GQLNodeInterface = missingInteraction.node;
 
-      this.logger.debug(
-        `[${contractDefinition.txId}][${missingInteraction.node.id}][${missingInteraction.node.block.height}]: ${
-          missingInteractions.indexOf(missingInteraction) + 1
-        }/${missingInteractions.length} [of all:${sortedInteractions.length}]`
-      );
+      if (contractDefinition.txId == '38TR3D8BxlPTc89NOW67IkQQUPR8jDLaJNdYv-4wWfM') {
+        this.logger.debug(
+          `[${contractDefinition.txId}][${missingInteraction.node.id}][${missingInteraction.node.block.height}]: ${
+            missingInteractions.indexOf(missingInteraction) + 1
+          }/${missingInteractions.length} [of all:${sortedInteractions.length}]`
+        );
+      }
 
       const isInteractWrite = this.tagsParser.isInteractWrite(missingInteraction, contractDefinition.txId);
 
-      this.logger.debug('interactWrite?:', isInteractWrite);
+      //this.logger.debug('interactWrite?:', isInteractWrite);
 
       // other contract makes write ("writing contract") on THIS contract
       if (isInteractWrite && internalWrites) {
@@ -173,7 +175,10 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           currentTx
         };
 
-        this.logger.debug('Interaction:', interaction);
+        if (contractDefinition.txId == '38TR3D8BxlPTc89NOW67IkQQUPR8jDLaJNdYv-4wWfM') {
+          this.logger.debug('Interaction:', interaction);
+          this.logger.debug('Interaction tx:', interactionTx);
+        }
 
         const interactionCall: InteractionCall = contract.getCallStack().addInteractionData(interactionData);
 
@@ -186,7 +191,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         this.logResult<State>(result, interactionTx, executionContext);
 
-        this.logger.debug('Interaction evaluation', singleInteractionBenchmark.elapsed());
+       // this.logger.debug('Interaction evaluation', singleInteractionBenchmark.elapsed());
 
         interactionCall.update({
           cacheHit: false,
@@ -218,10 +223,10 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         executionContext = await modify<State>(currentState, executionContext);
       }
     }
-    this.logger.info('State evaluation total:', stateEvaluationBenchmark.elapsed());
+    //this.logger.info('State evaluation total:', stateEvaluationBenchmark.elapsed());
     const evalStateResult = new EvalStateResult<State>(currentState, validity);
 
-    // state could have been full retrieved from cache
+    // state could have been fully retrieved from cache
     // or there were no interactions below requested block height
     if (lastEvaluatedInteraction !== null) {
       await this.onStateEvaluated(lastEvaluatedInteraction, executionContext, evalStateResult);

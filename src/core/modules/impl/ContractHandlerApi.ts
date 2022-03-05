@@ -50,14 +50,14 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
     try {
       const { interaction, interactionTx, currentTx } = interactionData;
 
+      const stateCopy = deepCopy(currentResult.state);
+      this.swGlobal._activeTx = interactionTx;
+
       const handler = this.contractFunction(this.swGlobal, BigNumber, clarity, contractLogger) as HandlerFunction<
         State,
         Input,
         Result
       >;
-      const stateCopy = deepCopy(currentResult.state);
-      this.swGlobal._activeTx = interactionTx;
-      this.logger.trace(`SmartWeave.contract.id:`, this.swGlobal.contract.id);
 
       this.assignReadContractState<Input>(executionContext, currentTx, currentResult, interactionTx);
       this.assignViewContractState<Input>(executionContext);
@@ -223,4 +223,5 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
   initState(state: State): void {
     // nth to do in this impl...
   }
+
 }

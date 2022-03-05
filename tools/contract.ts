@@ -12,18 +12,17 @@ import knex from 'knex';
 import os from 'os';
 import { readJSON } from '../../redstone-smartweave-examples/src/_utils';
 import { TsLogFactory } from '../src/logging/node/TsLogFactory';
+import path from "path";
+import stringify from "safe-stable-stringify";
+import {readContract} from "smartweave";
 
 const logger = LoggerFactory.INST.create('Contract');
 
 //LoggerFactory.use(new TsLogFactory());
 LoggerFactory.INST.logLevel('error');
-LoggerFactory.INST.logLevel('info', 'Contract');
-LoggerFactory.INST.logLevel('debug', 'RedstoneGatewayInteractionsLoader');
-LoggerFactory.INST.logLevel('debug', 'RedstoneGatewayContractDefinitionLoader');
-LoggerFactory.INST.logLevel('error', 'DefaultStateEvaluator');
-LoggerFactory.INST.logLevel('debug', 'ArweaveWrapper');
-LoggerFactory.INST.logLevel('debug', 'ContractDefinitionLoader');
-LoggerFactory.INST.logLevel('debug', 'HandlerExecutorFactory');
+//LoggerFactory.INST.logLevel('info', 'Contract');
+//LoggerFactory.INST.logLevel('debug', 'DefaultStateEvaluator');
+//LoggerFactory.INST.logLevel('error', 'CacheableStateEvaluator');
 
 async function main() {
   printTestInfo();
@@ -31,6 +30,7 @@ async function main() {
   const PIANITY_CONTRACT = 'SJ3l7474UHh3Dw6dWVT1bzsJ-8JvOewtGoDdOecWIZo';
   const PIANITY_COMMUNITY_CONTRACT = 'n05LTiuWcAYjizXAu-ghegaWjL89anZ6VdvuHcU6dno';
   const LOOT_CONTRACT = 'Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY';
+  const KOI_CONTRACT = '38TR3D8BxlPTc89NOW67IkQQUPR8jDLaJNdYv-4wWfM';
 
   const localC = "iwlOHr4oM37YGKyQOWxZ-CUiEUKNtiFEaRNwz8Pwx_k";
   const CACHE_PATH = 'cache.sqlite.db';
@@ -50,20 +50,25 @@ async function main() {
     fs.rmSync(CACHE_PATH);
   }
 
+  const koi_source = fs.readFileSync(path.join(__dirname, 'data', 'koi-source.js'), "utf-8");
+
   const smartweave = SmartWeaveNodeFactory.memCachedBased(arweave)
     .setInteractionsLoader(
-      new RedstoneGatewayInteractionsLoader('https://gateway.redstone.finance', { notCorrupted: true })
+      new RedstoneGatewayInteractionsLoader('https://gateway.redstone.finance')
     )
     /*.setDefinitionLoader(
-      new RedstoneGatewayContractDefinitionLoader('http://localhost:5666', arweave, new MemCache())
+      new RedstoneGatewayContractDefinitionLoader('https://gateway.redstone.finance', arweave, new MemCache())
     )*/
-    .build();
+    .overwriteSource({
+      ["38TR3D8BxlPTc89NOW67IkQQUPR8jDLaJNdYv-4wWfM"]: koi_source,
+    });
 
   const jwk = readJSON('../redstone-node/.secrets/redstone-jwk.json');
   const contract = smartweave
-    .contract(LOOT_CONTRACT)
+    .contract(KOI_CONTRACT)
     .setEvaluationOptions({
-      sequencerAddress: 'http://localhost:5666/'
+      sequencerAddress: 'http://localhost:5666/',
+      updateCacheForEachInteraction: false
     })
     .connect(jwk);
  /* const bundledInteraction = await contract.bundleInteraction({
@@ -75,6 +80,10 @@ async function main() {
   // bundlr balance I-5rWUehEv-MjdK9gFw09RxfSLQX9DIHxG614Wf8qo0 -h https://node1.bundlr.network/ -c arweave
 
   const {state, validity} = await contract.readState();
+
+  //const state = readContract(arweave, KOI_CONTRACT);
+
+  fs.writeFileSync(path.join(__dirname, 'data', 'koi-proper-state_2.json'), stringify(state));
 
   logger.info("State", state);
 
