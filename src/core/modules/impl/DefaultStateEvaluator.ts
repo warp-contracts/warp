@@ -191,7 +191,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         this.logResult<State>(result, interactionTx, executionContext);
 
-       // this.logger.debug('Interaction evaluation', singleInteractionBenchmark.elapsed());
+        // this.logger.debug('Interaction evaluation', singleInteractionBenchmark.elapsed());
 
         interactionCall.update({
           cacheHit: false,
