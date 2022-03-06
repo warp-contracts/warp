@@ -34,8 +34,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
   protected constructor(
     protected readonly arweave: Arweave,
     private readonly executionContextModifiers: ExecutionContextModifier[] = []
-  ) {
-  }
+  ) {}
 
   async eval<State>(
     executionContext: ExecutionContext<State, HandlerApi<State>>,
@@ -56,8 +55,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     currentTx: CurrentTx[]
   ): Promise<EvalStateResult<State>> {
     const stateEvaluationBenchmark = Benchmark.measure();
-    const {ignoreExceptions, stackTrace, internalWrites} = executionContext.evaluationOptions;
-    const {contract, contractDefinition, sortedInteractions} = executionContext;
+    const { ignoreExceptions, stackTrace, internalWrites } = executionContext.evaluationOptions;
+    const { contract, contractDefinition, sortedInteractions } = executionContext;
 
     let currentState = baseState.state;
     const validity = baseState.validity;
@@ -88,7 +87,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
       const isInteractWrite = this.tagsParser.isInteractWrite(missingInteraction, contractDefinition.txId);
 
-
       // other contract makes write ("writing contract") on THIS contract
       if (isInteractWrite && internalWrites) {
         // evaluating txId of the contract that is writing on THIS contract
@@ -97,7 +95,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         const interactionCall: InteractionCall = contract
           .getCallStack()
-          .addInteractionData({interaction: null, interactionTx, currentTx});
+          .addInteractionData({ interaction: null, interactionTx, currentTx });
 
         // creating a Contract instance for the "writing" contract
         const writingContract = executionContext.smartweave.contract(
@@ -148,7 +146,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           gasUsed: 0 // TODO...
         });
 
-        this.logger.debug('New state after internal write', {contractTxId: contractDefinition.txId, newState});
+        this.logger.debug('New state after internal write', { contractTxId: contractDefinition.txId, newState });
       } else {
         // "direct" interaction with this contract - "standard" processing
         const inputTag = this.tagsParser.getInputTag(missingInteraction, executionContext.contractDefinition.txId);
@@ -214,7 +212,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
       // I'm really NOT a fan of this "modify" feature, but I don't have idea how to better
       // implement the "evolve" feature
-      for (const {modify} of this.executionContextModifiers) {
+      for (const { modify } of this.executionContextModifiers) {
         executionContext = await modify<State>(currentState, executionContext);
       }
     }

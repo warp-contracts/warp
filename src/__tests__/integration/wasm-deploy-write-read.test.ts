@@ -81,8 +81,8 @@ describe('Testing the SmartWeave client for WASM contract', () => {
   it('should properly read initial state', async () => {
     const contractState = (await contract.readState()).state;
     expect(contractState.counter).toEqual(0);
-    expect(contractState.firstName).toEqual("first_ppe");
-    expect(contractState.lastName).toEqual("last_ppe");
+    expect(contractState.firstName).toEqual('first_ppe');
+    expect(contractState.lastName).toEqual('last_ppe');
   });
 
   it('should properly register interactions', async () => {
