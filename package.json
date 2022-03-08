@@ -60,11 +60,11 @@
     "json-beautify": "^1.1.1",
     "knex": "^0.95.14",
     "lodash": "^4.17.21",
-    "redstone-isomorphic": "^1.0.2",
+    "redstone-isomorphic": "1.1.1",
+    "redstone-wasm-metering": "1.0.0",
     "safe-stable-stringify": "2.3.1",
     "tslog": "^3.2.2",
-    "undici": "^4.12.2",
-    "wasm-metering": "^0.2.1"
+    "undici": "^4.12.2"
   },
   "devDependencies": {
     "@types/cheerio": "^0.22.30",
@@ -99,5 +99,10 @@
   },
   "overrides": {
     "arweave": "$arweave"
+  },
+  "browser": {
+    "fs": false,
+    "path": false,
+    "crypto": false
   }
 }
