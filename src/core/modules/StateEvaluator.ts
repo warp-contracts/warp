@@ -96,6 +96,8 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   sequencerAddress = 'https://gateway.redstone.finance/';
 
   gasLimit = Number.MAX_SAFE_INTEGER;
+
+  useFastCopy = false;
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some of the features.
@@ -143,4 +145,10 @@ export interface EvaluationOptions {
   sequencerAddress: string;
 
   gasLimit: number;
+
+  // Whether fast-copy library should be used during the state evaluation
+  // https://github.com/planttheidea/fast-copy#isstrict
+  // it's much faster (e.g. almost twice for the SJ3l7474UHh3Dw6dWVT1bzsJ-8JvOewtGoDdOecWIZo contract)
+  // but not yet fully tested - so exposing it as an option (with default to false)
+  useFastCopy: boolean;
 }

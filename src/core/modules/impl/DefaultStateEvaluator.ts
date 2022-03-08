@@ -68,8 +68,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       `Evaluating state for ${contractDefinition.txId} [${missingInteractions.length} non-cached of ${sortedInteractions.length} all]`
     );
 
-    this.logger.trace('Base state:', baseState.state);
-
     let errorMessage = null;
     let lastConfirmedTxState: { tx: GQLNodeInterface; state: EvalStateResult<State> } = null;
 
