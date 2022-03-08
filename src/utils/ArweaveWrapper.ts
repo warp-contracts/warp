@@ -3,8 +3,7 @@ import { NetworkInfoInterface } from 'arweave/node/network';
 import { GqlReqVariables, LoggerFactory } from '@smartweave';
 import { AxiosResponse } from 'axios';
 import Transaction from 'arweave/node/lib/transaction';
-import 'redstone-isomorphic';
-
+import { Buffer as isomorphicBuffer } from 'redstone-isomorphic';
 export class ArweaveWrapper {
   private readonly logger = LoggerFactory.INST.create('ArweaveWrapper');
 
@@ -98,10 +97,10 @@ export class ArweaveWrapper {
       const txData = (await this.arweave.transactions.getData(id, {
         decode: true
       })) as Uint8Array;
-      return Buffer.from(txData);
+      return isomorphicBuffer.from(txData);
     } else {
       const buffer = await response.arrayBuffer();
-      return Buffer.from(buffer);
+      return isomorphicBuffer.from(buffer);
     }
   }
 

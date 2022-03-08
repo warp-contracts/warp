@@ -13,7 +13,7 @@ import { ContractHandlerApi } from './ContractHandlerApi';
 import loader from '@assemblyscript/loader';
 import { imports } from './wasmImports';
 import { WasmContractHandlerApi } from './WasmContractHandlerApi';
-import metering from 'wasm-metering';
+import metering from 'redstone-wasm-metering';
 
 /**
  * A factory that produces handlers that are compatible with the "current" style of

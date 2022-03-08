@@ -16,7 +16,6 @@ import {
 } from '@smartweave';
 import BigNumber from 'bignumber.js';
 import * as clarity from '@weavery/clarity';
-import * as v8 from 'v8';
 
 export class ContractHandlerApi<State> implements HandlerApi<State> {
   private readonly contractLogger: RedStoneLogger;

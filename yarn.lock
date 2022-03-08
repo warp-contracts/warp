@@ -2169,7 +2169,7 @@ block-stream@*:
   dependencies:
     inherits "~2.0.0"
 
-bn.js@^4.0.0, bn.js@^4.11.6, bn.js@^4.11.8, bn.js@^4.11.9:
+bn.js@^4.0.0, bn.js@^4.11.6, bn.js@^4.11.9:
   version "4.12.0"
   resolved "https://registry.yarnpkg.com/bn.js/-/bn.js-4.12.0.tgz#775b3f278efbb9718eec7361f483fb36fbbfea88"
   integrity sha512-c98Bf3tPniI+scsdk237ku1Dc3ujXQTSgyiPUDEOe7tRkhrqridvh8klBv0HCEso1OLOYcHuCv/cS6DNxKH+ZA==
@@ -2279,12 +2279,12 @@ buffer-pipe@0.0.0:
   dependencies:
     safe-buffer "^5.1.1"
 
-buffer-pipe@0.0.2:
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/buffer-pipe/-/buffer-pipe-0.0.2.tgz#960678ab517ca926dc1bfe231f402cbe2fe74442"
-  integrity sha512-YlqzbWVqMv+xEeRyg0OXAJym3zAFTAIuku9l7okwxOXNDxbmSlL5o3QaF5k6IQ2iHO9o1OCo6tT4UkrQkI5VbQ==
+buffer-pipe@0.0.3:
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/buffer-pipe/-/buffer-pipe-0.0.3.tgz#242197681d4591e7feda213336af6c07a5ce2409"
+  integrity sha512-GlxfuD/NrKvCNs0Ut+7b1IHjylfdegMBxQIlZHj7bObKVQBxB5S84gtm2yu1mQ8/sSggceWBDPY0cPXgvX2MuA==
   dependencies:
-    safe-buffer "^5.1.1"
+    safe-buffer "^5.1.2"
 
 buffer-writer@2.0.0:
   version "2.0.0"
@@ -2307,7 +2307,7 @@ buffer@^5.5.0:
     base64-js "^1.3.1"
     ieee754 "^1.1.13"
 
-buffer@^6.0.2, buffer@~6.0.3:
+buffer@^6.0.2, buffer@^6.0.3, buffer@~6.0.3:
   version "6.0.3"
   resolved "https://registry.yarnpkg.com/buffer/-/buffer-6.0.3.tgz#2ace578459cc8fbe2a70aaa8f52ee63b6a74c6c6"
   integrity sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==
@@ -6082,12 +6082,40 @@ rechoir@0.7.0:
   dependencies:
     resolve "^1.9.0"
 
-redstone-isomorphic@^1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/redstone-isomorphic/-/redstone-isomorphic-1.0.2.tgz#d1cfccca24c860212d3a3d8d76103da0e9445a24"
-  integrity sha512-UK4oxxJmb4nowAM3p47CNwkiKFA0Ewn1i7LMU8ix7fdCefSNoMetar3LATyBYoCdGSNJKa8tLLvbnWfSfwwO5w==
+redstone-isomorphic@1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/redstone-isomorphic/-/redstone-isomorphic-1.1.1.tgz#48c2f8ba98bf053bec98242cbfdce7aaad46aeee"
+  integrity sha512-Xwg82SWj6MTAWRNgHCNdh+2fTvqRywhy4eK33/oedbvhAPrQR6yWmiXVcf0X3fZMQA67kLMiTgy+QyjDvmw5UQ==
   dependencies:
+    buffer "^6.0.3"
+    safe-buffer "^5.1.2"
     undici "^4.12.2"
+
+redstone-isomorphic@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/redstone-isomorphic/-/redstone-isomorphic-1.1.0.tgz#9d73a529e6253b64fb4a8db81022035d66834915"
+  integrity sha512-EyPbG6A+rPhakJWL8RfNXQwhqZ5Clnqv1tdEqxNgF90rundvKpupkAVeknX8JpneAaO/0obDxrcQ8JYbVzHsfw==
+  dependencies:
+    buffer "^6.0.3"
+    safe-buffer "^5.1.2"
+    undici "^4.12.2"
+
+redstone-wasm-json-toolkit@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/redstone-wasm-json-toolkit/-/redstone-wasm-json-toolkit-1.0.0.tgz#e7f0bf39c4566d445769ac6626351ce2512b61cb"
+  integrity sha512-N07LnP0CkjBWAuYDuiz/pzlJVLHIEcLQjoKk2Bzfga6vuLo+dNZhPrD8cDr8HtYZHeV6oKaPxe/eFnf5n0JmSQ==
+  dependencies:
+    buffer-pipe "0.0.3"
+    leb128 "0.0.4"
+    redstone-isomorphic "^1.1.0"
+
+redstone-wasm-metering@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/redstone-wasm-metering/-/redstone-wasm-metering-1.0.0.tgz#d41772fdd2e01ae3bd55502c3f9deb659a741da2"
+  integrity sha512-NsthdSoiEBh8jRq4kNqNZ77J9ZgPbvQaPYx+SqDctsQdz0aPFyD5czkv4Sn6K2L2p8DvfWxGqCJXp0Q0WneG8g==
+  dependencies:
+    leb128 "^0.0.4"
+    redstone-wasm-json-toolkit "1.0.0"
 
 regenerator-runtime@^0.13.4:
   version "0.13.9"
@@ -7207,24 +7235,6 @@ walker@^1.0.7:
   integrity sha512-ts/8E8l5b7kY0vlWLewOkDXMmPdLcVV4GmOQLyxuSswIJsweeFZtAsMF7k1Nszz+TYBQrlYRmzOnr398y1JemQ==
   dependencies:
     makeerror "1.0.12"
-
-wasm-json-toolkit@0.2.3:
-  version "0.2.3"
-  resolved "https://registry.yarnpkg.com/wasm-json-toolkit/-/wasm-json-toolkit-0.2.3.tgz#51207da907a343152b02d0e97ee30c4a6e9f2308"
-  integrity sha512-W0pESOST9hHFEmHq9kzMxAEhcPYuASdYCDw4FavKSyQKh3uOmH2slRXR/MhTKJY+gp1AauUDNd9DeE0cS4bV4A==
-  dependencies:
-    bn.js "^4.11.8"
-    buffer-pipe "0.0.2"
-    leb128 "0.0.4"
-    safe-buffer "^5.1.1"
-
-wasm-metering@^0.2.1:
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/wasm-metering/-/wasm-metering-0.2.1.tgz#08220896e5e74b4ee3286636fd31d84e40544083"
-  integrity sha512-YDlTPY4jspknNyDaVBQhLTuTYBh+39qI0P9F0grmR88NR4oh7qfgpTwZ2ly4oX2hHCj9KlIwhy2Yyez+3/wY2Q==
-  dependencies:
-    leb128 "^0.0.4"
-    wasm-json-toolkit "0.2.3"
 
 wcwidth@^1.0.1:
   version "1.0.1"
