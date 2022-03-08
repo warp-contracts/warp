@@ -56,6 +56,9 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
         )
         .build()
         .contract(contractTxId)
+        .setEvaluationOptions({
+          useFastCopy: true
+        })
         .readState(blockHeight);
       const result2String = stringify(result2.state).trim();
       expect(result2String).toEqual(resultString);
@@ -99,9 +102,15 @@ describe('readState', () => {
     const result = await readContract(arweave, contractTxId, blockHeight);
     const resultString = stringify(result).trim();
 
-    const result2 = await SmartWeaveNodeFactory.memCached(arweave, 1)
+    const result2 = await SmartWeaveNodeFactory.memCachedBased(arweave, 1)
+      .setInteractionsLoader(
+        new RedstoneGatewayInteractionsLoader('https://gateway.redstone.finance', null, SourceType.ARWEAVE)
+      )
+      .setDefinitionLoader(
+        new RedstoneGatewayContractDefinitionLoader('https://gateway.redstone.finance', arweave, new MemCache())
+      )
+      .build()
       .contract(contractTxId)
-      .setEvaluationOptions({ updateCacheForEachInteraction: false })
       .readState(blockHeight);
     const result2String = stringify(result2.state).trim();
 
@@ -116,9 +125,15 @@ describe('readState', () => {
       target: '6Z-ifqgVi1jOwMvSNwKWs6ewUEQ0gU9eo4aHYC3rN1M'
     });
 
-    const v2Result = await SmartWeaveNodeFactory.memCached(arweave, 1)
+    const v2Result = await SmartWeaveNodeFactory.memCachedBased(arweave, 1)
+      .setInteractionsLoader(
+        new RedstoneGatewayInteractionsLoader('https://gateway.redstone.finance', null, SourceType.ARWEAVE)
+      )
+      .setDefinitionLoader(
+        new RedstoneGatewayContractDefinitionLoader('https://gateway.redstone.finance', arweave, new MemCache())
+      )
+      .build()
       .contract(contractTxId)
-      .setEvaluationOptions({ updateCacheForEachInteraction: false })
       .connect(jwk)
       .viewState({
         function: 'balance',
