@@ -1,6 +1,7 @@
 import {
   Benchmark,
   BlockHeightCacheResult,
+  canBeCached,
   ContractInteraction,
   CurrentTx,
   deepCopy,
@@ -69,8 +70,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
     this.logger.trace('Base state:', baseState.state);
 
-    let lastEvaluatedInteraction = null;
     let errorMessage = null;
+    let lastConfirmedTxState: { tx: GQLNodeInterface; state: EvalStateResult<State> } = null;
 
     const missingInteractionsLength = missingInteractions.length;
     for (let i = 0; i < missingInteractionsLength; i++) {
@@ -130,8 +131,18 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         if (newState !== null) {
           currentState = deepCopy(newState.cachedValue.state);
           validity[interactionTx.id] = newState.cachedValue.validity[interactionTx.id];
-          await this.onStateUpdate<State>(interactionTx, executionContext, new EvalStateResult(currentState, validity));
-          lastEvaluatedInteraction = interactionTx;
+
+          const toCache = new EvalStateResult(currentState, validity);
+
+          // TODO: probably a separate hook should be created here
+          // to fix https://github.com/redstone-finance/redstone-smartcontracts/issues/109
+          await this.onStateUpdate<State>(interactionTx, executionContext, toCache);
+          if (canBeCached(interactionTx)) {
+            lastConfirmedTxState = {
+              tx: interactionTx,
+              state: toCache
+            };
+          }
         } else {
           validity[interactionTx.id] = false;
         }
@@ -203,11 +214,14 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         validity[interactionTx.id] = result.type === 'ok';
         currentState = result.state;
 
-        // cannot simply take last element of the missingInteractions
-        // as there is no certainty that it has been evaluated (e.g. issues with input tag).
-        lastEvaluatedInteraction = interactionTx;
-
-        await this.onStateUpdate<State>(interactionTx, executionContext, new EvalStateResult(currentState, validity));
+        const toCache = new EvalStateResult(currentState, validity);
+        if (canBeCached(interactionTx)) {
+          lastConfirmedTxState = {
+            tx: interactionTx,
+            state: toCache
+          };
+        }
+        await this.onStateUpdate<State>(interactionTx, executionContext, toCache);
       }
 
       // I'm really NOT a fan of this "modify" feature, but I don't have idea how to better
@@ -221,8 +235,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
     // state could have been fully retrieved from cache
     // or there were no interactions below requested block height
-    if (lastEvaluatedInteraction !== null) {
-      await this.onStateEvaluated(lastEvaluatedInteraction, executionContext, evalStateResult);
+    if (lastConfirmedTxState !== null) {
+      await this.onStateEvaluated(lastConfirmedTxState.tx, executionContext, lastConfirmedTxState.state);
     }
 
     return evalStateResult;

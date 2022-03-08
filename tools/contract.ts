@@ -56,16 +56,64 @@ async function main() {
     .setInteractionsLoader(
       new RedstoneGatewayInteractionsLoader('https://gateway.redstone.finance')
     )
-    /*.setDefinitionLoader(
-      new RedstoneGatewayContractDefinitionLoader('https://gateway.redstone.finance', arweave, new MemCache())
-    )*/
     .overwriteSource({
-      ["38TR3D8BxlPTc89NOW67IkQQUPR8jDLaJNdYv-4wWfM"]: koi_source,
+      ["egfnrQFu-xDNgl1x04HlH6-wGKcHVKMF7U5Nsc-1USA"]: "export async function handle (state, action) {\n" +
+      "    const puzzles = state.puzzles\n" +
+      "    const input = action.input\n" +
+      "    const caller = action.caller\n" +
+      "\n" +
+      "    if (input.function === 'create') {\n" +
+      "        const solution_hash = input.solution_hash\n" +
+      "        const file_id = input.file_id\n" +
+      "\n" +
+      "        if (!solution_hash) {\n" +
+      "            throw new ContractError('No solution hash provided')\n" +
+      "        }\n" +
+      "\n" +
+      "        if (!file_id) {\n" +
+      "            throw new ContractError('No file id specified')\n" +
+      "        }\n" +
+      "\n" +
+      "        if (solution_hash in puzzles) {\n" +
+      "            throw new ContractError('Puzzle already exists')\n" +
+      "        } else {\n" +
+      "            puzzles[solution_hash] = {\n" +
+      "                \"file_id\": file_id,\n" +
+      "                \"creator\": caller,\n" +
+      "                \"winner\": null\n" +
+      "            }\n" +
+      "        }\n" +
+      "\n" +
+      "        return { state }\n" +
+      "    }\n" +
+      "\n" +
+      "    if (input.function === 'solve') {\n" +
+      "        const solution = input.solution\n" +
+      "        const solution_hash = input.solution_hash\n" +
+      "\n" +
+      "        if (solution_hash in puzzles) {\n" +
+      "            const solution_buffer = SmartWeave.arweave.utils.stringToBuffer(solution)\n" +
+      "            const calculated_hash =\n" +
+      "                SmartWeave.arweave.utils.bufferTob64Url(\n" +
+      "                    await SmartWeave.arweave.utils.crypto.hash(solution_buffer)\n" +
+      "                )\n" +
+      "            if (calculated_hash === solution_hash){\n" +
+      "                puzzles[solution_hash].winner = caller\n" +
+      "            }\n" +
+      "        } else {\n" +
+      "            throw new ContractError('Puzzle not found')\n" +
+      "        }\n" +
+      "\n" +
+      "        return { state }\n" +
+      "    }\n" +
+      "\n" +
+      "    throw new ContractError(`No function supplied or function not recognised: \"${input.function}\"`)\n" +
+      "}\n",
     });
 
   const jwk = readJSON('../redstone-node/.secrets/redstone-jwk.json');
   const contract = smartweave
-    .contract(KOI_CONTRACT)
+    .contract("egfnrQFu-xDNgl1x04HlH6-wGKcHVKMF7U5Nsc-1USA")
     .setEvaluationOptions({
       sequencerAddress: 'http://localhost:5666/',
       updateCacheForEachInteraction: false
