@@ -49,7 +49,7 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
     try {
       const { interaction, interactionTx, currentTx } = interactionData;
 
-      const stateCopy = deepCopy(currentResult.state);
+      const stateCopy = deepCopy(currentResult.state, executionContext.evaluationOptions.useFastCopy);
       this.swGlobal._activeTx = interactionTx;
 
       const handler = this.contractFunction(this.swGlobal, BigNumber, clarity, contractLogger) as HandlerFunction<

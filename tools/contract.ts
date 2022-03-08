@@ -20,9 +20,9 @@ const logger = LoggerFactory.INST.create('Contract');
 
 //LoggerFactory.use(new TsLogFactory());
 LoggerFactory.INST.logLevel('error');
-//LoggerFactory.INST.logLevel('info', 'Contract');
+LoggerFactory.INST.logLevel('info', 'Contract');
 //LoggerFactory.INST.logLevel('debug', 'DefaultStateEvaluator');
-//LoggerFactory.INST.logLevel('error', 'CacheableStateEvaluator');
+//LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
 
 async function main() {
   printTestInfo();
@@ -52,71 +52,18 @@ async function main() {
 
   const koi_source = fs.readFileSync(path.join(__dirname, 'data', 'koi-source.js'), "utf-8");
 
-  const smartweave = SmartWeaveNodeFactory.memCachedBased(arweave)
+  const smartweave = SmartWeaveNodeFactory.fileCachedBased(arweave, 'data')
     .setInteractionsLoader(
       new RedstoneGatewayInteractionsLoader('https://gateway.redstone.finance')
     )
-    .overwriteSource({
-      ["egfnrQFu-xDNgl1x04HlH6-wGKcHVKMF7U5Nsc-1USA"]: "export async function handle (state, action) {\n" +
-      "    const puzzles = state.puzzles\n" +
-      "    const input = action.input\n" +
-      "    const caller = action.caller\n" +
-      "\n" +
-      "    if (input.function === 'create') {\n" +
-      "        const solution_hash = input.solution_hash\n" +
-      "        const file_id = input.file_id\n" +
-      "\n" +
-      "        if (!solution_hash) {\n" +
-      "            throw new ContractError('No solution hash provided')\n" +
-      "        }\n" +
-      "\n" +
-      "        if (!file_id) {\n" +
-      "            throw new ContractError('No file id specified')\n" +
-      "        }\n" +
-      "\n" +
-      "        if (solution_hash in puzzles) {\n" +
-      "            throw new ContractError('Puzzle already exists')\n" +
-      "        } else {\n" +
-      "            puzzles[solution_hash] = {\n" +
-      "                \"file_id\": file_id,\n" +
-      "                \"creator\": caller,\n" +
-      "                \"winner\": null\n" +
-      "            }\n" +
-      "        }\n" +
-      "\n" +
-      "        return { state }\n" +
-      "    }\n" +
-      "\n" +
-      "    if (input.function === 'solve') {\n" +
-      "        const solution = input.solution\n" +
-      "        const solution_hash = input.solution_hash\n" +
-      "\n" +
-      "        if (solution_hash in puzzles) {\n" +
-      "            const solution_buffer = SmartWeave.arweave.utils.stringToBuffer(solution)\n" +
-      "            const calculated_hash =\n" +
-      "                SmartWeave.arweave.utils.bufferTob64Url(\n" +
-      "                    await SmartWeave.arweave.utils.crypto.hash(solution_buffer)\n" +
-      "                )\n" +
-      "            if (calculated_hash === solution_hash){\n" +
-      "                puzzles[solution_hash].winner = caller\n" +
-      "            }\n" +
-      "        } else {\n" +
-      "            throw new ContractError('Puzzle not found')\n" +
-      "        }\n" +
-      "\n" +
-      "        return { state }\n" +
-      "    }\n" +
-      "\n" +
-      "    throw new ContractError(`No function supplied or function not recognised: \"${input.function}\"`)\n" +
-      "}\n",
-    });
+    .build();
 
   const jwk = readJSON('../redstone-node/.secrets/redstone-jwk.json');
   const contract = smartweave
-    .contract("egfnrQFu-xDNgl1x04HlH6-wGKcHVKMF7U5Nsc-1USA")
+    .contract(PIANITY_CONTRACT)
     .setEvaluationOptions({
       sequencerAddress: 'http://localhost:5666/',
-      updateCacheForEachInteraction: false
+      useFastCopy: true
     })
     .connect(jwk);
  /* const bundledInteraction = await contract.bundleInteraction({
@@ -132,8 +79,6 @@ async function main() {
   //const state = readContract(arweave, KOI_CONTRACT);
 
   fs.writeFileSync(path.join(__dirname, 'data', 'koi-proper-state_2.json'), stringify(state));
-
-  logger.info("State", state);
 
   const heapUsedAfter = Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100;
   const rssUsedAfter = Math.round((process.memoryUsage().rss / 1024 / 1024) * 100) / 100;
