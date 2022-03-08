@@ -2,6 +2,8 @@
 RedStone SmartContracts SDK is the new, written from scratch, implementation of 
 the SmartWeave [Protocol](./docs/SMARTWEAVE_PROTOCOL.md).
 
+It works in both web and Node.js environment (requires Node.js 16.5+).
+
 It has been built with performance (e.g. caching at multiple layers, Arweave calls optimization)
 and modularity (e.g. ability to use different types of caches, imported from external libraries) in mind.
 
@@ -142,19 +144,6 @@ LoggerFactory.INST.logLevel("debug", "ArweaveGatewayInteractionsLoader");
 // then create an instance of smartweave sdk
 const smartweave = SmartWeaveWebFactory.memCached(arweave);
 ```
-
-3. If your contract does not make any `readContractState` calls (i.e. it is not reading other contracts' state), you can switch the 
-`updateCacheForEachInteraction` flag to `false` - this will limit the amounts of writes to the state cache (and therefore decrease the execution time for such contracts), e.g.:
-```ts
-// create an instance of smartweave sdk
-const smartweave = SmartWeaveWebFactory.memCached(arweave);
-
-// then connect it to a given contract with "updateCacheForEachInteraction" set to "false"
-const contract = smartweave.contract(contractTxId).setEvaluationOptions({
-    updateCacheForEachInteraction: false
-  });
-```
-
 
 ### Examples
 Usage examples can be found in
