@@ -3,15 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import {interactRead, readContract} from 'smartweave';
 import Arweave from 'arweave';
-import {
-    LoggerFactory,
-    MemCache,
-    RedstoneGatewayContractDefinitionLoader,
-    RedstoneGatewayInteractionsLoader,
-    SmartWeaveNodeFactory,
-    SmartWeaveWebFactory,
-    SourceType
-} from '@smartweave';
+import {LoggerFactory, SmartWeaveNodeFactory, SmartWeaveWebFactory, SourceType} from '@smartweave';
 
 const stringify = require('safe-stable-stringify');
 
@@ -38,6 +30,8 @@ const testCasesGw: string[] = JSON.parse(fs.readFileSync(path.join(__dirname, 't
 const chunked: string[][][] = [...chunks(testCases, 10)];
 const chunkedGw: string[][][] = [...chunks(testCasesGw, 10)];
 
+const originalConsoleLog = console.log;
+
 describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
     // note: concurrent doesn't seem to be working here, duh...
     // will probably need to manually split all the test cases to separate test files
@@ -50,22 +44,29 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
                 .readFileSync(path.join(__dirname, 'test-cases', 'contracts', `${contractTxId}.json`), 'utf-8')
                 .trim();
             console.log('readState', contractTxId);
-            const result2 = await SmartWeaveNodeFactory.memCachedBased(arweave, 1)
-                .useRedStoneGateway(null, SourceType.ARWEAVE)
-                .build()
-                .contract(contractTxId)
-                .setEvaluationOptions({
-                    useFastCopy: true
-                })
-                .readState(blockHeight);
-            const result2String = stringify(result2.state).trim();
-            expect(result2String).toEqual(resultString);
+            try {
+                console.log = function () {
+                }; // to hide any logs from contracts...
+                const result2 = await SmartWeaveNodeFactory.memCachedBased(arweave, 1)
+                    .useRedStoneGateway(null, SourceType.ARWEAVE)
+                    .build()
+                    .contract(contractTxId)
+                    .setEvaluationOptions({
+                        useFastCopy: true
+                    })
+                    .readState(blockHeight);
+                const result2String = stringify(result2.state).trim();
+                expect(result2String).toEqual(resultString);
+            } finally {
+                console.log = originalConsoleLog;
+            }
+
         },
         800000
     );
 });
 
-fdescribe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
+describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
     // note: concurrent doesn't seem to be working here, duh...
     // will probably need to manually split all the test cases to separate test files
     it.concurrent.each(contracts)(
