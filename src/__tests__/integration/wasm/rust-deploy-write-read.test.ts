@@ -35,18 +35,16 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
   beforeAll(async () => {
     // note: each tests suit (i.e. file with tests that Jest is running concurrently
     // with another files has to have ArLocal set to a different port!)
-    arlocal = new ArLocal(1301, false);
+    arlocal = new ArLocal(1201, false);
     await arlocal.start();
 
     arweave = Arweave.init({
       host: 'localhost',
-      port: 1301,
+      port: 1201,
       protocol: 'http'
     });
 
     LoggerFactory.INST.logLevel('error');
-    LoggerFactory.INST.logLevel('debug', 'WASM');
-    LoggerFactory.INST.logLevel('debug', 'WasmContractHandlerApi');
 
     smartweave = SmartWeaveNodeFactory.memCached(arweave);
 
@@ -187,7 +185,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     results.forEach((result) => {
       expect(result.gasUsed).toEqual(9360178);
     });
-  });
+  }, 10000);
 
   it('should properly handle runtime errors', async () => {
     const result = await pst.dryWrite({
@@ -222,6 +220,6 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     });
 
     expect(result.type).toEqual('exception');
-    expect(result.errorMessage).toEqual('[RE:OOG] Out of gas! Used: 9000593, limit: 9000000');
+    expect(result.errorMessage.startsWith("[RE:OOG] Out of gas!")).toBeTruthy();
   });
 });
