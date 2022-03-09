@@ -28,7 +28,7 @@ export interface RedstoneGatewayInteractions {
   message?: string;
 }
 
-type ConfirmationStatus =
+export type ConfirmationStatus =
   | {
       notCorrupted?: boolean;
       confirmed?: null;
