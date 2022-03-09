@@ -92,7 +92,7 @@ In order to use the [Redstone Gateway](https://github.com/redstone-finance/redst
 configure the smartweave instance in the following way:
 ```ts
 const smartweave = SmartWeaveNodeFactory.memCachedBased(arweave)
-    .setInteractionsLoader(new RedstoneGatewayInteractionsLoader(gatewayUrl))
+    .useRedStoneGateway()
     .build();
 ```
 The gateway is currently available under [https://gateway.redstone.finance](https://gateway.redstone.finance) url.   
@@ -104,7 +104,7 @@ all the interactions. There is a risk of returning [corrupted transactions](http
 2. `{confirmed: true}` - returns only confirmed transactions - the most safe mode, eg:
 ```ts
 const smartweave = SmartWeaveNodeFactory.memCachedBased(arweave)
-    .setInteractionsLoader(new RedstoneGatewayInteractionsLoader(gatewayUrl, {confirmed: true}))
+    .useRedStoneGateway( {confirmed: true} )
     .build();
 ```
 
@@ -112,7 +112,7 @@ const smartweave = SmartWeaveNodeFactory.memCachedBased(arweave)
 Not as safe as previous mode, but good if you want combine high level of safety with the most recent data.
 ```ts
 const smartweave = SmartWeaveNodeFactory.memCachedBased(arweave)
-    .setInteractionsLoader(new RedstoneGatewayInteractionsLoader(gatewayUrl, {notCorrupted: true}))
+    .useRedStoneGateway( {notCorrupted: true} )
     .build();
 ```
 
