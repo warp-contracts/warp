@@ -27,8 +27,7 @@ export function normalizeContractSource(contractSrc: string): string {
     .replace(/export\s+function\s+handle/gmu, 'function handle');
 
   return `
-    const [SmartWeave, BigNumber, clarity, logger] = arguments;
-    clarity.SmartWeave = SmartWeave;
+    const [SmartWeave, BigNumber, logger] = arguments;
     class ContractError extends Error { constructor(message) { super(message); this.name = 'ContractError' } };
     function ContractAssert(cond, message) { if (!cond) throw new ContractError(message) };
     ${contractSrc};
