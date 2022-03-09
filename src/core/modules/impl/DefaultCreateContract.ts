@@ -40,8 +40,6 @@ export class DefaultCreateContract implements CreateContract {
     if (contractType == 'wasm') {
       const wasmModule = await WebAssembly.compile(src as Buffer);
       const moduleImports = WebAssembly.Module.imports(wasmModule);
-      this.logger.debug('Imports', moduleImports);
-
       const module = await WebAssembly.instantiate(src, dummyImports(moduleImports));
       // @ts-ignore
       if (!module.instance.exports.type) {

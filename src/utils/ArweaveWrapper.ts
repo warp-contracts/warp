@@ -34,7 +34,7 @@ export class ArweaveWrapper {
     }
   }
 
-  async gql(query: string, variables: GqlReqVariables): Promise<Partial<AxiosResponse>> {
+  async gql(query: string, variables: GqlReqVariables): Promise<Partial<AxiosResponse<any>>> {
     try {
       const data = JSON.stringify({
         query: query,

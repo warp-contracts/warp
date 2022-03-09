@@ -2,7 +2,7 @@ import fs from 'fs';
 
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
-import {JWKInterface} from 'arweave/node/lib/wallet';
+import { JWKInterface } from 'arweave/node/lib/wallet';
 import {
   getTag,
   InteractionResult,
@@ -14,7 +14,7 @@ import {
   SmartWeaveTags
 } from '@smartweave';
 import path from 'path';
-import {addFunds, mineBlock} from '../_helpers';
+import { addFunds, mineBlock } from '../_helpers';
 
 describe('Testing the Rust WASM Profit Sharing Token', () => {
   let wallet: JWKInterface;
@@ -99,7 +99,6 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
       src: contractSrc
     });
 
-
     // connecting to the PST contract
     pst = smartweave.pst(contractTxId);
 
@@ -152,12 +151,11 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     expect(result).toEqual(10000000 + 555);
   });
 
-
   // note: the dummy logic on the test contract should add 1000 tokens
   // to each address, if the foreign contract state 'ticker' field = 'FOREIGN_PST'
   it('should properly read foreign contract state', async () => {
     await pst.writeInteraction({
-      function: "foreignCall",
+      function: 'foreignCall',
       contract_tx_id: wrongForeignContractTxId
     });
     await mineBlock(arweave);
@@ -165,12 +163,14 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     expect((await pst.currentState()).balances['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']).toEqual(10000000 + 555);
 
     await pst.writeInteraction({
-      function: "foreignCall",
+      function: 'foreignCall',
       contract_tx_id: properForeignContractTxId
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(555669 - 555 + 1000);
-    expect((await pst.currentState()).balances['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']).toEqual(10000000 + 555 + 1000);
+    expect((await pst.currentState()).balances['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']).toEqual(
+      10000000 + 555 + 1000
+    );
   });
 
   it('should return stable gas results', async () => {
@@ -195,8 +195,8 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
       qty: 555
     });
 
-    expect(result.type).toEqual("exception");
-    expect(result.errorMessage).toEqual("[RE:RE] Error while parsing input");
+    expect(result.type).toEqual('exception');
+    expect(result.errorMessage).toEqual('[RE:RE] Error while parsing input');
   });
 
   it('should properly handle contract errors', async () => {
@@ -206,15 +206,14 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
       qty: 0
     });
 
-    expect(result.type).toEqual("error");
-    expect(result.errorMessage).toEqual("[CE:TransferAmountMustBeHigherThanZero]");
+    expect(result.type).toEqual('error');
+    expect(result.errorMessage).toEqual('[CE:TransferAmountMustBeHigherThanZero]');
   });
-
 
   it('should honor gas limits', async () => {
     pst.setEvaluationOptions({
       gasLimit: 9000000
-    })
+    });
 
     const result = await pst.dryWrite({
       function: 'transfer',
@@ -222,7 +221,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
       qty: 555
     });
 
-    expect(result.type).toEqual("exception");
-    expect(result.errorMessage).toEqual("[RE:OOG] Out of gas! Used: 9000868, limit: 9000000");
+    expect(result.type).toEqual('exception');
+    expect(result.errorMessage).toEqual('[RE:OOG] Out of gas! Used: 9000593, limit: 9000000');
   });
 });

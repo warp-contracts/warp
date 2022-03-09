@@ -15,7 +15,6 @@ import {
   timeout
 } from '@smartweave';
 import BigNumber from 'bignumber.js';
-import * as clarity from '@weavery/clarity';
 
 export class ContractHandlerApi<State> implements HandlerApi<State> {
   private readonly contractLogger: RedStoneLogger;
@@ -52,7 +51,7 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
       const stateCopy = deepCopy(currentResult.state, executionContext.evaluationOptions.useFastCopy);
       this.swGlobal._activeTx = interactionTx;
 
-      const handler = this.contractFunction(this.swGlobal, BigNumber, clarity, contractLogger) as HandlerFunction<
+      const handler = this.contractFunction(this.swGlobal, BigNumber, contractLogger) as HandlerFunction<
         State,
         Input,
         Result

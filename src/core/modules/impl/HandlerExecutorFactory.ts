@@ -72,8 +72,6 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
            */
           const wasmModule = await WebAssembly.compile(meteredWasmBinary);
           const moduleImports = WebAssembly.Module.imports(wasmModule);
-          this.logger.debug('Imports', moduleImports);
-
           const wbindgenImports = moduleImports
             .filter((imp) => {
               return imp.module === '__wbindgen_placeholder__';
@@ -96,7 +94,6 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
     } else {
       this.logger.info('Creating handler for js contract', contractDefinition.txId);
       const normalizedSource = normalizeContractSource(contractDefinition.src);
-
       const contractFunction = new Function(normalizedSource);
 
       return new ContractHandlerApi(swGlobal, contractFunction, contractDefinition);
