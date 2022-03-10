@@ -1882,10 +1882,10 @@ argparse@^1.0.7:
   dependencies:
     sprintf-js "~1.0.2"
 
-arlocal@1.1.22:
-  version "1.1.22"
-  resolved "https://registry.yarnpkg.com/arlocal/-/arlocal-1.1.22.tgz#75ee7c4f8c7e54f8756f9df35439b764b5486404"
-  integrity sha512-7p+Ic35ZagEOJRSnxpeJ6Gv6xsUVeBpn50ku1xA6m0eMM3ke+eBdoEVpaSsdaR8sAo840Vn/94Q5AHblw6Jt8Q==
+arlocal@1.1.26:
+  version "1.1.26"
+  resolved "https://registry.yarnpkg.com/arlocal/-/arlocal-1.1.26.tgz#8193fc7792507c2038dc720e69b8d9bf64ec3c33"
+  integrity sha512-5rY7z777o5D1sJ+OtanZOPsuJwgeONKLy7PWr4fAWS72q0RAP4JaoTsFk99nhZZcDd4BZJQhtpnbpUih1fs4Aw==
   dependencies:
     "@koa/cors" "^3.1.0"
     apollo-server-koa "^3.6.2"
@@ -1902,6 +1902,7 @@ arlocal@1.1.22:
     koa-logger "^3.2.1"
     koa-router "^10.1.1"
     lodash "^4.17.21"
+    mime "^3.0.0"
     minimist "^1.2.5"
     moment "^2.29.1"
     rfc4648 "^1.5.1"
@@ -5273,6 +5274,11 @@ mime@^2.4.6:
   version "2.6.0"
   resolved "https://registry.yarnpkg.com/mime/-/mime-2.6.0.tgz#a2a682a95cd4d0cb1d6257e28f83da7e35800367"
   integrity sha512-USPkMeET31rOMiarsBNIHZKLGgvKc/LrjofAnBlOttf5ajRvqiRA8QsenbcooctK6d6Ts6aqZXBA+XbkKthiQg==
+
+mime@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/mime/-/mime-3.0.0.tgz#b374550dca3a0c18443b0c950a6a58f1931cf7a7"
+  integrity sha512-jSCU7/VB1loIWBZe14aEYHU/+1UMEHoaO7qxCOVJOw9GgH72VAWppxNcjU+x9a2k3GSIBXNKxXQFqRvvZ7vr3A==
 
 mimic-fn@^2.1.0:
   version "2.1.0"

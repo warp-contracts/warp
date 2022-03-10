@@ -1,20 +1,23 @@
 import Arweave from 'arweave';
 import {
+  Benchmark,
   ContractDefinition,
   EvalStateResult,
   ExecutionContext,
   ExecutorFactory,
   GQLNodeInterface,
   LoggerFactory,
+  MemCache,
   normalizeContractSource,
-  SmartWeaveGlobal
+  SmartWeaveGlobal,
+  SwCache
 } from '@smartweave';
 import { ContractHandlerApi } from './ContractHandlerApi';
 import loader from '@assemblyscript/loader';
 import { WasmContractHandlerApi } from './WasmContractHandlerApi';
-import metering from 'redstone-wasm-metering';
 import { asWasmImports } from './wasm/as-wasm-imports';
 import { rustWasmImports } from './wasm/rust-wasm-imports';
+import { Go } from './wasm/go-wasm-imports';
 
 /**
  * A factory that produces handlers that are compatible with the "current" style of
@@ -22,6 +25,7 @@ import { rustWasmImports } from './wasm/rust-wasm-imports';
  */
 export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknown>> {
   private readonly logger = LoggerFactory.INST.create('HandlerExecutorFactory');
+  private readonly cache: SwCache<string, WebAssembly.Module> = new MemCache();
 
   constructor(private readonly arweave: Arweave) {}
 
@@ -34,12 +38,9 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
     if (contractDefinition.contractType == 'wasm') {
       this.logger.info('Creating handler for wasm contract', contractDefinition.txId);
 
-      const meteredWasmBinary = metering.meterWASM(contractDefinition.srcBinary, {
-        meterType: 'i32'
-      });
+      const benchmark = Benchmark.measure();
 
       let wasmInstance;
-
       let jsExports = null;
 
       switch (contractDefinition.srcWasmLang) {
@@ -47,7 +48,10 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
           const wasmInstanceExports = {
             exports: null
           };
-          wasmInstance = loader.instantiateSync(meteredWasmBinary, asWasmImports(swGlobal, wasmInstanceExports));
+          wasmInstance = loader.instantiateSync(
+            contractDefinition.srcBinary,
+            asWasmImports(swGlobal, wasmInstanceExports)
+          );
           // note: well, exports are required by some imports
           // - e.g. those that use wasmModule.exports.__newString underneath (like Block.indep_hash)
           wasmInstanceExports.exports = wasmInstance.exports;
@@ -70,7 +74,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
            * to NOT mangle the import function names - unfortunately that is not currently possible
            * - https://github.com/rustwasm/wasm-bindgen/issues/1128
            */
-          const wasmModule = await WebAssembly.compile(meteredWasmBinary);
+          const wasmModule: WebAssembly.Module = await WebAssembly.compile(contractDefinition.srcBinary);
           const moduleImports = WebAssembly.Module.imports(wasmModule);
           const wbindgenImports = moduleImports
             .filter((imp) => {
@@ -85,10 +89,28 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
           wasmInstanceExports.exports = wasmInstance.exports;
           break;
         }
+        case 'go': {
+          const go = new Go(swGlobal);
+          go.importObject.metering = {
+            usegas: function (value) {
+              swGlobal.useGas(value);
+            }
+          };
+          const wasmModule = await WebAssembly.compile(contractDefinition.srcBinary);
+          wasmInstance = new WebAssembly.Instance(wasmModule, go.importObject);
+
+          // nope - DO NOT await here!
+          go.run(wasmInstance);
+          jsExports = go.exports;
+          break;
+        }
+
         default: {
           throw new Error(`Support for ${contractDefinition.srcWasmLang} not implemented yet.`);
         }
       }
+
+      this.logger.info(`WASM ${contractDefinition.srcWasmLang} handler created in ${benchmark.elapsed()}`);
 
       return new WasmContractHandlerApi(swGlobal, contractDefinition, jsExports || wasmInstance.exports);
     } else {

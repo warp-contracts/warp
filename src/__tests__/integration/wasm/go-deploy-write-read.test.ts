@@ -15,7 +15,7 @@ import {
 import path from 'path';
 import { addFunds, mineBlock } from '../_helpers';
 
-describe('Testing the Rust WASM Profit Sharing Token', () => {
+describe('Testing the Go WASM Profit Sharing Token', () => {
   let wallet: JWKInterface;
   let walletAddress: string;
 
@@ -34,12 +34,12 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
   beforeAll(async () => {
     // note: each tests suit (i.e. file with tests that Jest is running concurrently
     // with another files has to have ArLocal set to a different port!)
-    arlocal = new ArLocal(1201, false);
+    arlocal = new ArLocal(1150, false);
     await arlocal.start();
 
     arweave = Arweave.init({
       host: 'localhost',
-      port: 1201,
+      port: 1150,
       protocol: 'http'
     });
 
@@ -51,7 +51,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     await addFunds(arweave, wallet);
     walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
-    const contractSrc = fs.readFileSync(path.join(__dirname, '../data/wasm/rust-pst_bg.wasm'));
+    const contractSrc = fs.readFileSync(path.join(__dirname, '../data/wasm/go-pst.wasm'));
     const stateFromFile: PstState = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/token-pst.json'), 'utf8'));
 
     initialState = {
@@ -116,19 +116,19 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
 
     expect(contractTx).not.toBeNull();
     expect(getTag(contractTx, SmartWeaveTags.CONTRACT_TYPE)).toEqual('wasm');
-    expect(getTag(contractTx, SmartWeaveTags.WASM_LANG)).toEqual('rust');
+    expect(getTag(contractTx, SmartWeaveTags.WASM_LANG)).toEqual('go');
 
     const contractSrcTx = await arweave.transactions.get(getTag(contractTx, SmartWeaveTags.CONTRACT_SRC_TX_ID));
     expect(getTag(contractSrcTx, SmartWeaveTags.CONTENT_TYPE)).toEqual('application/wasm');
-    expect(getTag(contractSrcTx, SmartWeaveTags.WASM_LANG)).toEqual('rust');
+    expect(getTag(contractSrcTx, SmartWeaveTags.WASM_LANG)).toEqual('go');
   });
 
   it('should read pst state and balance data', async () => {
     expect(await pst.currentState()).toEqual(initialState);
 
-    expect(await pst.currentBalance('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M')).toEqual(10000000);
-    expect(await pst.currentBalance('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA')).toEqual(23111222);
-    expect(await pst.currentBalance(walletAddress)).toEqual(555669);
+    expect((await pst.currentBalance('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M')).balance).toEqual(10000000);
+    expect((await pst.currentBalance('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA')).balance).toEqual(23111222);
+    expect((await pst.currentBalance(walletAddress)).balance).toEqual(555669);
   });
 
   it('should properly transfer tokens', async () => {
@@ -144,7 +144,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
   });
 
   it('should properly view contract state', async () => {
-    const result = await pst.currentBalance('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M');
+    const result = (await pst.currentBalance('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M')).balance;
     expect(result).toEqual(10000000 + 555);
   });
 
@@ -153,7 +153,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
   it('should properly read foreign contract state', async () => {
     await pst.writeInteraction({
       function: 'foreignCall',
-      contract_tx_id: wrongForeignContractTxId
+      contractTxId: wrongForeignContractTxId
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(555669 - 555);
@@ -161,7 +161,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
 
     await pst.writeInteraction({
       function: 'foreignCall',
-      contract_tx_id: properForeignContractTxId
+      contractTxId: properForeignContractTxId
     });
     await mineBlock(arweave);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(555669 - 555 + 1000);
@@ -183,7 +183,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     }
 
     results.forEach((result) => {
-      expect(result.gasUsed).toEqual(9388933);
+      expect(result.gasUsed).toEqual(81158922);
     });
   }, 10000);
 
@@ -194,7 +194,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     });
 
     expect(result.type).toEqual('exception');
-    expect(result.errorMessage).toEqual('[RE:RE] Error while parsing input');
+    expect(result.errorMessage).toEqual('[RE:WTF] unknown function: ');
   });
 
   it('should properly handle contract errors', async () => {
@@ -205,9 +205,8 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     });
 
     expect(result.type).toEqual('error');
-    expect(result.errorMessage).toEqual('[CE:TransferAmountMustBeHigherThanZero]');
+    expect(result.errorMessage).toEqual('[CE:ITQ] invalid transfer qty');
   });
-
   it('should honor gas limits', async () => {
     pst.setEvaluationOptions({
       gasLimit: 9000000

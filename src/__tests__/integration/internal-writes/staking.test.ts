@@ -71,6 +71,7 @@ describe('Testing internal writes', () => {
       'utf8'
     );
 
+    console.log("wallet address", walletAddress);
     tokenContractTxId = await smartweave.createContract.deploy({
       wallet,
       initState: JSON.stringify({

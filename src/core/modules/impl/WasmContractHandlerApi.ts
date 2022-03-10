@@ -39,8 +39,6 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
       this.swGlobal.gasUsed = 0;
 
       this.assignReadContractState<Input>(executionContext, currentTx, currentResult, interactionTx);
-
-
       const handlerResult = await this.doHandle(interaction);
 
       return {
@@ -92,6 +90,10 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
         this.wasmExports.initState(state);
         break;
       }
+      case "go": {
+        this.wasmExports.initState(stringify(state));
+        break;
+      }
       default: {
         throw new Error(`Support for ${this.contractDefinition.srcWasmLang} not implemented yet.`);
       }
@@ -132,6 +134,10 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
           }
         }
       }
+      case "go": {
+        const result = await this.wasmExports.handle(stringify(action.input));
+        return JSON.parse(result);
+      }
       default: {
         throw new Error(`Support for ${this.contractDefinition.srcWasmLang} not implemented yet.`);
       }
@@ -146,6 +152,10 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
       }
       case "rust": {
         return this.wasmExports.currentState();
+      }
+      case "go": {
+        const result = this.wasmExports.currentState();
+        return JSON.parse(result);
       }
       default: {
         throw new Error(`Support for ${this.contractDefinition.srcWasmLang} not implemented yet.`);
