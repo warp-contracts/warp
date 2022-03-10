@@ -30,6 +30,6 @@ export class CacheableExecutorFactory<Api> implements ExecutorFactory<Api> {
     // switching off caching for now
     // - https://github.com/redstone-finance/redstone-smartcontracts/issues/53
     // probably should be cached on a lower level - i.e. either handler function (for js contracts)
-    // or wasm instance.
+    // or wasm module.
   }
 }

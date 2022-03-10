@@ -1,7 +1,7 @@
 import { LoggerFactory, SmartWeaveGlobal } from '@smartweave';
 
 export const asWasmImports = (swGlobal: SmartWeaveGlobal, wasmInstance: any): any => {
-  const wasmLogger = LoggerFactory.INST.create('WASM');
+  const wasmLogger = LoggerFactory.INST.create('WASM:AS');
 
   return {
     metering: {
