@@ -71,6 +71,7 @@ describe('Testing internal writes', () => {
       'utf8'
     );
 
+    console.log("wallet address", walletAddress);
     tokenContractTxId = await smartweave.createContract.deploy({
       wallet,
       initState: JSON.stringify({
@@ -195,7 +196,8 @@ describe('Testing internal writes', () => {
     });
   });
 
-  describe('with read states at the end', () => {
+  // TODO: issues with ArLocal - https://github.com/textury/arlocal/issues/83
+  xdescribe('with read states at the end', () => {
     beforeAll(async () => {
       await deployContracts();
     });

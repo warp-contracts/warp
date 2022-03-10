@@ -129,7 +129,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         });
 
         if (newState !== null) {
-          currentState = deepCopy(newState.cachedValue.state);
+          currentState = newState.cachedValue.state;
           validity[interactionTx.id] = newState.cachedValue.validity[interactionTx.id];
 
           const toCache = new EvalStateResult(currentState, validity);

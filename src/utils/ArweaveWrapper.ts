@@ -88,9 +88,15 @@ export class ArweaveWrapper {
   }
 
   async txData(id: string): Promise<Buffer> {
+    // https://github.com/textury/arlocal/issues/83
+    const txData = (await this.arweave.transactions.getData(id, {
+      decode: true
+    })) as Uint8Array;
+    return isomorphicBuffer.from(txData);
+
     // note: this is using arweave.net cache -
     // not very safe and clever, but fast...
-    const response = await fetch(`${this.baseUrl}/${id}`);
+    /*const response = await fetch(`${this.baseUrl}/${id}`);
     if (!response.ok) {
       this.logger.warn(`Unable to load data from arweave.net/${id} endpoint, falling back to arweave.js`);
       // fallback to arweave-js as a last resort..
@@ -101,7 +107,7 @@ export class ArweaveWrapper {
     } else {
       const buffer = await response.arrayBuffer();
       return isomorphicBuffer.from(buffer);
-    }
+    }*/
   }
 
   async txDataString(id: string): Promise<string> {
