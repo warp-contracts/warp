@@ -22,3 +22,5 @@ yalc.lock
 /cache/
 
 /db/
+
+bundles/

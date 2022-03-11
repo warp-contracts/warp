@@ -220,6 +220,6 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     });
 
     expect(result.type).toEqual('exception');
-    expect(result.errorMessage.startsWith("[RE:OOG] Out of gas!")).toBeTruthy();
+    expect(result.errorMessage.startsWith('[RE:OOG] Out of gas!')).toBeTruthy();
   });
 });
