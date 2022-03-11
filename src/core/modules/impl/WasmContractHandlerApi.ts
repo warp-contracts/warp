@@ -1,8 +1,11 @@
 /* eslint-disable */
 import {
-  ContractDefinition, CurrentTx, deepCopy,
+  ContractDefinition,
+  CurrentTx,
+  deepCopy,
   EvalStateResult,
-  ExecutionContext, GQLNodeInterface,
+  ExecutionContext,
+  GQLNodeInterface,
   HandlerApi,
   InteractionData,
   InteractionResult,
@@ -30,7 +33,7 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
     interactionData: InteractionData<Input>
   ): Promise<InteractionResult<State, Result>> {
     try {
-      const {interaction, interactionTx, currentTx} = interactionData;
+      const { interaction, interactionTx, currentTx } = interactionData;
 
       this.swGlobal._activeTx = interactionTx;
       // TODO: this should be rather set on the HandlerFactory level..
@@ -39,7 +42,6 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
       this.swGlobal.gasUsed = 0;
 
       this.assignReadContractState<Input>(executionContext, currentTx, currentResult, interactionTx);
-
 
       const handlerResult = await this.doHandle(interaction);
 
@@ -83,12 +85,12 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
 
   initState(state: State): void {
     switch (this.contractDefinition.srcWasmLang) {
-      case "assemblyscript": {
+      case 'assemblyscript': {
         const statePtr = this.wasmExports.__newString(stringify(state));
         this.wasmExports.initState(statePtr);
         break;
       }
-      case "rust": {
+      case 'rust': {
         this.wasmExports.initState(state);
         break;
       }
@@ -100,14 +102,14 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
 
   private async doHandle(action: any): Promise<any> {
     switch (this.contractDefinition.srcWasmLang) {
-      case "assemblyscript": {
+      case 'assemblyscript': {
         const actionPtr = this.wasmExports.__newString(stringify(action.input));
         const resultPtr = this.wasmExports.handle(actionPtr);
         const result = this.wasmExports.__getString(resultPtr);
 
         return JSON.parse(result);
       }
-      case "rust": {
+      case 'rust': {
         let handleResult = await this.wasmExports.handle(action.input);
         if (!handleResult) {
           return;
@@ -115,17 +117,17 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
         if (Object.prototype.hasOwnProperty.call(handleResult, 'Ok')) {
           return handleResult.Ok;
         } else {
-          this.logger.debug("Error from rust", handleResult.Err);
+          this.logger.debug('Error from rust', handleResult.Err);
           let errorKey;
-          let errorArgs = "";
+          let errorArgs = '';
           if (typeof handleResult.Err === 'string' || handleResult.Err instanceof String) {
             errorKey = handleResult.Err;
           } else {
             errorKey = Object.keys(handleResult.Err)[0];
-            errorArgs = " " + handleResult.Err[errorKey];
+            errorArgs = ' ' + handleResult.Err[errorKey];
           }
 
-          if (errorKey == "RuntimeError") {
+          if (errorKey == 'RuntimeError') {
             throw new Error(`[RE:RE]${errorArgs}`);
           } else {
             throw new Error(`[CE:${errorKey}${errorArgs}]`);
@@ -140,11 +142,11 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
 
   private doGetCurrentState(): State {
     switch (this.contractDefinition.srcWasmLang) {
-      case "assemblyscript": {
+      case 'assemblyscript': {
         const currentStatePtr = this.wasmExports.currentState();
         return JSON.parse(this.wasmExports.__getString(currentStatePtr));
       }
-      case "rust": {
+      case 'rust': {
         return this.wasmExports.currentState();
       }
       default: {
@@ -173,7 +175,7 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
         transaction: this.swGlobal.transaction.id
       });
 
-      const {stateEvaluator} = executionContext.smartweave;
+      const { stateEvaluator } = executionContext.smartweave;
       const childContract = executionContext.smartweave.contract(
         contractTxId,
         executionContext.contract,
