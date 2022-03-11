@@ -13,7 +13,8 @@
     "build:cjs": "tsc -b tsconfig.json && tsc-alias -p tsconfig.json",
     "build:esm": "tsc -b tsconfig.esm.json && tsc-alias -p tsconfig.esm.json",
     "build:types": "tsc -b tsconfig.types.json && tsc-alias -p tsconfig.types.json",
-    "build": "yarn run clean && yarn build:cjs && yarn build:esm && yarn build:types",
+    "bundle:web": "node bundle.js",
+    "build": "yarn run clean && yarn build:cjs && yarn build:esm && yarn build:types && yarn bundle:web",
     "format": "prettier --write 'src/**/*.ts'",
     "clean": "rimraf ./lib",
     "lint": "eslint . --ext .ts",
@@ -40,7 +41,8 @@
     "lib/",
     "docs/",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "bundles/"
   ],
   "keywords": [
     "smartweave",
@@ -76,6 +78,7 @@
     "cli-table": "0.3.11",
     "colors": "^1.4.0",
     "cors": "^2.8.5",
+    "esbuild": "^0.14.25",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^3.4.1",

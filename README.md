@@ -87,6 +87,33 @@ import { SmartWeave, Contract, ... } from 'redstone-smartweave'
 The SDK is available in both the ESM and CJS format - to make it possible for web bundlers (like webpack) to effectively
 perform tree-shaking.
 
+#### Using web bundles
+
+Bundle files are possible to use in web environment only. Use minified version for production. It is possible to use latest or specified version.
+
+```html
+<!-- Latest -->
+<script src="https://unpkg.com/redstone-smartweave/bundles/web.bundle.js"></script>
+
+<!-- Latest, minified-->
+<script src="https://unpkg.com/redstone-smartweave/bundles/web.bundle.min.js"></script>
+
+<!-- Specific version -->
+<script src="https://unpkg.com/redstone-smartweave@0.4.40/bundles/web.bundle.js"></script>
+
+<!-- Specific version, minified -->
+<script src="https://unpkg.com/redstone-smartweave@0.4.40/bundles/web.bundle.min.js"></script>
+
+```
+
+All exports are stored under `rsdk` global variable.
+
+```html
+<script>
+  const smartweave = rsdk.SmartWeaveWebFactory.memCachedBased(arweave);
+</script>
+```
+
 ### Using the RedStone Gateway
 In order to use the [Redstone Gateway](https://github.com/redstone-finance/redstone-sw-gateway) for loading the contract interactions,
 configure the smartweave instance in the following way:
