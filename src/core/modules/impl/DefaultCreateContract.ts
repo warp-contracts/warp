@@ -8,7 +8,7 @@ import metering from 'redstone-wasm-metering';
 const wasmTypeMapping: Map<number, string> = new Map([
   [1, 'assemblyscript'],
   [2, 'rust'],
-  [3, 'go'],
+  [3, 'go']
   /*[4, 'swift'],
   [5, 'c']*/
 ]);
