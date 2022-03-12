@@ -55,7 +55,7 @@ describe('Testing the SmartWeave client for AssemblyScript WASM contract', () =>
     });
 
     contract = smartweave.contract<ExampleContractState>(contractTxId).setEvaluationOptions({
-      gasLimit: 12000000
+      gasLimit: 14000000
     });
     contract.connect(wallet);
 
@@ -110,7 +110,7 @@ describe('Testing the SmartWeave client for AssemblyScript WASM contract', () =>
       function: 'increment'
     });
 
-    expect(result.gasUsed).toEqual(9053274);
+    expect(result.gasUsed).toEqual(12284823);
   });
 
   it('should return stable gas results', async () => {
@@ -125,7 +125,7 @@ describe('Testing the SmartWeave client for AssemblyScript WASM contract', () =>
     }
 
     results.forEach((result) => {
-      expect(result.gasUsed).toEqual(9053274);
+      expect(result.gasUsed).toEqual(12284823);
     });
   });
 
