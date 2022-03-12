@@ -99,10 +99,10 @@ Bundle files are possible to use in web environment only. Use minified version f
 <script src="https://unpkg.com/redstone-smartweave/bundles/web.bundle.min.js"></script>
 
 <!-- Specific version -->
-<script src="https://unpkg.com/redstone-smartweave@0.4.40/bundles/web.bundle.js"></script>
+<script src="https://unpkg.com/redstone-smartweave@0.4.41/bundles/web.bundle.js"></script>
 
 <!-- Specific version, minified -->
-<script src="https://unpkg.com/redstone-smartweave@0.4.40/bundles/web.bundle.min.js"></script>
+<script src="https://unpkg.com/redstone-smartweave@0.4.41/bundles/web.bundle.min.js"></script>
 
 ```
 
