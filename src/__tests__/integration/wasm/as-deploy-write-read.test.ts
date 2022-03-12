@@ -60,7 +60,7 @@ describe('Testing the SmartWeave client for AssemblyScript WASM contract', () =>
     contract.connect(wallet);
 
     await mineBlock(arweave);
-  });
+  }, 50000);
 
   afterAll(async () => {
     await arlocal.stop();
@@ -110,7 +110,7 @@ describe('Testing the SmartWeave client for AssemblyScript WASM contract', () =>
       function: 'increment'
     });
 
-    expect(result.gasUsed).toEqual(12284823);
+    expect(result.gasUsed).toEqual(12316793);
   });
 
   it('should return stable gas results', async () => {
@@ -125,7 +125,7 @@ describe('Testing the SmartWeave client for AssemblyScript WASM contract', () =>
     }
 
     results.forEach((result) => {
-      expect(result.gasUsed).toEqual(12284823);
+      expect(result.gasUsed).toEqual(12316793);
     });
   });
 

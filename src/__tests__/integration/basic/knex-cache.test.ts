@@ -5,8 +5,8 @@ import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import { Contract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory } from '@smartweave';
 import path from 'path';
-import { TsLogFactory } from '../../logging/node/TsLogFactory';
-import { addFunds, mineBlock } from './_helpers';
+import { TsLogFactory } from '../../../logging/node/TsLogFactory';
+import { addFunds, mineBlock } from '../_helpers';
 import knex from 'knex';
 
 interface ExampleContractState {
@@ -60,8 +60,8 @@ describe('Testing the SmartWeave client', () => {
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
 
-    contractSrc = fs.readFileSync(path.join(__dirname, 'data/example-contract.js'), 'utf8');
-    initialState = fs.readFileSync(path.join(__dirname, 'data/example-contract-state.json'), 'utf8');
+    contractSrc = fs.readFileSync(path.join(__dirname, '../data/example-contract.js'), 'utf8');
+    initialState = fs.readFileSync(path.join(__dirname, '../data/example-contract-state.json'), 'utf8');
 
     // deploying contract using the new SDK.
     const contractTxId1 = await smartweave.createContract.deploy({

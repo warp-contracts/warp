@@ -12,7 +12,7 @@ import {
   SmartWeaveNodeFactory
 } from '@smartweave';
 import path from 'path';
-import { addFunds, mineBlock } from './_helpers';
+import { addFunds, mineBlock } from '../_helpers';
 
 describe('Testing the Profit Sharing Token', () => {
   let contractSrc: string;
@@ -26,29 +26,34 @@ describe('Testing the Profit Sharing Token', () => {
   let arlocal: ArLocal;
   let smartweave: SmartWeave;
   let pst: PstContract;
+  let contractTxId;
+
+  const cacheDir = path.join(__dirname, 'cache-pst');
 
   beforeAll(async () => {
+    removeCacheDir();
+    fs.mkdirSync(cacheDir);
     // note: each tests suit (i.e. file with tests that Jest is running concurrently
     // with another files has to have ArLocal set to a different port!)
-    arlocal = new ArLocal(1820, false);
+    arlocal = new ArLocal(1680, false);
     await arlocal.start();
 
     arweave = Arweave.init({
       host: 'localhost',
-      port: 1820,
+      port: 1680,
       protocol: 'http'
     });
 
     LoggerFactory.INST.logLevel('error');
 
-    smartweave = SmartWeaveNodeFactory.memCached(arweave);
+    smartweave = SmartWeaveNodeFactory.fileCached(arweave, cacheDir);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
     walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
-    contractSrc = fs.readFileSync(path.join(__dirname, 'data/token-pst.js'), 'utf8');
-    const stateFromFile: PstState = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/token-pst.json'), 'utf8'));
+    contractSrc = fs.readFileSync(path.join(__dirname, '../data/token-pst.js'), 'utf8');
+    const stateFromFile: PstState = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/token-pst.json'), 'utf8'));
 
     initialState = {
       ...stateFromFile,
@@ -62,7 +67,7 @@ describe('Testing the Profit Sharing Token', () => {
     };
 
     // deploying contract using the new SDK.
-    const contractTxId = await smartweave.createContract.deploy({
+    contractTxId = await smartweave.createContract.deploy({
       wallet,
       initState: JSON.stringify(initialState),
       src: contractSrc
@@ -79,6 +84,7 @@ describe('Testing the Profit Sharing Token', () => {
 
   afterAll(async () => {
     await arlocal.stop();
+    removeCacheDir();
   });
 
   it('should read pst state and balance data', async () => {
@@ -111,7 +117,7 @@ describe('Testing the Profit Sharing Token', () => {
   it("should properly evolve contract's source code", async () => {
     expect((await pst.currentState()).balances[walletAddress]).toEqual(555114);
 
-    const newSource = fs.readFileSync(path.join(__dirname, 'data/token-evolve.js'), 'utf8');
+    const newSource = fs.readFileSync(path.join(__dirname, '../data/token-evolve.js'), 'utf8');
 
     const newSrcTxId = await pst.saveNewSource(newSource);
     await mineBlock(arweave);
@@ -123,28 +129,20 @@ describe('Testing the Profit Sharing Token', () => {
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(555114 + 555);
   });
 
-  it('should properly perform dry write with overwritten caller', async () => {
-    const newWallet = await arweave.wallets.generate();
-    const overwrittenCaller = await arweave.wallets.jwkToAddress(newWallet);
-    await pst.transfer({
-      target: overwrittenCaller,
-      qty: 1000
-    });
+  it('should load updated source code', async () => {
+    const smartweave2 = SmartWeaveNodeFactory.fileCached(arweave, cacheDir);
+    // connecting to the PST contract
+    pst = smartweave2.pst(contractTxId);
 
-    await mineBlock(arweave);
+    // connecting wallet to the PST contract
+    pst.connect(wallet);
 
-    // note: transfer should be done from the "overwrittenCaller" address, not the "walletAddress"
-    const result: InteractionResult<PstState, unknown> = await pst.dryWrite(
-      {
-        function: 'transfer',
-        target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M',
-        qty: 333
-      },
-      overwrittenCaller
-    );
-
-    expect(result.state.balances[walletAddress]).toEqual(555114 - 1000);
-    expect(result.state.balances['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']).toEqual(10000000 + 555 + 333);
-    expect(result.state.balances[overwrittenCaller]).toEqual(1000 - 333);
+    expect((await pst.currentBalance(walletAddress)).balance).toEqual(555114 + 555);
   });
+
+  function removeCacheDir() {
+    if (fs.existsSync(cacheDir)) {
+      fs.rmSync(cacheDir, { recursive: true });
+    }
+  }
 });

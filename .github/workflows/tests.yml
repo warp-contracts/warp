@@ -12,7 +12,11 @@ jobs:
         run: yarn
       - name: Run unit tests
         run: yarn test:unit
-      - name: Run integration tests
-        run: yarn test:integration
+      - name: Run integration tests [basic]
+        run: yarn test:integration:basic
+      - name: Run integration tests [internal-writes]
+        run: yarn test:integration:internal-writes
+      - name: Run integration tests [wasm]
+        run: yarn test:integration:wasm
       - name: Run regression tests
         run: yarn test:regression

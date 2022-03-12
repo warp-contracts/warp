@@ -5,7 +5,7 @@ import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import { Contract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory } from '@smartweave';
 import path from 'path';
-import { addFunds, mineBlock } from './_helpers';
+import { addFunds, mineBlock } from '../_helpers';
 
 let arweave: Arweave;
 let arlocal: ArLocal;
@@ -39,7 +39,7 @@ describe('Testing the SmartWeave client', () => {
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
 
-    contractSrc = fs.readFileSync(path.join(__dirname, 'data/very-complicated-contract.js'), 'utf8');
+    contractSrc = fs.readFileSync(path.join(__dirname, '../data/very-complicated-contract.js'), 'utf8');
 
     // deploying contract using the new SDK.
     const contractTxId = await smartweave.createContract.deploy({

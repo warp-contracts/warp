@@ -27,7 +27,9 @@
     "yalc:publish": "yarn build && yalc publish --push",
     "test": "jest",
     "test:unit": "jest ./src/__tests__/unit",
-    "test:integration": "jest ./src/__tests__/integration",
+    "test:integration:basic": "jest ./src/__tests__/integration/basic",
+    "test:integration:internal-writes": "jest ./src/__tests__/integration/internal-writes",
+    "test:integration:wasm": "jest ./src/__tests__/integration/wasm",
     "test:regression": "node ./node_modules/.bin/jest ./src/__tests__/regression"
   },
   "license": "MIT",
