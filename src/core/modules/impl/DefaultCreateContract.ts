@@ -9,8 +9,8 @@ const wasmTypeMapping: Map<number, string> = new Map([
   [1, 'assemblyscript'],
   [2, 'rust'],
   [3, 'go'],
-  [4, 'swift'],
-  [5, 'c']
+  /*[4, 'swift'],
+  [5, 'c']*/
 ]);
 
 export class DefaultCreateContract implements CreateContract {
@@ -45,27 +45,27 @@ export class DefaultCreateContract implements CreateContract {
     if (contractType == 'wasm') {
       const wasmModule = await WebAssembly.compile(src as Buffer);
       const moduleImports = WebAssembly.Module.imports(wasmModule);
-      let type;
+      let lang;
       if (this.isGoModule(moduleImports)) {
         const go = new Go(null);
         const module = new WebAssembly.Instance(wasmModule, go.importObject);
         // DO NOT await here!
         go.run(module);
-        type = go.exports.contractType();
+        lang = go.exports.lang();
       } else {
         const module = await WebAssembly.instantiate(src, dummyImports(moduleImports));
         // @ts-ignore
-        if (!module.instance.exports.type) {
+        if (!module.instance.exports.lang) {
           throw new Error(`No info about source type in wasm binary. Did you forget to export "type" function?`);
         }
         // @ts-ignore
-        type = module.instance.exports.type();
-        if (!wasmTypeMapping.has(type)) {
-          throw new Error(`Unknown wasm source type ${type}`);
+        lang = module.instance.exports.lang();
+        if (!wasmTypeMapping.has(lang)) {
+          throw new Error(`Unknown wasm source type ${lang}`);
         }
       }
 
-      wasmLang = wasmTypeMapping.get(type);
+      wasmLang = wasmTypeMapping.get(lang);
       srcTx.addTag(SmartWeaveTags.WASM_LANG, wasmLang);
     }
 

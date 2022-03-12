@@ -25,6 +25,8 @@ import { Go } from './wasm/go-wasm-imports';
  */
 export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknown>> {
   private readonly logger = LoggerFactory.INST.create('HandlerExecutorFactory');
+
+  // TODO: cache compiled wasm binaries here.
   private readonly cache: SwCache<string, WebAssembly.Module> = new MemCache();
 
   constructor(private readonly arweave: Arweave) {}
