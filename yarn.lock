@@ -719,9 +719,9 @@
     tslib "~2.3.0"
 
 "@graphql-tools/mock@^8.1.2":
-  version "8.5.2"
-  resolved "https://registry.yarnpkg.com/@graphql-tools/mock/-/mock-8.5.2.tgz#c76d5fbe8dc87f6983f0e922d9a50f4410994dff"
-  integrity sha512-5BosbTWkzo5tdxIqoqokGLDPmdTS1tE4QNm6a2ONlXz0MaynPRAQ8b2CcSy/c6r0lDmCdkLtbVrRtV6m/wE6Kw==
+  version "8.5.3"
+  resolved "https://registry.yarnpkg.com/@graphql-tools/mock/-/mock-8.5.3.tgz#bf9fcf7b6085f08afcf67323653a462c4e3606e7"
+  integrity sha512-uvUZ2crfZVcoE5VG7FC5IEQHLoWgIIWg78PfjN5t07GC9AmbUqrqiUms2811Uge6mz+Am4k7wta1b/py4n7fzg==
   dependencies:
     "@graphql-tools/schema" "^8.3.2"
     "@graphql-tools/utils" "^8.6.2"
@@ -984,9 +984,9 @@
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
 "@koa/cors@^3.1.0":
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/@koa/cors/-/cors-3.1.0.tgz#618bb073438cfdbd3ebd0e648a76e33b84f3a3b2"
-  integrity sha512-7ulRC1da/rBa6kj6P4g2aJfnET3z8Uf3SWu60cjbtxTA5g8lxRdX/Bd2P92EagGwwAhANeNw8T8if99rJliR6Q==
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/@koa/cors/-/cors-3.2.0.tgz#7fb65fbeb7dd841c3edf645efbfa2524dc72916a"
+  integrity sha512-bMjKGAJW2lg2jm7StqedeL/TMra0zl5VMtRyzl+WKbopj3AZEvy+FE8zeWvl1x3pofuU4a7ICuwIK/nr5/PEHg==
   dependencies:
     vary "^1.1.2"
 
@@ -2976,9 +2976,9 @@ ee-first@1.1.1:
   integrity sha1-WQxhFWsK4vTwJVcyoViyZrxWsh0=
 
 electron-to-chromium@^1.4.76:
-  version "1.4.79"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.79.tgz#02b504e1e6039b2e61edfc5f856895a0927925f5"
-  integrity sha512-nWfAxof87mGHkbORCwVRPst4FlSVdprOKS6dBMrcwn3sjwf8iHXEhsu1+FU5Psd7Ps3KKeBufAdfsPK5BmbSUg==
+  version "1.4.82"
+  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.82.tgz#51e123ca434b1eba8c434ece2b54f095b304a651"
+  integrity sha512-Ks+ANzLoIrFDUOJdjxYMH6CMKB8UQo5modAwvSZTxgF+vEs/U7G5IbWFUp6dS4klPkTDVdxbORuk8xAXXhMsWw==
 
 elliptic@6.5.4, elliptic@^6.5.4:
   version "6.5.4"
@@ -3063,9 +3063,9 @@ es-to-primitive@^1.2.1:
     is-symbol "^1.0.2"
 
 es5-ext@^0.10.35, es5-ext@^0.10.50, es5-ext@~0.10.11, es5-ext@~0.10.14, es5-ext@~0.10.2, es5-ext@~0.10.46, es5-ext@~0.10.5, es5-ext@~0.10.6:
-  version "0.10.57"
-  resolved "https://registry.yarnpkg.com/es5-ext/-/es5-ext-0.10.57.tgz#440574256186e2bf22223d673087caae83edabd2"
-  integrity sha512-L7cCNoPwTkAp7IBHxrKLsh7NKiVFkcdxlP9vbVw9QUvb7gF0Mz9bEBN0WY9xqdTjGF907EMT/iG013vnbqwu1Q==
+  version "0.10.58"
+  resolved "https://registry.yarnpkg.com/es5-ext/-/es5-ext-0.10.58.tgz#5b97d94236285fb87c8ffc782cf42eb0a25d2ae0"
+  integrity sha512-LHO+KBBaHGwjy32ibSaMY+ZzjpC4K4I5bPoijICMBL7gXEXfrEUrzssmNP+KigbQEp1dRUnGkry/vUnxOqptLQ==
   dependencies:
     es6-iterator "^2.0.3"
     es6-symbol "^3.1.3"
@@ -6201,19 +6201,19 @@ rechoir@0.7.0:
   dependencies:
     resolve "^1.9.0"
 
-redstone-isomorphic@1.1.2:
-  version "1.1.2"
-  resolved "https://registry.yarnpkg.com/redstone-isomorphic/-/redstone-isomorphic-1.1.2.tgz#35422519e23f85198e5a4c9befbfb52e9a403dcb"
-  integrity sha512-t/06UGjT0VGrmwGbYtGEBMvK+nBhgoBFFYQv4DMCUf+pET8jzzqF9qraI8JrqEx6e6krCPF4dErb32eLPYn8Jw==
+redstone-isomorphic@1.1.4:
+  version "1.1.4"
+  resolved "https://registry.yarnpkg.com/redstone-isomorphic/-/redstone-isomorphic-1.1.4.tgz#3439ed5e14cbe0df5ad06da5bbf21089de282e71"
+  integrity sha512-7K6zAQldh0SRkjxLSrtfMnMiVylWEVI1MHScJIYww6PfQePe9pe1jIkXncKswfKXtIWkZEdriiuQc8sCVTROtw==
   dependencies:
     buffer "^6.0.3"
     safe-buffer "^5.1.2"
-    undici "^4.12.2"
+    undici "^4.15.1"
 
 redstone-isomorphic@^1.1.0:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/redstone-isomorphic/-/redstone-isomorphic-1.1.1.tgz#48c2f8ba98bf053bec98242cbfdce7aaad46aeee"
-  integrity sha512-Xwg82SWj6MTAWRNgHCNdh+2fTvqRywhy4eK33/oedbvhAPrQR6yWmiXVcf0X3fZMQA67kLMiTgy+QyjDvmw5UQ==
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/redstone-isomorphic/-/redstone-isomorphic-1.1.2.tgz#35422519e23f85198e5a4c9befbfb52e9a403dcb"
+  integrity sha512-t/06UGjT0VGrmwGbYtGEBMvK+nBhgoBFFYQv4DMCUf+pET8jzzqF9qraI8JrqEx6e6krCPF4dErb32eLPYn8Jw==
   dependencies:
     buffer "^6.0.3"
     safe-buffer "^5.1.2"
@@ -7227,7 +7227,7 @@ underscore@>=1.3.1:
   resolved "https://registry.yarnpkg.com/underscore/-/underscore-1.13.2.tgz#276cea1e8b9722a8dbed0100a407dda572125881"
   integrity sha512-ekY1NhRzq0B08g4bGuX4wd2jZx5GnKz6mKSqFL4nqBlfyMGiG10gDFhDTMEfYmDL6Jy0FUIZp7wiRB+0BP7J2g==
 
-undici@^4.12.2:
+undici@^4.12.2, undici@^4.15.1:
   version "4.15.1"
   resolved "https://registry.yarnpkg.com/undici/-/undici-4.15.1.tgz#c2c0e75f232178f0e6781f6b46c81ccc15065f6e"
   integrity sha512-h8LJybhMKD09IyQZoQadNtIR/GmugVhTOVREunJrpV6RStriKBFdSVoFzEzTihwXi/27DIBO+Z0OGF+Mzfi0lA==
