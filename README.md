@@ -125,7 +125,7 @@ const smartweave = SmartWeaveNodeFactory.memCachedBased(arweave)
 The gateway is currently available under [https://gateway.redstone.finance](https://gateway.redstone.finance) url.   
 Full API reference is available [here](https://github.com/redstone-finance/redstone-sw-gateway#http-api-reference).
 
-Optionally - you can pass the second argument to the `RedstoneGatewayInteractionsLoader` that will determine which transactions will be loaded:
+Optionally - you can pass the second argument to the `useRedStoneGateway` method that will determine which transactions will be loaded:
 1. no parameter - default mode, compatible with how the Arweave Gateway GQL endpoint works - returns
 all the interactions. There is a risk of returning [corrupted transactions](https://github.com/redstone-finance/redstone-sw-gateway#corrupted-transactions).
 2. `{confirmed: true}` - returns only confirmed transactions - the most safe mode, eg:
