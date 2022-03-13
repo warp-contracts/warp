@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { BlockHeightKey, MemBlockHeightSwCache } from '@smartweave/cache';
 import { Benchmark, LoggerFactory } from '@smartweave/logging';
-import stringify from "safe-stable-stringify";
+import stringify from 'safe-stable-stringify';
 
 /**
  * An implementation of {@link BlockHeightSwCache} that stores its data in JSON files.
@@ -111,10 +111,7 @@ export class FileBlockHeightSwCache<V = any> extends MemBlockHeightSwCache<V> {
         if (toStore !== null) {
           const { cachedHeight, cachedValue } = toStore;
 
-          fs.writeFileSync(
-            path.join(directoryPath, directory, `${cachedHeight}.cache.json`),
-            stringify(cachedValue)
-          );
+          fs.writeFileSync(path.join(directoryPath, directory, `${cachedHeight}.cache.json`), stringify(cachedValue));
         }
       }
       this.isDirty = false;

@@ -5,9 +5,8 @@ import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import { Contract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory } from '@smartweave';
 import path from 'path';
-import { TsLogFactory } from '../../../logging/node/TsLogFactory';
 import { addFunds, mineBlock } from '../_helpers';
-import knex from 'knex';
+import knex, { Knex } from 'knex';
 
 interface ExampleContractState {
   counter: number;
@@ -35,6 +34,14 @@ describe('Testing the SmartWeave client', () => {
     client: 'sqlite3',
     connection: {
       filename: `${cacheDir}/db.sqlite`
+    },
+    useNullAsDefault: true
+  });
+
+  const knexConfig2 = knex({
+    client: 'sqlite3',
+    connection: {
+      filename: `${cacheDir}/db-manual.sqlite`
     },
     useNullAsDefault: true
   });
@@ -85,6 +92,7 @@ describe('Testing the SmartWeave client', () => {
   afterAll(async () => {
     await arlocal.stop();
     await knexConfig.destroy();
+    await knexConfig2.destroy();
     removeCacheDir();
   });
 
@@ -102,6 +110,7 @@ describe('Testing the SmartWeave client', () => {
 
     expect((await contract_1.readState()).state.counter).toEqual(556);
     expect((await contract_2.readState()).state.counter).toEqual(102);
+    expect(await cachedStates(knexConfig)).toEqual(2);
   });
 
   it('should properly add another interactions', async () => {
@@ -117,6 +126,7 @@ describe('Testing the SmartWeave client', () => {
 
     expect((await contract_1.readState()).state.counter).toEqual(559);
     expect((await contract_2.readState()).state.counter).toEqual(105);
+    expect(await cachedStates(knexConfig)).toEqual(4);
   });
 
   it('should properly view contract state', async () => {
@@ -125,6 +135,8 @@ describe('Testing the SmartWeave client', () => {
 
     const interactionResult2 = await contract_2.viewState<unknown, number>({ function: 'value' });
     expect(interactionResult2.result).toEqual(105);
+
+    expect(await cachedStates(knexConfig)).toEqual(4);
   });
 
   it('should properly read state with a fresh client', async () => {
@@ -146,6 +158,7 @@ describe('Testing the SmartWeave client', () => {
     await mineBlock(arweave);
     expect((await contract_1_2.readState()).state.counter).toEqual(561);
     expect((await contract_2_2.readState()).state.counter).toEqual(107);
+    expect(await cachedStates(knexConfig)).toEqual(6);
   });
 
   it('should properly read state with another fresh client', async () => {
@@ -157,6 +170,7 @@ describe('Testing the SmartWeave client', () => {
       .connect(wallet);
     expect((await contract_1_3.readState()).state.counter).toEqual(561);
     expect((await contract_2_3.readState()).state.counter).toEqual(107);
+    expect(await cachedStates(knexConfig)).toEqual(6);
 
     await contract_1.writeInteraction({ function: 'add' });
     await contract_2.writeInteraction({ function: 'add' });
@@ -166,6 +180,7 @@ describe('Testing the SmartWeave client', () => {
     await mineBlock(arweave);
     expect((await contract_1_3.readState()).state.counter).toEqual(563);
     expect((await contract_2_3.readState()).state.counter).toEqual(109);
+    expect(await cachedStates(knexConfig)).toEqual(8);
   });
 
   it('should properly eval state for missing interactions', async () => {
@@ -186,7 +201,48 @@ describe('Testing the SmartWeave client', () => {
     expect((await contract_1_4.readState()).state.counter).toEqual(565);
     expect((await contract_2.readState()).state.counter).toEqual(111);
     expect((await contract_2_4.readState()).state.counter).toEqual(111);
+    expect(await cachedStates(knexConfig)).toEqual(10);
   });
+
+  it('should allow to manually flush cache', async () => {
+    const smartweave = await SmartWeaveNodeFactory.knexCached(arweave, knexConfig2);
+
+    const contract = smartweave
+      .contract<ExampleContractState>(contract_1.txId())
+      .setEvaluationOptions({
+        manualCacheFlush: true
+      })
+      .connect(wallet);
+
+    await contract.writeInteraction({ function: 'add' });
+    await mineBlock(arweave);
+    await contract.writeInteraction({ function: 'add' });
+    await mineBlock(arweave);
+    await contract.writeInteraction({ function: 'add' });
+    await mineBlock(arweave);
+
+    expect((await contract.readState()).state.counter).toEqual(568);
+    expect(await cachedStates(knexConfig2)).toEqual(0);
+    await smartweave.flushCache();
+    expect(await cachedStates(knexConfig2)).toEqual(1);
+
+    await contract.writeInteraction({ function: 'add' });
+    await mineBlock(arweave);
+    await contract.writeInteraction({ function: 'add' });
+    await mineBlock(arweave);
+    await contract.writeInteraction({ function: 'add' });
+    await mineBlock(arweave);
+    expect((await contract.readState()).state.counter).toEqual(571);
+    expect(await cachedStates(knexConfig2)).toEqual(1);
+
+    await smartweave.flushCache();
+    expect(await cachedStates(knexConfig2)).toEqual(2);
+  });
+
+  async function cachedStates(db: Knex): Promise<number> {
+    const result = await db.raw('select count(*) as cached from states');
+    return result[0].cached;
+  }
 
   function removeCacheDir() {
     if (fs.existsSync(cacheDir)) {

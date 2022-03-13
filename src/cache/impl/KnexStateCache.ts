@@ -3,7 +3,7 @@ import { LoggerFactory } from '@smartweave/logging';
 import { Knex } from 'knex';
 import { createHash } from 'crypto';
 import { StateCache } from '@smartweave';
-import stringify from "safe-stable-stringify";
+import stringify from 'safe-stable-stringify';
 
 type DbResult = {
   contract_id: string;
@@ -18,6 +18,7 @@ type DbResult = {
  */
 export class KnexStateCache extends MemBlockHeightSwCache<StateCache<any>> {
   private readonly kLogger = LoggerFactory.INST.create('KnexBlockHeightSwCache');
+  private readonly lastFlushHeight: Map<string, number> = new Map();
 
   private isFlushing = false;
 
@@ -41,6 +42,7 @@ export class KnexStateCache extends MemBlockHeightSwCache<StateCache<any>> {
         },
         JSON.parse(entry.state)
       );
+      this.lastFlushHeight.set(entry.contract_id, entry.height);
     });
 
     process.on('exit', async () => {
@@ -82,13 +84,17 @@ export class KnexStateCache extends MemBlockHeightSwCache<StateCache<any>> {
 
     this.kLogger.info(`==== Persisting cache ====`);
     try {
-      for (const contractTxId of Object.keys(this.storage)) {
+      const contracts = Object.keys(this.storage);
+      for (const contractTxId of contracts) {
         // store only highest cached height
         const toStore = await this.getLast(contractTxId);
 
         // this check is a bit paranoid, since we're iterating on storage keys..
         if (toStore !== null) {
           const { cachedHeight, cachedValue } = toStore;
+          if (this.lastFlushHeight.has(contractTxId) && this.lastFlushHeight.get(contractTxId) >= cachedHeight) {
+            continue;
+          }
 
           const jsonState = stringify(cachedValue);
 
@@ -111,6 +117,7 @@ export class KnexStateCache extends MemBlockHeightSwCache<StateCache<any>> {
             .into('states')
             .onConflict(['contract_id', 'height', 'hash'])
             .merge();
+          this.lastFlushHeight.set(contractTxId, cachedHeight);
         }
       }
       this.isDirty = false;

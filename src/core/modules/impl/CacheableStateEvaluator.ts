@@ -119,7 +119,6 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     state: EvalStateResult<State>
   ): Promise<void> {
     const contractTxId = executionContext.contractDefinition.txId;
-
     this.cLogger.debug(`onStateEvaluated: cache update for contract ${contractTxId} [${transaction.block.height}]`);
 
     // TODO: this will be problematic if we decide to cache only "onStateEvaluated" and containsInteractionsFromSequencer = true
@@ -130,7 +129,9 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       executionContext.blockHeight,
       executionContext.containsInteractionsFromSequencer
     );
-    await this.cache.flush();
+    if (!executionContext.evaluationOptions.manualCacheFlush) {
+      await this.cache.flush();
+    }
   }
 
   async onStateUpdate<State>(
@@ -206,15 +207,17 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     }
 
     const blockHeight = transaction.block.height;
-
     if (requestedBlockHeight !== null && requestedBlockHeight == blockHeight && containsInteractionsFromSequencer) {
       this.cLogger.debug('skipping caching of the last block');
       return;
     }
     const transactionId = transaction.id;
-
     const stateToCache = new EvalStateResult(state.state, state.validity, transactionId, transaction.block.id);
 
     await this.cache.put(new BlockHeightKey(contractTxId, blockHeight), stateToCache);
+  }
+
+  async flushCache(): Promise<void> {
+    return await this.cache.flush();
   }
 }

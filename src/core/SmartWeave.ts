@@ -59,4 +59,8 @@ export class SmartWeave {
   pst(contractTxId: string): PstContract {
     return new PstContractImpl(contractTxId, this);
   }
+
+  async flushCache(): Promise<void> {
+    await this.stateEvaluator.flushCache();
+  }
 }

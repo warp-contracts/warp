@@ -60,6 +60,11 @@ export interface StateEvaluator {
     contractTxId: string,
     blockHeight: number
   ): Promise<BlockHeightCacheResult<EvalStateResult<State>> | null>;
+
+  /**
+   * allows to manually flush state cache into underneath storage.
+   */
+  flushCache(): Promise<void>;
 }
 
 export class EvalStateResult<State> {
@@ -98,6 +103,8 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   gasLimit = Number.MAX_SAFE_INTEGER;
 
   useFastCopy = true;
+
+  manualCacheFlush = false;
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some of the features.
@@ -151,4 +158,6 @@ export interface EvaluationOptions {
   // it's much faster (e.g. almost twice for the SJ3l7474UHh3Dw6dWVT1bzsJ-8JvOewtGoDdOecWIZo contract)
   // currently defaults to true
   useFastCopy: boolean;
+
+  manualCacheFlush: boolean;
 }

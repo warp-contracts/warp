@@ -298,4 +298,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>
   ): Promise<void>;
+
+  abstract flushCache(): Promise<void>;
 }
