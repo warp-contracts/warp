@@ -3,6 +3,7 @@ import { LoggerFactory } from '@smartweave/logging';
 import { Knex } from 'knex';
 import { createHash } from 'crypto';
 import { StateCache } from '@smartweave';
+import stringify from "safe-stable-stringify";
 
 type DbResult = {
   contract_id: string;
@@ -89,16 +90,14 @@ export class KnexStateCache extends MemBlockHeightSwCache<StateCache<any>> {
         if (toStore !== null) {
           const { cachedHeight, cachedValue } = toStore;
 
-          // note: JSON.stringify is non-deterministic
-          // switch to https://www.npmjs.com/package/json-stringify-deterministic ?
-          const jsonState = JSON.stringify(cachedValue);
+          const jsonState = stringify(cachedValue);
 
           // note: cannot reuse:
           // "The Hash object can not be used again after hash.digest() method has been called.
           // Multiple calls will cause an error to be thrown."
           const hash = createHash('sha256');
 
-          hash.update(`${contractTxId}|${cachedHeight}|${JSON.stringify(cachedValue)}`);
+          hash.update(`${contractTxId}|${cachedHeight}|${jsonState}`);
           const digest = hash.digest('hex');
 
           // FIXME: batch insert
