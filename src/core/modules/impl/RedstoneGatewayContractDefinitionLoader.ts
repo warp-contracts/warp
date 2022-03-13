@@ -45,6 +45,7 @@ export class RedstoneGatewayContractDefinitionLoader extends ContractDefinitionL
       if (result.srcBinary != null && !(result.srcBinary instanceof Buffer)) {
         result.srcBinary = Buffer.from((result.srcBinary as any).data);
       }
+      result.contractType = result.src ? 'js' : 'wasm';
       return result;
     } catch (e) {
       this.rLogger.warn('Falling back to default contracts loader', e);
