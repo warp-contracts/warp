@@ -215,7 +215,7 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance): any =>
       throw new Error(getStringFromWasm0(arg0, arg1));
     },
     __wbindgen_closure_wrapper: function (arg0, arg1, arg2) {
-      var ret = makeMutClosure(arg0, arg1, 75, __wbg_adapter_14);
+      var ret = makeMutClosure(arg0, arg1, 65, __wbg_adapter_14);
       return addHeapObject(ret);
     },
     __wbindgen_string_new: function (arg0, arg1) {
@@ -449,7 +449,7 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance): any =>
   }
 
   function __wbg_adapter_14(arg0, arg1, arg2) {
-    wasmInstance.exports._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h0af8cf16c8647f23(
+    wasmInstance.modifiedExports._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__(
       arg0,
       arg1,
       addHeapObject(arg2)
@@ -525,7 +525,7 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance): any =>
   }
 
   function __wbg_adapter_42(arg0, arg1, arg2, arg3) {
-    wasmInstance.exports.wasm_bindgen__convert__closures__invoke2_mut__h1aa5ebac0642c58b(
+    wasmInstance.modifiedExports.wasm_bindgen__convert__closures__invoke2_mut__(
       arg0,
       arg1,
       addHeapObject(arg2),
