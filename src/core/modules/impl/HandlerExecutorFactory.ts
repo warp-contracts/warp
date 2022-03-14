@@ -73,7 +73,12 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
         }
         case 'rust': {
           const wasmInstanceExports = {
-            exports: null
+            exports: null,
+            modifiedExports: {
+              wasm_bindgen__convert__closures__invoke2_mut__: null,
+              _dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__:
+                null
+            }
           };
 
           /**
@@ -101,6 +106,24 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
 
           wasmInstance = new WebAssembly.Instance(wasmModule, imports);
           wasmInstanceExports.exports = wasmInstance.exports;
+
+          const moduleExports = Object.keys(wasmInstance.exports);
+
+          // ... no comments ...
+          moduleExports.forEach((moduleExport) => {
+            if (moduleExport.startsWith('wasm_bindgen__convert__closures__invoke2_mut__')) {
+              wasmInstanceExports.modifiedExports.wasm_bindgen__convert__closures__invoke2_mut__ =
+                wasmInstance.exports[moduleExport];
+            }
+            if (
+              moduleExport.startsWith(
+                '_dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__'
+              )
+            ) {
+              wasmInstanceExports.modifiedExports._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__ =
+                wasmInstance.exports[moduleExport];
+            }
+          });
           break;
         }
         case 'go': {
