@@ -85,7 +85,7 @@ export class DefaultCreateContract implements CreateContract {
         transfer
       });
     } else {
-      throw new Error('Unable to write Contract Source.');
+      throw new Error(`Unable to write Contract Source: ${response?.statusText}`);
     }
   }
 
@@ -135,7 +135,7 @@ export class DefaultCreateContract implements CreateContract {
     if (response.status === 200 || response.status === 208) {
       return contractTX.id;
     } else {
-      throw new Error('Unable to write Contract Initial State');
+      throw new Error(`Unable to write Contract Source: ${response?.statusText}`);
     }
   }
 }
