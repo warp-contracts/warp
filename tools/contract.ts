@@ -52,11 +52,16 @@ async function main() {
 
   const koi_source = fs.readFileSync(path.join(__dirname, 'data', 'koi-source.js'), "utf-8");
 
-  const smartweave = SmartWeaveNodeFactory.fileCachedBased(arweave, 'data')
+  const newSource = `function handle(state, action) {
+    return {"foo":"bar"};
+  }`;
+
+  const smartweave = SmartWeaveNodeFactory.memCachedBased(arweave )
     .setInteractionsLoader(
       new RedstoneGatewayInteractionsLoader('https://gateway.redstone.finance')
-    )
-    .build();
+    ).build()/*.overwriteSource({
+      [LOOT_CONTRACT]: newSource,
+    })*/;
 
   const jwk = readJSON('../redstone-node/.secrets/redstone-jwk.json');
   const contract = smartweave

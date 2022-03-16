@@ -105,6 +105,8 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   useFastCopy = true;
 
   manualCacheFlush = false;
+
+  useVM2 = false;
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some of the features.
@@ -160,4 +162,10 @@ export interface EvaluationOptions {
   useFastCopy: boolean;
 
   manualCacheFlush: boolean;
+
+  // Whether js contracts' code should be run within vm2 sandbox (https://github.com/patriksimek/vm2#vm2-----)
+  // it greatly enhances security - at a cost of performance.
+  // use for contracts that you cannot trust.
+  // this obviously works only in a node.js env.
+  useVM2: boolean;
 }

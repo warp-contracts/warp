@@ -22,7 +22,7 @@ describe('normalizeContractSource function', () => {
     } )   ()  ;`;
 
   it('should remove IIFE written as arrow functions', () => {
-    expect(normalizeContractSource(exampleSrcIIFEArrow)).toEqual(
+    expect(normalizeContractSource(exampleSrcIIFEArrow, false)).toEqual(
       '\n' +
         '    const [SmartWeave, BigNumber, logger] = arguments;\n' +
         "    class ContractError extends Error { constructor(message) { super(message); this.name = 'ContractError' } };\n" +
@@ -33,7 +33,7 @@ describe('normalizeContractSource function', () => {
         '  '
     );
 
-    expect(normalizeContractSource(exampleSrcIIFEArrowWeirdFormatting)).toEqual(
+    expect(normalizeContractSource(exampleSrcIIFEArrowWeirdFormatting, false)).toEqual(
       '\n' +
         '    const [SmartWeave, BigNumber, logger] = arguments;\n' +
         "    class ContractError extends Error { constructor(message) { super(message); this.name = 'ContractError' } };\n" +
@@ -46,7 +46,7 @@ describe('normalizeContractSource function', () => {
   });
 
   it('should remove IIFE written as standard functions', () => {
-    expect(normalizeContractSource(exampleSrcIIFE)).toEqual(
+    expect(normalizeContractSource(exampleSrcIIFE, false)).toEqual(
       '\n' +
         '    const [SmartWeave, BigNumber, logger] = arguments;\n' +
         "    class ContractError extends Error { constructor(message) { super(message); this.name = 'ContractError' } };\n" +
@@ -57,7 +57,7 @@ describe('normalizeContractSource function', () => {
         '  '
     );
 
-    expect(normalizeContractSource(exampleSrcIIFEWeirdFormatting)).toEqual(
+    expect(normalizeContractSource(exampleSrcIIFEWeirdFormatting, false)).toEqual(
       '\n' +
         '    const [SmartWeave, BigNumber, logger] = arguments;\n' +
         "    class ContractError extends Error { constructor(message) { super(message); this.name = 'ContractError' } };\n" +

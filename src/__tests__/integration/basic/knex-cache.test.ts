@@ -26,7 +26,9 @@ describe('Testing the SmartWeave client', () => {
   let arlocal: ArLocal;
   let smartweave: SmartWeave;
   let contract_1: Contract<ExampleContractState>;
+  let contract_1VM: Contract<ExampleContractState>;
   let contract_2: Contract<ExampleContractState>;
+  let contract_2VM: Contract<ExampleContractState>;
 
   const cacheDir = path.join(__dirname, 'db');
 
@@ -84,7 +86,15 @@ describe('Testing the SmartWeave client', () => {
     });
 
     contract_1 = smartweave.contract<ExampleContractState>(contractTxId1).connect(wallet);
+    contract_1VM = smartweave
+      .contract<ExampleContractState>(contractTxId1)
+      .setEvaluationOptions({ useVM2: true })
+      .connect(wallet);
     contract_2 = smartweave.contract<ExampleContractState>(contractTxId2).connect(wallet);
+    contract_2VM = smartweave
+      .contract<ExampleContractState>(contractTxId2)
+      .setEvaluationOptions({ useVM2: true })
+      .connect(wallet);
 
     await mineBlock(arweave);
   });
@@ -98,7 +108,9 @@ describe('Testing the SmartWeave client', () => {
 
   it('should properly deploy contract with initial state', async () => {
     expect((await contract_1.readState()).state.counter).toEqual(555);
+    expect((await contract_1VM.readState()).state.counter).toEqual(555);
     expect((await contract_2.readState()).state.counter).toEqual(100);
+    expect((await contract_2VM.readState()).state.counter).toEqual(100);
   });
 
   it('should properly add new interaction', async () => {
@@ -109,7 +121,9 @@ describe('Testing the SmartWeave client', () => {
     await mineBlock(arweave);
 
     expect((await contract_1.readState()).state.counter).toEqual(556);
+    expect((await contract_1VM.readState()).state.counter).toEqual(556);
     expect((await contract_2.readState()).state.counter).toEqual(102);
+    expect((await contract_2VM.readState()).state.counter).toEqual(102);
     expect(await cachedStates(knexConfig)).toEqual(2);
   });
 
@@ -125,16 +139,20 @@ describe('Testing the SmartWeave client', () => {
     await mineBlock(arweave);
 
     expect((await contract_1.readState()).state.counter).toEqual(559);
+    expect((await contract_1VM.readState()).state.counter).toEqual(559);
     expect((await contract_2.readState()).state.counter).toEqual(105);
+    expect((await contract_2VM.readState()).state.counter).toEqual(105);
     expect(await cachedStates(knexConfig)).toEqual(4);
   });
 
   it('should properly view contract state', async () => {
     const interactionResult = await contract_1.viewState<unknown, number>({ function: 'value' });
-    expect(interactionResult.result).toEqual(559);
+    const interactionResultVM = await contract_1VM.viewState<unknown, number>({ function: 'value' });
+    expect(interactionResultVM.result).toEqual(559);
 
     const interactionResult2 = await contract_2.viewState<unknown, number>({ function: 'value' });
-    expect(interactionResult2.result).toEqual(105);
+    const interactionResult2VM = await contract_2.viewState<unknown, number>({ function: 'value' });
+    expect(interactionResult2VM.result).toEqual(105);
 
     expect(await cachedStates(knexConfig)).toEqual(4);
   });
@@ -143,12 +161,22 @@ describe('Testing the SmartWeave client', () => {
     const contract_1_2 = (await SmartWeaveNodeFactory.knexCached(arweave, knexConfig))
       .contract<ExampleContractState>(contract_1.txId())
       .connect(wallet);
+    const contract_1_2VM = (await SmartWeaveNodeFactory.knexCached(arweave, knexConfig))
+      .contract<ExampleContractState>(contract_1.txId())
+      .setEvaluationOptions({ useVM2: true })
+      .connect(wallet);
     expect((await contract_1_2.readState()).state.counter).toEqual(559);
+    expect((await contract_1_2VM.readState()).state.counter).toEqual(559);
 
     const contract_2_2 = (await SmartWeaveNodeFactory.knexCached(arweave, knexConfig))
       .contract<ExampleContractState>(contract_2.txId())
       .connect(wallet);
+    const contract_2_2VM = (await SmartWeaveNodeFactory.knexCached(arweave, knexConfig))
+      .contract<ExampleContractState>(contract_2.txId())
+      .setEvaluationOptions({ useVM2: true })
+      .connect(wallet);
     expect((await contract_2_2.readState()).state.counter).toEqual(105);
+    expect((await contract_2_2VM.readState()).state.counter).toEqual(105);
 
     await contract_1.writeInteraction({ function: 'add' });
     await contract_2.writeInteraction({ function: 'add' });
@@ -157,7 +185,9 @@ describe('Testing the SmartWeave client', () => {
     await contract_2.writeInteraction({ function: 'add' });
     await mineBlock(arweave);
     expect((await contract_1_2.readState()).state.counter).toEqual(561);
+    expect((await contract_1_2VM.readState()).state.counter).toEqual(561);
     expect((await contract_2_2.readState()).state.counter).toEqual(107);
+    expect((await contract_2_2VM.readState()).state.counter).toEqual(107);
     expect(await cachedStates(knexConfig)).toEqual(6);
   });
 
@@ -165,11 +195,21 @@ describe('Testing the SmartWeave client', () => {
     const contract_1_3 = (await SmartWeaveNodeFactory.knexCached(arweave, knexConfig))
       .contract<ExampleContractState>(contract_1.txId())
       .connect(wallet);
+    const contract_1_3VM = (await SmartWeaveNodeFactory.knexCached(arweave, knexConfig))
+      .contract<ExampleContractState>(contract_1.txId())
+      .setEvaluationOptions({ useVM2: true })
+      .connect(wallet);
     const contract_2_3 = (await SmartWeaveNodeFactory.knexCached(arweave, knexConfig))
       .contract<ExampleContractState>(contract_2.txId())
       .connect(wallet);
+    const contract_2_3VM = (await SmartWeaveNodeFactory.knexCached(arweave, knexConfig))
+      .contract<ExampleContractState>(contract_2.txId())
+      .setEvaluationOptions({ useVM2: true })
+      .connect(wallet);
     expect((await contract_1_3.readState()).state.counter).toEqual(561);
+    expect((await contract_1_3VM.readState()).state.counter).toEqual(561);
     expect((await contract_2_3.readState()).state.counter).toEqual(107);
+    expect((await contract_2_3VM.readState()).state.counter).toEqual(107);
     expect(await cachedStates(knexConfig)).toEqual(6);
 
     await contract_1.writeInteraction({ function: 'add' });
@@ -179,7 +219,9 @@ describe('Testing the SmartWeave client', () => {
     await contract_2.writeInteraction({ function: 'add' });
     await mineBlock(arweave);
     expect((await contract_1_3.readState()).state.counter).toEqual(563);
+    expect((await contract_1_3VM.readState()).state.counter).toEqual(563);
     expect((await contract_2_3.readState()).state.counter).toEqual(109);
+    expect((await contract_2_3VM.readState()).state.counter).toEqual(109);
     expect(await cachedStates(knexConfig)).toEqual(8);
   });
 
@@ -194,13 +236,25 @@ describe('Testing the SmartWeave client', () => {
     const contract_1_4 = (await SmartWeaveNodeFactory.knexCached(arweave, knexConfig))
       .contract<ExampleContractState>(contract_1.txId())
       .connect(wallet);
+    const contract_1_4VM = (await SmartWeaveNodeFactory.knexCached(arweave, knexConfig))
+      .contract<ExampleContractState>(contract_1.txId())
+      .setEvaluationOptions({ useVM2: true })
+      .connect(wallet);
     const contract_2_4 = (await SmartWeaveNodeFactory.knexCached(arweave, knexConfig))
       .contract<ExampleContractState>(contract_2.txId())
       .connect(wallet);
+    const contract_2_4VM = (await SmartWeaveNodeFactory.knexCached(arweave, knexConfig))
+      .contract<ExampleContractState>(contract_2.txId())
+      .setEvaluationOptions({ useVM2: true })
+      .connect(wallet);
     expect((await contract_1.readState()).state.counter).toEqual(565);
+    expect((await contract_1VM.readState()).state.counter).toEqual(565);
     expect((await contract_1_4.readState()).state.counter).toEqual(565);
+    expect((await contract_1_4VM.readState()).state.counter).toEqual(565);
     expect((await contract_2.readState()).state.counter).toEqual(111);
+    expect((await contract_2VM.readState()).state.counter).toEqual(111);
     expect((await contract_2_4.readState()).state.counter).toEqual(111);
+    expect((await contract_2_4VM.readState()).state.counter).toEqual(111);
     expect(await cachedStates(knexConfig)).toEqual(10);
   });
 
@@ -213,6 +267,13 @@ describe('Testing the SmartWeave client', () => {
         manualCacheFlush: true
       })
       .connect(wallet);
+    const contractVM = smartweave
+      .contract<ExampleContractState>(contract_1.txId())
+      .setEvaluationOptions({
+        useVM2: true,
+        manualCacheFlush: true
+      })
+      .connect(wallet);
 
     await contract.writeInteraction({ function: 'add' });
     await mineBlock(arweave);
@@ -222,6 +283,7 @@ describe('Testing the SmartWeave client', () => {
     await mineBlock(arweave);
 
     expect((await contract.readState()).state.counter).toEqual(568);
+    expect((await contractVM.readState()).state.counter).toEqual(568);
     expect(await cachedStates(knexConfig2)).toEqual(0);
     await smartweave.flushCache();
     expect(await cachedStates(knexConfig2)).toEqual(1);
@@ -233,6 +295,7 @@ describe('Testing the SmartWeave client', () => {
     await contract.writeInteraction({ function: 'add' });
     await mineBlock(arweave);
     expect((await contract.readState()).state.counter).toEqual(571);
+    expect((await contractVM.readState()).state.counter).toEqual(571);
     expect(await cachedStates(knexConfig2)).toEqual(1);
 
     await smartweave.flushCache();
