@@ -103,7 +103,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     pst.connect(wallet);
 
     await mineBlock(arweave);
-  });
+  }, 50000);
 
   afterAll(async () => {
     await arlocal.stop();

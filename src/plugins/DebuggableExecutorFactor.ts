@@ -1,4 +1,4 @@
-import { ContractDefinition, ExecutorFactory } from '@smartweave/core';
+import { ContractDefinition, EvaluationOptions, ExecutorFactory } from '@smartweave/core';
 
 /**
  * An ExecutorFactory that allows to substitute original contract's source code.
@@ -14,7 +14,10 @@ export class DebuggableExecutorFactory<Api> implements ExecutorFactory<Api> {
     private readonly sourceCode: { [key: string]: string }
   ) {}
 
-  async create<State>(contractDefinition: ContractDefinition<State>): Promise<Api> {
+  async create<State>(
+    contractDefinition: ContractDefinition<State>,
+    evaluationOptions: EvaluationOptions
+  ): Promise<Api> {
     if (Object.prototype.hasOwnProperty.call(this.sourceCode, contractDefinition.txId)) {
       contractDefinition = {
         ...contractDefinition,
@@ -22,6 +25,6 @@ export class DebuggableExecutorFactory<Api> implements ExecutorFactory<Api> {
       };
     }
 
-    return await this.baseImplementation.create(contractDefinition);
+    return await this.baseImplementation.create(contractDefinition, evaluationOptions);
   }
 }

@@ -6,7 +6,6 @@ import {
   ExecutionContext,
   GQLNodeInterface,
   HandlerApi,
-  HandlerFunction,
   InteractionData,
   InteractionResult,
   LoggerFactory,
@@ -14,7 +13,6 @@ import {
   SmartWeaveGlobal,
   timeout
 } from '@smartweave';
-import BigNumber from 'bignumber.js';
 
 export class ContractHandlerApi<State> implements HandlerApi<State> {
   private readonly contractLogger: RedStoneLogger;
@@ -27,7 +25,6 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
     private readonly contractDefinition: ContractDefinition<State>
   ) {
     this.contractLogger = LoggerFactory.INST.create(swGlobal.contract.id);
-
     this.assignReadContractState = this.assignReadContractState.bind(this);
     this.assignViewContractState = this.assignViewContractState.bind(this);
     this.assignWrite = this.assignWrite.bind(this);
@@ -50,19 +47,12 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
 
       const stateCopy = deepCopy(currentResult.state, executionContext.evaluationOptions.useFastCopy);
       this.swGlobal._activeTx = interactionTx;
-
-      const handler = this.contractFunction(this.swGlobal, BigNumber, contractLogger) as HandlerFunction<
-        State,
-        Input,
-        Result
-      >;
-
       this.assignReadContractState<Input>(executionContext, currentTx, currentResult, interactionTx);
       this.assignViewContractState<Input>(executionContext);
       this.assignWrite(executionContext, currentTx);
       this.assignRefreshState(executionContext);
 
-      const handlerResult = await Promise.race([timeoutPromise, handler(stateCopy, interaction)]);
+      const handlerResult = await Promise.race([timeoutPromise, this.contractFunction(stateCopy, interaction)]);
 
       if (handlerResult && (handlerResult.state || handlerResult.result)) {
         return {

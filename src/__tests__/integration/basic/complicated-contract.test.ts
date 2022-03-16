@@ -10,11 +10,9 @@ import { addFunds, mineBlock } from '../_helpers';
 let arweave: Arweave;
 let arlocal: ArLocal;
 let smartweave: SmartWeave;
-let contract: Contract<ExampleContractState>;
+let contract: Contract<any>;
+let contractVM: Contract<any>;
 
-interface ExampleContractState {
-  counter: number;
-}
 describe('Testing the SmartWeave client', () => {
   let contractSrc: string;
 
@@ -49,7 +47,11 @@ describe('Testing the SmartWeave client', () => {
     });
 
     contract = smartweave.contract(contractTxId);
+    contractVM = smartweave.contract(contractTxId).setEvaluationOptions({
+      useVM2: true
+    });
     contract.connect(wallet);
+    contractVM.connect(wallet);
 
     await mineBlock(arweave);
   });
@@ -60,5 +62,11 @@ describe('Testing the SmartWeave client', () => {
 
   it('should properly deploy contract with initial state', async () => {
     expect(await contract.readState()).not.toBeUndefined();
+  });
+
+  it('sandboxed should not allow to calculate state with "eval" in source code', async () => {
+    await expect(contractVM.readState()).rejects.toThrowError(
+      'Code generation from strings disallowed for this context'
+    );
   });
 });

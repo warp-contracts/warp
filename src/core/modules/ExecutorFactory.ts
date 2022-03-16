@@ -1,4 +1,4 @@
-import { ContractDefinition } from '@smartweave';
+import { ContractDefinition, EvaluationOptions } from '@smartweave';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ContractApi {}
@@ -8,5 +8,5 @@ export interface ContractApi {}
  * i.e. objects that are responsible for actually running the contract's code.
  */
 export interface ExecutorFactory<Api> {
-  create<State>(contractDefinition: ContractDefinition<State>): Promise<Api>;
+  create<State>(contractDefinition: ContractDefinition<State>, evaluationOptions: EvaluationOptions): Promise<Api>;
 }

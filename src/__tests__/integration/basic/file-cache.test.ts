@@ -5,7 +5,6 @@ import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import { Contract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory } from '@smartweave';
 import path from 'path';
-import { TsLogFactory } from '../../../logging/node/TsLogFactory';
 import { addFunds, mineBlock } from '../_helpers';
 
 interface ExampleContractState {
@@ -26,6 +25,7 @@ describe('Testing the SmartWeave client', () => {
   let arlocal: ArLocal;
   let smartweave: SmartWeave;
   let contract: Contract<ExampleContractState>;
+  let contractVM: Contract<ExampleContractState>;
   const cacheDir = path.join(__dirname, 'cache');
 
   beforeAll(async () => {
@@ -60,7 +60,11 @@ describe('Testing the SmartWeave client', () => {
     });
 
     contract = smartweave.contract(contractTxId);
+    contractVM = smartweave.contract<ExampleContractState>(contractTxId).setEvaluationOptions({
+      useVM2: true
+    });
     contract.connect(wallet);
+    contractVM.connect(wallet);
 
     await mineBlock(arweave);
   });
@@ -72,6 +76,7 @@ describe('Testing the SmartWeave client', () => {
 
   it('should properly deploy contract with initial state', async () => {
     expect((await contract.readState()).state.counter).toEqual(555);
+    expect((await contractVM.readState()).state.counter).toEqual(555);
   });
 
   it('should properly add new interaction', async () => {
@@ -80,6 +85,7 @@ describe('Testing the SmartWeave client', () => {
     await mineBlock(arweave);
 
     expect((await contract.readState()).state.counter).toEqual(556);
+    expect((await contractVM.readState()).state.counter).toEqual(556);
   });
 
   it('should properly add another interactions', async () => {
@@ -91,37 +97,54 @@ describe('Testing the SmartWeave client', () => {
     await mineBlock(arweave);
 
     expect((await contract.readState()).state.counter).toEqual(559);
+    expect((await contractVM.readState()).state.counter).toEqual(559);
   });
 
   it('should properly view contract state', async () => {
     const interactionResult = await contract.viewState<unknown, number>({ function: 'value' });
+    const interactionResult2 = await contractVM.viewState<unknown, number>({ function: 'value' });
     expect(interactionResult.result).toEqual(559);
+    expect(interactionResult2.result).toEqual(559);
   });
 
   it('should properly read state with a fresh client', async () => {
     const contract2 = SmartWeaveNodeFactory.fileCached(arweave, cacheDir)
       .contract<ExampleContractState>(contract.txId())
       .connect(wallet);
+
+    const contract2VM = SmartWeaveNodeFactory.fileCached(arweave, cacheDir)
+      .contract<ExampleContractState>(contract.txId())
+      .connect(wallet);
     expect((await contract2.readState()).state.counter).toEqual(559);
+    expect((await contract2VM.readState()).state.counter).toEqual(559);
 
     await contract.writeInteraction({ function: 'add' });
     await mineBlock(arweave);
     await contract.writeInteraction({ function: 'add' });
     await mineBlock(arweave);
     expect((await contract2.readState()).state.counter).toEqual(561);
+    expect((await contract2VM.readState()).state.counter).toEqual(561);
   });
 
   it('should properly read state with another fresh client', async () => {
     const contract3 = SmartWeaveNodeFactory.fileCached(arweave, cacheDir)
       .contract<ExampleContractState>(contract.txId())
       .connect(wallet);
+    const contract3VM = SmartWeaveNodeFactory.fileCached(arweave, cacheDir)
+      .contract<ExampleContractState>(contract.txId())
+      .setEvaluationOptions({
+        useVM2: true
+      })
+      .connect(wallet);
     expect((await contract3.readState()).state.counter).toEqual(561);
+    expect((await contract3VM.readState()).state.counter).toEqual(561);
 
     await contract.writeInteraction({ function: 'add' });
     await mineBlock(arweave);
     await contract.writeInteraction({ function: 'add' });
     await mineBlock(arweave);
     expect((await contract3.readState()).state.counter).toEqual(563);
+    expect((await contract3VM.readState()).state.counter).toEqual(563);
   });
 
   it('should properly eval state for missing interactions', async () => {
@@ -133,8 +156,16 @@ describe('Testing the SmartWeave client', () => {
     const contract4 = SmartWeaveNodeFactory.fileCached(arweave, cacheDir)
       .contract<ExampleContractState>(contract.txId())
       .connect(wallet);
+    const contract4VM = SmartWeaveNodeFactory.fileCached(arweave, cacheDir)
+      .contract<ExampleContractState>(contract.txId())
+      .setEvaluationOptions({
+        useVM2: true
+      })
+      .connect(wallet);
     expect((await contract4.readState()).state.counter).toEqual(565);
+    expect((await contract4VM.readState()).state.counter).toEqual(565);
     expect((await contract.readState()).state.counter).toEqual(565);
+    expect((await contractVM.readState()).state.counter).toEqual(565);
   });
 
   function removeCacheDir() {

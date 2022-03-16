@@ -30,6 +30,7 @@ describe('Testing the SmartWeave client', () => {
   let arlocal: ArLocal;
   let smartweave: SmartWeave;
   let contract: Contract<ExampleContractState>;
+  let contractVM: Contract<ExampleContractState>;
 
   beforeAll(async () => {
     // note: each tests suit (i.e. file with tests that Jest is running concurrently
@@ -61,7 +62,11 @@ describe('Testing the SmartWeave client', () => {
     });
 
     contract = smartweave.contract(contractTxId);
+    contractVM = smartweave.contract<ExampleContractState>(contractTxId).setEvaluationOptions({
+      useVM2: true
+    });
     contract.connect(wallet);
+    contractVM.connect(wallet);
 
     await mineBlock(arweave);
   });
@@ -72,14 +77,15 @@ describe('Testing the SmartWeave client', () => {
 
   it('should properly deploy contract with initial state', async () => {
     expect((await contract.readState()).state.counter).toEqual(555);
+    expect((await contractVM.readState()).state.counter).toEqual(555);
   });
 
   it('should properly add new interaction', async () => {
     await contract.writeInteraction({ function: 'add' });
-
     await mineBlock(arweave);
 
     expect((await contract.readState()).state.counter).toEqual(556);
+    expect((await contractVM.readState()).state.counter).toEqual(556);
   });
 
   it('should properly add another interactions', async () => {
@@ -91,10 +97,13 @@ describe('Testing the SmartWeave client', () => {
     await mineBlock(arweave);
 
     expect((await contract.readState()).state.counter).toEqual(559);
+    expect((await contractVM.readState()).state.counter).toEqual(559);
   });
 
   it('should properly view contract state', async () => {
     const interactionResult = await contract.viewState<unknown, number>({ function: 'value' });
+    const interactionResultVM = await contractVM.viewState<unknown, number>({ function: 'value' });
     expect(interactionResult.result).toEqual(559);
+    expect(interactionResultVM.result).toEqual(559);
   });
 });

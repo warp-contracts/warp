@@ -71,7 +71,10 @@ export class Evolve implements ExecutionContextModifier {
           // but forcing different sourceTxId...
           this.logger.info('Evolving to: ', evolvedSrcTxId);
           const newContractDefinition = await this.definitionLoader.load<State>(contractTxId, evolvedSrcTxId);
-          const newHandler = (await this.executorFactory.create<State>(newContractDefinition)) as HandlerApi<State>;
+          const newHandler = (await this.executorFactory.create<State>(
+            newContractDefinition,
+            executionContext.evaluationOptions
+          )) as HandlerApi<State>;
 
           //FIXME: side-effect...
           executionContext.contractDefinition = newContractDefinition;

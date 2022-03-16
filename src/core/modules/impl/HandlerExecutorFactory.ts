@@ -3,6 +3,7 @@ import {
   Benchmark,
   ContractDefinition,
   EvalStateResult,
+  EvaluationOptions,
   ExecutionContext,
   ExecutorFactory,
   GQLNodeInterface,
@@ -18,6 +19,15 @@ import { WasmContractHandlerApi } from './WasmContractHandlerApi';
 import { asWasmImports } from './wasm/as-wasm-imports';
 import { rustWasmImports } from './wasm/rust-wasm-imports';
 import { Go } from './wasm/go-wasm-imports';
+import BigNumber from 'bignumber.js';
+import { NodeVM, VMScript } from 'vm2';
+
+class ContractError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'ContractError';
+  }
+}
 
 /**
  * A factory that produces handlers that are compatible with the "current" style of
@@ -31,7 +41,10 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
 
   constructor(private readonly arweave: Arweave) {}
 
-  async create<State>(contractDefinition: ContractDefinition<State>): Promise<HandlerApi<State>> {
+  async create<State>(
+    contractDefinition: ContractDefinition<State>,
+    evaluationOptions: EvaluationOptions
+  ): Promise<HandlerApi<State>> {
     const swGlobal = new SmartWeaveGlobal(this.arweave, {
       id: contractDefinition.txId,
       owner: contractDefinition.owner
@@ -39,7 +52,6 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
 
     if (contractDefinition.contractType == 'wasm') {
       this.logger.info('Creating handler for wasm contract', contractDefinition.txId);
-
       const benchmark = Benchmark.measure();
 
       let wasmInstance;
@@ -111,16 +123,37 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
           throw new Error(`Support for ${contractDefinition.srcWasmLang} not implemented yet.`);
         }
       }
-
       this.logger.info(`WASM ${contractDefinition.srcWasmLang} handler created in ${benchmark.elapsed()}`);
-
       return new WasmContractHandlerApi(swGlobal, contractDefinition, jsExports || wasmInstance.exports);
     } else {
       this.logger.info('Creating handler for js contract', contractDefinition.txId);
-      const normalizedSource = normalizeContractSource(contractDefinition.src);
-      const contractFunction = new Function(normalizedSource);
+      const normalizedSource = normalizeContractSource(contractDefinition.src, evaluationOptions.useVM2);
+      if (evaluationOptions.useVM2) {
+        const vmScript = new VMScript(normalizedSource);
+        const vm = new NodeVM({
+          console: 'off',
+          sandbox: {
+            SmartWeave: swGlobal,
+            BigNumber: BigNumber,
+            logger: this.logger,
+            ContractError: ContractError,
+            ContractAssert: function (cond, message) {
+              if (!cond) throw new ContractError(message);
+            }
+          },
+          compiler: 'javascript',
+          eval: false,
+          wasm: false,
+          allowAsync: true,
+          wrapper: 'commonjs'
+        });
 
-      return new ContractHandlerApi(swGlobal, contractFunction, contractDefinition);
+        return new ContractHandlerApi(swGlobal, vm.run(vmScript), contractDefinition);
+      } else {
+        const contractFunction = new Function(normalizedSource);
+        const handler = contractFunction(swGlobal, BigNumber, LoggerFactory.INST.create(swGlobal.contract.id));
+        return new ContractHandlerApi(swGlobal, handler, contractDefinition);
+      }
     }
   }
 }
