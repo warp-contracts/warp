@@ -51,7 +51,7 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
     await addFunds(arweave, wallet);
     walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
-    const contractSrc = fs.readFileSync(path.join(__dirname, '../data/wasm/go-pst.wasm'));
+    const contractSrc = fs.readFileSync(path.join(__dirname, '../data/wasm/go-pst_1.wasm'));
     const stateFromFile: PstState = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/token-pst.json'), 'utf8'));
 
     initialState = {
@@ -103,7 +103,7 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
     pst.connect(wallet);
 
     await mineBlock(arweave);
-  }, 50000);
+  });
 
   afterAll(async () => {
     await arlocal.stop();
