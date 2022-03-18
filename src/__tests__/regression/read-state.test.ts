@@ -26,7 +26,9 @@ LoggerFactory.INST.logLevel('fatal');
 
 const testCases: string[] = JSON.parse(fs.readFileSync(path.join(__dirname, 'test-cases/read-state.json'), 'utf-8'));
 const testCasesGw: string[] = JSON.parse(fs.readFileSync(path.join(__dirname, 'test-cases/gateways.json'), 'utf-8'));
-const testCasesVm: string[] = JSON.parse(fs.readFileSync(path.join(__dirname, 'test-cases/read-state-vm.json'), 'utf-8'));
+const testCasesVm: string[] = JSON.parse(
+  fs.readFileSync(path.join(__dirname, 'test-cases/read-state-vm.json'), 'utf-8')
+);
 
 const chunked: string[][][] = [...chunks(testCases, 10)];
 const chunkedGw: string[][][] = [...chunks(testCasesGw, 10)];
@@ -76,17 +78,17 @@ describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
         .readFileSync(path.join(__dirname, 'test-cases', 'contracts', `${contractTxId}.json`), 'utf-8')
         .trim();
       console.log('readState', contractTxId);
-        const result2 = await SmartWeaveNodeFactory.memCachedBased(arweave, 1)
-          .useRedStoneGateway(null, SourceType.ARWEAVE)
-          .build()
-          .contract(contractTxId)
-          .setEvaluationOptions({
-            useFastCopy: true,
-            useVM2: true
-          })
-          .readState(blockHeight);
-        const result2String = stringify(result2.state).trim();
-        expect(result2String).toEqual(resultString);
+      const result2 = await SmartWeaveNodeFactory.memCachedBased(arweave, 1)
+        .useRedStoneGateway(null, SourceType.ARWEAVE)
+        .build()
+        .contract(contractTxId)
+        .setEvaluationOptions({
+          useFastCopy: true,
+          useVM2: true
+        })
+        .readState(blockHeight);
+      const result2String = stringify(result2.state).trim();
+      expect(result2String).toEqual(resultString);
     },
     800000
   );
