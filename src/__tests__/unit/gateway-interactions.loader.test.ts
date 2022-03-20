@@ -1,4 +1,4 @@
-import { RedstoneGatewayInteractionsLoader, LoggerFactory } from '@smartweave';
+import { LoggerFactory, RedstoneGatewayInteractionsLoader } from '@smartweave';
 import { GQLEdgeInterface } from '../../legacy/gqlResult';
 
 const responseData = {

@@ -1,8 +1,7 @@
 import Arweave from 'arweave';
-import { ContractDefinition, EvaluationOptions, ExecutorFactory, HandlerApi } from '@smartweave/core';
+import { ContractDefinition, EvaluationOptions, ExecutorFactory } from '@smartweave/core';
 import { SwCache } from '@smartweave/cache';
 import { LoggerFactory } from '@smartweave/logging';
-import { SmartWeaveGlobal } from '@smartweave/legacy';
 
 /**
  * An implementation of ExecutorFactory that adds caching capabilities

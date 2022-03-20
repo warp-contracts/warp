@@ -9,7 +9,7 @@
 /* tslint:disable */
 /* eslint-disable */
 /* YOLO */
-import { LoggerFactory, SmartWeaveGlobal } from '@smartweave';
+import {LoggerFactory, SmartWeaveGlobal} from '@smartweave';
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder('utf-8');

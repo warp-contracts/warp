@@ -4,7 +4,6 @@ import {
   canBeCached,
   ContractInteraction,
   CurrentTx,
-  deepCopy,
   EvalStateResult,
   ExecutionContext,
   ExecutionContextModifier,
