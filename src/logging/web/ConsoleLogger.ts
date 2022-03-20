@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { LoggerSettings, LogLevel, lvlToOrder, RedStoneLogger } from '@smartweave';
+import {LoggerSettings, LogLevel, lvlToOrder, RedStoneLogger} from '@smartweave';
 
 export class ConsoleLogger implements RedStoneLogger {
   constructor(private readonly moduleName, public settings: LoggerSettings) {}

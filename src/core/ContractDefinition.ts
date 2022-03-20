@@ -3,6 +3,10 @@
  */
 import { ContractType } from './modules/CreateContract';
 
+export class ContractMetadata {
+  dtor: number;
+}
+
 export type ContractDefinition<State> = {
   txId: string;
   srcTxId: string;
@@ -13,4 +17,5 @@ export type ContractDefinition<State> = {
   minFee: string;
   owner: string;
   contractType: ContractType;
+  metadata?: ContractMetadata;
 };

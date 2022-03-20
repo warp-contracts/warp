@@ -1,0 +1,12 @@
+export const UINT8ARRAY_ID = idof<Uint8Array>();
+export const INT16ARRAY_ID = idof<Int16Array>();
+export const UINT16ARRAY_ID = idof<Uint16Array>();
+export const INT32ARRAY_ID = idof<Int32Array>();
+export const UINT32ARRAY_ID = idof<Uint32Array>();
+export const FLOAT32ARRAY_ID = idof<Float32Array>();
+export const ARRAYI32_ID = idof<Array<i32>>();
+export const STATICARRAYI32_ID = idof<StaticArray<i32>>();
+export const STATICARRAYU32_ID = idof<StaticArray<u32>>();
+export const STATICARRAYU8_ID = idof<StaticArray<u8>>();
+export const STATICARRAYI16_ID = idof<StaticArray<i16>>();
+export const STATICARRAYF32_ID = idof<StaticArray<f32>>();

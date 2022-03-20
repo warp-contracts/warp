@@ -34,7 +34,7 @@ export interface FromSrcTxContractData extends CommonContractData {
 }
 
 export interface CreateContract {
-  deploy(contractData: ContractData): Promise<string>;
+  deploy(contractData: ContractData, wasmSrcCodeDir?: string, wasmGlueCode?: string): Promise<string>;
 
   deployFromSourceTx(contractData: FromSrcTxContractData): Promise<string>;
 }

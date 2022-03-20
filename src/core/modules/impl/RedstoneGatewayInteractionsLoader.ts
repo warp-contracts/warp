@@ -1,12 +1,13 @@
 import {
   Benchmark,
+  GQLEdgeInterface,
+  GQLNodeInterface,
   InteractionsLoader,
   LoggerFactory,
-  stripTrailingSlash,
-  GQLEdgeInterface,
-  GQLNodeInterface
+  stripTrailingSlash
 } from '@smartweave';
 import 'redstone-isomorphic';
+
 interface Paging {
   total: string;
   limit: number;

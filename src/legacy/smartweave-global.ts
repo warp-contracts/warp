@@ -1,6 +1,6 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import { GQLNodeInterface, GQLTagInterface } from './gqlResult';
+import {GQLNodeInterface, GQLTagInterface} from './gqlResult';
 
 /**
  *

@@ -11,13 +11,14 @@ import {
 } from '@smartweave';
 import Arweave from 'arweave';
 import Transaction from 'arweave/web/lib/transaction';
+import { WasmSrc } from './wasm/WasmSrc';
 
 const supportedSrcContentTypes = ['application/javascript', 'application/wasm'];
 
 export class ContractDefinitionLoader implements DefinitionLoader {
   private readonly logger = LoggerFactory.INST.create('ContractDefinitionLoader');
 
-  private arweaveWrapper: ArweaveWrapper;
+  protected arweaveWrapper: ArweaveWrapper;
 
   constructor(
     private readonly arweave: Arweave,
@@ -66,11 +67,15 @@ export class ContractDefinitionLoader implements DefinitionLoader {
         : await this.arweaveWrapper.txData(contractSrcTxId);
 
     let srcWasmLang;
+    let wasmSrc: WasmSrc;
+    let srcMetaData;
     if (contractType == 'wasm') {
+      wasmSrc = new WasmSrc(src as Buffer);
       srcWasmLang = getTag(contractSrcTx, SmartWeaveTags.WASM_LANG);
       if (!srcWasmLang) {
-        this.logger.warn('Wasm lang not set for wasm contract src', contractSrcTxId);
+        throw new Error(`Wasm lang not set for wasm contract src ${contractSrcTxId}`);
       }
+      srcMetaData = JSON.parse(getTag(contractSrcTx, SmartWeaveTags.WASM_META));
     }
 
     this.logger.debug('Contract src tx load', benchmark.elapsed());
@@ -84,12 +89,13 @@ export class ContractDefinitionLoader implements DefinitionLoader {
       txId: contractTxId,
       srcTxId: contractSrcTxId,
       src: contractType == 'js' ? (src as string) : null,
-      srcBinary: contractType == 'wasm' ? (src as Buffer) : null,
+      srcBinary: contractType == 'wasm' ? wasmSrc.wasmBinary() : null,
       srcWasmLang,
       initState,
       minFee,
       owner,
-      contractType
+      contractType,
+      metadata: srcMetaData
     };
   }
 

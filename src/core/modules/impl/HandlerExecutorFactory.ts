@@ -101,7 +101,15 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
             })
             .map((imp) => imp.name);
 
-          const { imports, exports } = rustWasmImports(swGlobal, wbindgenImports, wasmInstanceExports);
+          console.log('contractDefinition.metadata', contractDefinition.metadata);
+          console.log('contractDefinition.metadata.dtor', contractDefinition.metadata.dtor);
+
+          const { imports, exports } = rustWasmImports(
+            swGlobal,
+            wbindgenImports,
+            wasmInstanceExports,
+            contractDefinition.metadata.dtor
+          );
           jsExports = exports;
 
           wasmInstance = new WebAssembly.Instance(wasmModule, imports);

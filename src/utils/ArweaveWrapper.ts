@@ -4,6 +4,7 @@ import { GqlReqVariables, LoggerFactory } from '@smartweave';
 import { AxiosResponse } from 'axios';
 import Transaction from 'arweave/node/lib/transaction';
 import { Buffer as isomorphicBuffer } from 'redstone-isomorphic';
+
 export class ArweaveWrapper {
   private readonly logger = LoggerFactory.INST.create('ArweaveWrapper');
 

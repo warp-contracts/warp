@@ -1,9 +1,12 @@
 /* eslint-disable */
-import { ContractData, ContractType, CreateContract, FromSrcTxContractData, SmartWeaveTags } from '@smartweave/core';
+import {ContractData, ContractType, CreateContract, FromSrcTxContractData, SmartWeaveTags} from '@smartweave/core';
 import Arweave from 'arweave';
-import { LoggerFactory } from '@smartweave/logging';
-import { Go } from './wasm/go-wasm-imports';
+import {LoggerFactory} from '@smartweave/logging';
+import {Go} from './wasm/go-wasm-imports';
 import metering from 'redstone-wasm-metering';
+import fs, {PathOrFileDescriptor} from "fs";
+import {matchMutClosureDtor} from "./wasm/wasm-bindgen-tools";
+import {parseInt} from "lodash";
 
 const wasmTypeMapping: Map<number, string> = new Map([
   [1, 'assemblyscript'],
@@ -20,53 +23,82 @@ export class DefaultCreateContract implements CreateContract {
     this.deployFromSourceTx = this.deployFromSourceTx.bind(this);
   }
 
-  async deploy(contractData: ContractData): Promise<string> {
+  async deploy(contractData: ContractData, wasmSrcCodeDir?: string, wasmGlueCodePath?: string): Promise<string> {
     this.logger.debug('Creating new contract');
 
     const { wallet, src, initState, tags, transfer } = contractData;
     const contractType: ContractType = src instanceof Buffer ? 'wasm' : 'js';
     let srcTx;
+    let wasmLang = null;
+    let wasmVersion = null;
+    let metadata = {};
+
+    const data: Buffer[] = [];
+
     if (contractType == 'wasm') {
       const meteredWasmBinary = metering.meterWASM(src, {
         meterType: 'i32'
       });
-      srcTx = await this.arweave.createTransaction({ data: meteredWasmBinary }, wallet);
-    } else {
-      srcTx = await this.arweave.createTransaction({ data: src }, wallet);
-    }
-    srcTx.addTag(SmartWeaveTags.APP_NAME, 'SmartWeaveContractSource');
-    // TODO: version should be taken from the current package.json version.
-    srcTx.addTag(SmartWeaveTags.APP_VERSION, '0.3.0');
-    srcTx.addTag(SmartWeaveTags.SDK, 'RedStone');
-    srcTx.addTag(SmartWeaveTags.CONTENT_TYPE, contractType == 'js' ? 'application/javascript' : 'application/wasm');
+      data.push(meteredWasmBinary);
 
-    let wasmLang = null;
-
-    if (contractType == 'wasm') {
       const wasmModule = await WebAssembly.compile(src as Buffer);
       const moduleImports = WebAssembly.Module.imports(wasmModule);
       let lang;
+
       if (this.isGoModule(moduleImports)) {
         const go = new Go(null);
         const module = new WebAssembly.Instance(wasmModule, go.importObject);
         // DO NOT await here!
         go.run(module);
         lang = go.exports.lang();
+        wasmVersion = go.exports.version();
       } else {
-        const module = await WebAssembly.instantiate(src, dummyImports(moduleImports));
+        const module: WebAssembly.Instance = await WebAssembly.instantiate(src, dummyImports(moduleImports));
         // @ts-ignore
         if (!module.instance.exports.lang) {
-          throw new Error(`No info about source type in wasm binary. Did you forget to export "type" function?`);
+          throw new Error(`No info about source type in wasm binary. Did you forget to export "lang" function?`);
         }
         // @ts-ignore
         lang = module.instance.exports.lang();
+        // @ts-ignore
+        wasmVersion = module.instance.exports.version();
         if (!wasmTypeMapping.has(lang)) {
           throw new Error(`Unknown wasm source type ${lang}`);
         }
       }
 
       wasmLang = wasmTypeMapping.get(lang);
+      if (wasmSrcCodeDir == null) {
+        throw new Error("No path to original wasm contract source code");
+      }
+
+      const zippedSourceCode = await this.zipContents(wasmSrcCodeDir);
+      data.push(zippedSourceCode);
+
+      if (wasmLang == "rust") {
+        if (!wasmGlueCodePath) {
+          throw new Error("No path to generated wasm-bindgen js code");
+        }
+        const wasmBindgenSrc = fs.readFileSync(wasmGlueCodePath, "utf-8");
+        const dtor = matchMutClosureDtor(wasmBindgenSrc);
+        metadata["dtor"] = parseInt(dtor);
+        data.push(Buffer.from(wasmBindgenSrc));
+      }
+    }
+
+    const allData = contractType == 'wasm' ? this.joinBuffers(data) : src;
+
+    srcTx = await this.arweave.createTransaction({ data: allData }, wallet);
+    srcTx.addTag(SmartWeaveTags.APP_NAME, 'SmartWeaveContractSource');
+    // TODO: version should be taken from the current package.json version.
+    srcTx.addTag(SmartWeaveTags.APP_VERSION, '0.3.0');
+    srcTx.addTag(SmartWeaveTags.SDK, 'RedStone');
+    srcTx.addTag(SmartWeaveTags.CONTENT_TYPE, contractType == 'js' ? 'application/javascript' : 'application/wasm');
+
+    if (contractType == 'wasm') {
       srcTx.addTag(SmartWeaveTags.WASM_LANG, wasmLang);
+      srcTx.addTag(SmartWeaveTags.WASM_LANG_VERSION, wasmVersion);
+      srcTx.addTag(SmartWeaveTags.WASM_META, JSON.stringify(metadata));
     }
 
     await this.arweave.transactions.sign(srcTx, wallet);
@@ -87,12 +119,6 @@ export class DefaultCreateContract implements CreateContract {
     } else {
       throw new Error(`Unable to write Contract Source: ${response?.statusText}`);
     }
-  }
-
-  private isGoModule(moduleImports: WebAssembly.ModuleImportDescriptor[]) {
-    return moduleImports.some((moduleImport) => {
-      return moduleImport.module == 'env' && moduleImport.name.startsWith('syscall/js');
-    });
   }
 
   async deployFromSourceTx(contractData: FromSrcTxContractData): Promise<string> {
@@ -137,6 +163,46 @@ export class DefaultCreateContract implements CreateContract {
     } else {
       throw new Error(`Unable to write Contract Source: ${response?.statusText}`);
     }
+  }
+
+  private isGoModule(moduleImports: WebAssembly.ModuleImportDescriptor[]) {
+    return moduleImports.some((moduleImport) => {
+      return moduleImport.module == 'env' && moduleImport.name.startsWith('syscall/js');
+    });
+  }
+
+  private joinBuffers(buffers: Buffer[]): Buffer {
+    const length = buffers.length;
+    const result = [];
+    result.push(Buffer.from(length.toString()))
+    result.push(Buffer.from("|"))
+    buffers.forEach(b => {
+      result.push(Buffer.from(b.length.toString()));
+      result.push(Buffer.from("|"))
+    });
+    result.push(...buffers);
+    return result.reduce((prev, b) => Buffer.concat([prev, b]));
+  }
+
+  private async zipContents(source: PathOrFileDescriptor): Promise<Buffer> {
+    const archiver = require('archiver'),
+      streamBuffers = require('stream-buffers');
+    const outputStreamBuffer = new streamBuffers.WritableStreamBuffer({
+      initialSize: (1000 * 1024),   // start at 1000 kilobytes.
+      incrementAmount: (1000 * 1024) // grow by 1000 kilobytes each time buffer overflows.
+    });
+    const archive = archiver('zip', {
+      zlib: {level: 9} // Sets the compression level.
+    });
+    archive.on('error', function(err) {
+      throw err;
+    });
+    archive.pipe(outputStreamBuffer);
+    archive.directory(source.toString(), source.toString());
+    await archive.finalize();
+    outputStreamBuffer.end();
+
+    return outputStreamBuffer.getContents();
   }
 }
 

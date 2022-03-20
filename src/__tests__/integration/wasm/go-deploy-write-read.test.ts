@@ -51,7 +51,7 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
     await addFunds(arweave, wallet);
     walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
-    const contractSrc = fs.readFileSync(path.join(__dirname, '../data/wasm/go-pst.wasm'));
+    const contractSrc = fs.readFileSync(path.join(__dirname, '../data/wasm/go/go-pst.wasm'));
     const stateFromFile: PstState = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/token-pst.json'), 'utf8'));
 
     initialState = {
@@ -66,35 +66,44 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
     };
 
     // deploying contract using the new SDK.
-    contractTxId = await smartweave.createContract.deploy({
-      wallet,
-      initState: JSON.stringify(initialState),
-      src: contractSrc
-    });
+    contractTxId = await smartweave.createContract.deploy(
+      {
+        wallet,
+        initState: JSON.stringify(initialState),
+        src: contractSrc
+      },
+      path.join(__dirname, '../data/wasm/go/src')
+    );
 
-    properForeignContractTxId = await smartweave.createContract.deploy({
-      wallet,
-      initState: JSON.stringify({
-        ...initialState,
-        ...{
-          ticker: 'FOREIGN_PST',
-          name: 'foreign contract'
-        }
-      }),
-      src: contractSrc
-    });
+    properForeignContractTxId = await smartweave.createContract.deploy(
+      {
+        wallet,
+        initState: JSON.stringify({
+          ...initialState,
+          ...{
+            ticker: 'FOREIGN_PST',
+            name: 'foreign contract'
+          }
+        }),
+        src: contractSrc
+      },
+      path.join(__dirname, '../data/wasm/go/src')
+    );
 
-    wrongForeignContractTxId = await smartweave.createContract.deploy({
-      wallet,
-      initState: JSON.stringify({
-        ...initialState,
-        ...{
-          ticker: 'FOREIGN_PST_2',
-          name: 'foreign contract 2'
-        }
-      }),
-      src: contractSrc
-    });
+    wrongForeignContractTxId = await smartweave.createContract.deploy(
+      {
+        wallet,
+        initState: JSON.stringify({
+          ...initialState,
+          ...{
+            ticker: 'FOREIGN_PST_2',
+            name: 'foreign contract 2'
+          }
+        }),
+        src: contractSrc
+      },
+      path.join(__dirname, '../data/wasm/go/src')
+    );
 
     // connecting to the PST contract
     pst = smartweave.pst(contractTxId);

@@ -44,15 +44,18 @@ describe('Testing the SmartWeave client for AssemblyScript WASM contract', () =>
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
 
-    contractSrc = fs.readFileSync(path.join(__dirname, '../data/wasm/assemblyscript-counter.wasm'));
+    contractSrc = fs.readFileSync(path.join(__dirname, '../data/wasm/as/assemblyscript-counter.wasm'));
     initialState = fs.readFileSync(path.join(__dirname, '../data/wasm/counter-init-state.json'), 'utf8');
 
     // deploying contract using the new SDK.
-    contractTxId = await smartweave.createContract.deploy({
-      wallet,
-      initState: initialState,
-      src: contractSrc
-    });
+    contractTxId = await smartweave.createContract.deploy(
+      {
+        wallet,
+        initState: initialState,
+        src: contractSrc
+      },
+      path.join(__dirname, '../data/wasm/as/assembly')
+    );
 
     contract = smartweave.contract<ExampleContractState>(contractTxId).setEvaluationOptions({
       gasLimit: 14000000

@@ -3,14 +3,7 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import {
-  InteractionResult,
-  LoggerFactory,
-  PstContract,
-  PstState,
-  SmartWeave,
-  SmartWeaveNodeFactory
-} from '@smartweave';
+import { LoggerFactory, PstContract, PstState, SmartWeave, SmartWeaveNodeFactory } from '@smartweave';
 import path from 'path';
 import { addFunds, mineBlock } from '../_helpers';
 
