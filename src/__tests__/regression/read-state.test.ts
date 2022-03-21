@@ -1,9 +1,9 @@
 /* eslint-disable */
 import fs from 'fs';
 import path from 'path';
-import {interactRead, readContract} from 'smartweave';
+import { interactRead, readContract } from 'smartweave';
 import Arweave from 'arweave';
-import {LoggerFactory, SmartWeaveNodeFactory, SmartWeaveWebFactory, SourceType} from '@smartweave';
+import { LoggerFactory, SmartWeaveNodeFactory, SmartWeaveWebFactory, SourceType } from '@smartweave';
 
 const stringify = require('safe-stable-stringify');
 

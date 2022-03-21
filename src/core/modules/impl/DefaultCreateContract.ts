@@ -1,12 +1,12 @@
 /* eslint-disable */
-import {ContractData, ContractType, CreateContract, FromSrcTxContractData, SmartWeaveTags} from '@smartweave/core';
+import { ContractData, ContractType, CreateContract, FromSrcTxContractData, SmartWeaveTags } from '@smartweave/core';
 import Arweave from 'arweave';
-import {LoggerFactory} from '@smartweave/logging';
-import {Go} from './wasm/go-wasm-imports';
+import { LoggerFactory } from '@smartweave/logging';
+import { Go } from './wasm/go-wasm-imports';
 import metering from 'redstone-wasm-metering';
-import fs, {PathOrFileDescriptor} from "fs";
-import {matchMutClosureDtor} from "./wasm/wasm-bindgen-tools";
-import {parseInt} from "lodash";
+import fs, { PathOrFileDescriptor } from 'fs';
+import { matchMutClosureDtor } from './wasm/wasm-bindgen-tools';
+import { parseInt } from 'lodash';
 
 const wasmTypeMapping: Map<number, string> = new Map([
   [1, 'assemblyscript'],
@@ -69,19 +69,19 @@ export class DefaultCreateContract implements CreateContract {
 
       wasmLang = wasmTypeMapping.get(lang);
       if (wasmSrcCodeDir == null) {
-        throw new Error("No path to original wasm contract source code");
+        throw new Error('No path to original wasm contract source code');
       }
 
       const zippedSourceCode = await this.zipContents(wasmSrcCodeDir);
       data.push(zippedSourceCode);
 
-      if (wasmLang == "rust") {
+      if (wasmLang == 'rust') {
         if (!wasmGlueCodePath) {
-          throw new Error("No path to generated wasm-bindgen js code");
+          throw new Error('No path to generated wasm-bindgen js code');
         }
-        const wasmBindgenSrc = fs.readFileSync(wasmGlueCodePath, "utf-8");
+        const wasmBindgenSrc = fs.readFileSync(wasmGlueCodePath, 'utf-8');
         const dtor = matchMutClosureDtor(wasmBindgenSrc);
-        metadata["dtor"] = parseInt(dtor);
+        metadata['dtor'] = parseInt(dtor);
         data.push(Buffer.from(wasmBindgenSrc));
       }
     }
@@ -174,11 +174,11 @@ export class DefaultCreateContract implements CreateContract {
   private joinBuffers(buffers: Buffer[]): Buffer {
     const length = buffers.length;
     const result = [];
-    result.push(Buffer.from(length.toString()))
-    result.push(Buffer.from("|"))
-    buffers.forEach(b => {
+    result.push(Buffer.from(length.toString()));
+    result.push(Buffer.from('|'));
+    buffers.forEach((b) => {
       result.push(Buffer.from(b.length.toString()));
-      result.push(Buffer.from("|"))
+      result.push(Buffer.from('|'));
     });
     result.push(...buffers);
     return result.reduce((prev, b) => Buffer.concat([prev, b]));
@@ -188,13 +188,13 @@ export class DefaultCreateContract implements CreateContract {
     const archiver = require('archiver'),
       streamBuffers = require('stream-buffers');
     const outputStreamBuffer = new streamBuffers.WritableStreamBuffer({
-      initialSize: (1000 * 1024),   // start at 1000 kilobytes.
-      incrementAmount: (1000 * 1024) // grow by 1000 kilobytes each time buffer overflows.
+      initialSize: 1000 * 1024, // start at 1000 kilobytes.
+      incrementAmount: 1000 * 1024 // grow by 1000 kilobytes each time buffer overflows.
     });
     const archive = archiver('zip', {
-      zlib: {level: 9} // Sets the compression level.
+      zlib: { level: 9 } // Sets the compression level.
     });
-    archive.on('error', function(err) {
+    archive.on('error', function (err) {
       throw err;
     });
     archive.pipe(outputStreamBuffer);
