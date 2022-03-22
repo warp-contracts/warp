@@ -101,9 +101,6 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
             })
             .map((imp) => imp.name);
 
-          console.log('contractDefinition.metadata', contractDefinition.metadata);
-          console.log('contractDefinition.metadata.dtor', contractDefinition.metadata.dtor);
-
           const { imports, exports } = rustWasmImports(
             swGlobal,
             wbindgenImports,
