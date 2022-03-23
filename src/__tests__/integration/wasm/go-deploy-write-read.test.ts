@@ -121,8 +121,6 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
   it('should properly deploy contract', async () => {
     const contractTx = await arweave.transactions.get(contractTxId);
 
-    console.log(contractTx.id);
-
     expect(contractTx).not.toBeNull();
     expect(getTag(contractTx, SmartWeaveTags.CONTRACT_TYPE)).toEqual('wasm');
     expect(getTag(contractTx, SmartWeaveTags.WASM_LANG)).toEqual('go');

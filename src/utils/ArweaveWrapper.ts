@@ -90,10 +90,21 @@ export class ArweaveWrapper {
 
   async txData(id: string): Promise<Buffer> {
     // https://github.com/textury/arlocal/issues/83
-    const txData = (await this.arweave.transactions.getData(id, {
-      decode: true
-    })) as Uint8Array;
-    return isomorphicBuffer.from(txData);
+    try {
+      const txData = (await this.arweave.transactions.getData(id, {
+        decode: true
+      })) as Uint8Array;
+      return isomorphicBuffer.from(txData);
+    } catch (e) {
+      const response = await fetch(`${this.baseUrl}/${id}`);
+      if (!response.ok) {
+        this.logger.error(e);
+        this.logger.error(response.statusText);
+        throw new Error('Unable to load tx data');
+      }
+      const buffer = await response.arrayBuffer();
+      return isomorphicBuffer.from(buffer);
+    }
 
     // note: this is using arweave.net cache -
     // not very safe and clever, but fast...
