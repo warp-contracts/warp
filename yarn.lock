@@ -1911,10 +1911,10 @@ argparse@^1.0.7:
   dependencies:
     sprintf-js "~1.0.2"
 
-arlocal@1.1.26:
-  version "1.1.26"
-  resolved "https://registry.yarnpkg.com/arlocal/-/arlocal-1.1.26.tgz#8193fc7792507c2038dc720e69b8d9bf64ec3c33"
-  integrity sha512-5rY7z777o5D1sJ+OtanZOPsuJwgeONKLy7PWr4fAWS72q0RAP4JaoTsFk99nhZZcDd4BZJQhtpnbpUih1fs4Aw==
+arlocal@1.1.30:
+  version "1.1.30"
+  resolved "https://registry.yarnpkg.com/arlocal/-/arlocal-1.1.30.tgz#8c9f0580ade2b67c91526652b21a80b8d5c38b5f"
+  integrity sha512-0YBidTuTwUXUv0UoTs8fb+1+3LrBf3B4/fyTTPhcekmhFTtmH/Rx70EwrldDDWFEMZ8VBnTtWVBCGQZTpuNKQw==
   dependencies:
     "@koa/cors" "^3.1.0"
     apollo-server-koa "^3.6.2"
