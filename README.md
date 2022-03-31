@@ -18,6 +18,8 @@ To further improve contract state evaluation time, one can additionally use AWS 
 - [Development](#development)
   - [Installation and import](#installation-and-import)
   - [Using the RedStone Gateway](#using-the-redstone-gateway)
+  - [WASM](#wasm)
+  - [VM2](#vm2)
   - [Performance - best practices](#performance---best-practices)
   - [Examples](#examples)
   - [Migration guide](#migration-guide)
@@ -145,6 +147,31 @@ const smartweave = SmartWeaveNodeFactory.memCachedBased(arweave)
 
 More examples can be found [here](https://github.com/redstone-finance/redstone-smartcontracts-examples/blob/main/src/redstone-gateway-example.ts).
 
+### WASM
+
+WASM provides proper sandboxing ensuring execution environment isolation which guarantees security to the contracts execution. As for now - **Assemblyscript**, **Rust** and **Go** languages are supported. WASM contracts templates containing example PST contract implementation within tools for compiling contracts to WASM, testing, deploying (locally, on testnet and mainnet) and writing interactions are available in a [dedicated repository]( https://github.com/redstone-finance/redstone-smartcontracts-wasm-templates). 
+
+Using SDKs' methods works exactly the same as in case of a regular JS contract.
+
+Additionally, it is possible to set gas limit for interaction execution in order to e.g. protect a contract against infinite loops. Defaults to `Number.MAX_SAFE_INTEGER` (2^53 - 1).
+
+```js
+contract = smartweave.contract(contractTxId).setEvaluationOptions({
+      gasLimit: 14000000
+    });
+```
+
+### VM2
+
+It is possible to provide an isolated execution environment also in the JavaScript implementation thanks to [VM2](https://github.com/patriksimek/vm2) - a sandbox that can run untrusted code with whitelisted Node's built-in modules. It works only in a NodeJS environment and it enhances security at a (slight) cost of performance, so it should be used it for contracts one cannot trust. 
+
+In order to use VM2, set `useVM2` evaluation option to `true` (defaults to `false`).
+
+```js
+contract = smartweave.contract(contractTxId).setEvaluationOptions({
+      useVM2: true
+    });
+```
 ### Performance - best practices
 In order to get the best performance on production environment (or while performing benchmarks ;-)), please follow these simple rules:
 1. Do NOT use the `TsLoggerFactory` - it is good for development, as it formats the logs nicely, but might slow down the state evaluation
