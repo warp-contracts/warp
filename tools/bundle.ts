@@ -4,7 +4,7 @@ import {
   LoggerFactory,
   MemCache,
   RedstoneGatewayContractDefinitionLoader,
-  RedstoneGatewayInteractionsLoader,
+  RedstoneGatewayInteractionsLoader, sleep,
   SmartWeaveNodeFactory
 } from '../src';
 import { readJSON } from '../../redstone-smartweave-examples/src/_utils';
@@ -15,7 +15,7 @@ const logger = LoggerFactory.INST.create('Contract');
 //LoggerFactory.use(new TsLogFactory());
 //LoggerFactory.INST.logLevel('error');
 LoggerFactory.INST.logLevel('info', 'Contract');
-LoggerFactory.INST.logLevel('debug', 'RedstoneGatewayInteractionsLoader');
+LoggerFactory.INST.logLevel('error', 'RedstoneGatewayInteractionsLoader');
 LoggerFactory.INST.logLevel('error', 'DefaultStateEvaluator');
 LoggerFactory.INST.logLevel('error', 'LexicographicalInteractionsSorter');
 
@@ -40,7 +40,7 @@ async function main() {
   const jwk = readJSON('../redstone-node/.secrets/redstone-jwk.json');
   // connecting to a given contract
   const token = smartweave
-    .contract("OrO8n453N6bx921wtsEs-0OCImBLCItNU5oSbFKlFuU")
+    .contract("KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY")
     .setEvaluationOptions({
       sequencerAddress: "https://gateway.redstone.finance/"
     })
@@ -48,25 +48,27 @@ async function main() {
     // calling "writeInteraction" without connecting to a wallet first will cause a runtime error.
     .connect(jwk);
 
-  const result1 = await token.readState();
+  //const result1 = await token.readState();
 
-  logger.info("Amount of computed interactions before 'bundleInteraction':", Object.keys(result1.validity).length);
+  //logger.info("Amount of computed interactions before 'bundleInteraction':", Object.keys(result1.validity).length);
 
-  const result = await token.bundleInteraction<any>({
-    function: "transfer",
-    data: {
-      target: "fake-from-bundle",
-      qty: 18599333,
-    },
-  });
+  for (let i = 0 ; i < 100 ; i++) {
+    console.log(`mint ${i + 1}`);
+    const result = await token.bundleInteraction<any>({
+      function: "mint"
+    });
+    await sleep(1000);
+  }
 
-  logger.info("Result from the sequencer", result);
+
+
+  /*logger.info("Result from the sequencer", result);
 
   // the new transaction is instantly available - ie. during the state read operation
   const result2 = await token.readState();
 
   logger.info("Amount of computed interactions after 'bundleInteraction':", Object.keys(result2.validity).length);
-
+*/
 }
 
 

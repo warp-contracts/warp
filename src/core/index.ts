@@ -18,6 +18,7 @@ export * from './modules/impl/DefaultCreateContract';
 export * from './modules/impl/TagsParser';
 export * from './modules/impl/normalize-source';
 export * from './modules/impl/StateCache';
+export * from './modules/impl/wasm/WasmSrc';
 
 export * from './ExecutionContextModifier';
 export * from './SmartWeaveTags';

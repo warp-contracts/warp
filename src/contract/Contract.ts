@@ -53,6 +53,12 @@ export interface Contract<State = unknown> {
    */
   readState(blockHeight?: number, currentTx?: CurrentTx[]): Promise<EvalStateResult<State>>;
 
+  readStateSequencer(
+    blockHeight: number,
+    upToTransactionId: string,
+    currentTx?: CurrentTx[]
+  ): Promise<EvalStateResult<State>>;
+
   /**
    * Returns the "view" of the state, computed by the SWC -
    * ie. object that is a derivative of a current state and some specific
@@ -197,4 +203,9 @@ export interface Contract<State = unknown> {
    * returns benchmark results for the last performed readState call
    */
   lastReadStateStats(): BenchmarkStats;
+
+  /**
+   * calculates state hash using stable stringify
+   */
+  stateHash(state: State): string;
 }

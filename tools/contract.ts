@@ -18,8 +18,8 @@ import {readContract} from "smartweave";
 
 const logger = LoggerFactory.INST.create('Contract');
 
-//LoggerFactory.use(new TsLogFactory());
-LoggerFactory.INST.logLevel('error');
+LoggerFactory.use(new TsLogFactory());
+LoggerFactory.INST.logLevel('debug');
 LoggerFactory.INST.logLevel('info', 'Contract');
 //LoggerFactory.INST.logLevel('debug', 'DefaultStateEvaluator');
 //LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
@@ -57,15 +57,15 @@ async function main() {
   }`;
 
   const smartweave = SmartWeaveNodeFactory.memCachedBased(arweave )
-    .setInteractionsLoader(
+   /* .setInteractionsLoader(
       new RedstoneGatewayInteractionsLoader('https://gateway.redstone.finance')
-    ).build()/*.overwriteSource({
+    )*/.build()/*.overwriteSource({
       [LOOT_CONTRACT]: newSource,
     })*/;
 
   const jwk = readJSON('../redstone-node/.secrets/redstone-jwk.json');
   const contract = smartweave
-    .contract(PIANITY_CONTRACT)
+    .contract("fnVpGWzMFHVv1BG3ejA0NbbCZ2OzM0LYukDyJpTAeyM")
     .setEvaluationOptions({
       sequencerAddress: 'http://localhost:5666/',
       useFastCopy: true

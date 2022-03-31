@@ -32,6 +32,8 @@ import {
 } from '@smartweave';
 import { TransactionStatusResponse } from 'arweave/node/transactions';
 import { NetworkInfoInterface } from 'arweave/node/network';
+import stringify from 'safe-stable-stringify';
+import { createHash } from 'crypto';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -104,7 +106,15 @@ export class HandlerBasedContract<State> implements Contract<State> {
   }
 
   async readState(blockHeight?: number, currentTx?: CurrentTx[]): Promise<EvalStateResult<State>> {
-    this.logger.info('Read state for', {
+    return this.readStateSequencer(blockHeight, undefined, currentTx);
+  }
+
+  async readStateSequencer(
+    blockHeight: number,
+    upToTransactionId: string,
+    currentTx?: CurrentTx[]
+  ): Promise<EvalStateResult<State>> {
+    this.logger.info('Read state EN for', {
       contractTxId: this._contractTxId,
       currentTx
     });
@@ -112,12 +122,18 @@ export class HandlerBasedContract<State> implements Contract<State> {
     this.maybeResetRootContract(blockHeight);
 
     const { stateEvaluator } = this.smartweave;
-    const executionContext = await this.createExecutionContext(this._contractTxId, blockHeight);
+    const executionContext = await this.createExecutionContext(
+      this._contractTxId,
+      blockHeight,
+      false,
+      upToTransactionId
+    );
     this.logger.info('Execution Context', {
       blockHeight: executionContext.blockHeight,
       srcTxId: executionContext.contractDefinition?.srcTxId,
       missingInteractions: executionContext.sortedInteractions.length,
-      cachedStateHeight: executionContext.cachedState?.cachedHeight
+      cachedStateHeight: executionContext.cachedState?.cachedHeight,
+      upToTransactionId
     });
     initBenchmark.stop();
 
@@ -138,6 +154,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       'Contract evaluation    ': stateBenchmark.elapsed(),
       'Total:                 ': `${total.toFixed(0)}ms`
     });
+
     return result as EvalStateResult<State>;
   }
 
@@ -344,7 +361,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
   private async createExecutionContext(
     contractTxId: string,
     blockHeight?: number,
-    forceDefinitionLoad = false
+    forceDefinitionLoad = false,
+    upToTransactionId: string = undefined
   ): Promise<ExecutionContext<State, HandlerApi<State>>> {
     const { definitionLoader, interactionsLoader, interactionsSorter, executorFactory, stateEvaluator } =
       this.smartweave;
@@ -411,7 +429,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
           contractTxId,
           cachedBlockHeight + 1,
           this._rootBlockHeight || this._networkInfo.height,
-          this._evaluationOptions
+          this._evaluationOptions,
+          upToTransactionId
         )
       ]);
       this.logger.debug('contract and interactions load', benchmark.elapsed());
@@ -439,7 +458,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
       evaluationOptions: this._evaluationOptions,
       currentNetworkInfo,
       cachedState,
-      containsInteractionsFromSequencer
+      containsInteractionsFromSequencer,
+      upToTransactionId
     };
   }
 
@@ -649,5 +669,17 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   lastReadStateStats(): BenchmarkStats {
     return this._benchmarkStats;
+  }
+
+  stateHash(state: State): string {
+    const jsonState = stringify(state);
+
+    // note: cannot reuse:
+    // "The Hash object can not be used again after hash.digest() method has been called.
+    // Multiple calls will cause an error to be thrown."
+    const hash = createHash('sha256');
+    hash.update(jsonState);
+
+    return hash.digest('hex');
   }
 }
