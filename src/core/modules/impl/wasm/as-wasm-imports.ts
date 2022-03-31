@@ -68,11 +68,14 @@ export const asWasmImports = (swGlobal: SmartWeaveGlobal, wasmInstance: any): an
     },
     env: {
       abort(messagePtr, fileNamePtr, line, column) {
-        console.error('--------------------- Error message from AssemblyScript ----------------------');
-        console.error('  ' + wasmInstance.exports.__getString(messagePtr));
-        console.error('    In file "' + wasmInstance.exports.__getString(fileNamePtr) + '"');
-        console.error(`    on line ${line}, column ${column}.`);
-        console.error('------------------------------------------------------------------------------\n');
+        const message = wasmInstance.exports.__getString(messagePtr);
+        wasmLogger.error('--------------------- Error message from AssemblyScript ----------------------\n');
+        wasmLogger.error('  ' + message);
+        wasmLogger.error('    In file "' + wasmInstance.exports.__getString(fileNamePtr) + '"');
+        wasmLogger.error(`    on line ${line}, column ${column}.`);
+        wasmLogger.error('------------------------------------------------------------------------------\n');
+
+        throw new Error(message);
       }
     }
   };

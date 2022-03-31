@@ -1,5 +1,6 @@
 import {
   Benchmark,
+  EvaluationOptions,
   GQLEdgeInterface,
   GQLNodeInterface,
   InteractionsLoader,
@@ -78,7 +79,13 @@ export class RedstoneGatewayInteractionsLoader implements InteractionsLoader {
 
   private readonly logger = LoggerFactory.INST.create('RedstoneGatewayInteractionsLoader');
 
-  async load(contractId: string, fromBlockHeight: number, toBlockHeight: number): Promise<GQLEdgeInterface[]> {
+  async load(
+    contractId: string,
+    fromBlockHeight: number,
+    toBlockHeight: number,
+    evaluationOptions?: EvaluationOptions,
+    upToTransactionId?: string
+  ): Promise<GQLEdgeInterface[]> {
     this.logger.debug('Loading interactions: for ', { contractId, fromBlockHeight, toBlockHeight });
 
     const interactions: GQLEdgeInterface[] = [];
@@ -94,6 +101,7 @@ export class RedstoneGatewayInteractionsLoader implements InteractionsLoader {
           from: fromBlockHeight.toString(),
           to: toBlockHeight.toString(),
           page: (++page).toString(),
+          ...(upToTransactionId ? { upToTransactionId } : ''),
           ...(this.confirmationStatus && this.confirmationStatus.confirmed ? { confirmationStatus: 'confirmed' } : ''),
           ...(this.confirmationStatus && this.confirmationStatus.notCorrupted
             ? { confirmationStatus: 'not_corrupted' }

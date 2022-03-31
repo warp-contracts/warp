@@ -113,7 +113,7 @@ describe('Testing the SmartWeave client for AssemblyScript WASM contract', () =>
       function: 'increment'
     });
 
-    expect(result.gasUsed).toEqual(12316793);
+    expect(result.gasUsed).toEqual(12284877);
   });
 
   it('should return stable gas results', async () => {
@@ -128,7 +128,7 @@ describe('Testing the SmartWeave client for AssemblyScript WASM contract', () =>
     }
 
     results.forEach((result) => {
-      expect(result.gasUsed).toEqual(12316793);
+      expect(result.gasUsed).toEqual(12284877);
     });
   });
 

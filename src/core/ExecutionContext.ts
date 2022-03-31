@@ -58,4 +58,6 @@ export type ExecutionContext<State, Api = unknown> = {
   // we cannot cache at requested block height - as it may happen that after this state
   // evaluation - new transactions will be available on the same block height.
   containsInteractionsFromSequencer: boolean;
+
+  upToTransactionId?: string;
 };

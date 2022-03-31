@@ -11,6 +11,7 @@ export interface InteractionsLoader {
     contractId: string,
     fromBlockHeight: number,
     toBlockHeight: number,
-    evaluationOptions?: EvaluationOptions
+    evaluationOptions?: EvaluationOptions,
+    upToTransactionId?: string
   ): Promise<GQLEdgeInterface[]>;
 }

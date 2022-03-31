@@ -1,7 +1,6 @@
 import { BlockHeightKey, MemBlockHeightSwCache } from '@smartweave/cache';
 import { LoggerFactory } from '@smartweave/logging';
 import { Knex } from 'knex';
-import { createHash } from 'crypto';
 import { StateCache } from '@smartweave';
 import stringify from 'safe-stable-stringify';
 
@@ -63,9 +62,8 @@ export class KnexStateCache extends MemBlockHeightSwCache<StateCache<any>> {
       await knex.schema.createTable('states', (table) => {
         table.string('contract_id', 64).notNullable().index();
         table.integer('height').notNullable().index();
-        table.string('hash').notNullable().unique();
         table.text('state').notNullable();
-        table.unique(['contract_id', 'height', 'hash'], { indexName: 'states_composite_index' });
+        table.unique(['contract_id', 'height'], { indexName: 'states_composite_index' });
       });
     }
 
@@ -98,24 +96,15 @@ export class KnexStateCache extends MemBlockHeightSwCache<StateCache<any>> {
 
           const jsonState = stringify(cachedValue);
 
-          // note: cannot reuse:
-          // "The Hash object can not be used again after hash.digest() method has been called.
-          // Multiple calls will cause an error to be thrown."
-          const hash = createHash('sha256');
-
-          hash.update(`${contractTxId}|${cachedHeight}|${jsonState}`);
-          const digest = hash.digest('hex');
-
           // FIXME: batch insert
           await this.knex
             .insert({
               contract_id: contractTxId,
               height: cachedHeight,
-              hash: digest,
               state: jsonState
             })
             .into('states')
-            .onConflict(['contract_id', 'height', 'hash'])
+            .onConflict(['contract_id', 'height'])
             .merge();
           this.lastFlushHeight.set(contractTxId, cachedHeight);
         }
