@@ -111,6 +111,7 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
         input
       });
 
+      // The contract that we want to call and modify its state
       const calleeContract = executionContext.smartweave.contract(
         contractTxId,
         executionContext.contract,

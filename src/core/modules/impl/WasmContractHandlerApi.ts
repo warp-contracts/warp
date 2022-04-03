@@ -42,6 +42,8 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
       this.swGlobal.gasUsed = 0;
 
       this.assignReadContractState<Input>(executionContext, currentTx, currentResult, interactionTx);
+      this.assignWrite(executionContext, currentTx);
+
       const handlerResult = await this.doHandle(interaction);
 
       return {
@@ -208,6 +210,49 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
       // but this (i.e. returning always stateWithValidity from here) would break backwards compatibility
       // in current contract's source code..:/
       return returnValidity ? deepCopy(stateWithValidity) : deepCopy(stateWithValidity.state);
+    };
+  }
+
+  private assignWrite(executionContext: ExecutionContext<State>, currentTx: CurrentTx[]) {
+    this.swGlobal.contracts.write = async <Input = unknown>(
+      contractTxId: string,
+      input: Input
+    ): Promise<InteractionResult<unknown, unknown>> => {
+      if (!executionContext.evaluationOptions.internalWrites) {
+        throw new Error("Internal writes feature switched off. Change EvaluationOptions.internalWrites flag to 'true'");
+      }
+
+      this.logger.debug('swGlobal.write call:', {
+        from: this.contractDefinition.txId,
+        to: contractTxId,
+        input
+      });
+
+      const calleeContract = executionContext.smartweave.contract(
+        contractTxId,
+        executionContext.contract,
+        this.swGlobal._activeTx
+      );
+
+      const result = await calleeContract.dryWriteFromTx<Input>(input, this.swGlobal._activeTx, [
+        ...(currentTx || []),
+        {
+          contractTxId: this.contractDefinition.txId,
+          interactionTxId: this.swGlobal.transaction.id
+        }
+      ]);
+
+      this.logger.debug('Cache result?:', !this.swGlobal._activeTx.dry);
+      await executionContext.smartweave.stateEvaluator.onInternalWriteStateUpdate(
+        this.swGlobal._activeTx,
+        contractTxId,
+        {
+          state: result.state as State,
+          validity: {}
+        }
+      );
+
+      return result;
     };
   }
 }
