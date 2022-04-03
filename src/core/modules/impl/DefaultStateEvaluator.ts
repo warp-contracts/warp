@@ -54,7 +54,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     executionContext: ExecutionContext<State, HandlerApi<State>>,
     currentTx: CurrentTx[]
   ): Promise<EvalStateResult<State>> {
-    const stateEvaluationBenchmark = Benchmark.measure();
     const { ignoreExceptions, stackTrace, internalWrites } = executionContext.evaluationOptions;
     const { contract, contractDefinition, sortedInteractions } = executionContext;
 
@@ -129,6 +128,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         if (newState !== null) {
           currentState = newState.cachedValue.state;
+          // we need to update the state in the wasm module
+          executionContext?.handler.initState(currentState);
           validity[interactionTx.id] = newState.cachedValue.validity[interactionTx.id];
 
           const toCache = new EvalStateResult(currentState, validity);

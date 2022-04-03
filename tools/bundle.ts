@@ -13,7 +13,7 @@ import { TsLogFactory } from '../src/logging/node/TsLogFactory';
 const logger = LoggerFactory.INST.create('Contract');
 
 //LoggerFactory.use(new TsLogFactory());
-//LoggerFactory.INST.logLevel('error');
+LoggerFactory.INST.logLevel('error');
 LoggerFactory.INST.logLevel('info', 'Contract');
 LoggerFactory.INST.logLevel('error', 'RedstoneGatewayInteractionsLoader');
 LoggerFactory.INST.logLevel('error', 'DefaultStateEvaluator');
@@ -40,9 +40,8 @@ async function main() {
   const jwk = readJSON('../redstone-node/.secrets/redstone-jwk.json');
   // connecting to a given contract
   const token = smartweave
-    .contract("-8A6RexFkpfWwuyVO98wzSFZh0d6VJuI-buTJvlwOJQ")
+    .contract("_IHQHkZrZfB3lN69Hw3xTRcHv2cBiNgh1HG1WENydP4")
     .setEvaluationOptions({
-      useVM2: true,
       sequencerAddress: "https://gateway.redstone.finance/"
     })
     // connecting wallet to a contract. It is required before performing any "writeInteraction"
@@ -51,16 +50,23 @@ async function main() {
 
   const result1 = await token.readState();
 
+  console.log(result1.state);
   console.log(token.lastReadStateStats());
 
   //logger.info("Amount of computed interactions before 'bundleInteraction':", Object.keys(result1.validity).length);
 
-  /*for (let i = 0 ; i < 100 ; i++) {
+  /*for (let i = 0 ; i < 1100 ; i++) {
     console.log(`mint ${i + 1}`);
-    const result = await token.bundleInteraction<any>({
-      function: "mint"
-    });
-    await sleep(1000);
+    try {
+      const result = await token.bundleInteraction<any>({
+        function: "transfer",
+        target: "33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA",
+        qty: 10
+      });
+    } catch(e:any) {
+
+    }
+    //await sleep(1);
   }*/
 
 
