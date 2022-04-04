@@ -40,25 +40,28 @@ async function main() {
   const jwk = readJSON('../redstone-node/.secrets/redstone-jwk.json');
   // connecting to a given contract
   const token = smartweave
-    .contract("KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY")
+    .contract("-8A6RexFkpfWwuyVO98wzSFZh0d6VJuI-buTJvlwOJQ")
     .setEvaluationOptions({
+      useVM2: true,
       sequencerAddress: "https://gateway.redstone.finance/"
     })
     // connecting wallet to a contract. It is required before performing any "writeInteraction"
     // calling "writeInteraction" without connecting to a wallet first will cause a runtime error.
     .connect(jwk);
 
-  //const result1 = await token.readState();
+  const result1 = await token.readState();
+
+  console.log(token.lastReadStateStats());
 
   //logger.info("Amount of computed interactions before 'bundleInteraction':", Object.keys(result1.validity).length);
 
-  for (let i = 0 ; i < 100 ; i++) {
+  /*for (let i = 0 ; i < 100 ; i++) {
     console.log(`mint ${i + 1}`);
     const result = await token.bundleInteraction<any>({
       function: "mint"
     });
     await sleep(1000);
-  }
+  }*/
 
 
 
