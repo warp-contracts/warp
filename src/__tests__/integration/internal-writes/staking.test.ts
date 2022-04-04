@@ -196,8 +196,7 @@ describe('Testing internal writes', () => {
     });
   });
 
-  // TODO: issues with ArLocal - https://github.com/textury/arlocal/issues/83
-  xdescribe('with read states at the end', () => {
+  describe('with read states at the end', () => {
     beforeAll(async () => {
       await deployContracts();
     });
