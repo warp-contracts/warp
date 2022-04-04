@@ -36,8 +36,6 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
     currentResult: EvalStateResult<State>,
     interactionData: InteractionData<Input>
   ): Promise<InteractionResult<State, Result>> {
-    const contractLogger = LoggerFactory.INST.create('Contract');
-
     const { timeoutId, timeoutPromise } = timeout(
       executionContext.evaluationOptions.maxInteractionEvaluationTimeSeconds
     );
@@ -47,6 +45,7 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
 
       const stateCopy = deepCopy(currentResult.state, executionContext.evaluationOptions.useFastCopy);
       this.swGlobal._activeTx = interactionTx;
+      this.swGlobal.caller = interaction.caller; // either contract tx id (for internal writes) or transaction.owner
       this.assignReadContractState<Input>(executionContext, currentTx, currentResult, interactionTx);
       this.assignViewContractState<Input>(executionContext);
       this.assignWrite(executionContext, currentTx);

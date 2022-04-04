@@ -49,6 +49,8 @@ export class SmartWeaveGlobal {
 
   _activeTx?: GQLNodeInterface;
 
+  caller?: string;
+
   constructor(arweave: Arweave, contract: { id: string; owner: string }, gasLimit = Number.MAX_SAFE_INTEGER) {
     this.gasUsed = 0;
     this.gasLimit = gasLimit;
