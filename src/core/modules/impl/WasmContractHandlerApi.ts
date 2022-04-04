@@ -36,6 +36,7 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
       const { interaction, interactionTx, currentTx } = interactionData;
 
       this.swGlobal._activeTx = interactionTx;
+      this.swGlobal.caller = interaction.caller; // either contract tx id (for internal writes) or transaction.owner
       // TODO: this should be rather set on the HandlerFactory level..
       //  but currently no access evaluationOptions there
       this.swGlobal.gasLimit = executionContext.evaluationOptions.gasLimit;
