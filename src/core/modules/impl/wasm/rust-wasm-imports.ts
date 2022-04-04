@@ -50,13 +50,13 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance, dtorVal
       }
     },
     SmartWeave: {
-      caller: function(): string {
+      caller: function (): string {
         return swGlobal.caller;
       },
       readContractState: async function (contractTxId): Promise<any> {
         return await swGlobal.contracts.readContractState(contractTxId);
       },
-      write: async function(contractId: string, input: any) {
+      write: async function (contractId: string, input: any) {
         return await swGlobal.contracts.write(contractId, input);
       }
     }
@@ -104,14 +104,18 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance, dtorVal
     __wbg_viewContractState: function (arg0, arg1) {
       // TODO
     },
-    __wbg_caller: function(arg0) {
+    __wbg_caller: function (arg0) {
       var ret = rawImports.SmartWeave.caller();
-      var ptr0 = passStringToWasm0(ret, wasmInstance.exports.__wbindgen_malloc, wasmInstance.exports.__wbindgen_realloc);
+      var ptr0 = passStringToWasm0(
+        ret,
+        wasmInstance.exports.__wbindgen_malloc,
+        wasmInstance.exports.__wbindgen_realloc
+      );
       var len0 = WASM_VECTOR_LEN;
       getInt32Memory0()[arg0 / 4 + 1] = len0;
       getInt32Memory0()[arg0 / 4 + 0] = ptr0;
     },
-    __wbg_write: function(arg0, arg1, arg2) {
+    __wbg_write: function (arg0, arg1, arg2) {
       var ret = rawImports.SmartWeave.write(getStringFromWasm0(arg0, arg1), takeObject(arg2));
       return addHeapObject(ret);
     },
