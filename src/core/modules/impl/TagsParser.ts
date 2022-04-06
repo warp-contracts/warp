@@ -47,6 +47,12 @@ export class TagsParser {
     );
   }
 
+  getInteractWritesContracts(interactionTransaction: GQLEdgeInterface): string[] {
+    return interactionTransaction.node.tags
+      .filter((tag) => tag.name === SmartWeaveTags.INTERACT_WRITE)
+      .map((t) => t.value);
+  }
+
   getContractTag(interactionTransaction: GQLEdgeInterface): string {
     return interactionTransaction.node.tags.find((tag) => tag.name === SmartWeaveTags.CONTRACT_TX_ID)?.value;
   }

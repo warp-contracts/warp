@@ -254,4 +254,64 @@ describe('TagsParser', () => {
     expect(input1).toBeUndefined();
     expect(allContracts).toEqual(new Map());
   });
+
+  it('should return single interact write contract', () => {
+    // given
+    const interactionTx = {
+      node: {
+        tags: [
+          { name: 'foo', value: 'bar' },
+          { name: 'duh', value: 'blah' },
+          { name: 'Interact-Write', value: 'Contract A' },
+          { name: 'one', value: 'two' }
+        ]
+      }
+    };
+
+    // when
+    const result = sut.getInteractWritesContracts(interactionTx as GQLEdgeInterface);
+    // then
+    expect(result).toEqual(['Contract A']);
+  });
+
+  it('should return multiple interact write contracts', () => {
+    // given
+    const interactionTx = {
+      node: {
+        tags: [
+          { name: 'foo', value: 'bar' },
+          { name: 'Interact-Write', value: 'Contract C' },
+          { name: 'Interact-Write', value: 'Contract D' },
+          { name: 'duh', value: 'blah' },
+          { name: 'Interact-Write', value: 'Contract A' },
+          { name: 'one', value: 'two' },
+          { name: 'Interact-Write', value: 'Contract E' }
+        ]
+      }
+    };
+
+    // when
+    const result = sut.getInteractWritesContracts(interactionTx as GQLEdgeInterface);
+    // then
+    expect(result).toEqual(['Contract C', 'Contract D', 'Contract A', 'Contract E']);
+  });
+
+  it('should return empty interact write contract', () => {
+    // given
+    const interactionTx = {
+      node: {
+        tags: [
+          { name: 'foo', value: 'bar' },
+          { name: 'duh', value: 'blah' },
+          { name: 'one', value: 'two' },
+          { name: 'Interact-Writee', value: 'Contract E' }
+        ]
+      }
+    };
+
+    // when
+    const result = sut.getInteractWritesContracts(interactionTx as GQLEdgeInterface);
+    // then
+    expect(result).toEqual([]);
+  });
 });
