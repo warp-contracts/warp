@@ -50,6 +50,7 @@ export interface GQLNodeInterface {
   sortKey?: string; // added dynamically by RedStone Sequencer
   confirmationStatus?: string;
   source?: string;
+  bundlerTxId?: string;
 }
 
 export interface GQLEdgeInterface {
