@@ -207,7 +207,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     }
 
     const blockHeight = transaction.block.height;
-    if (requestedBlockHeight !== null && blockHeight >= requestedBlockHeight - 2 && containsInteractionsFromSequencer) {
+    if (requestedBlockHeight !== null && blockHeight >= requestedBlockHeight - 1 && containsInteractionsFromSequencer) {
       this.cLogger.debug('skipping caching of the last blocks');
       return;
     }

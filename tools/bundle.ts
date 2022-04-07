@@ -9,6 +9,8 @@ import {
 } from '../src';
 import { readJSON } from '../../redstone-smartweave-examples/src/_utils';
 import { TsLogFactory } from '../src/logging/node/TsLogFactory';
+import path from "path";
+import knex from "knex";
 
 const logger = LoggerFactory.INST.create('Contract');
 
@@ -16,8 +18,8 @@ const logger = LoggerFactory.INST.create('Contract');
 LoggerFactory.INST.logLevel('error');
 LoggerFactory.INST.logLevel('info', 'Contract');
 LoggerFactory.INST.logLevel('error', 'RedstoneGatewayInteractionsLoader');
-LoggerFactory.INST.logLevel('error', 'DefaultStateEvaluator');
-LoggerFactory.INST.logLevel('error', 'LexicographicalInteractionsSorter');
+LoggerFactory.INST.logLevel('debug', 'DefaultStateEvaluator');
+LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
 
 async function main() {
   const arweave = Arweave.init({
@@ -28,27 +30,33 @@ async function main() {
     logging: false // Enable network request logging
   });
 
-  const redstoneLoader = new RedstoneGatewayInteractionsLoader('http://localhost:5666', {notCorrupted: true});
 
-  const smartweave = SmartWeaveNodeFactory.memCachedBased(arweave)
-    .setInteractionsLoader(redstoneLoader)
-    .setDefinitionLoader(
-      new RedstoneGatewayContractDefinitionLoader('http://localhost:5666', arweave, new MemCache())
-    )
+  const cacheDir = path.join(__dirname, 'db');
+  const knexConfig = knex({
+    client: 'sqlite3',
+    connection: {
+      filename: `${cacheDir}/db.sqlite`
+    },
+    useNullAsDefault: true
+  });
+
+  const smartweave = (await SmartWeaveNodeFactory.knexCachedBased(arweave, knexConfig))
+    .useRedStoneGateway()
     .build();
 
   const jwk = readJSON('../redstone-node/.secrets/redstone-jwk.json');
   // connecting to a given contract
   const token = smartweave
-    .contract("_IHQHkZrZfB3lN69Hw3xTRcHv2cBiNgh1HG1WENydP4")
-    .setEvaluationOptions({
-      sequencerAddress: "http://localhost:5666/"
-    })
+    .contract("_iWbqZMSq_maTbNQKRZ-S_is0Ilj5L0y9UJslZBChnk")
     // connecting wallet to a contract. It is required before performing any "writeInteraction"
     // calling "writeInteraction" without connecting to a wallet first will cause a runtime error.
     .connect(jwk);
 
-  const result = await token.writeInteraction({
+  const {state} = await token.readState();
+
+  logger.info("State", state);
+
+  /*const result = await token.writeInteraction({
     function: "transfer",
     target: "33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA",
     qty: 10
@@ -59,9 +67,9 @@ async function main() {
     name: SmartWeaveTags.INTERACT_WRITE,
     value: "4MnaOd-GvsE5iVQD4OhdY8DOrH3vo0QEqOw31HeIzQ0"
   }
-  ]);
+  ]);*/
 
-  console.log(result);
+  //console.log(result);
 
   //console.log(await redstoneLoader.load("33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA", 0, 1_000_000));
 
