@@ -33,7 +33,7 @@ import {
 import { TransactionStatusResponse } from 'arweave/node/transactions';
 import { NetworkInfoInterface } from 'arweave/node/network';
 import stringify from 'safe-stable-stringify';
-import { createHash } from 'crypto';
+import * as crypto from 'crypto';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -677,7 +677,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     // note: cannot reuse:
     // "The Hash object can not be used again after hash.digest() method has been called.
     // Multiple calls will cause an error to be thrown."
-    const hash = createHash('sha256');
+    const hash = crypto.createHash('sha256');
     hash.update(jsonState);
 
     return hash.digest('hex');

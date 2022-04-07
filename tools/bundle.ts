@@ -28,10 +28,10 @@ async function main() {
     logging: false // Enable network request logging
   });
 
+  const redstoneLoader = new RedstoneGatewayInteractionsLoader('http://localhost:5666', {notCorrupted: true});
+
   const smartweave = SmartWeaveNodeFactory.memCachedBased(arweave)
-    .setInteractionsLoader(
-      new RedstoneGatewayInteractionsLoader('http://localhost:5666', { notCorrupted: true })
-    )
+    .setInteractionsLoader(redstoneLoader)
     .setDefinitionLoader(
       new RedstoneGatewayContractDefinitionLoader('http://localhost:5666', arweave, new MemCache())
     )
@@ -62,6 +62,8 @@ async function main() {
   ]);
 
   console.log(result);
+
+  //console.log(await redstoneLoader.load("33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA", 0, 1_000_000));
 
 
   // UjZsNC0t5Ex7TjU8FIGLZcn_b3Af9OoNBuVmTAgp2_U
