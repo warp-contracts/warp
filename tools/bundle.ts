@@ -5,7 +5,7 @@ import {
   MemCache,
   RedstoneGatewayContractDefinitionLoader,
   RedstoneGatewayInteractionsLoader, sleep,
-  SmartWeaveNodeFactory
+  SmartWeaveNodeFactory, SmartWeaveTags
 } from '../src';
 import { readJSON } from '../../redstone-smartweave-examples/src/_utils';
 import { TsLogFactory } from '../src/logging/node/TsLogFactory';
@@ -30,10 +30,10 @@ async function main() {
 
   const smartweave = SmartWeaveNodeFactory.memCachedBased(arweave)
     .setInteractionsLoader(
-      new RedstoneGatewayInteractionsLoader('https://gateway.redstone.finance/', { notCorrupted: true })
+      new RedstoneGatewayInteractionsLoader('http://localhost:5666', { notCorrupted: true })
     )
     .setDefinitionLoader(
-      new RedstoneGatewayContractDefinitionLoader('https://gateway.redstone.finance', arweave, new MemCache())
+      new RedstoneGatewayContractDefinitionLoader('http://localhost:5666', arweave, new MemCache())
     )
     .build();
 
@@ -42,16 +42,33 @@ async function main() {
   const token = smartweave
     .contract("_IHQHkZrZfB3lN69Hw3xTRcHv2cBiNgh1HG1WENydP4")
     .setEvaluationOptions({
-      sequencerAddress: "https://gateway.redstone.finance/"
+      sequencerAddress: "http://localhost:5666/"
     })
     // connecting wallet to a contract. It is required before performing any "writeInteraction"
     // calling "writeInteraction" without connecting to a wallet first will cause a runtime error.
     .connect(jwk);
 
-  const result1 = await token.readState();
+  const result = await token.writeInteraction({
+    function: "transfer",
+    target: "33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA",
+    qty: 10
+  }, [{
+    name: SmartWeaveTags.INTERACT_WRITE,
+    value: "33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA"
+  },{
+    name: SmartWeaveTags.INTERACT_WRITE,
+    value: "4MnaOd-GvsE5iVQD4OhdY8DOrH3vo0QEqOw31HeIzQ0"
+  }
+  ]);
+
+  console.log(result);
+
+
+  // UjZsNC0t5Ex7TjU8FIGLZcn_b3Af9OoNBuVmTAgp2_U
+  /*const result1 = await token.readState();
 
   console.log(result1.state);
-  console.log(token.lastReadStateStats());
+  console.log(token.lastReadStateStats());*/
 
   //logger.info("Amount of computed interactions before 'bundleInteraction':", Object.keys(result1.validity).length);
 

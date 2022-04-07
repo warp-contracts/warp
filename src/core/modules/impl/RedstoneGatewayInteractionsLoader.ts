@@ -101,6 +101,7 @@ export class RedstoneGatewayInteractionsLoader implements InteractionsLoader {
           from: fromBlockHeight.toString(),
           to: toBlockHeight.toString(),
           page: (++page).toString(),
+          minimize: 'true',
           ...(upToTransactionId ? { upToTransactionId } : ''),
           ...(this.confirmationStatus && this.confirmationStatus.confirmed ? { confirmationStatus: 'confirmed' } : ''),
           ...(this.confirmationStatus && this.confirmationStatus.notCorrupted
