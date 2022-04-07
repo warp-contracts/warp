@@ -101,7 +101,7 @@ describe('RedstoneGatewayInteractionsLoader -> load', () => {
   it('should be called with correct params', async () => {
     const loader = new RedstoneGatewayInteractionsLoader('http://baseUrl');
     await loader.load(contractId, fromBlockHeight, toBlockHeight);
-    expect(fetchMock).toBeCalledWith(`${baseUrl}&page=1`);
+    expect(fetchMock).toBeCalledWith(`${baseUrl}&page=1&minimize=true`);
   });
   it('should be called accordingly to the amount of pages', async () => {
     const fetchMock = jest.spyOn(global, 'fetch').mockImplementation(
@@ -114,22 +114,22 @@ describe('RedstoneGatewayInteractionsLoader -> load', () => {
     );
     const loader = new RedstoneGatewayInteractionsLoader('http://baseUrl');
     await loader.load(contractId, fromBlockHeight, toBlockHeight);
-    expect(fetchMock).toBeCalledWith(`${baseUrl}&page=1`);
-    expect(fetchMock).toBeCalledWith(`${baseUrl}&page=2`);
-    expect(fetchMock).toBeCalledWith(`${baseUrl}&page=3`);
-    expect(fetchMock).toBeCalledWith(`${baseUrl}&page=4`);
-    expect(fetchMock).toBeCalledWith(`${baseUrl}&page=4`);
+    expect(fetchMock).toBeCalledWith(`${baseUrl}&page=1&minimize=true`);
+    expect(fetchMock).toBeCalledWith(`${baseUrl}&page=2&minimize=true`);
+    expect(fetchMock).toBeCalledWith(`${baseUrl}&page=3&minimize=true`);
+    expect(fetchMock).toBeCalledWith(`${baseUrl}&page=4&minimize=true`);
+    expect(fetchMock).toBeCalledWith(`${baseUrl}&page=4&minimize=true`);
     expect(fetchMock).toHaveBeenCalledTimes(5);
   });
   it('should be called with confirmationStatus set to "confirmed"', async () => {
     const loader = new RedstoneGatewayInteractionsLoader('http://baseUrl', { confirmed: true });
     await loader.load(contractId, fromBlockHeight, toBlockHeight);
-    expect(fetchMock).toBeCalledWith(`${baseUrl}&page=1&confirmationStatus=confirmed`);
+    expect(fetchMock).toBeCalledWith(`${baseUrl}&page=1&minimize=true&confirmationStatus=confirmed`);
   });
   it('should be called with confirmationStatus set to "not_corrupted"', async () => {
     const loader = new RedstoneGatewayInteractionsLoader('http://baseUrl', { notCorrupted: true });
     await loader.load(contractId, fromBlockHeight, toBlockHeight);
-    expect(fetchMock).toBeCalledWith(`${baseUrl}&page=1&confirmationStatus=not_corrupted`);
+    expect(fetchMock).toBeCalledWith(`${baseUrl}&page=1&minimize=true&confirmationStatus=not_corrupted`);
   });
   it('should throw an error in case of timeout', async () => {
     jest.spyOn(global, 'fetch').mockImplementation(() => Promise.reject({ status: 504, ok: false }));
