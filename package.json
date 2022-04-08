@@ -1,6 +1,6 @@
 {
   "name": "redstone-smartweave",
-  "version": "0.4.67",
+  "version": "0.4.68",
   "description": "An implementation of the SmartWeave smart contract protocol.",
   "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",
