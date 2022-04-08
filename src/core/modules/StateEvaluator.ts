@@ -98,7 +98,7 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
     saveState: false
   };
 
-  sequencerAddress = 'https://gateway.redstone.finance/';
+  bundlerAddress = 'https://gateway.redstone.finance/';
 
   gasLimit = Number.MAX_SAFE_INTEGER;
 
@@ -151,7 +151,7 @@ export interface EvaluationOptions {
     saveState: boolean;
   };
 
-  sequencerAddress: string;
+  bundlerAddress: string;
 
   gasLimit: number;
 

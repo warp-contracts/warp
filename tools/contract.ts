@@ -67,7 +67,7 @@ async function main() {
   const contract = smartweave
     .contract("fnVpGWzMFHVv1BG3ejA0NbbCZ2OzM0LYukDyJpTAeyM")
     .setEvaluationOptions({
-      sequencerAddress: 'http://localhost:5666/',
+      bundlerAddress: 'http://localhost:5666/',
       useFastCopy: true
     })
     .connect(jwk);

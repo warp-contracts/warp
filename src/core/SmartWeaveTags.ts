@@ -15,6 +15,5 @@ export enum SmartWeaveTags {
   INTERACT_WRITE = 'Interact-Write',
   WASM_LANG = 'Wasm-Lang',
   WASM_LANG_VERSION = 'Wasm-Lang-Version',
-  CONTRACT_TYPE = 'Contract-Type',
   WASM_META = 'Wasm-Meta'
 }

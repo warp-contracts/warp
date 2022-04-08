@@ -66,44 +66,38 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
     };
 
     // deploying contract using the new SDK.
-    contractTxId = await smartweave.createContract.deploy(
-      {
-        wallet,
-        initState: JSON.stringify(initialState),
-        src: contractSrc
-      },
-      path.join(__dirname, '../data/wasm/go/src')
-    );
+    contractTxId = await smartweave.createContract.deploy({
+      wallet,
+      initState: JSON.stringify(initialState),
+      src: contractSrc,
+      wasmSrcCodeDir: path.join(__dirname, '../data/wasm/go/src')
+    });
 
-    properForeignContractTxId = await smartweave.createContract.deploy(
-      {
-        wallet,
-        initState: JSON.stringify({
-          ...initialState,
-          ...{
-            ticker: 'FOREIGN_PST',
-            name: 'foreign contract'
-          }
-        }),
-        src: contractSrc
-      },
-      path.join(__dirname, '../data/wasm/go/src')
-    );
+    properForeignContractTxId = await smartweave.createContract.deploy({
+      wallet,
+      initState: JSON.stringify({
+        ...initialState,
+        ...{
+          ticker: 'FOREIGN_PST',
+          name: 'foreign contract'
+        }
+      }),
+      src: contractSrc,
+      wasmSrcCodeDir: path.join(__dirname, '../data/wasm/go/src')
+    });
 
-    wrongForeignContractTxId = await smartweave.createContract.deploy(
-      {
-        wallet,
-        initState: JSON.stringify({
-          ...initialState,
-          ...{
-            ticker: 'FOREIGN_PST_2',
-            name: 'foreign contract 2'
-          }
-        }),
-        src: contractSrc
-      },
-      path.join(__dirname, '../data/wasm/go/src')
-    );
+    wrongForeignContractTxId = await smartweave.createContract.deploy({
+      wallet,
+      initState: JSON.stringify({
+        ...initialState,
+        ...{
+          ticker: 'FOREIGN_PST_2',
+          name: 'foreign contract 2'
+        }
+      }),
+      src: contractSrc,
+      wasmSrcCodeDir: path.join(__dirname, '../data/wasm/go/src')
+    });
 
     // connecting to the PST contract
     pst = smartweave.pst(contractTxId);
@@ -122,8 +116,6 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
     const contractTx = await arweave.transactions.get(contractTxId);
 
     expect(contractTx).not.toBeNull();
-    expect(getTag(contractTx, SmartWeaveTags.CONTRACT_TYPE)).toEqual('wasm');
-    expect(getTag(contractTx, SmartWeaveTags.WASM_LANG)).toEqual('go');
 
     const contractSrcTx = await arweave.transactions.get(getTag(contractTx, SmartWeaveTags.CONTRACT_SRC_TX_ID));
     expect(getTag(contractSrcTx, SmartWeaveTags.CONTENT_TYPE)).toEqual('application/wasm');

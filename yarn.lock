@@ -6699,7 +6699,26 @@ slice-ansi@^4.0.0:
     astral-regex "^2.0.0"
     is-fullwidth-code-point "^3.0.0"
 
-smartweave@0.4.46, smartweave@^0.4.46:
+smartweave@0.4.48:
+  version "0.4.48"
+  resolved "https://registry.yarnpkg.com/smartweave/-/smartweave-0.4.48.tgz#11798272b7afcf2af65ebce07e234647e4614c70"
+  integrity sha512-cP9dpcpyy/k2LQm7jvNrmvvsf3e4/fP3iEc4IpZOONRPHfy/C0hDJ/VMqGz+9KlSXnRnJDYMa9/fcRHoYmu4Mg==
+  dependencies:
+    "@types/clui" "^0.3.0"
+    "@types/inquirer" "^7.3.1"
+    "@weavery/clarity" "^0.1.5"
+    arweave "^1.10.23"
+    bignumber.js "^9.0.1"
+    chalk "^4.1.2"
+    clui "^0.3.6"
+    figlet "^1.5.2"
+    inquirer "^8.1.2"
+    json-beautify "^1.1.1"
+    loglevel "^1.7.0"
+    sentencer "^0.2.1"
+    yargs "^17.1.1"
+
+smartweave@^0.4.46:
   version "0.4.46"
   resolved "https://registry.yarnpkg.com/smartweave/-/smartweave-0.4.46.tgz#55e2eb0e006e6ca84e5eb99f1bea7f19ac8a98db"
   integrity sha512-wZMCBRz5n+uElzdpEbQOvHs32q1rnAPVMlR57gtoKSSAtMolUVjjlcl6WK2RBU5doi9PQdUEHB/c7nLRwgfSew==

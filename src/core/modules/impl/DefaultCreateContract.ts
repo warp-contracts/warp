@@ -7,6 +7,8 @@ import metering from 'redstone-wasm-metering';
 import fs, { PathOrFileDescriptor } from 'fs';
 import { matchMutClosureDtor } from './wasm/wasm-bindgen-tools';
 import { parseInt } from 'lodash';
+import Transaction from "arweave/node/lib/transaction";
+import stringify from "safe-stable-stringify";
 
 const wasmTypeMapping: Map<number, string> = new Map([
   [1, 'assemblyscript'],
@@ -23,7 +25,7 @@ export class DefaultCreateContract implements CreateContract {
     this.deployFromSourceTx = this.deployFromSourceTx.bind(this);
   }
 
-  async deploy(contractData: ContractData): Promise<string> {
+  async deploy(contractData: ContractData, useBundler = false): Promise<string> {
     this.logger.debug('Creating new contract');
 
     const { wallet, src, initState, tags, transfer, wasmSrcCodeDir, wasmGlueCode } = contractData;
@@ -31,7 +33,7 @@ export class DefaultCreateContract implements CreateContract {
     let srcTx;
     let wasmLang = null;
     let wasmVersion = null;
-    let metadata = {};
+    const metadata = {};
 
     const data: Buffer[] = [];
 
@@ -102,28 +104,35 @@ export class DefaultCreateContract implements CreateContract {
     }
 
     await this.arweave.transactions.sign(srcTx, wallet);
-
     this.logger.debug('Posting transaction with source');
-    const response = await this.arweave.transactions.post(srcTx);
 
-    if (response.status === 200 || response.status === 208) {
+    // note: in case of useBundler = true, we're posting both
+    // src tx and contract tx in one request.
+    let responseOk = true;
+    if (!useBundler) {
+      const response = await this.arweave.transactions.post(srcTx);
+      responseOk = response.status === 200 || response.status === 208;
+    }
+
+    if (responseOk) {
       return await this.deployFromSourceTx({
         srcTxId: srcTx.id,
         wallet,
         initState,
-        contractType,
-        wasmLang,
         tags,
-        transfer
-      });
+        transfer,
+      }, useBundler, srcTx);
     } else {
-      throw new Error(`Unable to write Contract Source: ${response?.statusText}`);
+      throw new Error(`Unable to write Contract Source`);
     }
   }
 
-  async deployFromSourceTx(contractData: FromSrcTxContractData): Promise<string> {
-    this.logger.debug('Creating new contract from src tx');
+  async deployFromSourceTx(
+    contractData: FromSrcTxContractData,
+    useBundler = false,
+    srcTx: Transaction = null): Promise<string> {
 
+    this.logger.debug('Creating new contract from src tx');
     const { wallet, srcTxId, initState, tags, transfer } = contractData;
 
     let contractTX = await this.arweave.createTransaction({ data: initState }, wallet);
@@ -150,18 +159,51 @@ export class DefaultCreateContract implements CreateContract {
     contractTX.addTag(SmartWeaveTags.CONTRACT_SRC_TX_ID, srcTxId);
     contractTX.addTag(SmartWeaveTags.SDK, 'RedStone');
     contractTX.addTag(SmartWeaveTags.CONTENT_TYPE, 'application/json');
-    contractTX.addTag(SmartWeaveTags.CONTRACT_TYPE, contractData.contractType);
-    if (contractData.contractType == 'wasm') {
-      contractTX.addTag(SmartWeaveTags.WASM_LANG, contractData.wasmLang);
-    }
 
     await this.arweave.transactions.sign(contractTX, wallet);
 
-    const response = await this.arweave.transactions.post(contractTX);
-    if (response.status === 200 || response.status === 208) {
+    let responseOk;
+    if (useBundler) {
+      const result = await this.post(contractTX, srcTx);
+      this.logger.debug(result);
+      responseOk = true;
+    } else {
+      const response = await this.arweave.transactions.post(contractTX);
+      responseOk = response.status === 200 || response.status === 208;
+    }
+
+    if (responseOk) {
       return contractTX.id;
     } else {
-      throw new Error(`Unable to write Contract Source: ${response?.statusText}`);
+      throw new Error(`Unable to write Contract`);
+    }
+  }
+
+  private async post(contractTx: Transaction, srcTx: Transaction = null): Promise<any> {
+    let body: any = {
+      contractTx
+    }
+    if (srcTx) {
+      body = {
+        ...body,
+        srcTx
+      }
+    }
+
+    const response = await fetch(`https://gateway.redstone.finance/gateway/contracts/deploy`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers: {
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Content-Type': 'application/json',
+        Accept: 'application/json'
+      }
+    });
+
+    if (response.ok) {
+      return response.json();
+    } else {
+      throw new Error(`Error while posting contract ${response.statusText}`);
     }
   }
 

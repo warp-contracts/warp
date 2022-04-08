@@ -95,7 +95,9 @@ export class ContractDefinitionLoader implements DefinitionLoader {
       minFee,
       owner,
       contractType,
-      metadata: srcMetaData
+      metadata: srcMetaData,
+      contractTx: contractTx.toJSON(),
+      srcTx: contractSrcTx.toJSON()
     };
   }
 
