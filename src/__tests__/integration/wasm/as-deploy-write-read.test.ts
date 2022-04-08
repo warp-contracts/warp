@@ -113,8 +113,8 @@ describe('Testing the SmartWeave client for AssemblyScript WASM contract', () =>
       function: 'increment'
     });
 
-    expect(result.gasUsed).toBeGreaterThanOrEqual(12201781);
-    expect(result.gasUsed).toBeLessThanOrEqual(12284877);
+    expect(result.gasUsed).toBeGreaterThanOrEqual(12200000);
+    expect(result.gasUsed).toBeLessThanOrEqual(12410898);
   });
 
   it('should return stable gas results', async () => {
@@ -129,8 +129,8 @@ describe('Testing the SmartWeave client for AssemblyScript WASM contract', () =>
     }
 
     results.forEach((result) => {
-      expect(result.gasUsed).toBeGreaterThanOrEqual(12201781);
-      expect(result.gasUsed).toBeLessThanOrEqual(12284877);
+      expect(result.gasUsed).toBeGreaterThanOrEqual(12200000);
+      expect(result.gasUsed).toBeLessThanOrEqual(12410898);
     });
   });
 

@@ -21,6 +21,7 @@ import { rustWasmImports } from './wasm/rust-wasm-imports';
 import { Go } from './wasm/go-wasm-imports';
 import BigNumber from 'bignumber.js';
 import { NodeVM, VMScript } from 'vm2';
+import { Buffer as isomorphicBuffer } from 'redstone-isomorphic';
 
 class ContractError extends Error {
   constructor(message) {
@@ -62,10 +63,12 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
           const wasmInstanceExports = {
             exports: null
           };
-          wasmInstance = loader.instantiateSync(
-            contractDefinition.srcBinary,
-            asWasmImports(swGlobal, wasmInstanceExports)
-          );
+
+          const init = { status: 200, statusText: 'OK', headers: { 'Content-Type': 'application/wasm' } };
+          const response = new Response(contractDefinition.srcBinary, init);
+
+          // to make Chrome happy
+          wasmInstance = await loader.instantiateStreaming(response, asWasmImports(swGlobal, wasmInstanceExports));
           // note: well, exports are required by some imports
           // - e.g. those that use wasmModule.exports.__newString underneath (like Block.indep_hash)
           wasmInstanceExports.exports = wasmInstance.exports;
