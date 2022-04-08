@@ -23,10 +23,10 @@ export class DefaultCreateContract implements CreateContract {
     this.deployFromSourceTx = this.deployFromSourceTx.bind(this);
   }
 
-  async deploy(contractData: ContractData, wasmSrcCodeDir?: string, wasmGlueCodePath?: string): Promise<string> {
+  async deploy(contractData: ContractData): Promise<string> {
     this.logger.debug('Creating new contract');
 
-    const { wallet, src, initState, tags, transfer } = contractData;
+    const { wallet, src, initState, tags, transfer, wasmSrcCodeDir, wasmGlueCode } = contractData;
     const contractType: ContractType = src instanceof Buffer ? 'wasm' : 'js';
     let srcTx;
     let wasmLang = null;
@@ -76,10 +76,10 @@ export class DefaultCreateContract implements CreateContract {
       data.push(zippedSourceCode);
 
       if (wasmLang == 'rust') {
-        if (!wasmGlueCodePath) {
+        if (!wasmGlueCode) {
           throw new Error('No path to generated wasm-bindgen js code');
         }
-        const wasmBindgenSrc = fs.readFileSync(wasmGlueCodePath, 'utf-8');
+        const wasmBindgenSrc = fs.readFileSync(wasmGlueCode, 'utf-8');
         const dtor = matchMutClosureDtor(wasmBindgenSrc);
         metadata['dtor'] = parseInt(dtor);
         data.push(Buffer.from(wasmBindgenSrc));
