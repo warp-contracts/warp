@@ -72,47 +72,41 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     };
 
     // deploying contract using the new SDK.
-    contractTxId = await smartweave.createContract.deploy(
-      {
-        wallet,
-        initState: JSON.stringify(initialState),
-        src: contractSrc
-      },
-      path.join(__dirname, '../data/wasm/rust/src'),
-      path.join(__dirname, '../data/wasm/rust/rust-pst.js')
-    );
+    contractTxId = await smartweave.createContract.deploy({
+      wallet,
+      initState: JSON.stringify(initialState),
+      src: contractSrc,
+      wasmSrcCodeDir: path.join(__dirname, '../data/wasm/rust/src'),
+      wasmGlueCode: path.join(__dirname, '../data/wasm/rust/rust-pst.js')
+    });
 
-    properForeignContractTxId = await smartweave.createContract.deploy(
-      {
-        wallet,
-        initState: JSON.stringify({
-          ...initialState,
-          ...{
-            ticker: 'FOREIGN_PST',
-            name: 'foreign contract'
-          }
-        }),
-        src: contractSrc
-      },
-      path.join(__dirname, '../data/wasm/rust/src'),
-      path.join(__dirname, '../data/wasm/rust/rust-pst.js')
-    );
+    properForeignContractTxId = await smartweave.createContract.deploy({
+      wallet,
+      initState: JSON.stringify({
+        ...initialState,
+        ...{
+          ticker: 'FOREIGN_PST',
+          name: 'foreign contract'
+        }
+      }),
+      src: contractSrc,
+      wasmSrcCodeDir: path.join(__dirname, '../data/wasm/rust/src'),
+      wasmGlueCode: path.join(__dirname, '../data/wasm/rust/rust-pst.js')
+    });
 
-    wrongForeignContractTxId = await smartweave.createContract.deploy(
-      {
-        wallet,
-        initState: JSON.stringify({
-          ...initialState,
-          ...{
-            ticker: 'FOREIGN_PST_2',
-            name: 'foreign contract 2'
-          }
-        }),
-        src: contractSrc
-      },
-      path.join(__dirname, '../data/wasm/rust/src'),
-      path.join(__dirname, '../data/wasm/rust/rust-pst.js')
-    );
+    wrongForeignContractTxId = await smartweave.createContract.deploy({
+      wallet,
+      initState: JSON.stringify({
+        ...initialState,
+        ...{
+          ticker: 'FOREIGN_PST_2',
+          name: 'foreign contract 2'
+        }
+      }),
+      src: contractSrc,
+      wasmSrcCodeDir: path.join(__dirname, '../data/wasm/rust/src'),
+      wasmGlueCode: path.join(__dirname, '../data/wasm/rust/rust-pst.js')
+    });
 
     // connecting to the PST contract
     pst = smartweave.pst(contractTxId);
@@ -130,8 +124,6 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
   it('should properly deploy contract', async () => {
     const contractTx = await arweave.transactions.get(contractTxId);
     expect(contractTx).not.toBeNull();
-    expect(getTag(contractTx, SmartWeaveTags.CONTRACT_TYPE)).toEqual('wasm');
-    expect(getTag(contractTx, SmartWeaveTags.WASM_LANG)).toEqual('rust');
 
     const contractSrcTxId = getTag(contractTx, SmartWeaveTags.CONTRACT_SRC_TX_ID);
     const contractSrcTx = await arweave.transactions.get(contractSrcTxId);

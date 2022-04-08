@@ -48,14 +48,12 @@ describe('Testing the SmartWeave client for AssemblyScript WASM contract', () =>
     initialState = fs.readFileSync(path.join(__dirname, '../data/wasm/counter-init-state.json'), 'utf8');
 
     // deploying contract using the new SDK.
-    contractTxId = await smartweave.createContract.deploy(
-      {
-        wallet,
-        initState: initialState,
-        src: contractSrc
-      },
-      path.join(__dirname, '../data/wasm/as/assembly')
-    );
+    contractTxId = await smartweave.createContract.deploy({
+      wallet,
+      initState: initialState,
+      src: contractSrc,
+      wasmSrcCodeDir: path.join(__dirname, '../data/wasm/as/assembly')
+    });
 
     contract = smartweave.contract<ExampleContractState>(contractTxId).setEvaluationOptions({
       gasLimit: 14000000
@@ -72,11 +70,7 @@ describe('Testing the SmartWeave client for AssemblyScript WASM contract', () =>
   it('should properly deploy contract', async () => {
     const contractTx = await arweave.transactions.get(contractTxId);
 
-    console.log(contractTx.id);
-
     expect(contractTx).not.toBeNull();
-    expect(getTag(contractTx, SmartWeaveTags.CONTRACT_TYPE)).toEqual('wasm');
-    expect(getTag(contractTx, SmartWeaveTags.WASM_LANG)).toEqual('assemblyscript');
 
     const contractSrcTx = await arweave.transactions.get(getTag(contractTx, SmartWeaveTags.CONTRACT_SRC_TX_ID));
     expect(getTag(contractSrcTx, SmartWeaveTags.CONTENT_TYPE)).toEqual('application/wasm');

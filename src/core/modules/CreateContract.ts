@@ -31,12 +31,10 @@ export interface ContractData extends CommonContractData {
 
 export interface FromSrcTxContractData extends CommonContractData {
   srcTxId: string;
-  contractType: ContractType;
-  wasmLang: string | null;
 }
 
 export interface CreateContract {
-  deploy(contractData: ContractData): Promise<string>;
+  deploy(contractData: ContractData, useBundler?: boolean): Promise<string>;
 
-  deployFromSourceTx(contractData: FromSrcTxContractData): Promise<string>;
+  deployFromSourceTx(contractData: FromSrcTxContractData, useBundler?: boolean): Promise<string>;
 }

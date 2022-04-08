@@ -114,7 +114,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     upToTransactionId: string,
     currentTx?: CurrentTx[]
   ): Promise<EvalStateResult<State>> {
-    this.logger.info('Read state EN for', {
+    this.logger.info('Read state for', {
       contractTxId: this._contractTxId,
       currentTx
     });
@@ -236,7 +236,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
     const interactionTx = await this.createInteraction(input, tags, transfer, strict);
 
-    const response = await fetch(`${this._evaluationOptions.sequencerAddress}gateway/sequencer/register`, {
+    const response = await fetch(`${this._evaluationOptions.bundlerAddress}gateway/sequencer/register`, {
       method: 'POST',
       body: JSON.stringify(interactionTx),
       headers: {

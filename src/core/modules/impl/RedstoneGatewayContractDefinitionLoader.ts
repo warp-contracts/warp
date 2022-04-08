@@ -3,6 +3,7 @@ import Arweave from 'arweave';
 import { ContractDefinitionLoader } from './ContractDefinitionLoader';
 import 'redstone-isomorphic';
 import { WasmSrc } from './wasm/WasmSrc';
+import Transaction from 'arweave/node/lib/transaction';
 
 /**
  * An extension to {@link ContractDefinitionLoader} that makes use of
@@ -49,9 +50,12 @@ export class RedstoneGatewayContractDefinitionLoader extends ContractDefinitionL
       if (result.srcBinary) {
         const wasmSrc = new WasmSrc(result.srcBinary);
         result.srcBinary = wasmSrc.wasmBinary();
-
-        // TODO: store tags from contract tx id and src tx id in gateway
-        const sourceTx = await this.arweaveWrapper.tx(result.srcTxId);
+        let sourceTx;
+        if (result.srcTx) {
+          sourceTx = new Transaction({ ...result.srcTx });
+        } else {
+          sourceTx = await this.arweaveWrapper.tx(result.srcTxId);
+        }
         const srcMetaData = JSON.parse(getTag(sourceTx, SmartWeaveTags.WASM_META));
         result.metadata = srcMetaData;
       }
