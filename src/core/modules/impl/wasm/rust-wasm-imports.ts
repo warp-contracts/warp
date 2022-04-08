@@ -261,8 +261,6 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance, dtorVal
 
   imports['__wbindgen_placeholder__'] = module;
 
-  const { TextDecoder, TextEncoder } = require(`util`);
-
   let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
 
   cachedTextDecoder.decode();
@@ -301,6 +299,7 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance, dtorVal
 
   let WASM_VECTOR_LEN = 0;
 
+  // @ts-ignore
   let cachedTextEncoder = new TextEncoder('utf-8');
 
   const encodeString =

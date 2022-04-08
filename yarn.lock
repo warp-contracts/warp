@@ -6317,10 +6317,10 @@ rechoir@0.7.0:
   dependencies:
     resolve "^1.9.0"
 
-redstone-isomorphic@1.1.5:
-  version "1.1.5"
-  resolved "https://registry.yarnpkg.com/redstone-isomorphic/-/redstone-isomorphic-1.1.5.tgz#ffd357c32716825383c789a4e66231de4a6efc6b"
-  integrity sha512-3vSyHeO5TcZG3s9ERsoTRFvVksb+rbRwCw1f220ztTL3oCQA3rjsmzAk9Ri0CvxFdTppTTIadzYcjIw9xGJbpg==
+redstone-isomorphic@1.1.6:
+  version "1.1.6"
+  resolved "https://registry.yarnpkg.com/redstone-isomorphic/-/redstone-isomorphic-1.1.6.tgz#513eaf38a7ce14b7e1e84a973aa111066be43f9c"
+  integrity sha512-q9N6/B1KHFBxeRsaqMZUelLorp7BLh50R4fUTf9LNkZPTMZ+sRRVWVE0aZT7lyKbXTLiEdk8kSOHPY4yQu//7Q==
   dependencies:
     buffer "^6.0.3"
     safe-buffer "^5.1.2"

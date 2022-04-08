@@ -21,7 +21,7 @@ import { rustWasmImports } from './wasm/rust-wasm-imports';
 import { Go } from './wasm/go-wasm-imports';
 import BigNumber from 'bignumber.js';
 import { NodeVM, VMScript } from 'vm2';
-import { Buffer as isomorphicBuffer } from 'redstone-isomorphic';
+import * as Buffer from 'buffer';
 
 class ContractError extends Error {
   constructor(message) {
@@ -58,17 +58,14 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
       let wasmInstance;
       let jsExports = null;
 
+      const wasmResponse = generateResponse(contractDefinition.srcBinary);
+
       switch (contractDefinition.srcWasmLang) {
         case 'assemblyscript': {
           const wasmInstanceExports = {
             exports: null
           };
-
-          const init = { status: 200, statusText: 'OK', headers: { 'Content-Type': 'application/wasm' } };
-          const response = new Response(contractDefinition.srcBinary, init);
-
-          // to make Chrome happy
-          wasmInstance = await loader.instantiateStreaming(response, asWasmImports(swGlobal, wasmInstanceExports));
+          wasmInstance = await loader.instantiateStreaming(wasmResponse, asWasmImports(swGlobal, wasmInstanceExports));
           // note: well, exports are required by some imports
           // - e.g. those that use wasmModule.exports.__newString underneath (like Block.indep_hash)
           wasmInstanceExports.exports = wasmInstance.exports;
@@ -96,7 +93,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
            * to NOT mangle the import function names - unfortunately that is not currently possible
            * - https://github.com/rustwasm/wasm-bindgen/issues/1128
            */
-          const wasmModule: WebAssembly.Module = await WebAssembly.compile(contractDefinition.srcBinary);
+          const wasmModule = await getWasmModule(wasmResponse, contractDefinition.srcBinary);
           const moduleImports = WebAssembly.Module.imports(wasmModule);
           const wbindgenImports = moduleImports
             .filter((imp) => {
@@ -112,7 +109,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
           );
           jsExports = exports;
 
-          wasmInstance = new WebAssembly.Instance(wasmModule, imports);
+          wasmInstance = await WebAssembly.instantiate(wasmModule, imports);
           wasmInstanceExports.exports = wasmInstance.exports;
 
           const moduleExports = Object.keys(wasmInstance.exports);
@@ -141,8 +138,8 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
               swGlobal.useGas(value);
             }
           };
-          const wasmModule = await WebAssembly.compile(contractDefinition.srcBinary);
-          wasmInstance = new WebAssembly.Instance(wasmModule, go.importObject);
+          const wasmModule = await getWasmModule(wasmResponse, contractDefinition.srcBinary);
+          wasmInstance = await WebAssembly.instantiate(wasmModule, go.importObject);
 
           // nope - DO NOT await here!
           go.run(wasmInstance);
@@ -186,6 +183,19 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
         return new ContractHandlerApi(swGlobal, handler, contractDefinition);
       }
     }
+  }
+}
+
+function generateResponse(wasmBinary: Buffer): Response {
+  const init = { status: 200, statusText: 'OK', headers: { 'Content-Type': 'application/wasm' } };
+  return new Response(wasmBinary, init);
+}
+
+async function getWasmModule(wasmResponse: Response, binary: Buffer): Promise<WebAssembly.Module> {
+  if (WebAssembly.compileStreaming) {
+    return await WebAssembly.compileStreaming(wasmResponse);
+  } else {
+    return await WebAssembly.compile(binary);
   }
 }
 
