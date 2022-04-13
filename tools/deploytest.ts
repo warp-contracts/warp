@@ -24,7 +24,41 @@ async function main() {
       .useRedStoneGateway()
       .build();
 
-    const {state, validity} = await smartweave.contract("pvudp_Wp8NMDJR6KUsQbzJJ27oLO4fAKXsnVQn86JbU").readState();
+    const jsContractSrc = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.js'), 'utf8');
+    const wasmContractSrc = fs.readFileSync(path.join(__dirname, 'data/rust/rust-pst_bg.wasm'));
+    const initialState = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.json'), 'utf8');
+
+    // case 1 - full deploy, js contract
+    const contractTxId = await smartweave.createContract.deploy({
+      wallet,
+      initState: initialState,
+      src: jsContractSrc,
+    }, true);
+
+    // case 2 - deploy from source, js contract
+    /*const contractTxId = await smartweave.createContract.deployFromSourceTx({
+      wallet,
+      initState: initialState,
+      srcTxId: "Hj0S0iK5rG8yVf_5u-usb9vRZg1ZFkylQLXu6rcDt-0",
+    }, true);*/
+
+    // case 3 - full deploy, wasm contract
+    /*const contractTxId = await smartweave.createContract.deploy({
+      wallet,
+      initState: initialState,
+      src: wasmContractSrc,
+      wasmSrcCodeDir: path.join(__dirname, 'data/rust/src'),
+      wasmGlueCode: path.join(__dirname, 'data/rust/rust-pst.js')
+    }, true);*/
+
+    // case 4 - deploy from source, wasm contract
+    /*const contractTxId = await smartweave.createContract.deployFromSourceTx({
+      wallet,
+      initState: initialState,
+      srcTxId: "5wXT-A0iugP9pWEyw-iTbB0plZ_AbmvlNKyBfGS3AUY",
+    }, true);*/
+
+    const {state, validity} = await smartweave.contract(contractTxId).readState();
 
     logger.info("Result", state);
 
