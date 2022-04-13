@@ -6,6 +6,9 @@
   "module": "./lib/esm/index.js",
   "types": "./lib/types/index.d.ts",
   "sideEffects": false,
+  "engines": {
+    "node": ">=16.5"
+  },
   "scripts": {
     "build:cjs": "tsc -b tsconfig.json && tsc-alias -p tsconfig.json",
     "build:esm": "tsc -b tsconfig.esm.json && tsc-alias -p tsconfig.esm.json",

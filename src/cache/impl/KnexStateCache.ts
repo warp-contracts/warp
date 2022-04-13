@@ -33,6 +33,8 @@ export class KnexStateCache extends MemBlockHeightSwCache<StateCache<any>> {
     this.saveCache = this.saveCache.bind(this);
     this.flush = this.flush.bind(this);
 
+    this.kLogger.info(`Loaded ${cache.length} cache entries from db`);
+
     cache.forEach((entry) => {
       this.putSync(
         {
@@ -71,8 +73,7 @@ export class KnexStateCache extends MemBlockHeightSwCache<StateCache<any>> {
       .select(['contract_id', 'height', 'state'])
       .from('states')
       .max('height')
-      .groupBy(['contract_id', 'height', 'state'])
-      .orderBy('height', 'desc');
+      .groupBy(['contract_id']);
 
     return new KnexStateCache(knex, maxStoredInMemoryBlockHeights, cache);
   }
