@@ -21,7 +21,7 @@ async function main() {
   try {
     const smartweave = SmartWeaveNodeFactory
       .memCachedBased(arweave)
-      .useRedStoneGateway(null, null, "http://localhost:5666")
+      .useRedStoneGateway()
       .build();
 
     const jsContractSrc = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.js'), 'utf8');
@@ -29,17 +29,17 @@ async function main() {
     const initialState = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.json'), 'utf8');
 
     // case 1 - full deploy, js contract
-   /* const contractTxId = await smartweave.createContract.deploy({
+    const contractTxId = await smartweave.createContract.deploy({
       wallet,
       initState: initialState,
       src: jsContractSrc,
-    }, true);*/
+    }, true);
 
     // case 2 - deploy from source, js contract
     /*const contractTxId = await smartweave.createContract.deployFromSourceTx({
       wallet,
       initState: initialState,
-      srcTxId: "oB2CoWWJFRSoVV9_HN0h6z7iGIsGBXrkpNdPQ5HuEhw",
+      srcTxId: "Hj0S0iK5rG8yVf_5u-usb9vRZg1ZFkylQLXu6rcDt-0",
     }, true);*/
 
     // case 3 - full deploy, wasm contract
@@ -52,11 +52,11 @@ async function main() {
     }, true);*/
 
     // case 4 - deploy from source, wasm contract
-    const contractTxId = await smartweave.createContract.deployFromSourceTx({
+    /*const contractTxId = await smartweave.createContract.deployFromSourceTx({
       wallet,
       initState: initialState,
-      srcTxId: "lg8-ERY_VuVKJb6EBDO5gmE93wJ72hZslSqWKMy66b0",
-    }, true);
+      srcTxId: "5wXT-A0iugP9pWEyw-iTbB0plZ_AbmvlNKyBfGS3AUY",
+    }, true);*/
 
     const {state, validity} = await smartweave.contract(contractTxId).readState();
 
