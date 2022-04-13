@@ -7,8 +7,8 @@ import metering from 'redstone-wasm-metering';
 import fs, { PathOrFileDescriptor } from 'fs';
 import { matchMutClosureDtor } from './wasm/wasm-bindgen-tools';
 import { parseInt } from 'lodash';
-import Transaction from "arweave/node/lib/transaction";
-import stringify from "safe-stable-stringify";
+import Transaction from 'arweave/node/lib/transaction';
+import stringify from 'safe-stable-stringify';
 
 const wasmTypeMapping: Map<number, string> = new Map([
   [1, 'assemblyscript'],
@@ -115,13 +115,17 @@ export class DefaultCreateContract implements CreateContract {
     }
 
     if (responseOk) {
-      return await this.deployFromSourceTx({
-        srcTxId: srcTx.id,
-        wallet,
-        initState,
-        tags,
-        transfer,
-      }, useBundler, srcTx);
+      return await this.deployFromSourceTx(
+        {
+          srcTxId: srcTx.id,
+          wallet,
+          initState,
+          tags,
+          transfer
+        },
+        useBundler,
+        srcTx
+      );
     } else {
       throw new Error(`Unable to write Contract Source`);
     }
@@ -130,8 +134,8 @@ export class DefaultCreateContract implements CreateContract {
   async deployFromSourceTx(
     contractData: FromSrcTxContractData,
     useBundler = false,
-    srcTx: Transaction = null): Promise<string> {
-
+    srcTx: Transaction = null
+  ): Promise<string> {
     this.logger.debug('Creating new contract from src tx');
     const { wallet, srcTxId, initState, tags, transfer } = contractData;
 
@@ -182,12 +186,12 @@ export class DefaultCreateContract implements CreateContract {
   private async post(contractTx: Transaction, srcTx: Transaction = null): Promise<any> {
     let body: any = {
       contractTx
-    }
+    };
     if (srcTx) {
       body = {
         ...body,
         srcTx
-      }
+      };
     }
 
     const response = await fetch(`https://gateway.redstone.finance/gateway/contracts/deploy`, {
