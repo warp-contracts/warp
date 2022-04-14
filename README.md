@@ -16,7 +16,8 @@ To further improve contract state evaluation time, one can additionally use AWS 
 - [Architecture](#architecture)
 - [State evaluation diagram](#state-evaluation-diagram)
 - [Development](#development)
-  - [Installation and import](#installation-and-import)
+  - [Installation](#installation)
+  - [Import](#import)
   - [Using the RedStone Gateway](#using-the-redstone-gateway)
   - [WASM](#wasm)
   - [VM2](#vm2)
@@ -67,7 +68,7 @@ The diagram above and description assume the most basic “mem-cached” SDK cli
 PRs are welcome! :-) Also, feel free to submit [issues](https://github.com/redstone-finance/redstone-smartcontracts/issues) - with both bugs and feature proposals.
 In case of creating a PR - please use [semantic commit messages](https://gist.github.com/joshbuchea/6f47e86d2510bce28f8e7f42ae84c716).
 
-### Installation and import
+### Installation
 SDK requires node.js version 16.5+.
 
 #### Using npm
@@ -76,6 +77,16 @@ SDK requires node.js version 16.5+.
 #### Using yarn
 `yarn add redstone-smartweave`
 
+#### MacOS
+In case of issues with installing sqlite (required by ArLocal) - verify that Python 2 is installed on your system.
+In order to install Python 2:
+1. `brew install pyenv`
+2. `pyenv install 2.7.18`
+3. `pyenv global 2.7.18`
+4. `echo 'PATH=$(pyenv root)/shims:$PATH' >> ~/.zshrc`
+5. `source ~/.zshrc`  
+
+### Import
 You can import the full API or individual modules.
 
 ```typescript
