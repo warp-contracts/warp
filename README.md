@@ -77,15 +77,6 @@ SDK requires node.js version 16.5+.
 #### Using yarn
 `yarn add redstone-smartweave`
 
-#### MacOS
-In case of issues with installing sqlite (required by ArLocal) - verify that Python 2 is installed on your system.
-In order to install Python 2:
-1. `brew install pyenv`
-2. `pyenv install 2.7.18`
-3. `pyenv global 2.7.18`
-4. `echo 'PATH=$(pyenv root)/shims:$PATH' >> ~/.zshrc`
-5. `source ~/.zshrc`  
-
 ### Import
 You can import the full API or individual modules.
 
