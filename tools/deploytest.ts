@@ -5,10 +5,9 @@ import {TsLogFactory} from '../src/logging/node/TsLogFactory';
 import fs from 'fs';
 import path from 'path';
 import {JWKInterface} from 'arweave/node/lib/wallet';
-import { readJSON } from '../../redstone-smartweave-examples/src/_utils';
 
 async function main() {
-  let wallet: JWKInterface = readJSON('../redstone-node/.secrets/redstone-jwk.json');;
+  let wallet: JWKInterface = readJSON('./.secrets/33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA.json');;
   LoggerFactory.INST.logLevel('debug');
   const logger = LoggerFactory.INST.create('deploy');
 
@@ -60,13 +59,22 @@ async function main() {
 
     const {state, validity} = await smartweave.contract(contractTxId).readState();
 
-    logger.info("Result", state);
+    //logger.info("Result", state);
 
   } catch (e) {
     logger.error(e)
 
   }
 
+}
+
+export function readJSON(path: string): JWKInterface {
+  const content = fs.readFileSync(path, "utf-8");
+  try {
+    return JSON.parse(content);
+  } catch (e) {
+    throw new Error(`File "${path}" does not contain a valid JSON`);
+  }
 }
 
 main().catch((e) => console.error(e));
