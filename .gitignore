@@ -24,3 +24,5 @@ yalc.lock
 /db/
 
 bundles/
+
+.secrets
