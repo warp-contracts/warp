@@ -147,12 +147,7 @@ export interface Contract<State = unknown> {
    * @param transfer - additional {@link ArTransfer} than can be attached to the interaction transaction
    * @param strict - transaction will be posted on Arweave only if the dry-run of the input result is "ok"
    */
-  bundleInteraction<Input = unknown>(
-    input: Input,
-    tags?: Tags,
-    transfer?: ArTransfer,
-    strict?: boolean
-  ): Promise<any | null>;
+  bundleInteraction<Input = unknown>(input: Input, tags?: Tags, strict?: boolean): Promise<any | null>;
 
   /**
    * Returns the full call tree report the last

@@ -224,17 +224,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return interactionTx.id;
   }
 
-  async bundleInteraction<Input>(
-    input: Input,
-    tags: Tags = [],
-    transfer: ArTransfer = emptyTransfer,
-    strict = false
-  ): Promise<any | null> {
+  async bundleInteraction<Input>(input: Input, tags: Tags = [], strict = false): Promise<any | null> {
     this.logger.info('Bundle interaction input', input);
     if (!this.wallet) {
       throw new Error("Wallet not connected. Use 'connect' method first.");
     }
-    const interactionTx = await this.createInteraction(input, tags, transfer, strict);
+    const interactionTx = await this.createInteraction(input, tags, emptyTransfer, strict);
 
     const response = await fetch(`${this._evaluationOptions.bundlerAddress}gateway/sequencer/register`, {
       method: 'POST',
