@@ -13,6 +13,20 @@ export async function createTx(
   target = '',
   winstonQty = '0'
 ): Promise<Transaction> {
+  const tx = await createUnsignedTx(arweave, contractId, input, tags, target, winstonQty);
+  await arweave.transactions.sign(tx, wallet);
+
+  return tx;
+}
+
+export async function createUnsignedTx(
+  arweave: Arweave,
+  contractId: string,
+  input: any,
+  tags: { name: string; value: string }[],
+  target = '',
+  winstonQty = '0'
+): Promise<Transaction> {
   const options: Partial<CreateTransactionInterface> = {
     data: Math.random().toString().slice(-4)
   };
@@ -24,7 +38,7 @@ export async function createTx(
     }
   }
 
-  const interactionTx = await arweave.createTransaction(options, wallet);
+  const interactionTx = await arweave.createTransaction(options);
 
   if (!input) {
     throw new Error(`Input should be a truthy value: ${JSON.stringify(input)}`);
@@ -42,7 +56,6 @@ export async function createTx(
   interactionTx.addTag(SmartWeaveTags.CONTRACT_TX_ID, contractId);
   interactionTx.addTag(SmartWeaveTags.INPUT, JSON.stringify(input));
 
-  await arweave.transactions.sign(interactionTx, wallet);
   return interactionTx;
 }
 
