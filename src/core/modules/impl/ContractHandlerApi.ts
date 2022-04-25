@@ -53,7 +53,7 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
 
       const handlerResult = await Promise.race([timeoutPromise, this.contractFunction(stateCopy, interaction)]);
 
-      if (handlerResult && (handlerResult.state || handlerResult.result)) {
+      if (handlerResult && (handlerResult.state !== undefined || handlerResult.result !== undefined)) {
         return {
           type: 'ok',
           result: handlerResult.result,

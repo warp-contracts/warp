@@ -1,12 +1,12 @@
 import Arweave from 'arweave';
-import { ArWallet, GQLNodeInterface, GQLTagInterface, SmartWeaveTags } from '@smartweave';
+import { GQLNodeInterface, GQLTagInterface, SigningFunction, SmartWeaveTags } from '@smartweave';
 import Transaction from 'arweave/node/lib/transaction';
 import { CreateTransactionInterface } from 'arweave/node/common';
 import { BlockData } from 'arweave/node/blocks';
 
 export async function createTx(
   arweave: Arweave,
-  wallet: ArWallet,
+  signer: SigningFunction,
   contractId: string,
   input: any,
   tags: { name: string; value: string }[],
@@ -24,7 +24,7 @@ export async function createTx(
     }
   }
 
-  const interactionTx = await arweave.createTransaction(options, wallet);
+  const interactionTx = await arweave.createTransaction(options);
 
   if (!input) {
     throw new Error(`Input should be a truthy value: ${JSON.stringify(input)}`);
@@ -42,8 +42,8 @@ export async function createTx(
   interactionTx.addTag(SmartWeaveTags.CONTRACT_TX_ID, contractId);
   interactionTx.addTag(SmartWeaveTags.INPUT, JSON.stringify(input));
 
-  if (wallet) {
-    await arweave.transactions.sign(interactionTx, wallet);
+  if (signer) {
+    await signer(interactionTx);
   }
   return interactionTx;
 }
