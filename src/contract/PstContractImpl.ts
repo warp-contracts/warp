@@ -28,17 +28,17 @@ export class PstContractImpl extends HandlerBasedContract<PstState> implements P
   }
 
   async saveNewSource(newContractSource: string): Promise<string | null> {
-    if (!this.wallet) {
+    if (!this.signer) {
       throw new Error("Wallet not connected. Use 'connect' method first.");
     }
     const { arweave } = this.smartweave;
 
-    const tx = await arweave.createTransaction({ data: newContractSource }, this.wallet);
+    const tx = await arweave.createTransaction({ data: newContractSource });
     tx.addTag(SmartWeaveTags.APP_NAME, 'SmartWeaveContractSource');
     tx.addTag(SmartWeaveTags.APP_VERSION, '0.3.0');
     tx.addTag('Content-Type', 'application/javascript');
 
-    await arweave.transactions.sign(tx, this.wallet);
+    await this.signer(tx);
     await arweave.transactions.post(tx);
 
     return tx.id;

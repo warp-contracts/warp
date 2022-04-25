@@ -9,9 +9,12 @@ import {
   Tags
 } from '@smartweave';
 import { NetworkInfoInterface } from 'arweave/node/network';
+import Transaction from 'arweave/node/lib/transaction';
 
 export type CurrentTx = { interactionTxId: string; contractTxId: string };
 export type BenchmarkStats = { gatewayCommunication: number; stateEvaluation: number; total: number };
+
+export type SigningFunction = (tx: Transaction) => Promise<void>;
 
 /**
  * A base interface to be implemented by SmartWeave Contracts clients
@@ -24,14 +27,14 @@ export interface Contract<State = unknown> {
   txId(): string;
 
   /**
-   * Allows to connect {@link ArWallet} to a contract.
-   * Connecting a wallet MAY be done before "viewState" (depending on contract implementation,
-   * ie. whether called contract's function required "caller" info)
-   * Connecting a wallet MUST be done before "writeInteraction".
+   * Allows to connect a signer to a contract.
+   * Connecting a signer MAY be done before "viewState" (depending on contract implementation,
+   * i.e. whether called contract's function required "caller" info)
+   * Connecting a signer MUST be done before "writeInteraction" and "bundleInteraction".
    *
-   * @param wallet - {@link ArWallet} that will be connected to this contract
+   * @param signer - either {@link ArWallet} that will be connected to this contract or custom {@link SigningFunction}
    */
-  connect(wallet: ArWallet): Contract<State>;
+  connect(signer: ArWallet | SigningFunction): Contract<State>;
 
   /**
    * Allows to set ({@link EvaluationOptions})

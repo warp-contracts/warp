@@ -24,6 +24,7 @@ import {
   InteractionData,
   InteractionResult,
   LoggerFactory,
+  SigningFunction,
   sleep,
   SmartWeave,
   SmartWeaveTags,
@@ -34,6 +35,7 @@ import { TransactionStatusResponse } from 'arweave/node/transactions';
 import { NetworkInfoInterface } from 'arweave/node/network';
 import stringify from 'safe-stable-stringify';
 import * as crypto from 'crypto';
+import Transaction from 'arweave/node/lib/transaction';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -67,7 +69,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   /**
    * wallet connected to this contract
    */
-  protected wallet?: ArWallet;
+  protected signer?: SigningFunction;
 
   constructor(
     private readonly _contractTxId: string,
@@ -202,7 +204,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     strict = false
   ): Promise<string | null> {
     this.logger.info('Write interaction input', input);
-    if (!this.wallet) {
+    if (!this.signer) {
       throw new Error("Wallet not connected. Use 'connect' method first.");
     }
     const { arweave } = this.smartweave;
@@ -226,7 +228,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   async bundleInteraction<Input>(input: Input, tags: Tags = [], strict = false): Promise<any | null> {
     this.logger.info('Bundle interaction input', input);
-    if (!this.wallet) {
+    if (!this.signer) {
       throw new Error("Wallet not connected. Use 'connect' method first.");
     }
     const interactionTx = await this.createInteraction(input, tags, emptyTransfer, strict);
@@ -299,7 +301,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     const interactionTx = await createTx(
       this.smartweave.arweave,
-      this.wallet,
+      this.signer,
       this._contractTxId,
       input,
       tags,
@@ -321,8 +323,14 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return this._networkInfo;
   }
 
-  connect(wallet: ArWallet): Contract<State> {
-    this.wallet = wallet;
+  connect(signer: ArWallet | SigningFunction): Contract<State> {
+    if (typeof signer == 'function') {
+      this.signer = signer;
+    } else {
+      this.signer = async (tx: Transaction) => {
+        await this.smartweave.arweave.transactions.sign(tx, signer);
+      };
+    }
     return this;
   }
 
@@ -526,7 +534,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   ): Promise<InteractionResult<State, View>> {
     this.logger.info('Call contract input', input);
     this.maybeResetRootContract();
-    if (!this.wallet) {
+    if (!this.signer) {
       this.logger.warn('Wallet not set.');
     }
     const { arweave, stateEvaluator } = this.smartweave;
@@ -547,7 +555,18 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
 
     // add caller info to execution context
-    const effectiveCaller = caller || (this.wallet ? await arweave.wallets.jwkToAddress(this.wallet) : '');
+    let effectiveCaller;
+    if (caller) {
+      effectiveCaller = caller;
+    } else if (this.signer) {
+      const dummyTx = await arweave.createTransaction({ data: Math.random().toString().slice(-4) });
+      await this.signer(dummyTx);
+      effectiveCaller = await arweave.wallets.ownerToAddress(dummyTx.owner);
+    } else {
+      effectiveCaller = '';
+    }
+
+    this.logger.info('effectiveCaller', effectiveCaller);
     executionContext = {
       ...executionContext,
       caller: effectiveCaller
@@ -565,7 +584,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     this.logger.debug('interaction', interaction);
     const tx = await createTx(
       arweave,
-      this.wallet,
+      this.signer,
       this._contractTxId,
       input,
       tags,
