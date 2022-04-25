@@ -147,8 +147,9 @@ export interface Contract<State = unknown> {
    * if control over how the transaction is signed is not needed.
    *
    * @param interactionTx - {@link Transaction} to be posted
+   * @param strict - transaction will be posted on Arweave only if the dry-run of the input result is "ok"
    */
-  writeInteractionTx(interactionTx: Transaction): Promise<string | null>;
+  writeInteractionTx(interactionTx: Transaction, strict?: boolean): Promise<string | null>;
 
   /**
    * Creates a new "interaction" transaction using RedStone Sequencer - this, with combination with
@@ -171,8 +172,9 @@ export interface Contract<State = unknown> {
    * control over how the transaction is signed is not needed.
    *
    * @param interactionTx - {@link Transaction} to be posted
+   * @param strict - transaction will be posted on Arweave only if the dry-run of the input result is "ok"
    */
-  bundleInteractionTx(interactionTx: Transaction): Promise<any | null>;
+  bundleInteractionTx(interactionTx: Transaction, strict?: boolean): Promise<any | null>;
 
   /**
    * Creates an unsigned "interaction" transaction and returns it. This allows to sign the
@@ -182,14 +184,8 @@ export interface Contract<State = unknown> {
    * @param input - new input to the contract that will be assigned with this interactions transaction
    * @param tags - additional tags that can be attached to the newly created interaction transaction
    * @param transfer - additional {@link ArTransfer} than can be attached to the interaction transaction
-   * @param strict - transaction will be posted on Arweave only if the dry-run of the input result is "ok"
    */
-  createUnsignedInteraction<Input>(
-    input: Input,
-    tags?: Tags,
-    transfer?: ArTransfer,
-    strict?: boolean
-  ): Promise<Transaction>;
+  createUnsignedInteraction<Input>(input: Input, tags?: Tags, transfer?: ArTransfer): Promise<Transaction>;
 
   /**
    * Returns the full call tree report the last

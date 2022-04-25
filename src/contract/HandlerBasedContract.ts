@@ -29,7 +29,8 @@ import {
   SmartWeave,
   SmartWeaveTags,
   SourceType,
-  Tags
+  Tags,
+  unpackTags
 } from '@smartweave';
 import { TransactionStatusResponse } from 'arweave/node/transactions';
 import { NetworkInfoInterface } from 'arweave/node/network';
@@ -208,14 +209,14 @@ export class HandlerBasedContract<State> implements Contract<State> {
       throw new Error("Wallet not connected. Use 'connect' method first.");
     }
 
-    const interactionTx = await this.createUnsignedInteraction(input, tags, transfer, strict);
+    const interactionTx = await this.createUnsignedInteraction(input, tags, transfer);
     await this.smartweave.arweave.transactions.sign(interactionTx, this.wallet);
 
-    return this.writeInteractionTx(interactionTx);
+    return this.writeInteractionTx(interactionTx, strict);
   }
 
-  async writeInteractionTx(interactionTx: Transaction): Promise<string | null> {
-    await this.smartweave.arweave.transactions.verify(interactionTx);
+  async writeInteractionTx(interactionTx: Transaction, strict = false): Promise<string | null> {
+    await this.prePostChecks(interactionTx, strict);
 
     this.logger.info('Write interaction tx', interactionTx.id);
     const response = await this.smartweave.arweave.transactions.post(interactionTx);
@@ -239,14 +240,14 @@ export class HandlerBasedContract<State> implements Contract<State> {
     if (!this.wallet) {
       throw new Error("Wallet not connected. Use 'connect' method first.");
     }
-    const interactionTx = await this.createUnsignedInteraction(input, tags, emptyTransfer, strict);
+    const interactionTx = await this.createUnsignedInteraction(input, tags, emptyTransfer);
     await this.smartweave.arweave.transactions.sign(interactionTx, this.wallet);
 
-    return this.bundleInteractionTx(interactionTx);
+    return this.bundleInteractionTx(interactionTx, strict);
   }
 
-  async bundleInteractionTx(interactionTx: Transaction): Promise<any | null> {
-    await this.smartweave.arweave.transactions.verify(interactionTx);
+  async bundleInteractionTx(interactionTx: Transaction, strict = false): Promise<any | null> {
+    await this.prePostChecks(interactionTx, strict);
 
     this.logger.info('Bundle interaction tx', interactionTx.id);
     const response = await fetch(`${this._evaluationOptions.bundlerAddress}gateway/sequencer/register`, {
@@ -276,13 +277,18 @@ export class HandlerBasedContract<State> implements Contract<State> {
     };
   }
 
-  async createUnsignedInteraction<Input>(
-    input: Input,
-    tags: Tags = [],
-    transfer = emptyTransfer,
-    strict = false
-  ): Promise<Transaction> {
-    this.logger.info('Unsigned interaction input', input);
+  private async prePostChecks(interactionTx: Transaction, strict = false): Promise<void> {
+    if (!(await this.smartweave.arweave.transactions.verify(interactionTx))) {
+      throw new Error(`Invalid signature for transaction ${interactionTx.id}.`);
+    }
+
+    const tags = unpackTags(interactionTx);
+    const input = JSON.parse(tags[SmartWeaveTags.INPUT]);
+    const transfer: ArTransfer | undefined =
+      interactionTx.target && interactionTx.quantity
+        ? { target: interactionTx.target, winstonQty: interactionTx.quantity }
+        : undefined;
+
     if (this._evaluationOptions.internalWrites) {
       // Call contract and verify if there are any internal writes:
       // 1. Evaluate current contract state
@@ -315,7 +321,14 @@ export class HandlerBasedContract<State> implements Contract<State> {
         }
       }
     }
+  }
 
+  async createUnsignedInteraction<Input>(
+    input: Input,
+    tags: Tags = [],
+    transfer = emptyTransfer
+  ): Promise<Transaction> {
+    this.logger.info('Unsigned interaction input', input);
     const interactionTx = await createUnsignedTx(
       this.smartweave.arweave,
       this._contractTxId,
@@ -324,6 +337,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       transfer.target,
       transfer.winstonQty
     );
+
     return interactionTx;
   }
 
