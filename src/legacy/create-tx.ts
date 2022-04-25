@@ -42,7 +42,9 @@ export async function createTx(
   interactionTx.addTag(SmartWeaveTags.CONTRACT_TX_ID, contractId);
   interactionTx.addTag(SmartWeaveTags.INPUT, JSON.stringify(input));
 
-  await arweave.transactions.sign(interactionTx, wallet);
+  if (wallet) {
+    await arweave.transactions.sign(interactionTx, wallet);
+  }
   return interactionTx;
 }
 

@@ -220,4 +220,15 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
   async flushCache(): Promise<void> {
     return await this.cache.flush();
   }
+
+  async syncState(
+    contractTxId: string,
+    blockHeight: number,
+    transactionId: string,
+    state: any,
+    validity: any
+  ): Promise<void> {
+    const stateToCache = new EvalStateResult(state, validity, transactionId);
+    await this.cache.put(new BlockHeightKey(contractTxId, blockHeight), stateToCache);
+  }
 }

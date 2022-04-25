@@ -65,6 +65,11 @@ export interface StateEvaluator {
    * allows to manually flush state cache into underneath storage.
    */
   flushCache(): Promise<void>;
+
+  /**
+   * allows to syncState with an external state source (like RedStone Distributed Execution Network)
+   */
+  syncState(contractTxId: string, blockHeight: number, transactionId: string, state: any, validity: any): Promise<void>;
 }
 
 export class EvalStateResult<State> {

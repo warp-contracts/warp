@@ -677,4 +677,28 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     return hash.digest('hex');
   }
+
+  async syncState(nodeAddress: string): Promise<Contract> {
+    const { stateEvaluator } = this.smartweave;
+    const response = await fetch(`${nodeAddress}/state?id=${this._contractTxId}&validity=true&safeHeight=true`)
+      .then((res) => {
+        return res.ok ? res.json() : Promise.reject(res);
+      })
+      .catch((error) => {
+        if (error.body?.message) {
+          this.logger.error(error.body.message);
+        }
+        throw new Error(`Unable to retrieve state. ${error.status}: ${error.body?.message}`);
+      });
+
+    await stateEvaluator.syncState(
+      this._contractTxId,
+      response.height,
+      response.lastTransactionId,
+      response.state,
+      response.validity
+    );
+
+    return this;
+  }
 }

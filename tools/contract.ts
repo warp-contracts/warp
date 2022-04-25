@@ -10,7 +10,6 @@ import {
 import * as fs from 'fs';
 import knex from 'knex';
 import os from 'os';
-import { readJSON } from '../../redstone-smartweave-examples/src/_utils';
 import { TsLogFactory } from '../src/logging/node/TsLogFactory';
 import path from "path";
 import stringify from "safe-stable-stringify";

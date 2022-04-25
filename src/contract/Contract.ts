@@ -8,7 +8,7 @@ import {
   InteractionResult,
   Tags
 } from '@smartweave';
-import { NetworkInfoInterface } from 'arweave/node/network';
+import {NetworkInfoInterface} from 'arweave/node/network';
 
 export type CurrentTx = { interactionTxId: string; contractTxId: string };
 export type BenchmarkStats = { gatewayCommunication: number; stateEvaluation: number; total: number };
@@ -203,4 +203,11 @@ export interface Contract<State = unknown> {
    * calculates state hash using stable stringify
    */
   stateHash(state: State): string;
+
+  /**
+   * this method allows to sync the state of the local SDK state with the Execution Network -
+   * to make features like "viewStates" possible when using EN;
+   * @param nodeAddress - distributed execution network node address
+   */
+  syncState(nodeAddress: string): Promise<Contract>;
 }
