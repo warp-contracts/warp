@@ -186,9 +186,9 @@ export interface Contract<State = unknown> {
    */
   createUnsignedInteraction<Input>(
     input: Input,
-    tags: { name: string; value: string }[],
-    transfer: ArTransfer,
-    strict: boolean
+    tags?: Tags,
+    transfer?: ArTransfer,
+    strict?: boolean
   ): Promise<Transaction>;
 
   /**

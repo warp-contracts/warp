@@ -278,9 +278,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   async createUnsignedInteraction<Input>(
     input: Input,
-    tags: { name: string; value: string }[],
-    transfer: ArTransfer,
-    strict: boolean
+    tags: Tags = [],
+    transfer = emptyTransfer,
+    strict = false
   ): Promise<Transaction> {
     this.logger.info('Unsigned interaction input', input);
     if (this._evaluationOptions.internalWrites) {
