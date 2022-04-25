@@ -8,6 +8,7 @@ import {
   InteractionResult,
   Tags
 } from '@smartweave';
+import Transaction from 'arweave/node/lib/transaction';
 import { NetworkInfoInterface } from 'arweave/node/network';
 
 export type CurrentTx = { interactionTxId: string; contractTxId: string };
@@ -139,6 +140,17 @@ export interface Contract<State = unknown> {
   ): Promise<string | null>;
 
   /**
+   * Posts an "interaction" transaction that has already been created.
+   *
+   * **Note:** This method is useful when the transaction object has already been created with
+   * {@link createUnsignedTransaction} and signed later on. Prefer using {@link writeInteraction}
+   * if control over how the transaction is signed is not needed.
+   *
+   * @param interactionTx - {@link Transaction} to be posted
+   */
+  writeInteractionTx(interactionTx: Transaction): Promise<string | null>;
+
+  /**
    * Creates a new "interaction" transaction using RedStone Sequencer - this, with combination with
    * RedStone Gateway, gives instant transaction availability and finality guaranteed by Bundlr.
    *
@@ -148,6 +160,36 @@ export interface Contract<State = unknown> {
    * @param strict - transaction will be posted on Arweave only if the dry-run of the input result is "ok"
    */
   bundleInteraction<Input = unknown>(input: Input, tags?: Tags, strict?: boolean): Promise<any | null>;
+
+  /**
+   * Post an "interaction" transaction, that has already been created, using RedStone Sequencer -
+   * this, with combination with RedStone Gateway, gives instant transaction availability and finality
+   * guaranteed by Bundlr.
+   *
+   * **Note:** This method is useful when the transaction object has already been created with
+   * {@link createUnsignedTransaction} and signed later on. Prefer using {@link bundleInteraction} if
+   * control over how the transaction is signed is not needed.
+   *
+   * @param interactionTx - {@link Transaction} to be posted
+   */
+  bundleInteractionTx(interactionTx: Transaction): Promise<any | null>;
+
+  /**
+   * Creates an unsigned "interaction" transaction and returns it. This allows to sign the
+   * transaction manually. After being signed, the transaction should be posted using either
+   * {@link writeInteractionTx} or {@link bundleInteractionTx}.
+   *
+   * @param input - new input to the contract that will be assigned with this interactions transaction
+   * @param tags - additional tags that can be attached to the newly created interaction transaction
+   * @param transfer - additional {@link ArTransfer} than can be attached to the interaction transaction
+   * @param strict - transaction will be posted on Arweave only if the dry-run of the input result is "ok"
+   */
+  createUnsignedInteraction<Input>(
+    input: Input,
+    tags: { name: string; value: string }[],
+    transfer: ArTransfer,
+    strict: boolean
+  ): Promise<Transaction>;
 
   /**
    * Returns the full call tree report the last
