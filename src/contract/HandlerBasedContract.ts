@@ -215,7 +215,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   }
 
   async writeInteractionTx(interactionTx: Transaction): Promise<string | null> {
-    this.smartweave.arweave.transactions.verify(interactionTx);
+    await this.smartweave.arweave.transactions.verify(interactionTx);
 
     this.logger.info('Write interaction tx', interactionTx.id);
     const response = await this.smartweave.arweave.transactions.post(interactionTx);
@@ -234,7 +234,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return interactionTx.id;
   }
 
-  async bundleInteraction<Input>(input: Input, tags: Tags = [], strict = false): Promise<any> {
+  async bundleInteraction<Input>(input: Input, tags: Tags = [], strict = false): Promise<any | null> {
     this.logger.info('Bundle interaction input', input);
     if (!this.wallet) {
       throw new Error("Wallet not connected. Use 'connect' method first.");
@@ -245,8 +245,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return this.bundleInteractionTx(interactionTx);
   }
 
-  async bundleInteractionTx(interactionTx: Transaction): Promise<any> {
-    this.smartweave.arweave.transactions.verify(interactionTx);
+  async bundleInteractionTx(interactionTx: Transaction): Promise<any | null> {
+    await this.smartweave.arweave.transactions.verify(interactionTx);
 
     this.logger.info('Bundle interaction tx', interactionTx.id);
     const response = await fetch(`${this._evaluationOptions.bundlerAddress}gateway/sequencer/register`, {
