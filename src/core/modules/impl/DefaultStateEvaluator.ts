@@ -300,4 +300,12 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
   ): Promise<void>;
 
   abstract flushCache(): Promise<void>;
+
+  abstract syncState(
+    contractTxId: string,
+    blockHeight: number,
+    transactionId: string,
+    state: any,
+    validity: any
+  ): Promise<void>;
 }
