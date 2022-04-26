@@ -8,7 +8,7 @@ import {
   InteractionResult,
   Tags
 } from '@smartweave';
-import {NetworkInfoInterface} from 'arweave/node/network';
+import { NetworkInfoInterface } from 'arweave/node/network';
 
 export type CurrentTx = { interactionTxId: string; contractTxId: string };
 export type BenchmarkStats = { gatewayCommunication: number; stateEvaluation: number; total: number };
