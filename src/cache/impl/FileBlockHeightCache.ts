@@ -81,15 +81,6 @@ export class FileBlockHeightSwCache<V = any> extends MemBlockHeightSwCache<V> {
       this.fLogger.debug(`Amount of elements loaded for ${contract} to mem: ${this.storage[contract].size}`);
     });
     this.fLogger.debug('Storage keys', this.storage);
-
-    process.on('exit', async () => {
-      await this.flush();
-      process.exit();
-    });
-    process.on('SIGINT', async () => {
-      await this.flush();
-      process.exit();
-    });
   }
 
   private async saveCache() {

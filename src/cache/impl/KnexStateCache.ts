@@ -45,15 +45,6 @@ export class KnexStateCache extends MemBlockHeightSwCache<StateCache<any>> {
       );
       this.lastFlushHeight.set(entry.contract_id, entry.height);
     });
-
-    process.on('exit', async () => {
-      await this.flush();
-      process.exit();
-    });
-    process.on('SIGINT', async () => {
-      await this.flush();
-      process.exit();
-    });
   }
 
   public static async init(
