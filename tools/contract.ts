@@ -17,7 +17,7 @@ import {readContract} from "smartweave";
 
 const logger = LoggerFactory.INST.create('Contract');
 
-LoggerFactory.use(new TsLogFactory());
+//LoggerFactory.use(new TsLogFactory());
 LoggerFactory.INST.logLevel('debug');
 LoggerFactory.INST.logLevel('info', 'Contract');
 //LoggerFactory.INST.logLevel('debug', 'DefaultStateEvaluator');
@@ -52,42 +52,13 @@ async function main() {
   const knexConfig = knex({
     client: 'sqlite3',
     connection: {
-      filename: `tools/data/smartweave.sqlite`
+      filename: `tools/data/smartweave_just_one.sqlite`
     },
     useNullAsDefault: true
   });
-  const smartweave = SmartWeaveNodeFactory.memCachedBased(arweave).useRedStoneGateway().build()//await SmartWeaveNodeFactory.knexCached(arweave, knexConfig)
-    /* .setInteractionsLoader(
-       new RedstoneGatewayInteractionsLoader('https://gateway.redstone.finance')
-     )*//*.overwriteSource({
-      [LOOT_CONTRACT]: newSource,
-    })*/;
-
-  const contract = smartweave.contract("sTZAYKqNIj2NgwmAqoLPPw4KnzALNHblk6xwPL0BlIY");
-
+  const smartweave = await SmartWeaveNodeFactory.knexCached(arweave, knexConfig, 1)
+  const contract = smartweave.contract("3vAx5cIFhwMihrNJgGx3CoAeZTOjG7LeIs9tnbBfL14");
   await contract.readState();
-
- /* const jwk = readJSON('../redstone-node/.secrets/redstone-jwk.json');
-  const contract = smartweave
-    .contract("fnVpGWzMFHVv1BG3ejA0NbbCZ2OzM0LYukDyJpTAeyM")
-    .setEvaluationOptions({
-      bundlerAddress: 'http://localhost:5666/',
-      useFastCopy: true
-    })
-    .connect(jwk);*/
- /* const bundledInteraction = await contract.bundleInteraction({
-    function: 'generate'
-  });
-
-  logger.info('Bundled interaction', bundledInteraction);*/
-
-  // bundlr balance I-5rWUehEv-MjdK9gFw09RxfSLQX9DIHxG614Wf8qo0 -h https://node1.bundlr.network/ -c arweave
-
-  /*const {state, validity} = await contract.readState();*/
-
-  //const state = readContract(arweave, KOI_CONTRACT);
-
- // fs.writeFileSync(path.join(__dirname, 'data', 'koi-proper-state_2.json'), stringify(state));
 
   const heapUsedAfter = Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100;
   const rssUsedAfter = Math.round((process.memoryUsage().rss / 1024 / 1024) * 100) / 100;
@@ -96,7 +67,7 @@ async function main() {
     usedAfter: heapUsedAfter
   });
 
-  logger.warn('RSS used in MB', {
+  logger.info('RSS used in MB', {
     usedBefore: rssUsedBefore,
     usedAfter: rssUsedAfter
   });
