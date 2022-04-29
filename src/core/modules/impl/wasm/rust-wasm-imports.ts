@@ -141,9 +141,16 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance, dtorVal
       var ret = rawImports.Block.timestamp();
       return ret;
     },
-    __wbg_id: function () {
+    __wbg_id: function (arg0) {
       var ret = rawImports.Transaction.id();
-      return ret;
+      var ptr0 = passStringToWasm0(
+        ret,
+        wasmInstance.exports.__wbindgen_malloc,
+        wasmInstance.exports.__wbindgen_realloc
+      );
+      var len0 = WASM_VECTOR_LEN;
+      getInt32Memory0()[arg0 / 4 + 1] = len0;
+      getInt32Memory0()[arg0 / 4 + 0] = ptr0;
     },
     __wbg_contractOwner: function (arg0) {
       var ret = rawImports.Contract.owner();
@@ -156,9 +163,16 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance, dtorVal
       getInt32Memory0()[arg0 / 4 + 1] = len0;
       getInt32Memory0()[arg0 / 4 + 0] = ptr0;
     },
-    __wbg_contractId: function () {
+    __wbg_contractId: function (arg0) {
       var ret = rawImports.Contract.id();
-      return ret;
+      var ptr0 = passStringToWasm0(
+        ret,
+        wasmInstance.exports.__wbindgen_malloc,
+        wasmInstance.exports.__wbindgen_realloc
+      );
+      var len0 = WASM_VECTOR_LEN;
+      getInt32Memory0()[arg0 / 4 + 1] = len0;
+      getInt32Memory0()[arg0 / 4 + 0] = ptr0;
     },
     __wbg_owner: function (arg0) {
       var ret = rawImports.Transaction.owner();

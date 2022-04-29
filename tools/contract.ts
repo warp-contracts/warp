@@ -1,19 +1,9 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import {
-  LoggerFactory,
-  MemCache,
-  RedstoneGatewayContractDefinitionLoader,
-  RedstoneGatewayInteractionsLoader,
-  SmartWeaveNodeFactory
-} from '../src';
+import {LoggerFactory, SmartWeaveNodeFactory} from '../src';
 import * as fs from 'fs';
 import knex from 'knex';
 import os from 'os';
-import { TsLogFactory } from '../src/logging/node/TsLogFactory';
-import path from "path";
-import stringify from "safe-stable-stringify";
-import {readContract} from "smartweave";
 
 const logger = LoggerFactory.INST.create('Contract');
 
@@ -56,8 +46,10 @@ async function main() {
     },
     useNullAsDefault: true
   });
-  const smartweave = await SmartWeaveNodeFactory.knexCached(arweave, knexConfig, 1)
+  const smartweave = (await SmartWeaveNodeFactory.knexCachedBased(arweave, knexConfig, 1))
+    .useRedStoneGateway().build();
   const contract = smartweave.contract("3vAx5cIFhwMihrNJgGx3CoAeZTOjG7LeIs9tnbBfL14");
+  await contract.readState();
   await contract.readState();
 
   const heapUsedAfter = Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100;
