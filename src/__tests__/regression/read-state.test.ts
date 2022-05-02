@@ -56,7 +56,7 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
           .contract(contractTxId)
           .setEvaluationOptions({
             useFastCopy: true,
-            allowUnsafeClient: true,
+            allowUnsafeClient: true
           })
           .readState(blockHeight);
         const result2String = stringify(result2.state).trim();
