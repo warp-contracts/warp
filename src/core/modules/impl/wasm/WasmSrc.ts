@@ -1,5 +1,6 @@
 import { LoggerFactory } from '@smartweave';
 import { unzip } from 'unzipit';
+import { Buffer } from 'redstone-isomorphic';
 
 export class WasmSrc {
   private readonly logger = LoggerFactory.INST.create('WasmSrc');
