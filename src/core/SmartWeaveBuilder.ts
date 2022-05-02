@@ -73,7 +73,7 @@ export class SmartWeaveBuilder {
   public useRedStoneGateway(
     confirmationStatus: ConfirmationStatus = null,
     source: SourceType = null,
-    address = 'https://gateway.redstone.finance'
+    address = 'https://d1o5nlqr4okus2.cloudfront.net'
   ): SmartWeaveBuilder {
     this._interactionsLoader = new RedstoneGatewayInteractionsLoader(address, confirmationStatus, source);
     this._definitionLoader = new RedstoneGatewayContractDefinitionLoader(address, this._arweave, new MemCache());
