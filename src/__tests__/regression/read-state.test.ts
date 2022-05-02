@@ -55,7 +55,8 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
           .build()
           .contract(contractTxId)
           .setEvaluationOptions({
-            useFastCopy: true
+            useFastCopy: true,
+            allowUnsafeClient: true,
           })
           .readState(blockHeight);
         const result2String = stringify(result2.state).trim();
@@ -84,7 +85,8 @@ describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
         .contract(contractTxId)
         .setEvaluationOptions({
           useFastCopy: true,
-          useVM2: true
+          useVM2: true,
+          allowUnsafeClient: true
         })
         .readState(blockHeight);
       const result2String = stringify(result2.state).trim();
@@ -128,6 +130,9 @@ describe('readState', () => {
       .useRedStoneGateway(null, SourceType.ARWEAVE)
       .build()
       .contract(contractTxId)
+      .setEvaluationOptions({
+        allowUnsafeClient: true
+      })
       .readState(blockHeight);
     const result2String = stringify(result2.state).trim();
 

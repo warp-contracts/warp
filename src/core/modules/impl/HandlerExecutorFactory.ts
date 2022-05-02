@@ -156,6 +156,15 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
     } else {
       this.logger.info('Creating handler for js contract', contractDefinition.txId);
       const normalizedSource = normalizeContractSource(contractDefinition.src, evaluationOptions.useVM2);
+
+      if (!evaluationOptions.allowUnsafeClient) {
+        if (normalizedSource.includes('SmartWeave.unsafeClient')) {
+          throw new Error(
+            'Using unsafeClient is not allowed by default. Use EvaluationOptions.allowUnsafeClient flag.'
+          );
+        }
+      }
+
       if (evaluationOptions.useVM2) {
         const vmScript = new VMScript(normalizedSource);
         const vm = new NodeVM({

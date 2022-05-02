@@ -112,6 +112,8 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   manualCacheFlush = false;
 
   useVM2 = false;
+
+  allowUnsafeClient = false;
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some of the features.
@@ -173,4 +175,9 @@ export interface EvaluationOptions {
   // use for contracts that you cannot trust.
   // this obviously works only in a node.js env.
   useVM2: boolean;
+
+  // Whether using unsafe client should be allowed
+  // if set to false - calling unsafe clinet in contract code will
+  // result in throwing an exception
+  allowUnsafeClient: boolean;
 }
