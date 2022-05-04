@@ -2,6 +2,7 @@ import {
   ArTransfer,
   ArWallet,
   ContractCallStack,
+  CustomError,
   EvalStateResult,
   EvaluationOptions,
   GQLNodeInterface,
@@ -15,6 +16,20 @@ export type CurrentTx = { interactionTxId: string; contractTxId: string };
 export type BenchmarkStats = { gatewayCommunication: number; stateEvaluation: number; total: number };
 
 export type SigningFunction = (tx: Transaction) => Promise<void>;
+
+export type ContractErrorKind = 'NoWalletConnected';
+
+export type CreateInteractionErrorKind = 'InvalidInteraction' | 'UnknownError';
+export class CreateInteractionError extends CustomError<CreateInteractionErrorKind> {}
+
+export type BundleInteractionErrorKind =
+  | ContractErrorKind
+  | 'UnknownError'
+  | 'TxCreationFailed'
+  | 'InvalidInteraction'
+  | 'UnrecognizedGatewayStatus'
+  | 'CannotBundle';
+export class BundleInteractionError extends CustomError<BundleInteractionErrorKind> {}
 
 /**
  * A base interface to be implemented by SmartWeave Contracts clients
