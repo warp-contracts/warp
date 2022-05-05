@@ -13,7 +13,8 @@ export interface StateEvaluator {
   onStateUpdate<State>(
     transaction: GQLNodeInterface,
     executionContext: ExecutionContext<State>,
-    state: EvalStateResult<State>
+    state: EvalStateResult<State>,
+    nthInteraction?: number
   ): Promise<void>;
 
   /**
