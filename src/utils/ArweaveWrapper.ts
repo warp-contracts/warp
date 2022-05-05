@@ -1,6 +1,6 @@
 import Arweave from 'arweave';
 import { NetworkInfoInterface } from 'arweave/node/network';
-import { GqlReqVariables, LoggerFactory } from '@smartweave';
+import { GqlReqVariables, LoggerFactory, R_GW_URL } from '@smartweave';
 import { AxiosResponse } from 'axios';
 import Transaction from 'arweave/node/lib/transaction';
 import { Buffer as isomorphicBuffer } from 'redstone-isomorphic';
@@ -15,24 +15,12 @@ export class ArweaveWrapper {
     this.logger.debug('baseurl', this.baseUrl);
   }
 
-  async info(): Promise<Partial<NetworkInfoInterface>> {
-    try {
-      const response = await fetch(`${this.baseUrl}/info`)
-        .then((res) => {
-          return res.ok ? res.json() : Promise.reject(res);
-        })
-        .catch((error) => {
-          if (error.body?.message) {
-            this.logger.error(error.body.message);
-          }
-          throw new Error(`Unable to retrieve info. ${error.status}: ${error.body?.message}`);
-        });
+  async rGwInfo(): Promise<NetworkInfoInterface> {
+    return await this.doFetchInfo(`${R_GW_URL}/gateway/arweave/info`);
+  }
 
-      return response;
-    } catch (e) {
-      this.logger.error('Error while loading network info', e);
-      throw e;
-    }
+  async info(): Promise<NetworkInfoInterface> {
+    return await this.doFetchInfo(`${this.baseUrl}/info`);
   }
 
   async gql(query: string, variables: GqlReqVariables): Promise<Partial<AxiosResponse<any>>> {
@@ -108,5 +96,25 @@ export class ArweaveWrapper {
   async txDataString(id: string): Promise<string> {
     const buffer = await this.txData(id);
     return Arweave.utils.bufferToString(buffer);
+  }
+
+  private async doFetchInfo(url: string): Promise<NetworkInfoInterface> {
+    try {
+      const response = await fetch(url)
+        .then((res) => {
+          return res.ok ? res.json() : Promise.reject(res);
+        })
+        .catch((error) => {
+          if (error.body?.message) {
+            this.logger.error(error.body.message);
+          }
+          throw new Error(`Unable to retrieve info. ${error.status}: ${error.body?.message}`);
+        });
+
+      return response;
+    } catch (e) {
+      this.logger.error('Error while loading network info', e);
+      throw e;
+    }
   }
 }

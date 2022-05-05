@@ -367,8 +367,14 @@ export class HandlerBasedContract<State> implements Contract<State> {
     forceDefinitionLoad = false,
     upToTransactionId: string = undefined
   ): Promise<ExecutionContext<State, HandlerApi<State>>> {
-    const { definitionLoader, interactionsLoader, interactionsSorter, executorFactory, stateEvaluator } =
-      this.smartweave;
+    const {
+      definitionLoader,
+      interactionsLoader,
+      interactionsSorter,
+      executorFactory,
+      stateEvaluator,
+      useRedstoneGwInfo
+    } = this.smartweave;
 
     let currentNetworkInfo;
 
@@ -381,7 +387,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
         };
       } else {
         this.logger.debug('Reading network info for root call');
-        currentNetworkInfo = await this._arweaveWrapper.info();
+        currentNetworkInfo = useRedstoneGwInfo
+          ? await this._arweaveWrapper.rGwInfo()
+          : await this._arweaveWrapper.info();
         this._networkInfo = currentNetworkInfo;
       }
     } else {

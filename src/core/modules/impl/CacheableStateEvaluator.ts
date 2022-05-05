@@ -121,7 +121,8 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     const contractTxId = executionContext.contractDefinition.txId;
     this.cLogger.debug(`onStateEvaluated: cache update for contract ${contractTxId} [${transaction.block.height}]`);
 
-    // TODO: this will be problematic if we decide to cache only "onStateEvaluated" and containsInteractionsFromSequencer = true
+    // this will be problematic if we decide to cache only "onStateEvaluated" and containsInteractionsFromSequencer = true
+    // as a workaround, we're now caching every 100 interactions
     await this.putInCache(
       contractTxId,
       transaction,
@@ -137,11 +138,13 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
   async onStateUpdate<State>(
     transaction: GQLNodeInterface,
     executionContext: ExecutionContext<State>,
-    state: EvalStateResult<State>
+    state: EvalStateResult<State>,
+    nthInteraction?: number
   ): Promise<void> {
     if (
       executionContext.evaluationOptions.updateCacheForEachInteraction ||
-      executionContext.evaluationOptions.internalWrites
+      executionContext.evaluationOptions.internalWrites ||
+      (nthInteraction || 1) % 100 == 0
     ) {
       await this.putInCache(
         executionContext.contractDefinition.txId,
@@ -205,16 +208,23 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     if (transaction.confirmationStatus !== undefined && transaction.confirmationStatus !== 'confirmed') {
       return;
     }
-
-    const blockHeight = transaction.block.height;
-    if (requestedBlockHeight !== null && blockHeight >= requestedBlockHeight - 1 && containsInteractionsFromSequencer) {
-      this.cLogger.debug('skipping caching of the last blocks');
+    // example:
+    // requested - 10
+    // tx - 9, 10 - caching should be skipped
+    const txBlockHeight = transaction.block.height;
+    this.cLogger.debug(`requestedBlockHeight: ${requestedBlockHeight}, txBlockHeight: ${txBlockHeight}`);
+    if (
+      requestedBlockHeight !== null &&
+      txBlockHeight >= requestedBlockHeight - 1 &&
+      containsInteractionsFromSequencer
+    ) {
+      this.cLogger.debug(`skipping caching of the last blocks`);
       return;
     }
     const transactionId = transaction.id;
     const stateToCache = new EvalStateResult(state.state, state.validity, transactionId, transaction.block.id);
 
-    await this.cache.put(new BlockHeightKey(contractTxId, blockHeight), stateToCache);
+    await this.cache.put(new BlockHeightKey(contractTxId, txBlockHeight), stateToCache);
   }
 
   async flushCache(): Promise<void> {

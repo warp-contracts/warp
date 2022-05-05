@@ -17,12 +17,15 @@ import {
   StateEvaluator
 } from '@smartweave';
 
+export const R_GW_URL = 'https://d1o5nlqr4okus2.cloudfront.net';
+
 export class SmartWeaveBuilder {
   private _definitionLoader?: DefinitionLoader;
   private _interactionsLoader?: InteractionsLoader;
   private _interactionsSorter?: InteractionsSorter;
   private _executorFactory?: ExecutorFactory<HandlerApi<unknown>>;
   private _stateEvaluator?: StateEvaluator;
+  private _useRedstoneGwInfo = false;
 
   constructor(private readonly _arweave: Arweave) {}
 
@@ -73,11 +76,11 @@ export class SmartWeaveBuilder {
   public useRedStoneGateway(
     confirmationStatus: ConfirmationStatus = null,
     source: SourceType = null,
-    address = 'https://d1o5nlqr4okus2.cloudfront.net'
+    address = R_GW_URL
   ): SmartWeaveBuilder {
     this._interactionsLoader = new RedstoneGatewayInteractionsLoader(address, confirmationStatus, source);
     this._definitionLoader = new RedstoneGatewayContractDefinitionLoader(address, this._arweave, new MemCache());
-
+    this._useRedstoneGwInfo = true;
     return this;
   }
 
@@ -88,7 +91,8 @@ export class SmartWeaveBuilder {
       this._interactionsLoader,
       this._interactionsSorter,
       this._executorFactory,
-      this._stateEvaluator
+      this._stateEvaluator,
+      this._useRedstoneGwInfo
     );
   }
 }
