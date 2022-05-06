@@ -8,6 +8,7 @@ import {
   stripTrailingSlash
 } from '@smartweave';
 import 'redstone-isomorphic';
+import { InteractionLoaderError } from '../InteractionsLoader';
 
 interface Paging {
   total: string;
@@ -123,7 +124,16 @@ export class RedstoneGatewayInteractionsLoader implements InteractionsLoader {
           if (error.body?.message) {
             this.logger.error(error.body.message);
           }
-          throw new Error(`Unable to retrieve transactions. Redstone gateway responded with status ${error.status}.`);
+          const errorMessage = `Unable to retrieve transactions. Redstone gateway responded with status ${error.status}.`;
+          switch (error.status) {
+            case 504:
+              throw new InteractionLoaderError('BadGatewayResponse500', errorMessage);
+            case 500:
+              throw new InteractionLoaderError('BadGatewayResponse504', errorMessage);
+
+            default:
+              throw new InteractionLoaderError('BadGatewayResponse', errorMessage);
+          }
         });
       totalPages = response.paging.pages;
 

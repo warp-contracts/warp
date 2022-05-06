@@ -23,6 +23,7 @@ import {
   InnerWritesEvaluator,
   InteractionCall,
   InteractionData,
+  InteractionLoaderError,
   InteractionResult,
   LoggerFactory,
   SigningFunction,
@@ -30,8 +31,7 @@ import {
   SmartWeave,
   SmartWeaveTags,
   SourceType,
-  Tags,
-  CreateInteractionError
+  Tags
 } from '@smartweave';
 import { TransactionStatusResponse } from 'arweave/node/transactions';
 import { NetworkInfoInterface } from 'arweave/node/network';
@@ -234,16 +234,14 @@ export class HandlerBasedContract<State> implements Contract<State> {
       throw new BundleInteractionError('NoWalletConnected', "Wallet not connected. Use 'connect' method first.");
     }
 
-    let interactionTx;
+    let interactionTx: Transaction;
     try {
       interactionTx = await this.createInteraction(input, tags, emptyTransfer, strict);
     } catch (e) {
-      if (e instanceof CreateInteractionError) {
-        if (e.kind === 'InvalidInteraction') {
-          throw new BundleInteractionError('InvalidInteraction');
-        } else {
-          throw new BundleInteractionError('UnknownError', undefined, e);
-        }
+      if (e instanceof InteractionLoaderError) {
+        throw new BundleInteractionError('BadGatewayResponse');
+      } else {
+        throw new BundleInteractionError('InvalidInteraction');
       }
     }
 
@@ -280,63 +278,49 @@ export class HandlerBasedContract<State> implements Contract<State> {
     transfer: ArTransfer,
     strict: boolean
   ) {
-    try {
-      if (this._evaluationOptions.internalWrites) {
-        // Call contract and verify if there are any internal writes:
-        // 1. Evaluate current contract state
-        // 2. Apply input as "dry-run" transaction
-        // 3. Verify the callStack and search for any "internalWrites" transactions
-        // 4. For each found "internalWrite" transaction - generate additional tag:
-        // {name: 'InternalWrite', value: callingContractTxId}
-        const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer);
-        if (strict && handlerResult.type !== 'ok') {
-          throw new CreateInteractionError(
-            'InvalidInteraction',
-            `Cannot create interaction: ${handlerResult.errorMessage}`
-          );
-        }
-        const callStack: ContractCallStack = this.getCallStack();
-        const innerWrites = this._innerWritesEvaluator.eval(callStack);
-        this.logger.debug('Input', input);
-        this.logger.debug('Callstack', callStack.print());
-
-        innerWrites.forEach((contractTxId) => {
-          tags.push({
-            name: SmartWeaveTags.INTERACT_WRITE,
-            value: contractTxId
-          });
-        });
-
-        this.logger.debug('Tags with inner calls', tags);
-      } else {
-        if (strict) {
-          const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer);
-          if (handlerResult.type !== 'ok') {
-            throw new CreateInteractionError(
-              'InvalidInteraction',
-              `Cannot create interaction: ${handlerResult.errorMessage}`
-            );
-          }
-        }
+    if (this._evaluationOptions.internalWrites) {
+      // Call contract and verify if there are any internal writes:
+      // 1. Evaluate current contract state
+      // 2. Apply input as "dry-run" transaction
+      // 3. Verify the callStack and search for any "internalWrites" transactions
+      // 4. For each found "internalWrite" transaction - generate additional tag:
+      // {name: 'InternalWrite', value: callingContractTxId}
+      const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer);
+      if (strict && handlerResult.type !== 'ok') {
+        throw new Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
       }
+      const callStack: ContractCallStack = this.getCallStack();
+      const innerWrites = this._innerWritesEvaluator.eval(callStack);
+      this.logger.debug('Input', input);
+      this.logger.debug('Callstack', callStack.print());
 
-      const interactionTx = await createTx(
-        this.smartweave.arweave,
-        this.signer,
-        this._contractTxId,
-        input,
-        tags,
-        transfer.target,
-        transfer.winstonQty
-      );
-      return interactionTx;
-    } catch (e) {
-      if (e instanceof CreateInteractionError) {
-        throw e;
-      } else {
-        throw new CreateInteractionError('UnknownError', e, e);
+      innerWrites.forEach((contractTxId) => {
+        tags.push({
+          name: SmartWeaveTags.INTERACT_WRITE,
+          value: contractTxId
+        });
+      });
+
+      this.logger.debug('Tags with inner calls', tags);
+    } else {
+      if (strict) {
+        const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer);
+        if (handlerResult.type !== 'ok') {
+          throw new Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
+        }
       }
     }
+
+    const interactionTx = await createTx(
+      this.smartweave.arweave,
+      this.signer,
+      this._contractTxId,
+      input,
+      tags,
+      transfer.target,
+      transfer.winstonQty
+    );
+    return interactionTx;
   }
 
   txId(): string {

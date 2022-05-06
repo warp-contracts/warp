@@ -1,4 +1,9 @@
-import { EvaluationOptions, GQLEdgeInterface } from '@smartweave';
+import { CustomError, EvaluationOptions, GQLEdgeInterface } from '@smartweave';
+
+// TODO: Update tests at `src/__tests__/unit/gateway-interactions.loader.test.ts:140 & 151` to use
+// this instead of comparing with error's message.
+export type InteractionLoaderErrorKind = 'BadGatewayResponse500' | 'BadGatewayResponse504' | 'BadGatewayResponse';
+export class InteractionLoaderError extends CustomError<InteractionLoaderErrorKind> {}
 
 /**
  * Implementors of this interface add functionality of loading contract's interaction transactions.

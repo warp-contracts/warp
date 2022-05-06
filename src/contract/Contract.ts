@@ -19,12 +19,12 @@ export type SigningFunction = (tx: Transaction) => Promise<void>;
 
 export type ContractErrorKind = 'NoWalletConnected';
 
-export type CreateInteractionErrorKind = 'InvalidInteraction' | 'UnknownError';
-export class CreateInteractionError extends CustomError<CreateInteractionErrorKind> {}
+export type CreateInteractionErrorKind = 'InvalidInteraction';
 
 export type BundleInteractionErrorKind =
   | ContractErrorKind
-  | 'UnknownError'
+  | CreateInteractionErrorKind
+  | 'BadGatewayResponse'
   | 'TxCreationFailed'
   | 'InvalidInteraction'
   | 'UnrecognizedGatewayStatus'
