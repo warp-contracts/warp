@@ -30,7 +30,8 @@ export class SmartWeave {
     readonly interactionsLoader: InteractionsLoader,
     readonly interactionsSorter: InteractionsSorter,
     readonly executorFactory: ExecutorFactory<HandlerApi<unknown>>,
-    readonly stateEvaluator: StateEvaluator
+    readonly stateEvaluator: StateEvaluator,
+    readonly useRedstoneGwInfo: boolean = false
   ) {
     this.createContract = new DefaultCreateContract(arweave);
   }

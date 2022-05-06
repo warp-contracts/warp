@@ -141,7 +141,9 @@ export class RedstoneGatewayInteractionsLoader implements InteractionsLoader {
         })
       );
 
-      this.logger.debug(`Loaded interactions length: ${interactions.length}`);
+      this.logger.debug(
+        `Loaded interactions length: ${interactions.length}, from: ${fromBlockHeight}, to: ${toBlockHeight}`
+      );
     } while (page < totalPages);
 
     this.logger.debug('All loaded interactions:', {

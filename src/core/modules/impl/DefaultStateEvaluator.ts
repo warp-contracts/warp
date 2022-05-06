@@ -62,7 +62,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
     executionContext?.handler.initState(currentState);
 
-    this.logger.info(
+    this.logger.debug(
       `Evaluating state for ${contractDefinition.txId} [${missingInteractions.length} non-cached of ${sortedInteractions.length} all]`
     );
 
@@ -221,7 +221,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
             state: toCache
           };
         }
-        await this.onStateUpdate<State>(interactionTx, executionContext, toCache);
+        await this.onStateUpdate<State>(interactionTx, executionContext, toCache, i);
       }
 
       // I'm really NOT a fan of this "modify" feature, but I don't have idea how to better
@@ -296,7 +296,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
   abstract onStateUpdate<State>(
     transaction: GQLNodeInterface,
     executionContext: ExecutionContext<State>,
-    state: EvalStateResult<State>
+    state: EvalStateResult<State>,
+    nthInteraction?: number
   ): Promise<void>;
 
   abstract flushCache(): Promise<void>;
