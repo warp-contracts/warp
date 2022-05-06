@@ -25,9 +25,6 @@ export type BundleInteractionErrorKind =
   | ContractErrorKind
   | CreateInteractionErrorKind
   | 'BadGatewayResponse'
-  | 'TxCreationFailed'
-  | 'InvalidInteraction'
-  | 'UnrecognizedGatewayStatus'
   | 'CannotBundle';
 export class BundleInteractionError extends CustomError<BundleInteractionErrorKind> {}
 
