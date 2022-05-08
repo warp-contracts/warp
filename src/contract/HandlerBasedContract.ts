@@ -239,9 +239,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
       interactionTx = await this.createInteraction(input, tags, emptyTransfer, strict);
     } catch (e) {
       if (e instanceof InteractionsLoaderError) {
-        throw new BundleInteractionError('BadGatewayResponse');
+        throw new BundleInteractionError('BadGatewayResponse', `${e}`, e);
       } else {
-        throw new BundleInteractionError('InvalidInteraction');
+        throw new BundleInteractionError('InvalidInteraction', `${e}`, e);
       }
     }
 
