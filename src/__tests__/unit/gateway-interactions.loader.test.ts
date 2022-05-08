@@ -1,4 +1,4 @@
-import { LoggerFactory, RedstoneGatewayInteractionsLoader } from '@smartweave';
+import { LoggerFactory, RedstoneGatewayInteractionsLoader, InteractionsLoaderError } from '@smartweave';
 import { GQLEdgeInterface } from '../../legacy/gqlResult';
 
 const responseData = {
@@ -137,7 +137,7 @@ describe('RedstoneGatewayInteractionsLoader -> load', () => {
     try {
       await loader.load(contractId, fromBlockHeight, toBlockHeight);
     } catch (e) {
-      expect(e).toEqual(new Error('Unable to retrieve transactions. Redstone gateway responded with status 504.'));
+      expect((e as InteractionsLoaderError).kind === 'BadGatewayResponse504').toBeTruthy();
     }
   });
   it('should throw an error when request fails', async () => {
@@ -148,7 +148,8 @@ describe('RedstoneGatewayInteractionsLoader -> load', () => {
     try {
       await loader.load(contractId, fromBlockHeight, toBlockHeight);
     } catch (e) {
-      expect(e).toEqual(new Error('Unable to retrieve transactions. Redstone gateway responded with status 500.'));
+      console.log(e);
+      expect((e as InteractionsLoaderError).kind === 'BadGatewayResponse500').toBeTruthy();
     }
   });
 });
