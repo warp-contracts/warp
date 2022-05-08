@@ -2,13 +2,13 @@ import {
   ArTransfer,
   ArWallet,
   ContractCallStack,
-  CustomError,
   EvalStateResult,
   EvaluationOptions,
   GQLNodeInterface,
   InteractionResult,
   Tags
 } from '@smartweave';
+import { CustomError } from '@smartweave/utils';
 import { NetworkInfoInterface } from 'arweave/node/network';
 import Transaction from 'arweave/node/lib/transaction';
 

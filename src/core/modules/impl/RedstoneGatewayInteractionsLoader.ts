@@ -5,10 +5,10 @@ import {
   GQLNodeInterface,
   InteractionsLoader,
   LoggerFactory,
-  stripTrailingSlash
+  stripTrailingSlash,
+  InteractionsLoaderError
 } from '@smartweave';
 import 'redstone-isomorphic';
-import { InteractionLoaderError } from '../InteractionsLoader';
 
 interface Paging {
   total: string;
@@ -127,12 +127,12 @@ export class RedstoneGatewayInteractionsLoader implements InteractionsLoader {
           const errorMessage = `Unable to retrieve transactions. Redstone gateway responded with status ${error.status}.`;
           switch (error.status) {
             case 504:
-              throw new InteractionLoaderError('BadGatewayResponse500', errorMessage);
+              throw new InteractionsLoaderError('BadGatewayResponse504', errorMessage);
             case 500:
-              throw new InteractionLoaderError('BadGatewayResponse504', errorMessage);
+              throw new InteractionsLoaderError('BadGatewayResponse500', errorMessage);
 
             default:
-              throw new InteractionLoaderError('BadGatewayResponse', errorMessage);
+              throw new InteractionsLoaderError('BadGatewayResponse', errorMessage);
           }
         });
       totalPages = response.paging.pages;

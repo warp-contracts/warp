@@ -23,7 +23,7 @@ import {
   InnerWritesEvaluator,
   InteractionCall,
   InteractionData,
-  InteractionLoaderError,
+  InteractionsLoaderError,
   InteractionResult,
   LoggerFactory,
   SigningFunction,
@@ -238,7 +238,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     try {
       interactionTx = await this.createInteraction(input, tags, emptyTransfer, strict);
     } catch (e) {
-      if (e instanceof InteractionLoaderError) {
+      if (e instanceof InteractionsLoaderError) {
         throw new BundleInteractionError('BadGatewayResponse');
       } else {
         throw new BundleInteractionError('InvalidInteraction');

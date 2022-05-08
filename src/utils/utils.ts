@@ -55,13 +55,3 @@ export function timeout(s: number): { timeoutId: number; timeoutPromise: Promise
 export function stripTrailingSlash(str: string) {
   return str.endsWith('/') ? str.slice(0, -1) : str;
 }
-
-export class CustomError<T> extends Error {
-  constructor(public kind: T, message?: string, public originalError?: unknown) {
-    super(`${kind}${message ? `: ${message}` : ''}`);
-    this.name = 'CustomError';
-    Error.captureStackTrace(this, CustomError);
-  }
-}
-
-type Constructor<T> = new (...args: any[]) => T;
