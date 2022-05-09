@@ -1,6 +1,7 @@
 /* eslint-disable */
 import Arweave from 'arweave';
 import { GQLNodeInterface, GQLTagInterface } from './gqlResult';
+import {EvaluationOptions} from "@smartweave/core";
 
 /**
  *
@@ -51,9 +52,9 @@ export class SmartWeaveGlobal {
 
   caller?: string;
 
-  constructor(arweave: Arweave, contract: { id: string; owner: string }, gasLimit = Number.MAX_SAFE_INTEGER) {
+  constructor(arweave: Arweave, contract: { id: string; owner: string }, evaluationOptions: EvaluationOptions) {
     this.gasUsed = 0;
-    this.gasLimit = gasLimit;
+    this.gasLimit = Number.MAX_SAFE_INTEGER;
     this.unsafeClient = arweave;
     this.arweave = {
       ar: arweave.ar,
@@ -61,6 +62,24 @@ export class SmartWeaveGlobal {
       wallets: arweave.wallets,
       crypto: arweave.crypto
     };
+    this.arweave.wallets.getBalance = async (address: string): Promise<string> => {
+      if (!this._activeTx) {
+        throw new Error("Cannot read balance - active tx is not set.");
+      }
+      if (!this.block.height) {
+        throw new Error("Cannot read balance - block height not set.")
+      }
+      console.log(`${evaluationOptions.walletBalanceUrl}block/height/${this.block.height}/wallet/${address}/balance`);
+
+      // http://nyc-1.dev.arweave.net:1984/block/height/914387/wallet/M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI/balance
+      return await fetch(`${evaluationOptions.walletBalanceUrl}block/height/${this.block.height}/wallet/${address}/balance`)
+        .then((res) => {
+          return res.ok ? res.text() : Promise.reject(res);
+        })
+        .catch((error) => {
+          throw new Error(`Unable to read wallet balance. ${error.status}. ${error.body?.message}`);
+        });
+    }
     this.contract = contract;
     this.transaction = new Transaction(this);
     this.block = new Block(this);

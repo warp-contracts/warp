@@ -28,11 +28,11 @@ async function main() {
     const initialState = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.json'), 'utf8');
 
     // case 1 - full deploy, js contract
-    const contractTxId = await smartweave.createContract.deploy({
+   /* const contractTxId = await smartweave.createContract.deploy({
       wallet,
       initState: initialState,
       src: jsContractSrc,
-    }, true);
+    }, true);*/
 
     // case 2 - deploy from source, js contract
     /*const contractTxId = await smartweave.createContract.deployFromSourceTx({
@@ -57,7 +57,14 @@ async function main() {
       srcTxId: "5wXT-A0iugP9pWEyw-iTbB0plZ_AbmvlNKyBfGS3AUY",
     }, true);*/
 
-    const {state, validity} = await smartweave.contract(contractTxId).readState();
+    const contract = smartweave.contract("CRMRwP-poSTYI7f9fI-vF0CKaTTJTIl74KQYbnJ4hnE").connect(wallet);
+
+    const result = await contract.writeInteraction<any>({
+      function: "storeBalance",
+      target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+    });
+
+    //const {state, validity} = await contract.readState();
 
     //logger.info("Result", state);
 

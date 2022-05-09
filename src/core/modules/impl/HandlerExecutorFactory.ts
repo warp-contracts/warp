@@ -46,10 +46,14 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
     contractDefinition: ContractDefinition<State>,
     evaluationOptions: EvaluationOptions
   ): Promise<HandlerApi<State>> {
-    const swGlobal = new SmartWeaveGlobal(this.arweave, {
-      id: contractDefinition.txId,
-      owner: contractDefinition.owner
-    });
+    const swGlobal = new SmartWeaveGlobal(
+      this.arweave,
+      {
+        id: contractDefinition.txId,
+        owner: contractDefinition.owner
+      },
+      evaluationOptions
+    );
 
     if (contractDefinition.contractType == 'wasm') {
       this.logger.info('Creating handler for wasm contract', contractDefinition.txId);

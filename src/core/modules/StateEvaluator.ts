@@ -104,7 +104,7 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
     saveState: false
   };
 
-  bundlerAddress = 'https://gateway.redstone.finance/';
+  bundlerUrl = 'https://gateway.redstone.finance/';
 
   gasLimit = Number.MAX_SAFE_INTEGER;
 
@@ -115,6 +115,8 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   useVM2 = false;
 
   allowUnsafeClient = false;
+
+  walletBalanceUrl = 'http://nyc-1.dev.arweave.net:1984/';
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some of the features.
@@ -159,7 +161,7 @@ export interface EvaluationOptions {
     saveState: boolean;
   };
 
-  bundlerAddress: string;
+  bundlerUrl: string;
 
   gasLimit: number;
 
@@ -181,4 +183,7 @@ export interface EvaluationOptions {
   // if set to false - calling unsafe clinet in contract code will
   // result in throwing an exception
   allowUnsafeClient: boolean;
+
+  // an endpoint for retrieving wallet balance info
+  walletBalanceUrl: string;
 }
