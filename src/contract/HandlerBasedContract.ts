@@ -233,7 +233,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
     const interactionTx = await this.createInteraction(input, tags, emptyTransfer, strict);
 
-    const response = await fetch(`${this._evaluationOptions.bundlerAddress}gateway/sequencer/register`, {
+    const response = await fetch(`${this._evaluationOptions.bundlerUrl}gateway/sequencer/register`, {
       method: 'POST',
       body: JSON.stringify(interactionTx),
       headers: {
