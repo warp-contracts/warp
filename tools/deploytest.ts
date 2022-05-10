@@ -18,21 +18,18 @@ async function main() {
   });
 
   try {
-    const smartweave = SmartWeaveNodeFactory
-      .memCachedBased(arweave)
-      .useRedStoneGateway()
-      .build();
+    const smartweave = SmartWeaveNodeFactory.memCached(arweave);
 
     const jsContractSrc = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.js'), 'utf8');
     const wasmContractSrc = fs.readFileSync(path.join(__dirname, 'data/rust/rust-pst_bg.wasm'));
     const initialState = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.json'), 'utf8');
 
     // case 1 - full deploy, js contract
-   /* const contractTxId = await smartweave.createContract.deploy({
+    const contractTxId = await smartweave.createContract.deploy({
       wallet,
       initState: initialState,
       src: jsContractSrc,
-    }, true);*/
+    }, true);
 
     // case 2 - deploy from source, js contract
     /*const contractTxId = await smartweave.createContract.deployFromSourceTx({
@@ -57,16 +54,27 @@ async function main() {
       srcTxId: "5wXT-A0iugP9pWEyw-iTbB0plZ_AbmvlNKyBfGS3AUY",
     }, true);*/
 
-    const contract = smartweave.contract("CRMRwP-poSTYI7f9fI-vF0CKaTTJTIl74KQYbnJ4hnE").connect(wallet);
+    const contract = smartweave.contract(contractTxId).connect(wallet);
 
-    const result = await contract.writeInteraction<any>({
+    await contract.bundleInteraction<any>({
       function: "storeBalance",
       target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
     });
 
-    //const {state, validity} = await contract.readState();
+    await contract.bundleInteraction<any>({
+      function: "storeBalance",
+      target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+    });
 
-    //logger.info("Result", state);
+    await contract.bundleInteraction<any>({
+      function: "storeBalance",
+      target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+    });
+
+    const {state, validity} = await contract.readState();
+
+    logger.info("Result", state);
+    logger.info("Validity", validity);
 
   } catch (e) {
     logger.error(e)
