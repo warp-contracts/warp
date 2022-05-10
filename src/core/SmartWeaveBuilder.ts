@@ -2,7 +2,8 @@ import Arweave from 'arweave';
 import {
   ArweaveGatewayInteractionsLoader,
   CacheableContractInteractionsLoader,
-  ConfirmationStatus, ContractDefinitionLoader,
+  ConfirmationStatus,
+  ContractDefinitionLoader,
   DebuggableExecutorFactory,
   DefinitionLoader,
   ExecutorFactory,

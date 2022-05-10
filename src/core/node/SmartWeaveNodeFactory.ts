@@ -1,7 +1,8 @@
 import Arweave from 'arweave';
 import {
   ArweaveGatewayInteractionsLoader,
-  CacheableStateEvaluator, ConfirmationStatus,
+  CacheableStateEvaluator,
+  ConfirmationStatus,
   ContractDefinitionLoader,
   HandlerExecutorFactory,
   LexicographicalInteractionsSorter,
