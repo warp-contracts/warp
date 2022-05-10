@@ -119,6 +119,18 @@ All exports are stored under `rsdk` global variable.
 ```
 
 ### Using the RedStone Gateway
+
+#### SDK version >= `0.5.0`
+From version `0.5.0`, the RedStone Gateway is the default gateway used by the SDK.
+By default, the `{notCorrupted: true}` mode is used (as describe below).  
+If you want to use the Arweave gateway in version >= `0.5.0`:
+```ts
+const smartweave = SmartWeaveNodeFactory.memCachedBased(arweave)
+    .useArweaveGateway()
+    .build();
+```
+
+#### SDK version < `0.5.0`
 In order to use the [Redstone Gateway](https://github.com/redstone-finance/redstone-sw-gateway) for loading the contract interactions,
 configure the smartweave instance in the following way:
 ```ts
