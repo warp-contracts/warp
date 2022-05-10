@@ -111,7 +111,10 @@ describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
       const resultString = stringify(result.state).trim();
 
       console.log('readState Arweave Gateway', contractTxId);
-      const result2 = await SmartWeaveNodeFactory.memCached(arweave, 1).contract(contractTxId).readState(blockHeight);
+      const result2 = await SmartWeaveNodeFactory.memCachedBased(arweave, 1)
+        .useArweaveGateway()
+        .build()
+        .contract(contractTxId).readState(blockHeight);
       const result2String = stringify(result2.state).trim();
       expect(result2String).toEqual(resultString);
     },

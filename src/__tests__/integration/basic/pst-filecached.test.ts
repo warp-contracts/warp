@@ -39,7 +39,7 @@ describe('Testing the Profit Sharing Token', () => {
 
     LoggerFactory.INST.logLevel('error');
 
-    smartweave = SmartWeaveNodeFactory.fileCached(arweave, cacheDir);
+    smartweave = SmartWeaveNodeFactory.fileCachedBased(arweave, cacheDir).useArweaveGateway().build();
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -123,7 +123,7 @@ describe('Testing the Profit Sharing Token', () => {
   });
 
   it('should load updated source code', async () => {
-    const smartweave2 = SmartWeaveNodeFactory.fileCached(arweave, cacheDir);
+    const smartweave2 = SmartWeaveNodeFactory.fileCachedBased(arweave, cacheDir).useArweaveGateway().build();
     // connecting to the PST contract
     pst = smartweave2.pst(contractTxId);
 

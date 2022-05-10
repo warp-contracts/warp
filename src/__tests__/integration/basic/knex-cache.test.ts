@@ -12,6 +12,10 @@ interface ExampleContractState {
   counter: number;
 }
 
+async function getSmartWeave(arweave: Arweave, knexConfig: Knex<any, unknown[]>) {
+  return (await SmartWeaveNodeFactory.knexCachedBased(arweave, knexConfig)).useArweaveGateway().build();
+}
+
 /**
  * This integration test should verify whether the basic functions of the SmartWeave client
  * work properly when Knex cache is being used.
@@ -64,7 +68,7 @@ describe('Testing the SmartWeave client', () => {
 
     LoggerFactory.INST.logLevel('error');
 
-    smartweave = await SmartWeaveNodeFactory.knexCached(arweave, knexConfig);
+    smartweave = await getSmartWeave(arweave, knexConfig);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -158,20 +162,20 @@ describe('Testing the SmartWeave client', () => {
   });
 
   it('should properly read state with a fresh client', async () => {
-    const contract_1_2 = (await SmartWeaveNodeFactory.knexCached(arweave, knexConfig))
+    const contract_1_2 = (await getSmartWeave(arweave, knexConfig))
       .contract<ExampleContractState>(contract_1.txId())
       .connect(wallet);
-    const contract_1_2VM = (await SmartWeaveNodeFactory.knexCached(arweave, knexConfig))
+    const contract_1_2VM = (await getSmartWeave(arweave, knexConfig))
       .contract<ExampleContractState>(contract_1.txId())
       .setEvaluationOptions({ useVM2: true })
       .connect(wallet);
     expect((await contract_1_2.readState()).state.counter).toEqual(559);
     expect((await contract_1_2VM.readState()).state.counter).toEqual(559);
 
-    const contract_2_2 = (await SmartWeaveNodeFactory.knexCached(arweave, knexConfig))
+    const contract_2_2 = (await getSmartWeave(arweave, knexConfig))
       .contract<ExampleContractState>(contract_2.txId())
       .connect(wallet);
-    const contract_2_2VM = (await SmartWeaveNodeFactory.knexCached(arweave, knexConfig))
+    const contract_2_2VM = (await getSmartWeave(arweave, knexConfig))
       .contract<ExampleContractState>(contract_2.txId())
       .setEvaluationOptions({ useVM2: true })
       .connect(wallet);
@@ -192,17 +196,17 @@ describe('Testing the SmartWeave client', () => {
   });
 
   it('should properly read state with another fresh client', async () => {
-    const contract_1_3 = (await SmartWeaveNodeFactory.knexCached(arweave, knexConfig))
+    const contract_1_3 = (await getSmartWeave(arweave, knexConfig))
       .contract<ExampleContractState>(contract_1.txId())
       .connect(wallet);
-    const contract_1_3VM = (await SmartWeaveNodeFactory.knexCached(arweave, knexConfig))
+    const contract_1_3VM = (await getSmartWeave(arweave, knexConfig))
       .contract<ExampleContractState>(contract_1.txId())
       .setEvaluationOptions({ useVM2: true })
       .connect(wallet);
-    const contract_2_3 = (await SmartWeaveNodeFactory.knexCached(arweave, knexConfig))
+    const contract_2_3 = (await getSmartWeave(arweave, knexConfig))
       .contract<ExampleContractState>(contract_2.txId())
       .connect(wallet);
-    const contract_2_3VM = (await SmartWeaveNodeFactory.knexCached(arweave, knexConfig))
+    const contract_2_3VM = (await getSmartWeave(arweave, knexConfig))
       .contract<ExampleContractState>(contract_2.txId())
       .setEvaluationOptions({ useVM2: true })
       .connect(wallet);
@@ -233,17 +237,17 @@ describe('Testing the SmartWeave client', () => {
     await contract_2.writeInteraction({ function: 'add' });
     await mineBlock(arweave);
 
-    const contract_1_4 = (await SmartWeaveNodeFactory.knexCached(arweave, knexConfig))
+    const contract_1_4 = (await getSmartWeave(arweave, knexConfig))
       .contract<ExampleContractState>(contract_1.txId())
       .connect(wallet);
-    const contract_1_4VM = (await SmartWeaveNodeFactory.knexCached(arweave, knexConfig))
+    const contract_1_4VM = (await getSmartWeave(arweave, knexConfig))
       .contract<ExampleContractState>(contract_1.txId())
       .setEvaluationOptions({ useVM2: true })
       .connect(wallet);
-    const contract_2_4 = (await SmartWeaveNodeFactory.knexCached(arweave, knexConfig))
+    const contract_2_4 = (await getSmartWeave(arweave, knexConfig))
       .contract<ExampleContractState>(contract_2.txId())
       .connect(wallet);
-    const contract_2_4VM = (await SmartWeaveNodeFactory.knexCached(arweave, knexConfig))
+    const contract_2_4VM = (await getSmartWeave(arweave, knexConfig))
       .contract<ExampleContractState>(contract_2.txId())
       .setEvaluationOptions({ useVM2: true })
       .connect(wallet);
@@ -259,7 +263,7 @@ describe('Testing the SmartWeave client', () => {
   });
 
   it('should allow to manually flush cache', async () => {
-    const smartweave = await SmartWeaveNodeFactory.knexCached(arweave, knexConfig2);
+    const smartweave = await getSmartWeave(arweave, knexConfig2);
 
     const contract = smartweave
       .contract<ExampleContractState>(contract_1.txId())
