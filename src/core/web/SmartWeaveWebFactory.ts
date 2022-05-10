@@ -3,9 +3,13 @@ import { CacheableContractInteractionsLoader, CacheableExecutorFactory, Evolve }
 import {
   ArweaveGatewayInteractionsLoader,
   CacheableStateEvaluator,
+  ConfirmationStatus,
   ContractDefinitionLoader,
   HandlerExecutorFactory,
   LexicographicalInteractionsSorter,
+  R_GW_URL,
+  RedstoneGatewayContractDefinitionLoader,
+  RedstoneGatewayInteractionsLoader,
   SmartWeave,
   SmartWeaveBuilder,
   StateCache
@@ -18,44 +22,6 @@ import { MemBlockHeightSwCache, MemCache, RemoteBlockHeightCache } from '@smartw
  * SmartWeave instances created by this factory can be safely used in a web environment.
  */
 export class SmartWeaveWebFactory {
-  /**
-   * Returns a fully configured {@link SmartWeave} that is using remote cache for all layers.
-   * See {@link RemoteBlockHeightCache} for details.
-   */
-  static remoteCached(arweave: Arweave, cacheBaseURL: string): SmartWeave {
-    return this.remoteCacheBased(arweave, cacheBaseURL).build();
-  }
-
-  /**
-   * Returns a preconfigured, remoteCached {@link SmartWeaveBuilder}, that allows for customization of the SmartWeave instance.
-   * Use {@link SmartWeaveBuilder.build()} to finish the configuration.
-   */
-  static remoteCacheBased(arweave: Arweave, cacheBaseURL: string): SmartWeaveBuilder {
-    const definitionLoader = new ContractDefinitionLoader(arweave, new MemCache());
-
-    const interactionsLoader = new CacheableContractInteractionsLoader(
-      new ArweaveGatewayInteractionsLoader(arweave),
-      new RemoteBlockHeightCache('INTERACTIONS', cacheBaseURL)
-    );
-
-    const executorFactory = new CacheableExecutorFactory(arweave, new HandlerExecutorFactory(arweave), new MemCache());
-
-    const stateEvaluator = new CacheableStateEvaluator(
-      arweave,
-      new RemoteBlockHeightCache<StateCache<unknown>>('STATE', cacheBaseURL),
-      [new Evolve(definitionLoader, executorFactory)]
-    );
-
-    const interactionsSorter = new LexicographicalInteractionsSorter(arweave);
-
-    return SmartWeave.builder(arweave)
-      .setDefinitionLoader(definitionLoader)
-      .setInteractionsLoader(interactionsLoader)
-      .setInteractionsSorter(interactionsSorter)
-      .setExecutorFactory(executorFactory)
-      .setStateEvaluator(stateEvaluator);
-  }
-
   /**
    * Returns a fully configured {@link SmartWeave} that is using mem cache for all layers.
    */
@@ -70,17 +36,16 @@ export class SmartWeaveWebFactory {
   static memCachedBased(
     arweave: Arweave,
     maxStoredBlockHeights = 10,
-    stateCache?: MemBlockHeightSwCache<StateCache<unknown>>
+    confirmationStatus: ConfirmationStatus = { notCorrupted: true }
   ): SmartWeaveBuilder {
-    const definitionLoader = new ContractDefinitionLoader(arweave, new MemCache());
-
-    const interactionsLoader = new ArweaveGatewayInteractionsLoader(arweave);
+    const interactionsLoader = new RedstoneGatewayInteractionsLoader(R_GW_URL, confirmationStatus);
+    const definitionLoader = new RedstoneGatewayContractDefinitionLoader(R_GW_URL, arweave, new MemCache());
 
     const executorFactory = new CacheableExecutorFactory(arweave, new HandlerExecutorFactory(arweave), new MemCache());
 
     const stateEvaluator = new CacheableStateEvaluator(
       arweave,
-      stateCache ? stateCache : new MemBlockHeightSwCache<StateCache<unknown>>(maxStoredBlockHeights),
+      new MemBlockHeightSwCache<StateCache<unknown>>(maxStoredBlockHeights),
       [new Evolve(definitionLoader, executorFactory)]
     );
 
@@ -88,7 +53,8 @@ export class SmartWeaveWebFactory {
 
     return SmartWeave.builder(arweave)
       .setDefinitionLoader(definitionLoader)
-      .setCacheableInteractionsLoader(interactionsLoader)
+      .setInteractionsLoader(interactionsLoader)
+      .useRedStoneGwInfo()
       .setInteractionsSorter(interactionsSorter)
       .setExecutorFactory(executorFactory)
       .setStateEvaluator(stateEvaluator);

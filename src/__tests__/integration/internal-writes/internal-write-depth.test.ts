@@ -89,7 +89,7 @@ describe('Testing internal writes', () => {
   });
 
   async function deployContracts() {
-    smartweave = SmartWeaveNodeFactory.memCached(arweave);
+    smartweave = SmartWeaveNodeFactory.forTesting(arweave);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -208,11 +208,11 @@ describe('Testing internal writes', () => {
     });
 
     it('should properly evaluate state with a new client', async () => {
-      const contractB2 = SmartWeaveNodeFactory.memCached(arweave)
+      const contractB2 = SmartWeaveNodeFactory.forTesting(arweave)
         .contract<any>(contractBTxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
-      const contractC2 = SmartWeaveNodeFactory.memCached(arweave)
+      const contractC2 = SmartWeaveNodeFactory.forTesting(arweave)
         .contract<any>(contractCTxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);

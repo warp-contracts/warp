@@ -1,7 +1,8 @@
 import Arweave from 'arweave';
 import {
+  ArweaveGatewayInteractionsLoader,
   CacheableContractInteractionsLoader,
-  ConfirmationStatus,
+  ConfirmationStatus, ContractDefinitionLoader,
   DebuggableExecutorFactory,
   DefinitionLoader,
   ExecutorFactory,
@@ -80,6 +81,21 @@ export class SmartWeaveBuilder {
   ): SmartWeaveBuilder {
     this._interactionsLoader = new RedstoneGatewayInteractionsLoader(address, confirmationStatus, source);
     this._definitionLoader = new RedstoneGatewayContractDefinitionLoader(address, this._arweave, new MemCache());
+    this._useRedstoneGwInfo = true;
+    return this;
+  }
+
+  public useArweaveGateway(): SmartWeaveBuilder {
+    this._definitionLoader = new ContractDefinitionLoader(this._arweave, new MemCache());
+    this._interactionsLoader = new CacheableContractInteractionsLoader(
+      new ArweaveGatewayInteractionsLoader(this._arweave),
+      new MemBlockHeightSwCache(1)
+    );
+    this._useRedstoneGwInfo = false;
+    return this;
+  }
+
+  public useRedStoneGwInfo(): SmartWeaveBuilder {
     this._useRedstoneGwInfo = true;
     return this;
   }
