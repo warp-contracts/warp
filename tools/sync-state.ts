@@ -3,10 +3,12 @@ import Arweave from 'arweave';
 import {LoggerFactory, SmartWeaveNodeFactory} from '../src';
 import fs from 'fs';
 import {JWKInterface} from 'arweave/node/lib/wallet';
+import {TsLogFactory} from "../src/logging/node/TsLogFactory";
 
 async function main() {
+  LoggerFactory.use(new TsLogFactory());
   LoggerFactory.INST.logLevel('info');
-  const logger = LoggerFactory.INST.create('deploy');
+  const logger = LoggerFactory.INST.create('den');
 
   const arweave = Arweave.init({
     host: 'arweave.net',
@@ -15,22 +17,17 @@ async function main() {
   });
 
   try {
-    const smartweave = SmartWeaveNodeFactory
-      .memCachedBased(arweave)
-      .useRedStoneGateway()
-      .build();
-
-    const contract = await smartweave.contract("qg5BIOUraunoi6XJzbCC-TgIAypcXyXlVprgg0zRRDE")
+    const contract = await SmartWeaveNodeFactory.memCached(arweave)
+      .contract("XIutiOKujGI21_ywULlBeyy-L9d8goHxt0ZyUayGaDg")
       .syncState("http://134.209.84.136:8080");
 
-    const result = await contract
+    const call = await contract
       .viewState({
-        function: "getNodeDetails", data: {
-          address: "33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA"
-        }
+        function: "owner",
+        tokenId: "N44xR9fFg98mHmdIA8cOyHA19qNDmT4Xbd8dww8KSDk"
       });
 
-    logger.info("Result", result);
+    logger.info(call.result);
 
   } catch (e) {
     logger.error(e)
