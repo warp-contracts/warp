@@ -1,7 +1,8 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import { GQLNodeInterface, GQLTagInterface } from './gqlResult';
+import {GQLNodeInterface, GQLTagInterface, VrfData} from './gqlResult';
 import { EvaluationOptions } from '@smartweave/core';
+import {kMaxLength} from "buffer";
 
 /**
  *
@@ -34,6 +35,7 @@ export class SmartWeaveGlobal {
   gasLimit: number;
   transaction: Transaction;
   block: Block;
+  vrf: Vrf;
   arweave: Pick<Arweave, 'ar' | 'wallets' | 'utils' | 'crypto'>;
   contract: {
     id: string;
@@ -102,6 +104,7 @@ export class SmartWeaveGlobal {
         throw new Error('Not implemented - should be set by HandlerApi implementor');
       }
     };
+    this.vrf = new Vrf(this);
 
     this.useGas = this.useGas.bind(this);
   }
@@ -187,5 +190,32 @@ class Block {
       throw new Error('No current tx');
     }
     return this.global._activeTx.block.timestamp;
+  }
+}
+
+class Vrf {
+  constructor(private readonly global: SmartWeaveGlobal) {}
+
+  get data(): VrfData {
+    return this.global._activeTx.vrf;
+  }
+
+  // returns the original generated random number as a BigInt string;
+  get value(): string {
+    return this.global._activeTx.vrf.bigint;
+  }
+
+  // returns a random value in a range from 1 to maxValue
+  randomInt(maxValue: number): number {
+    if (!Number.isInteger(maxValue)) {
+      throw new Error('Integer max value required for random integer generation');
+    }
+    const result = BigInt(this.global._activeTx.vrf.bigint) % BigInt(maxValue) + BigInt(1);
+
+    if (result > Number.MAX_SAFE_INTEGER || result < Number.MIN_SAFE_INTEGER) {
+      throw new Error('Random int cannot be cast to number');
+    }
+
+    return Number(result);
   }
 }

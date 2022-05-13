@@ -36,6 +36,7 @@ import { NetworkInfoInterface } from 'arweave/node/network';
 import stringify from 'safe-stable-stringify';
 import * as crypto from 'crypto';
 import Transaction from 'arweave/node/lib/transaction';
+import { options } from 'tsconfig-paths/lib/options';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -226,12 +227,19 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return interactionTx.id;
   }
 
-  async bundleInteraction<Input>(input: Input, tags: Tags = [], strict = false): Promise<any | null> {
+  async bundleInteraction<Input>(
+    input: Input,
+    options: {
+      tags: [];
+      strict: false;
+      vrf: false;
+    }
+  ): Promise<any | null> {
     this.logger.info('Bundle interaction input', input);
     if (!this.signer) {
       throw new Error("Wallet not connected. Use 'connect' method first.");
     }
-    const interactionTx = await this.createInteraction(input, tags, emptyTransfer, strict);
+    const interactionTx = await this.createInteraction(input, options.tags, emptyTransfer, options.strict, options.vrf);
 
     const response = await fetch(`${this._evaluationOptions.bundlerUrl}gateway/sequencer/register`, {
       method: 'POST',
@@ -264,7 +272,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     input: Input,
     tags: { name: string; value: string }[],
     transfer: ArTransfer,
-    strict: boolean
+    strict: boolean,
+    vrf = false
   ) {
     if (this._evaluationOptions.internalWrites) {
       // Call contract and verify if there are any internal writes:
@@ -297,6 +306,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
           throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
         }
       }
+    }
+
+    if (vrf) {
+      tags.push({
+        name: SmartWeaveTags.REQUEST_VRF,
+        value: 'true'
+      });
     }
 
     const interactionTx = await createTx(
