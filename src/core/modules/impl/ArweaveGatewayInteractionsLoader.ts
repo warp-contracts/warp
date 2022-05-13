@@ -71,7 +71,7 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
 
   private readonly arweaveWrapper: ArweaveWrapper;
 
-  constructor(private readonly arweave: Arweave) {
+  constructor(protected readonly arweave: Arweave) {
     this.arweaveWrapper = new ArweaveWrapper(arweave);
   }
 

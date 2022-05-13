@@ -15,9 +15,15 @@ import {
   InteractionResult,
   LoggerFactory,
   StateEvaluator,
-  TagsParser
+  TagsParser,
+  VrfData
 } from '@smartweave';
 import Arweave from 'arweave';
+
+import { ProofHoHash } from '@idena/vrf-js';
+import elliptic from 'elliptic';
+
+const EC = new elliptic.ec('secp256k1');
 
 /**
  * This class contains the base functionality of evaluating the contracts state - according
@@ -77,6 +83,12 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       const singleInteractionBenchmark = Benchmark.measure();
 
       const interactionTx: GQLNodeInterface = missingInteraction.node;
+
+      if (interactionTx.vrf) {
+        if (!this.verifyVrf(interactionTx.vrf, interactionTx.sortKey, this.arweave)) {
+          throw new Error('Vrf verification failed.');
+        }
+      }
 
       this.logger.debug(
         `[${contractDefinition.txId}][${missingInteraction.node.id}][${missingInteraction.node.block.height}]: ${
@@ -240,6 +252,24 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     }
 
     return evalStateResult;
+  }
+
+  private verifyVrf(vrf: VrfData, sortKey: string, arweave: Arweave): boolean {
+    const keys = EC.keyFromPublic(vrf.pubkey, 'hex');
+
+    let hash;
+    try {
+      // ProofHoHash throws its own 'invalid vrf' exception
+      hash = ProofHoHash(
+        keys.getPublic(),
+        arweave.utils.stringToBuffer(sortKey),
+        arweave.utils.b64UrlToBuffer(vrf.proof)
+      );
+    } catch (e: any) {
+      return false;
+    }
+
+    return arweave.utils.bufferTob64Url(hash) == vrf.index;
   }
 
   private logResult<State>(
