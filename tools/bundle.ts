@@ -38,9 +38,7 @@ async function main() {
     useNullAsDefault: true
   });
 
-  const smartweave = (await SmartWeaveNodeFactory.knexCachedBased(arweave, knexConfig))
-    .useRedStoneGateway(null, null, "http://localhost:5666/")
-    .build();
+  const smartweave = await SmartWeaveNodeFactory.knexCached(arweave, knexConfig);
 
   const wallet: JWKInterface = readJSON('.secrets/33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA.json');
 
@@ -61,10 +59,7 @@ async function main() {
     .contract<any>(contractTxId)
     // connecting wallet to a contract. It is required before performing any "writeInteraction"
     // calling "writeInteraction" without connecting to a wallet first will cause a runtime error.
-    .connect(wallet)
-    .setEvaluationOptions({
-      bundlerUrl: "http://localhost:5666/"
-    });
+    .connect(wallet);
 
   const result = await token.bundleInteraction<any>({
     function: "vrf",
