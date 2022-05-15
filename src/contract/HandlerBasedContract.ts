@@ -230,15 +230,27 @@ export class HandlerBasedContract<State> implements Contract<State> {
   async bundleInteraction<Input>(
     input: Input,
     options: {
-      tags: [];
-      strict: false;
-      vrf: false;
+      tags: Tags;
+      strict: boolean;
+      vrf: boolean;
+    } = {
+      tags: [],
+      strict: false,
+      vrf: false
     }
   ): Promise<any | null> {
     this.logger.info('Bundle interaction input', input);
     if (!this.signer) {
       throw new Error("Wallet not connected. Use 'connect' method first.");
     }
+
+    options = {
+      tags: [],
+      strict: false,
+      vrf: false,
+      ...options
+    };
+
     const interactionTx = await this.createInteraction(input, options.tags, emptyTransfer, options.strict, options.vrf);
 
     const response = await fetch(`${this._evaluationOptions.bundlerUrl}gateway/sequencer/register`, {
@@ -268,13 +280,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     };
   }
 
-  private async createInteraction<Input>(
-    input: Input,
-    tags: { name: string; value: string }[],
-    transfer: ArTransfer,
-    strict: boolean,
-    vrf = false
-  ) {
+  private async createInteraction<Input>(input: Input, tags: Tags, transfer: ArTransfer, strict: boolean, vrf = false) {
     if (this._evaluationOptions.internalWrites) {
       // Call contract and verify if there are any internal writes:
       // 1. Evaluate current contract state

@@ -15,6 +15,35 @@ export async function handle(state, action) {
     return { state };
   }
 
+  if (input.function === 'vrf') {
+    if (!state.vrf) {
+      state.vrf = {};
+    }
+
+    state.vrf[SmartWeave.transaction.id] = {
+      vrf: SmartWeave.vrf.data,
+      value: SmartWeave.vrf.value,
+
+      random_6_1: SmartWeave.vrf.randomInt(6),
+      random_6_2: SmartWeave.vrf.randomInt(6),
+      random_6_3: SmartWeave.vrf.randomInt(6),
+
+      random_12_1: SmartWeave.vrf.randomInt(12),
+      random_12_2: SmartWeave.vrf.randomInt(12),
+      random_12_3: SmartWeave.vrf.randomInt(12),
+
+      random_46_1: SmartWeave.vrf.randomInt(46),
+      random_46_2: SmartWeave.vrf.randomInt(46),
+      random_46_3: SmartWeave.vrf.randomInt(46),
+
+      random_99_1: SmartWeave.vrf.randomInt(99),
+      random_99_2: SmartWeave.vrf.randomInt(99),
+      random_99_3: SmartWeave.vrf.randomInt(99),
+    }
+
+    return {state};
+  }
+
   if (input.function === 'transfer') {
     const target = input.target;
     const qty = input.qty;

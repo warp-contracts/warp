@@ -149,7 +149,7 @@ export interface Contract<State = unknown> {
    */
   bundleInteraction<Input = unknown>(
     input: Input,
-    options: {
+    options?: {
       tags?: Tags;
       strict?: boolean;
       vrf?: boolean;

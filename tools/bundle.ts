@@ -2,15 +2,13 @@
 import Arweave from 'arweave';
 import {
   LoggerFactory,
-  MemCache,
-  RedstoneGatewayContractDefinitionLoader,
-  RedstoneGatewayInteractionsLoader, sleep,
-  SmartWeaveNodeFactory, SmartWeaveTags
+  SmartWeaveNodeFactory
 } from '../src';
-import { readJSON } from '../../redstone-smartweave-examples/src/_utils';
 import { TsLogFactory } from '../src/logging/node/TsLogFactory';
 import path from "path";
 import knex from "knex";
+import fs from "fs";
+import {JWKInterface} from "arweave/node/lib/wallet";
 
 const logger = LoggerFactory.INST.create('Contract');
 
@@ -41,20 +39,40 @@ async function main() {
   });
 
   const smartweave = (await SmartWeaveNodeFactory.knexCachedBased(arweave, knexConfig))
-    .useRedStoneGateway()
+    .useRedStoneGateway(null, null, "http://localhost:5666/")
     .build();
 
-  const jwk = readJSON('../redstone-node/.secrets/redstone-jwk.json');
+  const wallet: JWKInterface = readJSON('.secrets/33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA.json');
+
+  const jsContractSrc = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.js'), 'utf8');
+  const initialState = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.json'), 'utf8');
+
+  // case 1 - full deploy, js contract
+  const contractTxId = await smartweave.createContract.deploy({
+    wallet,
+    initState: initialState,
+    src: jsContractSrc,
+  }, true);
+
+  logger.info("tx id:", contractTxId);
+
   // connecting to a given contract
   const token = smartweave
-    .contract("_iWbqZMSq_maTbNQKRZ-S_is0Ilj5L0y9UJslZBChnk")
+    .contract<any>(contractTxId)
     // connecting wallet to a contract. It is required before performing any "writeInteraction"
     // calling "writeInteraction" without connecting to a wallet first will cause a runtime error.
-    .connect(jwk);
+    .connect(wallet)
+    .setEvaluationOptions({
+      bundlerUrl: "http://localhost:5666/"
+    });
+
+  const result = await token.bundleInteraction<any>({
+    function: "vrf",
+  }, {vrf: true});
 
   const {state} = await token.readState();
 
-  logger.info("State", state);
+  logger.info("State", state.vrf);
 
   /*const result = await token.writeInteraction({
     function: "transfer",
@@ -105,6 +123,15 @@ async function main() {
 
   logger.info("Amount of computed interactions after 'bundleInteraction':", Object.keys(result2.validity).length);
 */
+}
+
+function readJSON(path: string): JWKInterface {
+  const content = fs.readFileSync(path, "utf-8");
+  try {
+    return JSON.parse(content);
+  } catch (e) {
+    throw new Error(`File "${path}" does not contain a valid JSON`);
+  }
 }
 
 
