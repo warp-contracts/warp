@@ -1,8 +1,8 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import {GQLNodeInterface, GQLTagInterface, VrfData} from './gqlResult';
+import { GQLNodeInterface, GQLTagInterface, VrfData } from './gqlResult';
 import { EvaluationOptions } from '@smartweave/core';
-import {kMaxLength} from "buffer";
+import { kMaxLength } from 'buffer';
 
 /**
  *
@@ -210,7 +210,7 @@ class Vrf {
     if (!Number.isInteger(maxValue)) {
       throw new Error('Integer max value required for random integer generation');
     }
-    const result = BigInt(this.global._activeTx.vrf.bigint) % BigInt(maxValue) + BigInt(1);
+    const result = (BigInt(this.global._activeTx.vrf.bigint) % BigInt(maxValue)) + BigInt(1);
 
     if (result > Number.MAX_SAFE_INTEGER || result < Number.MIN_SAFE_INTEGER) {
       throw new Error('Random int cannot be cast to number');
