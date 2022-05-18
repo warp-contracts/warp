@@ -15,6 +15,17 @@ export async function handle(state, action) {
     return { state };
   }
 
+  try {
+    this.stateLockAvailable = false;
+    console.log("fetching state fresh in getState()");
+    const {state, validity} = await this.contract.readState();
+    console.log(`newly fetched state in getState(): ${state}`);
+    this.stateCache.set("current", state);
+    return state;
+  } finally {
+    this.stateLockAvailable = true;
+  }
+
   if (input.function === 'vrf') {
     if (!state.vrf) {
       state.vrf = {};

@@ -36,6 +36,7 @@ export class SmartWeaveGlobal {
   transaction: Transaction;
   block: Block;
   vrf: Vrf;
+  evaluationOptions: EvaluationOptions;
   arweave: Pick<Arweave, 'ar' | 'wallets' | 'utils' | 'crypto'>;
   contract: {
     id: string;
@@ -64,6 +65,9 @@ export class SmartWeaveGlobal {
       wallets: arweave.wallets,
       crypto: arweave.crypto
     };
+
+    this.evaluationOptions = evaluationOptions;
+
     this.arweave.wallets.getBalance = async (address: string): Promise<string> => {
       if (!this._activeTx) {
         throw new Error('Cannot read balance - active tx is not set.');
@@ -71,7 +75,6 @@ export class SmartWeaveGlobal {
       if (!this.block.height) {
         throw new Error('Cannot read balance - block height not set.');
       }
-      console.log(`${evaluationOptions.walletBalanceUrl}block/height/${this.block.height}/wallet/${address}/balance`);
 
       // http://nyc-1.dev.arweave.net:1984/block/height/914387/wallet/M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI/balance
       return await fetch(
@@ -107,6 +110,7 @@ export class SmartWeaveGlobal {
     this.vrf = new Vrf(this);
 
     this.useGas = this.useGas.bind(this);
+    this.getBalance = this.getBalance.bind(this);
   }
 
   useGas(gas: number) {
@@ -117,6 +121,26 @@ export class SmartWeaveGlobal {
     if (this.gasUsed > this.gasLimit) {
       throw new Error(`[RE:OOG] Out of gas! Used: ${this.gasUsed}, limit: ${this.gasLimit}`);
     }
+  }
+
+  async getBalance(address: string): Promise<string> {
+    if (!this._activeTx) {
+      throw new Error('Cannot read balance - active tx is not set.');
+    }
+    if (!this.block.height) {
+      throw new Error('Cannot read balance - block height not set.');
+    }
+
+    // http://nyc-1.dev.arweave.net:1984/block/height/914387/wallet/M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI/balance
+    return await fetch(
+      `${this.evaluationOptions.walletBalanceUrl}block/height/${this.block.height}/wallet/${address}/balance`
+    )
+      .then((res) => {
+        return res.ok ? res.text() : Promise.reject(res);
+      })
+      .catch((error) => {
+        throw new Error(`Unable to read wallet balance. ${error.status}. ${error.body?.message}`);
+      });
   }
 }
 
