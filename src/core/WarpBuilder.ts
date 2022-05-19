@@ -10,7 +10,7 @@ import {
   HandlerApi,
   InteractionsLoader,
   InteractionsSorter,
-  MemBlockHeightSwCache,
+  MemBlockHeightWarpCache,
   MemCache,
   WarpGatewayContractDefinitionLoader,
   WarpGatewayInteractionsLoader,
@@ -47,7 +47,7 @@ export class WarpBuilder {
   ): WarpBuilder {
     this._interactionsLoader = new CacheableContractInteractionsLoader(
       value,
-      new MemBlockHeightSwCache(maxStoredInMemoryBlockHeights)
+      new MemBlockHeightWarpCache(maxStoredInMemoryBlockHeights)
     );
     return this;
   }
@@ -90,7 +90,7 @@ export class WarpBuilder {
     this._definitionLoader = new ContractDefinitionLoader(this._arweave, new MemCache());
     this._interactionsLoader = new CacheableContractInteractionsLoader(
       new ArweaveGatewayInteractionsLoader(this._arweave),
-      new MemBlockHeightSwCache(1)
+      new MemBlockHeightWarpCache(1)
     );
     this._useWarpGwInfo = false;
     return this;

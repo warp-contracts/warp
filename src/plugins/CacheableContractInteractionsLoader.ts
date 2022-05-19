@@ -1,7 +1,7 @@
 import {
   Benchmark,
   BlockHeightKey,
-  BlockHeightSwCache,
+  BlockHeightWarpCache,
   EvaluationOptions,
   GQLEdgeInterface,
   InteractionsLoader,
@@ -18,7 +18,7 @@ export class CacheableContractInteractionsLoader implements InteractionsLoader {
 
   constructor(
     private readonly baseImplementation: InteractionsLoader,
-    private readonly cache: BlockHeightSwCache<GQLEdgeInterface[]>
+    private readonly cache: BlockHeightWarpCache<GQLEdgeInterface[]>
   ) {}
 
   async load(

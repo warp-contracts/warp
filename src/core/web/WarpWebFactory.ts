@@ -14,7 +14,7 @@ import {
   WarpBuilder,
   StateCache
 } from '@warp/core';
-import { MemBlockHeightSwCache, MemCache, RemoteBlockHeightCache } from '@warp/cache';
+import { MemBlockHeightWarpCache, MemCache, RemoteBlockHeightCache } from '@warp/cache';
 
 /**
  * A factory that simplifies the process of creating different versions of {@link Warp}.
@@ -45,7 +45,7 @@ export class WarpWebFactory {
 
     const stateEvaluator = new CacheableStateEvaluator(
       arweave,
-      new MemBlockHeightSwCache<StateCache<unknown>>(maxStoredBlockHeights),
+      new MemBlockHeightWarpCache<StateCache<unknown>>(maxStoredBlockHeights),
       [new Evolve(definitionLoader, executorFactory)]
     );
 

@@ -1,12 +1,12 @@
-import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@warp/cache';
+import { BlockHeightCacheResult, BlockHeightKey, BlockHeightWarpCache } from '@warp/cache';
 import { asc, deepCopy, desc } from '@warp/utils';
 import { LoggerFactory } from '@warp/logging';
 
 /**
- * A simple, in-memory cache implementation of the BlockHeightSwCache
+ * A simple, in-memory cache implementation of the BlockHeightWarpCache
  */
-export class MemBlockHeightSwCache<V = any> implements BlockHeightSwCache<V> {
-  private readonly logger = LoggerFactory.INST.create('MemBlockHeightSwCache');
+export class MemBlockHeightWarpCache<V = any> implements BlockHeightWarpCache<V> {
+  private readonly logger = LoggerFactory.INST.create('MemBlockHeightWarpCache');
 
   protected storage: { [key: string]: Map<number, V> } = {};
 

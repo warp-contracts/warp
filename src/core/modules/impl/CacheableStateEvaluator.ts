@@ -1,4 +1,4 @@
-import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@warp/cache';
+import { BlockHeightCacheResult, BlockHeightKey, BlockHeightWarpCache } from '@warp/cache';
 import {
   DefaultStateEvaluator,
   EvalStateResult,
@@ -25,7 +25,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
 
   constructor(
     arweave: Arweave,
-    private readonly cache: BlockHeightSwCache<StateCache<unknown>>,
+    private readonly cache: BlockHeightWarpCache<StateCache<unknown>>,
     executionContextModifiers: ExecutionContextModifier[] = []
   ) {
     super(arweave, executionContextModifiers);

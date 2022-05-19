@@ -1,4 +1,4 @@
-import { ContractDefinition, getTag, LoggerFactory, WarpTags, stripTrailingSlash, SwCache } from '@warp';
+import { ContractDefinition, getTag, LoggerFactory, WarpTags, stripTrailingSlash, WarpCache } from '@warp';
 import Arweave from 'arweave';
 import { ContractDefinitionLoader } from './ContractDefinitionLoader';
 import 'redstone-isomorphic';
@@ -19,7 +19,7 @@ export class WarpGatewayContractDefinitionLoader extends ContractDefinitionLoade
   constructor(
     private readonly baseUrl: string,
     arweave: Arweave,
-    cache?: SwCache<string, ContractDefinition<unknown>>
+    cache?: WarpCache<string, ContractDefinition<unknown>>
   ) {
     super(arweave, cache);
     this.baseUrl = stripTrailingSlash(baseUrl);

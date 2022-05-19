@@ -1,4 +1,4 @@
-import { BlockHeightKey, MemBlockHeightSwCache } from '@warp/cache';
+import { BlockHeightKey, MemBlockHeightWarpCache } from '@warp/cache';
 import { LoggerFactory } from '@warp/logging';
 import { Knex } from 'knex';
 import { StateCache } from '@warp';
@@ -11,12 +11,12 @@ type DbResult = {
 };
 
 /**
- * An implementation of {@link BlockHeightSwCache} that stores its data (ie. contracts state)
+ * An implementation of {@link BlockHeightWarpCache} that stores its data (ie. contracts state)
  * in a Knex-compatible storage (PostgreSQL, CockroachDB, MSSQL, MySQL, MariaDB, SQLite3, Oracle, and Amazon Redshift)
  * https://knexjs.org
  */
-export class KnexStateCache extends MemBlockHeightSwCache<StateCache<any>> {
-  private readonly kLogger = LoggerFactory.INST.create('KnexBlockHeightSwCache');
+export class KnexStateCache extends MemBlockHeightWarpCache<StateCache<any>> {
+  private readonly kLogger = LoggerFactory.INST.create('KnexBlockHeightWarpCache');
   private readonly lastFlushHeight: Map<string, number> = new Map();
 
   private isFlushing = false;

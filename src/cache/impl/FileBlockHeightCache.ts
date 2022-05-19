@@ -1,15 +1,15 @@
 import fs from 'fs';
 import path from 'path';
-import { BlockHeightKey, MemBlockHeightSwCache } from '@warp/cache';
+import { BlockHeightKey, MemBlockHeightWarpCache } from '@warp/cache';
 import { Benchmark, LoggerFactory } from '@warp/logging';
 import stringify from 'safe-stable-stringify';
 
 /**
- * An implementation of {@link BlockHeightSwCache} that stores its data in JSON files.
+ * An implementation of {@link BlockHeightWarpCache} that stores its data in JSON files.
  *
  * Main use-case is the per block height state cache for contracts.
  *
- * This class extends standard {@link MemBlockHeightSwCache} and add features of
+ * This class extends standard {@link MemBlockHeightWarpCache} and add features of
  * 1. Loading cache from files to memory (during initialization)
  * 2. Flushing cache to files (only the "last" (ie. highest) block stored currently in memory
  * is being saved).
@@ -37,8 +37,8 @@ import stringify from 'safe-stable-stringify';
  * @Deprecated - a more mature persistent cache, based on LevelDB (or similar storage)
  * should be implemented.
  */
-export class FileBlockHeightSwCache<V = any> extends MemBlockHeightSwCache<V> {
-  private readonly fLogger = LoggerFactory.INST.create('FileBlockHeightSwCache');
+export class FileBlockHeightWarpCache<V = any> extends MemBlockHeightWarpCache<V> {
+  private readonly fLogger = LoggerFactory.INST.create('FileBlockHeightWarpCache');
 
   private isFlushing = false;
 

@@ -1,6 +1,6 @@
 import Arweave from 'arweave';
 import { ContractDefinition, EvaluationOptions, ExecutorFactory } from '@warp/core';
-import { SwCache } from '@warp/cache';
+import { WarpCache } from '@warp/cache';
 import { LoggerFactory } from '@warp/logging';
 
 /**
@@ -12,7 +12,7 @@ export class CacheableExecutorFactory<Api> implements ExecutorFactory<Api> {
   constructor(
     private readonly arweave: Arweave,
     private readonly baseImplementation: ExecutorFactory<Api>,
-    private readonly cache: SwCache<string, Api>
+    private readonly cache: WarpCache<string, Api>
   ) {}
 
   async create<State>(

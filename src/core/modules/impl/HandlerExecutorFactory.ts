@@ -11,7 +11,7 @@ import {
   MemCache,
   normalizeContractSource,
   SmartWeaveGlobal,
-  SwCache
+  WarpCache
 } from '@warp';
 import { ContractHandlerApi } from './ContractHandlerApi';
 import loader from '@assemblyscript/loader';
@@ -38,7 +38,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
   private readonly logger = LoggerFactory.INST.create('HandlerExecutorFactory');
 
   // TODO: cache compiled wasm binaries here.
-  private readonly cache: SwCache<string, WebAssembly.Module> = new MemCache();
+  private readonly cache: WarpCache<string, WebAssembly.Module> = new MemCache();
 
   constructor(private readonly arweave: Arweave) {}
 

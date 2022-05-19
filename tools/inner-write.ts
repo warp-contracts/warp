@@ -26,7 +26,7 @@ async function main() {
   /*LoggerFactory.INST.logLevel('debug', 'DefaultStateEvaluator');
   LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
   LoggerFactory.INST.logLevel('debug', 'ContractHandler');
-  LoggerFactory.INST.logLevel('debug', 'MemBlockHeightSwCache');*/
+  LoggerFactory.INST.logLevel('debug', 'MemBlockHeightWarpCache');*/
   const logger = LoggerFactory.INST.create('inner-write');
 
   const arlocal = new ArLocal(1985, false);

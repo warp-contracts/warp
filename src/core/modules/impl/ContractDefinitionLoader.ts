@@ -8,7 +8,7 @@ import {
   getTag,
   LoggerFactory,
   WarpTags,
-  SwCache
+  WarpCache
 } from '@warp';
 import Arweave from 'arweave';
 import Transaction from 'arweave/web/lib/transaction';
@@ -24,7 +24,7 @@ export class ContractDefinitionLoader implements DefinitionLoader {
   constructor(
     private readonly arweave: Arweave,
     // TODO: cache should be removed from the core layer and implemented in a wrapper of the core implementation
-    protected readonly cache?: SwCache<string, ContractDefinition<unknown>>
+    protected readonly cache?: WarpCache<string, ContractDefinition<unknown>>
   ) {
     this.arweaveWrapper = new ArweaveWrapper(arweave);
   }

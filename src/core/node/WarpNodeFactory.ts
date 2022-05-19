@@ -14,7 +14,7 @@ import {
   WarpWebFactory
 } from '@warp/core';
 import { CacheableExecutorFactory, Evolve } from '@warp/plugins';
-import { FileBlockHeightSwCache, MemCache } from '@warp/cache';
+import { FileBlockHeightWarpCache, MemCache } from '@warp/cache';
 import { Knex } from 'knex';
 import { KnexStateCache } from '../../cache/impl/KnexStateCache';
 
@@ -61,7 +61,7 @@ export class WarpNodeFactory extends WarpWebFactory {
 
     const stateEvaluator = new CacheableStateEvaluator(
       arweave,
-      new FileBlockHeightSwCache(cacheBasePath, maxStoredInMemoryBlockHeights),
+      new FileBlockHeightWarpCache(cacheBasePath, maxStoredInMemoryBlockHeights),
       [new Evolve(definitionLoader, executorFactory)]
     );
 
