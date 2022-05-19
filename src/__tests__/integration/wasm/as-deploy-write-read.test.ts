@@ -22,7 +22,7 @@ describe('Testing the Warp client for AssemblyScript WASM contract', () => {
 
   let arweave: Arweave;
   let arlocal: ArLocal;
-  let smartweave: Warp;
+  let warp: Warp;
   let contract: Contract<ExampleContractState>;
 
   beforeAll(async () => {
@@ -39,7 +39,7 @@ describe('Testing the Warp client for AssemblyScript WASM contract', () => {
 
     LoggerFactory.INST.logLevel('error');
 
-    smartweave = WarpNodeFactory.forTesting(arweave);
+    warp = WarpNodeFactory.forTesting(arweave);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -48,14 +48,14 @@ describe('Testing the Warp client for AssemblyScript WASM contract', () => {
     initialState = fs.readFileSync(path.join(__dirname, '../data/wasm/counter-init-state.json'), 'utf8');
 
     // deploying contract using the new SDK.
-    contractTxId = await smartweave.createContract.deploy({
+    contractTxId = await warp.createContract.deploy({
       wallet,
       initState: initialState,
       src: contractSrc,
       wasmSrcCodeDir: path.join(__dirname, '../data/wasm/as/assembly')
     });
 
-    contract = smartweave.contract<ExampleContractState>(contractTxId).setEvaluationOptions({
+    contract = warp.contract<ExampleContractState>(contractTxId).setEvaluationOptions({
       gasLimit: 1000000000
     });
     contract.connect(wallet);

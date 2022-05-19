@@ -59,9 +59,9 @@
     "arweave"
   ],
   "bugs": {
-    "url": "https://github.com/redstone-finance/redstone-smartweave/issues"
+    "url": "https://github.com/redstone-finance/warp/issues"
   },
-  "homepage": "https://github.com/redstone-finance/redstone-smartweave#readme",
+  "homepage": "https://github.com/redstone-finance/warp#readme",
   "dependencies": {
     "@assemblyscript/loader": "^0.19.23",
     "@idena/vrf-js": "^1.0.1",

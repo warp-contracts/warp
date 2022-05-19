@@ -5,8 +5,8 @@ import {
   BlockHeightInteractionsSorter,
   Contract, DefaultEvaluationOptions, LexicographicalInteractionsSorter,
   LoggerFactory, RedstoneGatewayInteractionsLoader,
-  SmartWeave,
-  SmartWeaveNodeFactory
+  Warp,
+  WarpNodeFactory
 } from '../src';
 import {TsLogFactory} from '../src/logging/node/TsLogFactory';
 import fs from 'fs';

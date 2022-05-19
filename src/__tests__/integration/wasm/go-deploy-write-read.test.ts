@@ -15,7 +15,7 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
 
   let arweave: Arweave;
   let arlocal: ArLocal;
-  let smartweave: Warp;
+  let warp: Warp;
   let pst: PstContract;
 
   let contractTxId: string;
@@ -37,7 +37,7 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
 
     LoggerFactory.INST.logLevel('error');
 
-    smartweave = WarpNodeFactory.forTesting(arweave);
+    warp = WarpNodeFactory.forTesting(arweave);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -58,14 +58,14 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
     };
 
     // deploying contract using the new SDK.
-    contractTxId = await smartweave.createContract.deploy({
+    contractTxId = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify(initialState),
       src: contractSrc,
       wasmSrcCodeDir: path.join(__dirname, '../data/wasm/go/src')
     });
 
-    properForeignContractTxId = await smartweave.createContract.deploy({
+    properForeignContractTxId = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify({
         ...initialState,
@@ -78,7 +78,7 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
       wasmSrcCodeDir: path.join(__dirname, '../data/wasm/go/src')
     });
 
-    wrongForeignContractTxId = await smartweave.createContract.deploy({
+    wrongForeignContractTxId = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify({
         ...initialState,
@@ -92,7 +92,7 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
     });
 
     // connecting to the PST contract
-    pst = smartweave.pst(contractTxId);
+    pst = warp.pst(contractTxId);
 
     // connecting wallet to the PST contract
     pst.connect(wallet);

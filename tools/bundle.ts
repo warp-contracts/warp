@@ -2,7 +2,7 @@
 import Arweave from 'arweave';
 import {
   LoggerFactory,
-  SmartWeaveNodeFactory
+  WarpNodeFactory
 } from '../src';
 import { TsLogFactory } from '../src/logging/node/TsLogFactory';
 import path from "path";
@@ -38,7 +38,7 @@ async function main() {
     useNullAsDefault: true
   });
 
-  const smartweave = await SmartWeaveNodeFactory.knexCached(arweave, knexConfig);
+  const warp = await WarpNodeFactory.knexCached(arweave, knexConfig);
 
   const wallet: JWKInterface = readJSON('.secrets/33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA.json');
 
@@ -46,7 +46,7 @@ async function main() {
   const initialState = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.json'), 'utf8');
 
   // case 1 - full deploy, js contract
-  const contractTxId = await smartweave.createContract.deploy({
+  const contractTxId = await warp.createContract.deploy({
     wallet,
     initState: initialState,
     src: jsContractSrc,
@@ -55,7 +55,7 @@ async function main() {
   logger.info("tx id:", contractTxId);
 
   // connecting to a given contract
-  const token = smartweave
+  const token = warp
     .contract<any>(contractTxId)
     // connecting wallet to a contract. It is required before performing any "writeInteraction"
     // calling "writeInteraction" without connecting to a wallet first will cause a runtime error.
@@ -76,10 +76,10 @@ async function main() {
     target: "33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA",
     qty: 10
   }, [{
-    name: SmartWeaveTags.INTERACT_WRITE,
+    name: WarpTags.INTERACT_WRITE,
     value: "33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA"
   },{
-    name: SmartWeaveTags.INTERACT_WRITE,
+    name: WarpTags.INTERACT_WRITE,
     value: "4MnaOd-GvsE5iVQD4OhdY8DOrH3vo0QEqOw31HeIzQ0"
   }
   ]);*/

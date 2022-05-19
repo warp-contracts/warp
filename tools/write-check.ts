@@ -4,7 +4,7 @@ import { LoggerFactory } from '../src';
 import { TsLogFactory } from '../src/logging/node/TsLogFactory';
 import fs from 'fs';
 import path from 'path';
-import { SmartWeaveWebFactory } from '../src/core/web/SmartWeaveWebFactory';
+import { WarpWebFactory } from '../src/core/web/WarpWebFactory';
 import { FromFileInteractionsLoader } from './FromFileInteractionsLoader';
 import { readContract } from 'smartweave';
 import { readJSON } from '../../redstone-smartweave-examples/src/_utils';
@@ -21,7 +21,7 @@ async function main() {
     logging: false // Enable network request logging
   });
 
-  const smartweave = SmartWeaveWebFactory.memCached(arweave);
+  const smartweave = WarpWebFactory.memCached(arweave);
 
   const jwk = readJSON('../redstone-node/.secrets/redstone-jwk.json');
 

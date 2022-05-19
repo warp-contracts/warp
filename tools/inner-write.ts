@@ -1,6 +1,6 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import { Contract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory } from '../src';
+import { Contract, LoggerFactory, Warp, WarpNodeFactory } from '../src';
 import { TsLogFactory } from '../src/logging/node/TsLogFactory';
 import fs from 'fs';
 import path from 'path';
@@ -15,7 +15,7 @@ async function main() {
   let wallet: JWKInterface;
   let walletAddress: string;
 
-  let smartweave: SmartWeave;
+  let warp: Warp;
   let calleeContract: Contract<any>;
   let callingContract: Contract;
   let calleeTxId;
@@ -38,7 +38,7 @@ async function main() {
   });
 
   try {
-    smartweave = SmartWeaveNodeFactory.memCached(arweave);
+    warp = WarpNodeFactory.memCached(arweave);
 
     wallet = await arweave.wallets.generate();
     walletAddress = await arweave.wallets.jwkToAddress(wallet);
@@ -53,23 +53,23 @@ async function main() {
     );
 
     // deploying contract using the new SDK.
-    calleeTxId = await smartweave.createContract.deploy({
+    calleeTxId = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify({ counter: 100 }),
       src: calleeContractSrc
     });
 
-    const callingTxId = await smartweave.createContract.deploy({
+    const callingTxId = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify({ ticker: 'WRITING_CONTRACT' }),
       src: callingContractSrc
     });
 
-    calleeContract = smartweave.contract(calleeTxId).connect(wallet).setEvaluationOptions({
+    calleeContract = warp.contract(calleeTxId).connect(wallet).setEvaluationOptions({
       ignoreExceptions: false,
       internalWrites: true,
     });
-    callingContract = smartweave.contract(callingTxId).connect(wallet).setEvaluationOptions({
+    callingContract = warp.contract(callingTxId).connect(wallet).setEvaluationOptions({
       ignoreExceptions: false,
       internalWrites: true
     });

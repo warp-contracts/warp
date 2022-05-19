@@ -1,6 +1,6 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import { Contract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory } from '../src';
+import { Contract, LoggerFactory, Warp, WarpNodeFactory } from '../src';
 import { TsLogFactory } from '../src/logging/node/TsLogFactory';
 import fs from 'fs';
 import path from 'path';
@@ -21,7 +21,7 @@ async function main() {
   let wallet: JWKInterface;
   let walletAddress: string;
 
-  let smartweave: SmartWeave;
+  let warp: Warp;
 
   LoggerFactory.use(new TsLogFactory());
   LoggerFactory.INST.logLevel('debug');
@@ -42,7 +42,7 @@ async function main() {
   });
 
   try {
-    smartweave = SmartWeaveNodeFactory.memCached(arweave);
+    warp = WarpNodeFactory.memCached(arweave);
 
     wallet = await arweave.wallets.generate();
     walletAddress = await arweave.wallets.jwkToAddress(wallet);
@@ -65,7 +65,7 @@ async function main() {
       'utf8'
     );
 
-    tokenContractTxId = await smartweave.createContract.deploy({
+    tokenContractTxId = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify({
         ...JSON.parse(tokenContractInitialState),
@@ -74,7 +74,7 @@ async function main() {
       src: tokenContractSrc
     });
 
-    stakingContractTxId = await smartweave.createContract.deploy({
+    stakingContractTxId = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify({
         ...JSON.parse(stakingContractInitialState),
@@ -83,11 +83,11 @@ async function main() {
       src: stakingContractSrc
     });
 
-    tokenContract = smartweave
+    tokenContract = warp
       .contract(tokenContractTxId)
       .setEvaluationOptions({ internalWrites: true })
       .connect(wallet);
-    stakingContract = smartweave
+    stakingContract = warp
       .contract(stakingContractTxId)
       .setEvaluationOptions({ internalWrites: true })
       .connect(wallet);
