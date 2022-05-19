@@ -6,9 +6,9 @@ export * from './modules/StateEvaluator';
 
 export * from './modules/impl/BlockHeightInteractionsSorter';
 export * from './modules/impl/ContractDefinitionLoader';
-export * from './modules/impl/RedstoneGatewayContractDefinitionLoader';
+export * from './modules/impl/WarpGatewayContractDefinitionLoader';
 export * from './modules/impl/ArweaveGatewayInteractionsLoader';
-export * from './modules/impl/RedstoneGatewayInteractionsLoader';
+export * from './modules/impl/WarpGatewayInteractionsLoader';
 export * from './modules/impl/DefaultStateEvaluator';
 export * from './modules/impl/CacheableStateEvaluator';
 export * from './modules/impl/HandlerExecutorFactory';

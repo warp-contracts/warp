@@ -8,8 +8,8 @@ import {
   HandlerExecutorFactory,
   LexicographicalInteractionsSorter,
   R_GW_URL,
-  RedstoneGatewayContractDefinitionLoader,
-  RedstoneGatewayInteractionsLoader,
+  WarpGatewayContractDefinitionLoader,
+  WarpGatewayInteractionsLoader,
   Warp,
   WarpBuilder,
   StateCache
@@ -38,8 +38,8 @@ export class WarpWebFactory {
     maxStoredBlockHeights = 10,
     confirmationStatus: ConfirmationStatus = { notCorrupted: true }
   ): WarpBuilder {
-    const interactionsLoader = new RedstoneGatewayInteractionsLoader(R_GW_URL, confirmationStatus);
-    const definitionLoader = new RedstoneGatewayContractDefinitionLoader(R_GW_URL, arweave, new MemCache());
+    const interactionsLoader = new WarpGatewayInteractionsLoader(R_GW_URL, confirmationStatus);
+    const definitionLoader = new WarpGatewayContractDefinitionLoader(R_GW_URL, arweave, new MemCache());
 
     const executorFactory = new CacheableExecutorFactory(arweave, new HandlerExecutorFactory(arweave), new MemCache());
 
@@ -54,7 +54,7 @@ export class WarpWebFactory {
     return Warp.builder(arweave)
       .setDefinitionLoader(definitionLoader)
       .setInteractionsLoader(interactionsLoader)
-      .useRedStoneGwInfo()
+      .useWarpGwInfo()
       .setInteractionsSorter(interactionsSorter)
       .setExecutorFactory(executorFactory)
       .setStateEvaluator(stateEvaluator);

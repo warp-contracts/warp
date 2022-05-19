@@ -29,7 +29,7 @@ export class Warp {
     readonly interactionsSorter: InteractionsSorter,
     readonly executorFactory: ExecutorFactory<HandlerApi<unknown>>,
     readonly stateEvaluator: StateEvaluator,
-    readonly useRedstoneGwInfo: boolean = false
+    readonly useWarpGwInfo: boolean = false
   ) {
     this.createContract = new DefaultCreateContract(arweave);
   }

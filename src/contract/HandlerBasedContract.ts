@@ -405,14 +405,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     forceDefinitionLoad = false,
     upToTransactionId: string = undefined
   ): Promise<ExecutionContext<State, HandlerApi<State>>> {
-    const {
-      definitionLoader,
-      interactionsLoader,
-      interactionsSorter,
-      executorFactory,
-      stateEvaluator,
-      useRedstoneGwInfo
-    } = this.warp;
+    const { definitionLoader, interactionsLoader, interactionsSorter, executorFactory, stateEvaluator, useWarpGwInfo } =
+      this.warp;
 
     let currentNetworkInfo;
 
@@ -425,9 +419,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
         };
       } else {
         this.logger.debug('Reading network info for root call');
-        currentNetworkInfo = useRedstoneGwInfo
-          ? await this._arweaveWrapper.rGwInfo()
-          : await this._arweaveWrapper.info();
+        currentNetworkInfo = useWarpGwInfo ? await this._arweaveWrapper.rGwInfo() : await this._arweaveWrapper.info();
         this._networkInfo = currentNetworkInfo;
       }
     } else {
@@ -494,7 +486,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       }
     }
 
-    const containsInteractionsFromSequencer = interactions.some((i) => i.node.source == SourceType.REDSTONE_SEQUENCER);
+    const containsInteractionsFromSequencer = interactions.some((i) => i.node.source == SourceType.WARP_SEQUENCER);
     this.logger.debug('containsInteractionsFromSequencer', containsInteractionsFromSequencer);
 
     return {
@@ -545,7 +537,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     this.logger.debug('Creating execution context from tx:', benchmark.elapsed());
 
-    const containsInteractionsFromSequencer = interactions.some((i) => i.node.source == SourceType.REDSTONE_SEQUENCER);
+    const containsInteractionsFromSequencer = interactions.some((i) => i.node.source == SourceType.WARP_SEQUENCER);
 
     return {
       contractDefinition,

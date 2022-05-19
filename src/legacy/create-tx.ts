@@ -48,7 +48,7 @@ export async function createTx(
   interactionTx.addTag(WarpTags.APP_NAME, 'SmartWeaveAction');
   // use real SDK version here?
   interactionTx.addTag(WarpTags.APP_VERSION, '0.3.0');
-  interactionTx.addTag(WarpTags.SDK, 'RedStone');
+  interactionTx.addTag(WarpTags.SDK, 'Warp');
   interactionTx.addTag(WarpTags.CONTRACT_TX_ID, contractId);
   interactionTx.addTag(WarpTags.INPUT, JSON.stringify(input));
 
@@ -59,7 +59,7 @@ export async function createTx(
 }
 
 export function createDummyTx(tx: Transaction, from: string, block: BlockData): GQLNodeInterface {
-  // transactions loaded from gateway (either arweave.net GQL or RedStone) have the tags decoded
+  // transactions loaded from gateway (either arweave.net GQL or Warp) have the tags decoded
   // - so to be consistent, the "dummy" tx, which is used for viewState and dryWrites, also has to have
   // the tags decoded.
   const decodedTags = unpackTags(tx);

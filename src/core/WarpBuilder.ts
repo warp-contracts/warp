@@ -12,8 +12,8 @@ import {
   InteractionsSorter,
   MemBlockHeightSwCache,
   MemCache,
-  RedstoneGatewayContractDefinitionLoader,
-  RedstoneGatewayInteractionsLoader,
+  WarpGatewayContractDefinitionLoader,
+  WarpGatewayInteractionsLoader,
   Warp,
   SourceType,
   StateEvaluator
@@ -27,7 +27,7 @@ export class WarpBuilder {
   private _interactionsSorter?: InteractionsSorter;
   private _executorFactory?: ExecutorFactory<HandlerApi<unknown>>;
   private _stateEvaluator?: StateEvaluator;
-  private _useRedstoneGwInfo = false;
+  private _useWarpGwInfo = false;
 
   constructor(private readonly _arweave: Arweave) {}
 
@@ -75,14 +75,14 @@ export class WarpBuilder {
     return this.build();
   }
 
-  public useRedStoneGateway(
+  public useWarpGateway(
     confirmationStatus: ConfirmationStatus = null,
     source: SourceType = null,
     address = R_GW_URL
   ): WarpBuilder {
-    this._interactionsLoader = new RedstoneGatewayInteractionsLoader(address, confirmationStatus, source);
-    this._definitionLoader = new RedstoneGatewayContractDefinitionLoader(address, this._arweave, new MemCache());
-    this._useRedstoneGwInfo = true;
+    this._interactionsLoader = new WarpGatewayInteractionsLoader(address, confirmationStatus, source);
+    this._definitionLoader = new WarpGatewayContractDefinitionLoader(address, this._arweave, new MemCache());
+    this._useWarpGwInfo = true;
     return this;
   }
 
@@ -92,12 +92,12 @@ export class WarpBuilder {
       new ArweaveGatewayInteractionsLoader(this._arweave),
       new MemBlockHeightSwCache(1)
     );
-    this._useRedstoneGwInfo = false;
+    this._useWarpGwInfo = false;
     return this;
   }
 
-  public useRedStoneGwInfo(): WarpBuilder {
-    this._useRedstoneGwInfo = true;
+  public useWarpGwInfo(): WarpBuilder {
+    this._useWarpGwInfo = true;
     return this;
   }
 
@@ -109,7 +109,7 @@ export class WarpBuilder {
       this._interactionsSorter,
       this._executorFactory,
       this._stateEvaluator,
-      this._useRedstoneGwInfo
+      this._useWarpGwInfo
     );
   }
 }

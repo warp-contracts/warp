@@ -158,8 +158,8 @@ export interface Contract<State = unknown> extends Source {
   ): Promise<string | null>;
 
   /**
-   * Creates a new "interaction" transaction using RedStone Sequencer - this, with combination with
-   * RedStone Gateway, gives instant transaction availability and finality guaranteed by Bundlr.
+   * Creates a new "interaction" transaction using Warp Sequencer - this, with combination with
+   * Warp Gateway, gives instant transaction availability and finality guaranteed by Bundlr.
    * @param input -  new input to the contract that will be assigned with this interactions transaction
    * @param options
    */

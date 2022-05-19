@@ -1,4 +1,4 @@
-import { LoggerFactory, RedstoneGatewayInteractionsLoader } from '@warp';
+import { LoggerFactory, WarpGatewayInteractionsLoader } from '@warp';
 import { GQLEdgeInterface } from '../../legacy/gqlResult';
 
 const responseData = {
@@ -86,20 +86,20 @@ const fetchMock = jest
     () => Promise.resolve({ json: () => Promise.resolve(responseData), ok: true, status: 200 }) as Promise<Response>
   );
 
-describe('RedstoneGatewayInteractionsLoader -> load', () => {
+describe('WarpGatewayInteractionsLoader -> load', () => {
   it('should be called with baseUrl devoid of trailing slashes', async () => {
-    const loader = new RedstoneGatewayInteractionsLoader('http://baseUrl/');
+    const loader = new WarpGatewayInteractionsLoader('http://baseUrl/');
 
     expect(loader['baseUrl']).toBe('http://baseUrl');
   });
   it('should return correct number of interactions', async () => {
-    const loader = new RedstoneGatewayInteractionsLoader('http://baseUrl');
+    const loader = new WarpGatewayInteractionsLoader('http://baseUrl');
     const response: GQLEdgeInterface[] = await loader.load(contractId, fromBlockHeight, toBlockHeight);
     expect(fetchMock).toHaveBeenCalled();
     expect(response.length).toEqual(2);
   });
   it('should be called with correct params', async () => {
-    const loader = new RedstoneGatewayInteractionsLoader('http://baseUrl');
+    const loader = new WarpGatewayInteractionsLoader('http://baseUrl');
     await loader.load(contractId, fromBlockHeight, toBlockHeight);
     expect(fetchMock).toBeCalledWith(`${baseUrl}&page=1&minimize=true`);
   });
@@ -112,7 +112,7 @@ describe('RedstoneGatewayInteractionsLoader -> load', () => {
           status: 200
         }) as Promise<Response>
     );
-    const loader = new RedstoneGatewayInteractionsLoader('http://baseUrl');
+    const loader = new WarpGatewayInteractionsLoader('http://baseUrl');
     await loader.load(contractId, fromBlockHeight, toBlockHeight);
     expect(fetchMock).toBeCalledWith(`${baseUrl}&page=1&minimize=true`);
     expect(fetchMock).toBeCalledWith(`${baseUrl}&page=2&minimize=true`);
@@ -122,33 +122,33 @@ describe('RedstoneGatewayInteractionsLoader -> load', () => {
     expect(fetchMock).toHaveBeenCalledTimes(5);
   });
   it('should be called with confirmationStatus set to "confirmed"', async () => {
-    const loader = new RedstoneGatewayInteractionsLoader('http://baseUrl', { confirmed: true });
+    const loader = new WarpGatewayInteractionsLoader('http://baseUrl', { confirmed: true });
     await loader.load(contractId, fromBlockHeight, toBlockHeight);
     expect(fetchMock).toBeCalledWith(`${baseUrl}&page=1&minimize=true&confirmationStatus=confirmed`);
   });
   it('should be called with confirmationStatus set to "not_corrupted"', async () => {
-    const loader = new RedstoneGatewayInteractionsLoader('http://baseUrl', { notCorrupted: true });
+    const loader = new WarpGatewayInteractionsLoader('http://baseUrl', { notCorrupted: true });
     await loader.load(contractId, fromBlockHeight, toBlockHeight);
     expect(fetchMock).toBeCalledWith(`${baseUrl}&page=1&minimize=true&confirmationStatus=not_corrupted`);
   });
   it('should throw an error in case of timeout', async () => {
     jest.spyOn(global, 'fetch').mockImplementation(() => Promise.reject({ status: 504, ok: false }));
-    const loader = new RedstoneGatewayInteractionsLoader('http://baseUrl');
+    const loader = new WarpGatewayInteractionsLoader('http://baseUrl');
     try {
       await loader.load(contractId, fromBlockHeight, toBlockHeight);
     } catch (e) {
-      expect(e).toEqual(new Error('Unable to retrieve transactions. Redstone gateway responded with status 504.'));
+      expect(e).toEqual(new Error('Unable to retrieve transactions. Warp gateway responded with status 504.'));
     }
   });
   it('should throw an error when request fails', async () => {
     jest
       .spyOn(global, 'fetch')
       .mockImplementation(() => Promise.reject({ status: 500, ok: false, body: { message: 'request fails' } }));
-    const loader = new RedstoneGatewayInteractionsLoader('http://baseUrl');
+    const loader = new WarpGatewayInteractionsLoader('http://baseUrl');
     try {
       await loader.load(contractId, fromBlockHeight, toBlockHeight);
     } catch (e) {
-      expect(e).toEqual(new Error('Unable to retrieve transactions. Redstone gateway responded with status 500.'));
+      expect(e).toEqual(new Error('Unable to retrieve transactions. Warp gateway responded with status 500.'));
     }
   });
 });

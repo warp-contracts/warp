@@ -10,13 +10,13 @@ import {
   InteractionData,
   InteractionResult,
   LoggerFactory,
-  RedStoneLogger,
+  WarpLogger,
   SmartWeaveGlobal
 } from '@warp';
 import stringify from 'safe-stable-stringify';
 
 export class WasmContractHandlerApi<State> implements HandlerApi<State> {
-  private readonly contractLogger: RedStoneLogger;
+  private readonly contractLogger: WarpLogger;
   private readonly logger = LoggerFactory.INST.create('WasmContractHandlerApi');
 
   constructor(

@@ -9,13 +9,13 @@ import {
   InteractionData,
   InteractionResult,
   LoggerFactory,
-  RedStoneLogger,
+  WarpLogger,
   SmartWeaveGlobal,
   timeout
 } from '@warp';
 
 export class ContractHandlerApi<State> implements HandlerApi<State> {
-  private readonly contractLogger: RedStoneLogger;
+  private readonly contractLogger: WarpLogger;
   private readonly logger = LoggerFactory.INST.create('ContractHandlerApi');
 
   constructor(

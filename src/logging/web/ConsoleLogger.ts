@@ -1,7 +1,7 @@
 /* eslint-disable */
-import { LoggerSettings, LogLevel, lvlToOrder, RedStoneLogger } from '@warp';
+import { LoggerSettings, LogLevel, lvlToOrder, WarpLogger } from '@warp';
 
-export class ConsoleLogger implements RedStoneLogger {
+export class ConsoleLogger implements WarpLogger {
   constructor(private readonly moduleName, public settings: LoggerSettings) {}
 
   trace(message?: any, ...optionalParams: any[]): void {

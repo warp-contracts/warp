@@ -101,7 +101,7 @@ export class SourceImpl implements Source {
     srcTx.addTag(WarpTags.APP_NAME, 'SmartWeaveContractSource');
     // TODO: version should be taken from the current package.json version.
     srcTx.addTag(WarpTags.APP_VERSION, '0.3.0');
-    srcTx.addTag(WarpTags.SDK, 'RedStone');
+    srcTx.addTag(WarpTags.SDK, 'Warp');
     srcTx.addTag(WarpTags.CONTENT_TYPE, contractType == 'js' ? 'application/javascript' : 'application/wasm');
 
     if (contractType == 'wasm') {
