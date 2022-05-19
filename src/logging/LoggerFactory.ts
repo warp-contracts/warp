@@ -1,4 +1,4 @@
-import { LogLevel, RedStoneLogger } from '@smartweave/logging';
+import { LogLevel, RedStoneLogger } from '@warp/logging';
 import { ConsoleLoggerFactory } from './web/ConsoleLoggerFactory';
 
 export interface ILoggerFactory {

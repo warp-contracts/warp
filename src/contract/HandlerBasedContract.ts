@@ -26,13 +26,13 @@ import {
   LoggerFactory,
   SigningFunction,
   sleep,
-  SmartWeave,
-  SmartWeaveTags,
+  Warp,
+  WarpTags,
   SourceType,
   Tags,
   SourceImpl,
   SourceData
-} from '@smartweave';
+} from '@warp';
 import { TransactionStatusResponse } from 'arweave/node/transactions';
 import { NetworkInfoInterface } from 'arweave/node/network';
 import stringify from 'safe-stable-stringify';
@@ -75,12 +75,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   constructor(
     private readonly _contractTxId: string,
-    protected readonly smartweave: SmartWeave,
+    protected readonly warp: Warp,
     private readonly _parentContract: Contract = null,
     private readonly _callingInteraction: GQLNodeInterface = null
   ) {
     this.waitForConfirmation = this.waitForConfirmation.bind(this);
-    this._arweaveWrapper = new ArweaveWrapper(smartweave.arweave);
+    this._arweaveWrapper = new ArweaveWrapper(warp.arweave);
     if (_parentContract != null) {
       this._networkInfo = _parentContract.getNetworkInfo();
       this._rootBlockHeight = _parentContract.getRootBlockHeight();
@@ -125,7 +125,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const initBenchmark = Benchmark.measure();
     this.maybeResetRootContract(blockHeight);
 
-    const { stateEvaluator } = this.smartweave;
+    const { stateEvaluator } = this.warp;
     const executionContext = await this.createExecutionContext(
       this._contractTxId,
       blockHeight,
@@ -209,7 +209,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     if (!this.signer) {
       throw new Error("Wallet not connected. Use 'connect' method first.");
     }
-    const { arweave } = this.smartweave;
+    const { arweave } = this.warp;
 
     const interactionTx = await this.createInteraction(input, tags, transfer, strict);
     const response = await arweave.transactions.post(interactionTx);
@@ -314,7 +314,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
       innerWrites.forEach((contractTxId) => {
         tags.push({
-          name: SmartWeaveTags.INTERACT_WRITE,
+          name: WarpTags.INTERACT_WRITE,
           value: contractTxId
         });
       });
@@ -331,13 +331,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     if (vrf) {
       tags.push({
-        name: SmartWeaveTags.REQUEST_VRF,
+        name: WarpTags.REQUEST_VRF,
         value: 'true'
       });
     }
 
     const interactionTx = await createTx(
-      this.smartweave.arweave,
+      this.warp.arweave,
       this.signer,
       this._contractTxId,
       input,
@@ -366,7 +366,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       this.signer = signer;
     } else {
       this.signer = async (tx: Transaction) => {
-        await this.smartweave.arweave.transactions.sign(tx, signer);
+        await this.warp.arweave.transactions.sign(tx, signer);
       };
     }
     return this;
@@ -385,7 +385,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   }
 
   private async waitForConfirmation(transactionId: string): Promise<TransactionStatusResponse> {
-    const { arweave } = this.smartweave;
+    const { arweave } = this.warp;
 
     const status = await arweave.transactions.getStatus(transactionId);
 
@@ -412,12 +412,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
       executorFactory,
       stateEvaluator,
       useRedstoneGwInfo
-    } = this.smartweave;
+    } = this.warp;
 
     let currentNetworkInfo;
 
     const benchmark = Benchmark.measure();
-    // if this is a "root" call (ie. original call from SmartWeave's client)
+    // if this is a "root" call (ie. original call from Warp's client)
     if (this._parentContract == null) {
       if (blockHeight) {
         this._networkInfo = {
@@ -502,7 +502,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       blockHeight,
       sortedInteractions,
       handler,
-      smartweave: this.smartweave,
+      warp: this.warp,
       contract: this,
       evaluationOptions: this._evaluationOptions,
       currentNetworkInfo,
@@ -517,8 +517,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     transaction: GQLNodeInterface
   ): Promise<ExecutionContext<State, HandlerApi<State>>> {
     const benchmark = Benchmark.measure();
-    const { definitionLoader, interactionsLoader, interactionsSorter, executorFactory, stateEvaluator } =
-      this.smartweave;
+    const { definitionLoader, interactionsLoader, interactionsSorter, executorFactory, stateEvaluator } = this.warp;
     const blockHeight = transaction.block.height;
     const caller = transaction.owner.address;
 
@@ -553,7 +552,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       blockHeight,
       sortedInteractions,
       handler,
-      smartweave: this.smartweave,
+      warp: this.warp,
       contract: this,
       evaluationOptions: this._evaluationOptions,
       caller,
@@ -583,7 +582,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     if (!this.signer) {
       this.logger.warn('Wallet not set.');
     }
-    const { arweave, stateEvaluator } = this.smartweave;
+    const { arweave, stateEvaluator } = this.warp;
     // create execution context
     let executionContext = await this.createExecutionContext(this._contractTxId, blockHeight, true);
 
@@ -667,7 +666,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     this.maybeResetRootContract();
 
     const executionContext = await this.createExecutionContextFromTx(this._contractTxId, interactionTx);
-    const evalStateResult = await this.smartweave.stateEvaluator.eval<State>(executionContext, currentTx);
+    const evalStateResult = await this.warp.stateEvaluator.eval<State>(executionContext, currentTx);
 
     this.logger.debug('callContractForTx - evalStateResult', {
       result: evalStateResult.state,
@@ -744,7 +743,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   }
 
   async syncState(nodeAddress: string): Promise<Contract> {
-    const { stateEvaluator } = this.smartweave;
+    const { stateEvaluator } = this.warp;
     const response = await fetch(`${nodeAddress}/state?id=${this._contractTxId}&validity=true&safeHeight=true`)
       .then((res) => {
         return res.ok ? res.json() : Promise.reject(res);

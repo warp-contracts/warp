@@ -12,7 +12,7 @@ import {
   LoggerFactory,
   RedStoneLogger,
   SmartWeaveGlobal
-} from '@smartweave';
+} from '@warp';
 import stringify from 'safe-stable-stringify';
 
 export class WasmContractHandlerApi<State> implements HandlerApi<State> {
@@ -189,8 +189,8 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
         transaction: this.swGlobal.transaction.id
       });
 
-      const { stateEvaluator } = executionContext.smartweave;
-      const childContract = executionContext.smartweave.contract(
+      const { stateEvaluator } = executionContext.warp;
+      const childContract = executionContext.warp.contract(
         contractTxId,
         executionContext.contract,
         interactionTx
@@ -229,7 +229,7 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
         input
       });
 
-      const calleeContract = executionContext.smartweave.contract(
+      const calleeContract = executionContext.warp.contract(
         contractTxId,
         executionContext.contract,
         this.swGlobal._activeTx
@@ -244,7 +244,7 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
       ]);
 
       this.logger.debug('Cache result?:', !this.swGlobal._activeTx.dry);
-      await executionContext.smartweave.stateEvaluator.onInternalWriteStateUpdate(
+      await executionContext.warp.stateEvaluator.onInternalWriteStateUpdate(
         this.swGlobal._activeTx,
         contractTxId,
         {

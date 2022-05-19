@@ -6,9 +6,8 @@ import {
   EvaluationOptions,
   GQLNodeInterface,
   InteractionResult,
-  Tags,
-  Source
-} from '@smartweave';
+  Tags
+} from '@warp';
 import { NetworkInfoInterface } from 'arweave/node/network';
 import Transaction from 'arweave/node/lib/transaction';
 

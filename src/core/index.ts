@@ -19,12 +19,12 @@ export * from './modules/impl/StateCache';
 export * from './modules/impl/wasm/WasmSrc';
 
 export * from './ExecutionContextModifier';
-export * from './SmartWeaveTags';
+export * from './WarpTags';
 export * from './ExecutionContext';
 export * from './ContractDefinition';
 export * from './ContractCallStack';
 
-export * from './web/SmartWeaveWebFactory';
-export * from './node/SmartWeaveNodeFactory';
-export * from './SmartWeave';
-export * from './SmartWeaveBuilder';
+export * from './web/WarpWebFactory';
+export * from './node/WarpNodeFactory';
+export * from './Warp';
+export * from './WarpBuilder';

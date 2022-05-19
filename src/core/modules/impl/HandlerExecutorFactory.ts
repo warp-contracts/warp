@@ -12,7 +12,7 @@ import {
   normalizeContractSource,
   SmartWeaveGlobal,
   SwCache
-} from '@smartweave';
+} from '@warp';
 import { ContractHandlerApi } from './ContractHandlerApi';
 import loader from '@assemblyscript/loader';
 import { WasmContractHandlerApi } from './WasmContractHandlerApi';

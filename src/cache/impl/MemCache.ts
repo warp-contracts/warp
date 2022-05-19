@@ -1,4 +1,4 @@
-import { SwCache } from '@smartweave/cache';
+import { SwCache } from '@warp/cache';
 
 /**
  * A simple, in-memory cache, with keys being transaction ids (e.g. contract transaction id).

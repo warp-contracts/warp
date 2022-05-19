@@ -1,4 +1,4 @@
-import { arrayToHex, GQLEdgeInterface, InteractionsSorter, LoggerFactory, SourceType } from '@smartweave';
+import { arrayToHex, GQLEdgeInterface, InteractionsSorter, LoggerFactory, SourceType } from '@warp';
 import Arweave from 'arweave';
 
 // note: this (i.e. padding to 13 digits) should be safe between years ~1966 and ~2286

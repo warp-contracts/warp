@@ -1,4 +1,4 @@
-import { GQLEdgeInterface } from '@smartweave';
+import { GQLEdgeInterface } from '@warp';
 
 /**
  * this is probably self-explanatory ;-)

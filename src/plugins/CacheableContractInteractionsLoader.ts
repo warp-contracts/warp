@@ -6,7 +6,7 @@ import {
   GQLEdgeInterface,
   InteractionsLoader,
   LoggerFactory
-} from '@smartweave';
+} from '@warp';
 
 /**
  * This implementation of the {@link InteractionsLoader} tries to limit the amount of interactions

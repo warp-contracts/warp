@@ -1,4 +1,4 @@
-import { ILoggerFactory, LoggerSettings, RedStoneLogger } from '@smartweave';
+import { ILoggerFactory, LoggerSettings, RedStoneLogger } from '@warp';
 import { ConsoleLogger } from './ConsoleLogger';
 import { LogLevel } from '../LoggerSettings';
 

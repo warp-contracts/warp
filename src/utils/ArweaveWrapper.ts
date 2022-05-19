@@ -1,6 +1,6 @@
 import Arweave from 'arweave';
 import { NetworkInfoInterface } from 'arweave/node/network';
-import { GqlReqVariables, LoggerFactory, R_GW_URL } from '@smartweave';
+import { GqlReqVariables, LoggerFactory, R_GW_URL } from '@warp';
 import { AxiosResponse } from 'axios';
 import Transaction from 'arweave/node/lib/transaction';
 import { Buffer as isomorphicBuffer } from 'redstone-isomorphic';

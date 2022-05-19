@@ -3,16 +3,7 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import {
-  ArweaveWrapper,
-  getTag,
-  LoggerFactory,
-  PstContract,
-  PstState,
-  SmartWeave,
-  SmartWeaveNodeFactory,
-  SmartWeaveTags
-} from '@smartweave';
+import { ArweaveWrapper, getTag, LoggerFactory, PstContract, PstState, Warp, WarpNodeFactory, WarpTags } from '@warp';
 import path from 'path';
 import { addFunds, mineBlock } from '../_helpers';
 import { WasmSrc } from '../../../core/modules/impl/wasm/WasmSrc';
@@ -25,7 +16,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
 
   let arweave: Arweave;
   let arlocal: ArLocal;
-  let smartweave: SmartWeave;
+  let smartweave: Warp;
   let pst: PstContract;
 
   let contractTxId: string;
@@ -51,7 +42,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
 
     LoggerFactory.INST.logLevel('error');
 
-    smartweave = SmartWeaveNodeFactory.forTesting(arweave);
+    smartweave = WarpNodeFactory.forTesting(arweave);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -125,11 +116,11 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     const contractTx = await arweave.transactions.get(contractTxId);
     expect(contractTx).not.toBeNull();
 
-    const contractSrcTxId = getTag(contractTx, SmartWeaveTags.CONTRACT_SRC_TX_ID);
+    const contractSrcTxId = getTag(contractTx, WarpTags.CONTRACT_SRC_TX_ID);
     const contractSrcTx = await arweave.transactions.get(contractSrcTxId);
-    expect(getTag(contractSrcTx, SmartWeaveTags.CONTENT_TYPE)).toEqual('application/wasm');
-    expect(getTag(contractSrcTx, SmartWeaveTags.WASM_LANG)).toEqual('rust');
-    expect(getTag(contractSrcTx, SmartWeaveTags.WASM_META)).toEqual(JSON.stringify({ dtor: 74 }));
+    expect(getTag(contractSrcTx, WarpTags.CONTENT_TYPE)).toEqual('application/wasm');
+    expect(getTag(contractSrcTx, WarpTags.WASM_LANG)).toEqual('rust');
+    expect(getTag(contractSrcTx, WarpTags.WASM_META)).toEqual(JSON.stringify({ dtor: 74 }));
 
     const srcTxData = await arweaveWrapper.txData(contractSrcTxId);
     const wasmSrc = new WasmSrc(srcTxData);

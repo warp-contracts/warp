@@ -1,4 +1,4 @@
-import { GQLEdgeInterface, TagsParser } from '@smartweave';
+import { GQLEdgeInterface, TagsParser } from '@warp';
 
 describe('TagsParser', () => {
   const sut = new TagsParser();

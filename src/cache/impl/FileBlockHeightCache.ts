@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import { BlockHeightKey, MemBlockHeightSwCache } from '@smartweave/cache';
-import { Benchmark, LoggerFactory } from '@smartweave/logging';
+import { BlockHeightKey, MemBlockHeightSwCache } from '@warp/cache';
+import { Benchmark, LoggerFactory } from '@warp/logging';
 import stringify from 'safe-stable-stringify';
 
 /**

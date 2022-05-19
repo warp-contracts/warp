@@ -12,7 +12,7 @@ import {
   RedStoneLogger,
   SmartWeaveGlobal,
   timeout
-} from '@smartweave';
+} from '@warp';
 
 export class ContractHandlerApi<State> implements HandlerApi<State> {
   private readonly contractLogger: RedStoneLogger;
@@ -111,7 +111,7 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
       });
 
       // The contract that we want to call and modify its state
-      const calleeContract = executionContext.smartweave.contract(
+      const calleeContract = executionContext.warp.contract(
         contractTxId,
         executionContext.contract,
         this.swGlobal._activeTx
@@ -126,7 +126,7 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
       ]);
 
       this.logger.debug('Cache result?:', !this.swGlobal._activeTx.dry);
-      await executionContext.smartweave.stateEvaluator.onInternalWriteStateUpdate(
+      await executionContext.warp.stateEvaluator.onInternalWriteStateUpdate(
         this.swGlobal._activeTx,
         contractTxId,
         {
@@ -146,7 +146,7 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
         to: contractTxId,
         input
       });
-      const childContract = executionContext.smartweave.contract(
+      const childContract = executionContext.warp.contract(
         contractTxId,
         executionContext.contract,
         this.swGlobal._activeTx
@@ -175,8 +175,8 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
         transaction: this.swGlobal.transaction.id
       });
 
-      const { stateEvaluator } = executionContext.smartweave;
-      const childContract = executionContext.smartweave.contract(
+      const { stateEvaluator } = executionContext.warp;
+      const childContract = executionContext.warp.contract(
         contractTxId,
         executionContext.contract,
         interactionTx
@@ -202,7 +202,7 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
 
   private assignRefreshState(executionContext: ExecutionContext<State>) {
     this.swGlobal.contracts.refreshState = async () => {
-      const stateEvaluator = executionContext.smartweave.stateEvaluator;
+      const stateEvaluator = executionContext.warp.stateEvaluator;
       const result = await stateEvaluator.latestAvailableState(this.swGlobal.contract.id, this.swGlobal.block.height);
       return result?.cachedValue.state;
     };

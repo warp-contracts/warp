@@ -3,7 +3,7 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, getTag, LoggerFactory, SmartWeave, SmartWeaveNodeFactory, SmartWeaveTags } from '@smartweave';
+import { Contract, getTag, LoggerFactory, Warp, WarpNodeFactory, WarpTags } from '@warp';
 import path from 'path';
 import { addFunds, mineBlock } from '../_helpers';
 
@@ -13,7 +13,7 @@ interface ExampleContractState {
   lastName: string;
 }
 
-describe('Testing the SmartWeave client for AssemblyScript WASM contract', () => {
+describe('Testing the Warp client for AssemblyScript WASM contract', () => {
   let contractSrc: Buffer;
   let initialState: string;
   let contractTxId: string;
@@ -22,7 +22,7 @@ describe('Testing the SmartWeave client for AssemblyScript WASM contract', () =>
 
   let arweave: Arweave;
   let arlocal: ArLocal;
-  let smartweave: SmartWeave;
+  let smartweave: Warp;
   let contract: Contract<ExampleContractState>;
 
   beforeAll(async () => {
@@ -39,7 +39,7 @@ describe('Testing the SmartWeave client for AssemblyScript WASM contract', () =>
 
     LoggerFactory.INST.logLevel('error');
 
-    smartweave = SmartWeaveNodeFactory.forTesting(arweave);
+    smartweave = WarpNodeFactory.forTesting(arweave);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -72,9 +72,9 @@ describe('Testing the SmartWeave client for AssemblyScript WASM contract', () =>
 
     expect(contractTx).not.toBeNull();
 
-    const contractSrcTx = await arweave.transactions.get(getTag(contractTx, SmartWeaveTags.CONTRACT_SRC_TX_ID));
-    expect(getTag(contractSrcTx, SmartWeaveTags.CONTENT_TYPE)).toEqual('application/wasm');
-    expect(getTag(contractSrcTx, SmartWeaveTags.WASM_LANG)).toEqual('assemblyscript');
+    const contractSrcTx = await arweave.transactions.get(getTag(contractTx, WarpTags.CONTRACT_SRC_TX_ID));
+    expect(getTag(contractSrcTx, WarpTags.CONTENT_TYPE)).toEqual('application/wasm');
+    expect(getTag(contractSrcTx, WarpTags.WASM_LANG)).toEqual('assemblyscript');
   });
 
   it('should properly read initial state', async () => {

@@ -6,7 +6,7 @@ import {
   InteractionsLoader,
   LoggerFactory,
   stripTrailingSlash
-} from '@smartweave';
+} from '@warp';
 import 'redstone-isomorphic';
 
 interface Paging {

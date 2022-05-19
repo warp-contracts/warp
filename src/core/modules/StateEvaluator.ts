@@ -1,4 +1,4 @@
-import { BlockHeightCacheResult, CurrentTx, ExecutionContext, GQLNodeInterface } from '@smartweave';
+import { BlockHeightCacheResult, CurrentTx, ExecutionContext, GQLNodeInterface } from '@warp';
 
 /**
  * Implementors of this class are responsible for evaluating contract's state

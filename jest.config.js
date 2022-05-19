@@ -6,14 +6,14 @@ module.exports = {
 
   // A map from regular expressions to module names that allow to stub out resources with a single module
   moduleNameMapper: {
-    '@smartweave/cache': '<rootDir>/src/cache/index',
-    '@smartweave/contract': '<rootDir>/src/contract/index',
-    '@smartweave/core': '<rootDir>/src/core/index',
-    '@smartweave/legacy': '<rootDir>/src/legacy/index',
-    '@smartweave/plugins': '<rootDir>/src/plugins/index',
-    '@smartweave/logging': '<rootDir>/src/logging/index',
-    '@smartweave/utils': '<rootDir>/src/utils/index',
-    '@smartweave': '<rootDir>/src/index'
+    '@warp/cache': '<rootDir>/src/cache/index',
+    '@warp/contract': '<rootDir>/src/contract/index',
+    '@warp/core': '<rootDir>/src/core/index',
+    '@warp/legacy': '<rootDir>/src/legacy/index',
+    '@warp/plugins': '<rootDir>/src/plugins/index',
+    '@warp/logging': '<rootDir>/src/logging/index',
+    '@warp/utils': '<rootDir>/src/utils/index',
+    '@warp': '<rootDir>/src/index'
   },
 
   testPathIgnorePatterns: [

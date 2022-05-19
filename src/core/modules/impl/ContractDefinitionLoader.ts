@@ -7,9 +7,9 @@ import {
   DefinitionLoader,
   getTag,
   LoggerFactory,
-  SmartWeaveTags,
+  WarpTags,
   SwCache
-} from '@smartweave';
+} from '@warp';
 import Arweave from 'arweave';
 import Transaction from 'arweave/web/lib/transaction';
 import { WasmSrc } from './wasm/WasmSrc';
@@ -50,8 +50,8 @@ export class ContractDefinitionLoader implements DefinitionLoader {
     this.logger.debug('Contract tx and owner', benchmark.elapsed());
     benchmark.reset();
 
-    const contractSrcTxId = forcedSrcTxId ? forcedSrcTxId : getTag(contractTx, SmartWeaveTags.CONTRACT_SRC_TX_ID);
-    const minFee = getTag(contractTx, SmartWeaveTags.MIN_FEE);
+    const contractSrcTxId = forcedSrcTxId ? forcedSrcTxId : getTag(contractTx, WarpTags.CONTRACT_SRC_TX_ID);
+    const minFee = getTag(contractTx, WarpTags.MIN_FEE);
     this.logger.debug('Tags decoding', benchmark.elapsed());
     benchmark.reset();
     const s = await this.evalInitialState(contractTx);
@@ -83,7 +83,7 @@ export class ContractDefinitionLoader implements DefinitionLoader {
     const benchmark = Benchmark.measure();
 
     const contractSrcTx = await this.arweaveWrapper.tx(contractSrcTxId);
-    const srcContentType = getTag(contractSrcTx, SmartWeaveTags.CONTENT_TYPE);
+    const srcContentType = getTag(contractSrcTx, WarpTags.CONTENT_TYPE);
     if (!supportedSrcContentTypes.includes(srcContentType)) {
       throw new Error(`Contract source content type ${srcContentType} not supported`);
     }
@@ -99,11 +99,11 @@ export class ContractDefinitionLoader implements DefinitionLoader {
     let srcMetaData;
     if (contractType == 'wasm') {
       wasmSrc = new WasmSrc(src as Buffer);
-      srcWasmLang = getTag(contractSrcTx, SmartWeaveTags.WASM_LANG);
+      srcWasmLang = getTag(contractSrcTx, WarpTags.WASM_LANG);
       if (!srcWasmLang) {
         throw new Error(`Wasm lang not set for wasm contract src ${contractSrcTxId}`);
       }
-      srcMetaData = JSON.parse(getTag(contractSrcTx, SmartWeaveTags.WASM_META));
+      srcMetaData = JSON.parse(getTag(contractSrcTx, WarpTags.WASM_META));
     }
 
     this.logger.debug('Contract src tx load', benchmark.elapsed());
@@ -120,10 +120,10 @@ export class ContractDefinitionLoader implements DefinitionLoader {
   }
 
   private async evalInitialState(contractTx: Transaction): Promise<string> {
-    if (getTag(contractTx, SmartWeaveTags.INIT_STATE)) {
-      return getTag(contractTx, SmartWeaveTags.INIT_STATE);
-    } else if (getTag(contractTx, SmartWeaveTags.INIT_STATE_TX)) {
-      const stateTX = getTag(contractTx, SmartWeaveTags.INIT_STATE_TX);
+    if (getTag(contractTx, WarpTags.INIT_STATE)) {
+      return getTag(contractTx, WarpTags.INIT_STATE);
+    } else if (getTag(contractTx, WarpTags.INIT_STATE_TX)) {
+      const stateTX = getTag(contractTx, WarpTags.INIT_STATE_TX);
       return this.arweaveWrapper.txDataString(stateTX);
     } else {
       return this.arweaveWrapper.txDataString(contractTx.id);

@@ -1,4 +1,4 @@
-import { ContractDefinition, ContractSource } from '@smartweave';
+import { ContractDefinition, ContractSource } from '@warp';
 
 /**
  * Implementors of this interface are responsible for loading contract's definitions -

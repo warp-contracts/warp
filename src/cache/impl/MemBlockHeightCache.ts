@@ -1,6 +1,6 @@
-import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@smartweave/cache';
-import { asc, deepCopy, desc } from '@smartweave/utils';
-import { LoggerFactory } from '@smartweave/logging';
+import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@warp/cache';
+import { asc, deepCopy, desc } from '@warp/utils';
+import { LoggerFactory } from '@warp/logging';
 
 /**
  * A simple, in-memory cache implementation of the BlockHeightSwCache

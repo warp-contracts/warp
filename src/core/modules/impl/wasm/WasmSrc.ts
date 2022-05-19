@@ -1,4 +1,4 @@
-import { LoggerFactory } from '@smartweave';
+import { LoggerFactory } from '@warp';
 import { unzip } from 'unzipit';
 import { Buffer } from 'redstone-isomorphic';
 

@@ -1,4 +1,5 @@
-import { BalanceResult, HandlerBasedContract, PstContract, PstState, TransferInput } from '@smartweave/contract';
+import { WarpTags } from '@warp';
+import { BalanceResult, HandlerBasedContract, PstContract, PstState, TransferInput } from '@warp/contract';
 
 interface BalanceInput {
   function: string;

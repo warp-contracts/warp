@@ -1,9 +1,9 @@
 /* eslint-disable */
 import fs from 'fs';
 import path from 'path';
-import { interactRead, readContract } from 'smartweave';
+import { interactRead, readContract } from 'warp';
 import Arweave from 'arweave';
-import { LoggerFactory, SmartWeaveNodeFactory, SmartWeaveWebFactory, SourceType } from '@smartweave';
+import { LoggerFactory, SmartWeaveNodeFactory, SmartWeaveWebFactory, SourceType } from '@warp';
 
 const stringify = require('safe-stable-stringify');
 
@@ -104,10 +104,10 @@ describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
     async (contractTxId: string) => {
       const blockHeight = 855134;
       console.log('readState Redstone Gateway', contractTxId);
-      const smartweaveR = SmartWeaveWebFactory.memCachedBased(arweave, 1)
+      const warpR = SmartWeaveWebFactory.memCachedBased(arweave, 1)
         .useRedStoneGateway(null, SourceType.ARWEAVE)
         .build();
-      const result = await smartweaveR.contract(contractTxId).readState(blockHeight);
+      const result = await warpR.contract(contractTxId).readState(blockHeight);
       const resultString = stringify(result.state).trim();
 
       console.log('readState Arweave Gateway', contractTxId);

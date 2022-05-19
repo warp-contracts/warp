@@ -1,5 +1,5 @@
 import Arweave from 'arweave';
-import { CacheableContractInteractionsLoader, CacheableExecutorFactory, Evolve } from '@smartweave/plugins';
+import { CacheableContractInteractionsLoader, CacheableExecutorFactory, Evolve } from '@warp/plugins';
 import {
   ArweaveGatewayInteractionsLoader,
   CacheableStateEvaluator,
@@ -10,34 +10,34 @@ import {
   R_GW_URL,
   RedstoneGatewayContractDefinitionLoader,
   RedstoneGatewayInteractionsLoader,
-  SmartWeave,
-  SmartWeaveBuilder,
+  Warp,
+  WarpBuilder,
   StateCache
-} from '@smartweave/core';
-import { MemBlockHeightSwCache, MemCache, RemoteBlockHeightCache } from '@smartweave/cache';
+} from '@warp/core';
+import { MemBlockHeightSwCache, MemCache, RemoteBlockHeightCache } from '@warp/cache';
 
 /**
- * A factory that simplifies the process of creating different versions of {@link SmartWeave}.
+ * A factory that simplifies the process of creating different versions of {@link Warp}.
  * All versions use the {@link Evolve} plugin.
- * SmartWeave instances created by this factory can be safely used in a web environment.
+ * Warp instances created by this factory can be safely used in a web environment.
  */
-export class SmartWeaveWebFactory {
+export class WarpWebFactory {
   /**
-   * Returns a fully configured {@link SmartWeave} that is using mem cache for all layers.
+   * Returns a fully configured {@link Warp} that is using mem cache for all layers.
    */
-  static memCached(arweave: Arweave, maxStoredBlockHeights = 10): SmartWeave {
+  static memCached(arweave: Arweave, maxStoredBlockHeights = 10): Warp {
     return this.memCachedBased(arweave, maxStoredBlockHeights).build();
   }
 
   /**
-   * Returns a preconfigured, memCached {@link SmartWeaveBuilder}, that allows for customization of the SmartWeave instance.
-   * Use {@link SmartWeaveBuilder.build()} to finish the configuration.
+   * Returns a preconfigured, memCached {@link WarpBuilder}, that allows for customization of the Warp instance.
+   * Use {@link WarpBuilder.build()} to finish the configuration.
    */
   static memCachedBased(
     arweave: Arweave,
     maxStoredBlockHeights = 10,
     confirmationStatus: ConfirmationStatus = { notCorrupted: true }
-  ): SmartWeaveBuilder {
+  ): WarpBuilder {
     const interactionsLoader = new RedstoneGatewayInteractionsLoader(R_GW_URL, confirmationStatus);
     const definitionLoader = new RedstoneGatewayContractDefinitionLoader(R_GW_URL, arweave, new MemCache());
 
@@ -51,7 +51,7 @@ export class SmartWeaveWebFactory {
 
     const interactionsSorter = new LexicographicalInteractionsSorter(arweave);
 
-    return SmartWeave.builder(arweave)
+    return Warp.builder(arweave)
       .setDefinitionLoader(definitionLoader)
       .setInteractionsLoader(interactionsLoader)
       .useRedStoneGwInfo()

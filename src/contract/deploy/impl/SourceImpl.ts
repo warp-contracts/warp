@@ -1,6 +1,6 @@
-import { SmartWeaveTags } from '@smartweave/core';
-import { LoggerFactory } from '@smartweave/logging';
-import { Source, SigningFunction } from '@smartweave';
+import { WarpTags } from '@warp/core';
+import { LoggerFactory } from '@warp/logging';
+import { Source, SigningFunction } from '@warp';
 import metering from 'redstone-wasm-metering';
 import Arweave from 'arweave';
 import { Go } from '../../../core/modules/impl/wasm/go-wasm-imports';
@@ -98,16 +98,16 @@ export class SourceImpl implements Source {
       srcTx = await this.arweave.createTransaction({ data: allData }, signer);
     }
 
-    srcTx.addTag(SmartWeaveTags.APP_NAME, 'SmartWeaveContractSource');
+    srcTx.addTag(WarpTags.APP_NAME, 'SmartWeaveContractSource');
     // TODO: version should be taken from the current package.json version.
-    srcTx.addTag(SmartWeaveTags.APP_VERSION, '0.3.0');
-    srcTx.addTag(SmartWeaveTags.SDK, 'RedStone');
-    srcTx.addTag(SmartWeaveTags.CONTENT_TYPE, contractType == 'js' ? 'application/javascript' : 'application/wasm');
+    srcTx.addTag(WarpTags.APP_VERSION, '0.3.0');
+    srcTx.addTag(WarpTags.SDK, 'RedStone');
+    srcTx.addTag(WarpTags.CONTENT_TYPE, contractType == 'js' ? 'application/javascript' : 'application/wasm');
 
     if (contractType == 'wasm') {
-      srcTx.addTag(SmartWeaveTags.WASM_LANG, wasmLang);
-      srcTx.addTag(SmartWeaveTags.WASM_LANG_VERSION, wasmVersion);
-      srcTx.addTag(SmartWeaveTags.WASM_META, JSON.stringify(metadata));
+      srcTx.addTag(WarpTags.WASM_LANG, wasmLang);
+      srcTx.addTag(WarpTags.WASM_LANG_VERSION, wasmVersion);
+      srcTx.addTag(WarpTags.WASM_META, JSON.stringify(metadata));
     }
 
     if (typeof signer == 'function') {

@@ -17,7 +17,7 @@ import {
   StateEvaluator,
   TagsParser,
   VrfData
-} from '@smartweave';
+} from '@warp';
 import Arweave from 'arweave';
 
 import { ProofHoHash } from '@idena/vrf-js';
@@ -109,7 +109,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           .addInteractionData({ interaction: null, interactionTx, currentTx });
 
         // creating a Contract instance for the "writing" contract
-        const writingContract = executionContext.smartweave.contract(
+        const writingContract = executionContext.warp.contract(
           writingContractTxId,
           executionContext.contract,
           interactionTx

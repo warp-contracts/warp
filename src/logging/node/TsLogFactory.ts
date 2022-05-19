@@ -1,7 +1,7 @@
 import path from 'path';
 import { ISettingsParam, Logger } from 'tslog';
 import { RedStoneLogger } from '../RedStoneLogger';
-import { ILoggerFactory, LogLevel } from '@smartweave';
+import { ILoggerFactory, LogLevel } from '@warp';
 
 export const defaultLoggerOptions: ISettingsParam = {
   displayFunctionName: false,

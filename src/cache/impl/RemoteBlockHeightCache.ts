@@ -1,4 +1,4 @@
-import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@smartweave/cache';
+import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@warp/cache';
 import axios, { AxiosInstance } from 'axios';
 
 /**
