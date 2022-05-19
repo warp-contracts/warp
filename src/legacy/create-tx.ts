@@ -11,7 +11,8 @@ export async function createTx(
   input: any,
   tags: { name: string; value: string }[],
   target = '',
-  winstonQty = '0'
+  winstonQty = '0',
+  bundle = false
 ): Promise<Transaction> {
   const options: Partial<CreateTransactionInterface> = {
     data: Math.random().toString().slice(-4)
@@ -22,6 +23,15 @@ export async function createTx(
     if (winstonQty && +winstonQty > 0) {
       options.quantity = winstonQty.toString();
     }
+  }
+
+  // both reward and last_tx are irrelevant in case of interactions
+  // that are bundled. So to speed up the procees (and prevent the arweave-js
+  // from calling /tx_anchor and /price endpoints) - we're presetting theses
+  // values here
+  if (bundle) {
+    options.reward = '72600854';
+    options.last_tx = 'p7vc1iSP6bvH_fCeUFa9LqoV5qiyW-jdEKouAT0XMoSwrNraB9mgpi29Q10waEpO';
   }
 
   const interactionTx = await arweave.createTransaction(options);

@@ -251,7 +251,14 @@ export class HandlerBasedContract<State> implements Contract<State> {
       ...options
     };
 
-    const interactionTx = await this.createInteraction(input, options.tags, emptyTransfer, options.strict, options.vrf);
+    const interactionTx = await this.createInteraction(
+      input,
+      options.tags,
+      emptyTransfer,
+      options.strict,
+      true,
+      options.vrf
+    );
 
     const response = await fetch(`${this._evaluationOptions.bundlerUrl}gateway/sequencer/register`, {
       method: 'POST',
@@ -280,7 +287,14 @@ export class HandlerBasedContract<State> implements Contract<State> {
     };
   }
 
-  private async createInteraction<Input>(input: Input, tags: Tags, transfer: ArTransfer, strict: boolean, vrf = false) {
+  private async createInteraction<Input>(
+    input: Input,
+    tags: Tags,
+    transfer: ArTransfer,
+    strict: boolean,
+    bundle = false,
+    vrf = false
+  ) {
     if (this._evaluationOptions.internalWrites) {
       // Call contract and verify if there are any internal writes:
       // 1. Evaluate current contract state
@@ -328,7 +342,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
       input,
       tags,
       transfer.target,
-      transfer.winstonQty
+      transfer.winstonQty,
+      bundle
     );
     return interactionTx;
   }
