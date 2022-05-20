@@ -18,7 +18,7 @@ const runBuild = async () => {
     platform: 'browser',
     target: ['es2020', 'chrome58', 'firefox57', 'safari11'],
     format: 'iife',
-    globalName: 'rsdk'
+    globalName: 'warp'
   }).catch((e) => {
     console.log(e);
     process.exit(1);
