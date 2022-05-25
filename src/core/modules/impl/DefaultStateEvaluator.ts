@@ -48,7 +48,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
   ): Promise<EvalStateResult<State>> {
     return this.doReadState(
       executionContext.sortedInteractions,
-      new EvalStateResult<State>(executionContext.contractDefinition.initState, {}),
+      new EvalStateResult<State>(executionContext.contractDefinition.initState, {}, {}),
       executionContext,
       currentTx
     );
@@ -65,6 +65,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
     let currentState = baseState.state;
     const validity = baseState.validity;
+    const errorMessages = baseState.errorMessages;
 
     executionContext?.handler.initState(currentState);
 
@@ -144,7 +145,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           executionContext?.handler.initState(currentState);
           validity[interactionTx.id] = newState.cachedValue.validity[interactionTx.id];
 
-          const toCache = new EvalStateResult(currentState, validity);
+          const toCache = new EvalStateResult(currentState, validity, errorMessages);
 
           // TODO: probably a separate hook should be created here
           // to fix https://github.com/redstone-finance/warp/issues/109
@@ -200,10 +201,13 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         const result = await executionContext.handler.handle(
           executionContext,
-          new EvalStateResult(currentState, validity),
+          new EvalStateResult(currentState, validity, errorMessages),
           interactionData
         );
         errorMessage = result.errorMessage;
+        if (result.type !== 'ok') {
+          errorMessages[interactionTx.id] = errorMessage;
+        }
 
         this.logResult<State>(result, interactionTx, executionContext);
 
@@ -226,7 +230,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         validity[interactionTx.id] = result.type === 'ok';
         currentState = result.state;
 
-        const toCache = new EvalStateResult(currentState, validity);
+        const toCache = new EvalStateResult(currentState, validity, errorMessages);
         if (canBeCached(interactionTx)) {
           lastConfirmedTxState = {
             tx: interactionTx,
@@ -243,7 +247,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       }
     }
     //this.logger.info('State evaluation total:', stateEvaluationBenchmark.elapsed());
-    const evalStateResult = new EvalStateResult<State>(currentState, validity);
+    const evalStateResult = new EvalStateResult<State>(currentState, validity, errorMessages);
 
     // state could have been fully retrieved from cache
     // or there were no interactions below requested block height

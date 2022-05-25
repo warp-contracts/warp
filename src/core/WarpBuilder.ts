@@ -6,11 +6,13 @@ import {
   ContractDefinitionLoader,
   DebuggableExecutorFactory,
   DefinitionLoader,
+  EmptyInteractionsSorter,
   ExecutorFactory,
   HandlerApi,
   InteractionsLoader,
   InteractionsSorter,
   MemBlockHeightWarpCache,
+  LexicographicalInteractionsSorter,
   MemCache,
   WarpGatewayContractDefinitionLoader,
   WarpGatewayInteractionsLoader,
@@ -79,6 +81,7 @@ export class WarpBuilder {
   ): WarpBuilder {
     this._interactionsLoader = new WarpGatewayInteractionsLoader(address, confirmationStatus, source);
     this._definitionLoader = new WarpGatewayContractDefinitionLoader(address, this._arweave, new MemCache());
+    this._interactionsSorter = new EmptyInteractionsSorter();
     this._useWarpGwInfo = true;
     return this;
   }
@@ -89,6 +92,7 @@ export class WarpBuilder {
       new ArweaveGatewayInteractionsLoader(this._arweave),
       new MemBlockHeightWarpCache(1)
     );
+    this._interactionsSorter = new LexicographicalInteractionsSorter(this._arweave);
     this._useWarpGwInfo = false;
     return this;
   }
