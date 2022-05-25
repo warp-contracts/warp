@@ -4,6 +4,8 @@ import {LoggerFactory, SmartWeaveNodeFactory} from '../src';
 import * as fs from 'fs';
 import knex from 'knex';
 import os from 'os';
+import path from "path";
+import stringify from "safe-stable-stringify";
 
 const logger = LoggerFactory.INST.create('Contract');
 
@@ -46,11 +48,15 @@ async function main() {
     },
     useNullAsDefault: true
   });
-  const smartweave = (await SmartWeaveNodeFactory.knexCachedBased(arweave, knexConfig, 1))
-    .useRedStoneGateway().build();
-  const contract = smartweave.contract("3vAx5cIFhwMihrNJgGx3CoAeZTOjG7LeIs9tnbBfL14");
-  await contract.readState();
-  await contract.readState();
+  const smartweave = SmartWeaveNodeFactory.memCached(arweave); /*(await SmartWeaveNodeFactory.knexCachedBased(arweave, knexConfig, 1))
+    .useRedStoneGateway().build();*/
+  const contract = smartweave.contract("Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY");
+  const {state, validity, errorMessages} = await contract.readState();
+  //console.log(errorMessages);
+  //console.log(state);
+
+  const resultString = stringify(state);
+  fs.writeFileSync(path.join(__dirname, 'DAJ.json'), resultString);
 
   const heapUsedAfter = Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100;
   const rssUsedAfter = Math.round((process.memoryUsage().rss / 1024 / 1024) * 100) / 100;

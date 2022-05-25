@@ -79,7 +79,7 @@ LoggerFactory.INST.logLevel('error');
 const contractId = 'SJ3l7474UHh3Dw6dWVT1bzsJ-8JvOewtGoDdOecWIZo';
 const fromBlockHeight = 600000;
 const toBlockHeight = 655393;
-const baseUrl = `http://baseUrl/gateway/interactions?contractId=SJ3l7474UHh3Dw6dWVT1bzsJ-8JvOewtGoDdOecWIZo&from=600000&to=655393`;
+const baseUrl = `http://baseUrl/gateway/interactions-sort-key?contractId=SJ3l7474UHh3Dw6dWVT1bzsJ-8JvOewtGoDdOecWIZo&from=600000&to=655393`;
 const fetchMock = jest
   .spyOn(global, 'fetch')
   .mockImplementation(

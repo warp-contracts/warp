@@ -4,6 +4,7 @@ import {
   CacheableStateEvaluator,
   ConfirmationStatus,
   ContractDefinitionLoader,
+  EmptyInteractionsSorter,
   HandlerExecutorFactory,
   LexicographicalInteractionsSorter,
   R_GW_URL,
@@ -65,7 +66,7 @@ export class SmartWeaveNodeFactory extends SmartWeaveWebFactory {
       [new Evolve(definitionLoader, executorFactory)]
     );
 
-    const interactionsSorter = new LexicographicalInteractionsSorter(arweave);
+    const interactionsSorter = new EmptyInteractionsSorter();
 
     return SmartWeave.builder(arweave)
       .setDefinitionLoader(definitionLoader)
@@ -103,7 +104,7 @@ export class SmartWeaveNodeFactory extends SmartWeaveWebFactory {
       [new Evolve(definitionLoader, executorFactory)]
     );
 
-    const interactionsSorter = new LexicographicalInteractionsSorter(arweave);
+    const interactionsSorter = new EmptyInteractionsSorter();
 
     return SmartWeave.builder(arweave)
       .setDefinitionLoader(definitionLoader)

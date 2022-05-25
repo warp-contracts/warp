@@ -1,12 +1,10 @@
 import Arweave from 'arweave';
-import { CacheableContractInteractionsLoader, CacheableExecutorFactory, Evolve } from '@smartweave/plugins';
+import { CacheableExecutorFactory, Evolve } from '@smartweave/plugins';
 import {
-  ArweaveGatewayInteractionsLoader,
   CacheableStateEvaluator,
   ConfirmationStatus,
-  ContractDefinitionLoader,
+  EmptyInteractionsSorter,
   HandlerExecutorFactory,
-  LexicographicalInteractionsSorter,
   R_GW_URL,
   RedstoneGatewayContractDefinitionLoader,
   RedstoneGatewayInteractionsLoader,
@@ -14,7 +12,7 @@ import {
   SmartWeaveBuilder,
   StateCache
 } from '@smartweave/core';
-import { MemBlockHeightSwCache, MemCache, RemoteBlockHeightCache } from '@smartweave/cache';
+import { MemBlockHeightSwCache, MemCache } from '@smartweave/cache';
 
 /**
  * A factory that simplifies the process of creating different versions of {@link SmartWeave}.
@@ -49,7 +47,7 @@ export class SmartWeaveWebFactory {
       [new Evolve(definitionLoader, executorFactory)]
     );
 
-    const interactionsSorter = new LexicographicalInteractionsSorter(arweave);
+    const interactionsSorter = new EmptyInteractionsSorter();
 
     return SmartWeave.builder(arweave)
       .setDefinitionLoader(definitionLoader)

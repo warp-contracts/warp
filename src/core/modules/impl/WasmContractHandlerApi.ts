@@ -249,7 +249,8 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
         contractTxId,
         {
           state: result.state as State,
-          validity: {}
+          validity: {},
+          errorMessages: {}
         }
       );
 
