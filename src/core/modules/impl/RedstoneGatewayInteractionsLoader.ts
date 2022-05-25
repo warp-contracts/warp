@@ -97,9 +97,7 @@ export class RedstoneGatewayInteractionsLoader implements InteractionsLoader {
       const benchmarkRequestTime = Benchmark.measure();
 
       // to make caching in cloudfront possible
-      const url = upToTransactionId
-        ? `${this.baseUrl}/gateway/interactions/transactionId`
-        : `${this.baseUrl}/gateway/interactions`;
+      const url = `${this.baseUrl}/gateway/interactions-sort-key`;
 
       const response = await fetch(
         `${url}?${new URLSearchParams({

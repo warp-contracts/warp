@@ -7,6 +7,8 @@ const fs = require('fs');
 const path =require('path');
 const {readContract} = require("smartweave");
 const {SmartWeaveNodeFactory} = require("../lib/cjs/core/node/SmartWeaveNodeFactory");
+const {ContractDefinitionLoader} = require("../src");
+const {load} = require("cheerio");
 
 const logger = LoggerFactory.INST.create('Contract');
 
@@ -20,6 +22,10 @@ async function main() {
     protocol: 'https',
     port: 443,
   });
+
+  const loader = new ContractDefinitionLoader(arweave);
+  const definition = await loader.load("contract_tx_id");
+  console.log(definition.srcTxId);
   /*const result = await SmartWeaveNodeFactory
       .memCached(arweave)
       .contract("dKR4CTZUei9Q7L0n37WXs8pOOMP-WOyg0_2DSprdag4")

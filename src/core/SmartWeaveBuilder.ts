@@ -6,10 +6,12 @@ import {
   ContractDefinitionLoader,
   DebuggableExecutorFactory,
   DefinitionLoader,
+  EmptyInteractionsSorter,
   ExecutorFactory,
   HandlerApi,
   InteractionsLoader,
   InteractionsSorter,
+  LexicographicalInteractionsSorter,
   MemBlockHeightSwCache,
   MemCache,
   RedstoneGatewayContractDefinitionLoader,
@@ -82,6 +84,7 @@ export class SmartWeaveBuilder {
   ): SmartWeaveBuilder {
     this._interactionsLoader = new RedstoneGatewayInteractionsLoader(address, confirmationStatus, source);
     this._definitionLoader = new RedstoneGatewayContractDefinitionLoader(address, this._arweave, new MemCache());
+    this._interactionsSorter = new EmptyInteractionsSorter();
     this._useRedstoneGwInfo = true;
     return this;
   }
@@ -92,6 +95,7 @@ export class SmartWeaveBuilder {
       new ArweaveGatewayInteractionsLoader(this._arweave),
       new MemBlockHeightSwCache(1)
     );
+    this._interactionsSorter = new LexicographicalInteractionsSorter(this._arweave);
     this._useRedstoneGwInfo = false;
     return this;
   }

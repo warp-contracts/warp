@@ -103,11 +103,12 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       cachedState == null ? executionContext.contractDefinition.initState : cachedState.cachedValue.state;
 
     const baseValidity = cachedState == null ? {} : cachedState.cachedValue.validity;
+    const baseErrorMessages = cachedState == null ? {} : cachedState.cachedValue.errorMessages;
 
     // eval state for the missing transactions - starting from latest value from cache.
     return await this.doReadState(
       missingInteractions,
-      new EvalStateResult(baseState, baseValidity),
+      new EvalStateResult(baseState, baseValidity, baseErrorMessages || {}),
       executionContext,
       currentTx
     );
@@ -222,7 +223,13 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       return;
     }
     const transactionId = transaction.id;
-    const stateToCache = new EvalStateResult(state.state, state.validity, transactionId, transaction.block.id);
+    const stateToCache = new EvalStateResult(
+      state.state,
+      state.validity,
+      state.errorMessages || {},
+      transactionId,
+      transaction.block.id
+    );
 
     await this.cache.put(new BlockHeightKey(contractTxId, txBlockHeight), stateToCache);
   }
@@ -238,7 +245,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     state: any,
     validity: any
   ): Promise<void> {
-    const stateToCache = new EvalStateResult(state, validity, transactionId);
+    const stateToCache = new EvalStateResult(state, validity, {}, transactionId);
     await this.cache.put(new BlockHeightKey(contractTxId, blockHeight), stateToCache);
   }
 }

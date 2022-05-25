@@ -36,7 +36,6 @@ import { NetworkInfoInterface } from 'arweave/node/network';
 import stringify from 'safe-stable-stringify';
 import * as crypto from 'crypto';
 import Transaction from 'arweave/node/lib/transaction';
-import { options } from 'tsconfig-paths/lib/options';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
