@@ -6,8 +6,8 @@ import {
   ExecutorFactory,
   HandlerApi,
   LoggerFactory,
-  WarpError,
-  WarpErrorType
+  SmartWeaveError,
+  SmartWeaveErrorType
 } from '@warp';
 
 /*
@@ -89,7 +89,7 @@ export class Evolve implements ExecutionContextModifier {
 
           return executionContext;
         } catch (e) {
-          throw new WarpError(WarpErrorType.CONTRACT_NOT_FOUND, {
+          throw new SmartWeaveError(SmartWeaveErrorType.CONTRACT_NOT_FOUND, {
             message: `Contract having txId: ${contractTxId} not found`,
             requestedTxId: contractTxId
           });

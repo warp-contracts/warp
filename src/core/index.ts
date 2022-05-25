@@ -19,7 +19,7 @@ export * from './modules/impl/StateCache';
 export * from './modules/impl/wasm/WasmSrc';
 
 export * from './ExecutionContextModifier';
-export * from './WarpTags';
+export * from './SmartWeaveTags';
 export * from './ExecutionContext';
 export * from './ContractDefinition';
 export * from './ContractCallStack';

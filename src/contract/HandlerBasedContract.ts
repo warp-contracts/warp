@@ -27,7 +27,7 @@ import {
   SigningFunction,
   sleep,
   Warp,
-  WarpTags,
+  SmartWeaveTags,
   SourceType,
   Tags,
   SourceImpl,
@@ -314,7 +314,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
       innerWrites.forEach((contractTxId) => {
         tags.push({
-          name: WarpTags.INTERACT_WRITE,
+          name: SmartWeaveTags.INTERACT_WRITE,
           value: contractTxId
         });
       });
@@ -331,7 +331,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     if (vrf) {
       tags.push({
-        name: WarpTags.REQUEST_VRF,
+        name: SmartWeaveTags.REQUEST_VRF,
         value: 'true'
       });
     }

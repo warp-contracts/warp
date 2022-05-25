@@ -1,13 +1,13 @@
-export const enum WarpErrorType {
+export const enum SmartWeaveErrorType {
   CONTRACT_NOT_FOUND = 'CONTRACT_NOT_FOUND'
 }
 
-export class WarpError extends Error {
-  public readonly type: WarpErrorType;
+export class SmartWeaveError extends Error {
+  public readonly type: SmartWeaveErrorType;
   public readonly otherInfo: any;
 
   constructor(
-    type: WarpErrorType,
+    type: SmartWeaveErrorType,
     optional: {
       message?: string;
       requestedTxId?: string;
@@ -22,7 +22,7 @@ export class WarpError extends Error {
     this.otherInfo = optional;
   }
 
-  public getType(): WarpErrorType {
+  public getType(): SmartWeaveErrorType {
     return this.type;
   }
 }

@@ -1,5 +1,5 @@
 import Arweave from 'arweave';
-import { GQLNodeInterface, GQLTagInterface, SigningFunction, WarpTags } from '@warp';
+import { GQLNodeInterface, GQLTagInterface, SigningFunction, SmartWeaveTags } from '@warp';
 import Transaction from 'arweave/node/lib/transaction';
 import { CreateTransactionInterface } from 'arweave/node/common';
 import { BlockData } from 'arweave/node/blocks';
@@ -45,12 +45,12 @@ export async function createTx(
       interactionTx.addTag(tag.name.toString(), tag.value.toString());
     }
   }
-  interactionTx.addTag(WarpTags.APP_NAME, 'SmartWeaveAction');
+  interactionTx.addTag(SmartWeaveTags.APP_NAME, 'SmartWeaveAction');
   // use real SDK version here?
-  interactionTx.addTag(WarpTags.APP_VERSION, '0.3.0');
-  interactionTx.addTag(WarpTags.SDK, 'Warp');
-  interactionTx.addTag(WarpTags.CONTRACT_TX_ID, contractId);
-  interactionTx.addTag(WarpTags.INPUT, JSON.stringify(input));
+  interactionTx.addTag(SmartWeaveTags.APP_VERSION, '0.3.0');
+  interactionTx.addTag(SmartWeaveTags.SDK, 'Warp');
+  interactionTx.addTag(SmartWeaveTags.CONTRACT_TX_ID, contractId);
+  interactionTx.addTag(SmartWeaveTags.INPUT, JSON.stringify(input));
 
   if (signer) {
     await signer(interactionTx);

@@ -3,7 +3,7 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { getTag, LoggerFactory, PstContract, PstState, Warp, WarpNodeFactory, WarpTags } from '@warp';
+import { getTag, LoggerFactory, PstContract, PstState, Warp, WarpNodeFactory, SmartWeaveTags } from '@warp';
 import path from 'path';
 import { addFunds, mineBlock } from '../_helpers';
 
@@ -109,9 +109,9 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
 
     expect(contractTx).not.toBeNull();
 
-    const contractSrcTx = await arweave.transactions.get(getTag(contractTx, WarpTags.CONTRACT_SRC_TX_ID));
-    expect(getTag(contractSrcTx, WarpTags.CONTENT_TYPE)).toEqual('application/wasm');
-    expect(getTag(contractSrcTx, WarpTags.WASM_LANG)).toEqual('go');
+    const contractSrcTx = await arweave.transactions.get(getTag(contractTx, SmartWeaveTags.CONTRACT_SRC_TX_ID));
+    expect(getTag(contractSrcTx, SmartWeaveTags.CONTENT_TYPE)).toEqual('application/wasm');
+    expect(getTag(contractSrcTx, SmartWeaveTags.WASM_LANG)).toEqual('go');
   });
 
   it('should read pst state and balance data', async () => {

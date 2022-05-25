@@ -1,7 +1,7 @@
 /**
  * Definition of all transaction tags used by the SmartWeave "protocol"
  */
-export enum WarpTags {
+export enum SmartWeaveTags {
   APP_NAME = 'App-Name',
   APP_VERSION = 'App-Version',
   CONTRACT_TX_ID = 'Contract', // note: should be named Contract-Tx-Id

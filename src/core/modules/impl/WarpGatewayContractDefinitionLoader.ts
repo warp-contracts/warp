@@ -1,4 +1,4 @@
-import { ContractDefinition, getTag, LoggerFactory, WarpTags, stripTrailingSlash, WarpCache } from '@warp';
+import { ContractDefinition, getTag, LoggerFactory, SmartWeaveTags, stripTrailingSlash, WarpCache } from '@warp';
 import Arweave from 'arweave';
 import { ContractDefinitionLoader } from './ContractDefinitionLoader';
 import 'redstone-isomorphic';
@@ -53,7 +53,7 @@ export class WarpGatewayContractDefinitionLoader extends ContractDefinitionLoade
         } else {
           sourceTx = await this.arweaveWrapper.tx(result.srcTxId);
         }
-        const srcMetaData = JSON.parse(getTag(sourceTx, WarpTags.WASM_META));
+        const srcMetaData = JSON.parse(getTag(sourceTx, SmartWeaveTags.WASM_META));
         result.metadata = srcMetaData;
       }
       result.contractType = result.src ? 'js' : 'wasm';

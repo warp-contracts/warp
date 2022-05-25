@@ -8,7 +8,7 @@ import {
   InteractionsLoader,
   LoggerFactory,
   sleep,
-  WarpTags
+  SmartWeaveTags
 } from '@warp';
 import Arweave from 'arweave';
 
@@ -85,11 +85,11 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
     const mainTransactionsVariables: GqlReqVariables = {
       tags: [
         {
-          name: WarpTags.APP_NAME,
+          name: SmartWeaveTags.APP_NAME,
           values: ['SmartWeaveAction']
         },
         {
-          name: WarpTags.CONTRACT_TX_ID,
+          name: SmartWeaveTags.CONTRACT_TX_ID,
           values: [contractId]
         }
       ],
@@ -108,7 +108,7 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
       const innerWritesVariables: GqlReqVariables = {
         tags: [
           {
-            name: WarpTags.INTERACT_WRITE,
+            name: SmartWeaveTags.INTERACT_WRITE,
             values: [contractId]
           }
         ],

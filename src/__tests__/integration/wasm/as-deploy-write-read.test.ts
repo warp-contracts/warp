@@ -3,7 +3,7 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, getTag, LoggerFactory, Warp, WarpNodeFactory, WarpTags } from '@warp';
+import { Contract, getTag, LoggerFactory, Warp, WarpNodeFactory, SmartWeaveTags } from '@warp';
 import path from 'path';
 import { addFunds, mineBlock } from '../_helpers';
 
@@ -72,9 +72,9 @@ describe('Testing the Warp client for AssemblyScript WASM contract', () => {
 
     expect(contractTx).not.toBeNull();
 
-    const contractSrcTx = await arweave.transactions.get(getTag(contractTx, WarpTags.CONTRACT_SRC_TX_ID));
-    expect(getTag(contractSrcTx, WarpTags.CONTENT_TYPE)).toEqual('application/wasm');
-    expect(getTag(contractSrcTx, WarpTags.WASM_LANG)).toEqual('assemblyscript');
+    const contractSrcTx = await arweave.transactions.get(getTag(contractTx, SmartWeaveTags.CONTRACT_SRC_TX_ID));
+    expect(getTag(contractSrcTx, SmartWeaveTags.CONTENT_TYPE)).toEqual('application/wasm');
+    expect(getTag(contractSrcTx, SmartWeaveTags.WASM_LANG)).toEqual('assemblyscript');
   });
 
   it('should properly read initial state', async () => {
