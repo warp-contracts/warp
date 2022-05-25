@@ -123,7 +123,7 @@ export class SmartWeaveGlobal {
     }
   }
 
-  async getBalance(address: string): Promise<string> {
+  async getBalance(address: string, height?: number): Promise<string> {
     if (!this._activeTx) {
       throw new Error('Cannot read balance - active tx is not set.');
     }
@@ -131,9 +131,11 @@ export class SmartWeaveGlobal {
       throw new Error('Cannot read balance - block height not set.');
     }
 
+    const effectiveHeight = height || this.block.height;
+
     // http://nyc-1.dev.arweave.net:1984/block/height/914387/wallet/M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI/balance
     return await fetch(
-      `${this.evaluationOptions.walletBalanceUrl}block/height/${this.block.height}/wallet/${address}/balance`
+      `${this.evaluationOptions.walletBalanceUrl}block/height/${effectiveHeight}/wallet/${address}/balance`
     )
       .then((res) => {
         return res.ok ? res.text() : Promise.reject(res);
