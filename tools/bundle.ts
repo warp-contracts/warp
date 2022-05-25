@@ -65,6 +65,8 @@ async function main() {
     function: "vrf",
   }, {vrf: true});
 
+  console.log(result);
+
   const {state} = await token.readState();
 
   logger.info("State", state.vrf);
