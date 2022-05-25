@@ -149,7 +149,7 @@ All exports are stored under `warp` global variable.
 
 #### SDK version >= `0.5.0`
 
-From version `0.5.0`, the RedStone Gateway is the default gateway used by the SDK.
+From version `0.5.0`, the Warp Gateway is the default gateway used by the SDK.
 By default, the `{notCorrupted: true}` mode is used (as describe below).  
 If you want to use the Arweave gateway in version >= `0.5.0`:
 
@@ -159,7 +159,7 @@ const warp = WarpNodeFactory.memCachedBased(arweave).useArweaveGateway().build()
 
 #### SDK version < `0.5.0`
 
-In order to use the [Warp Gateway](https://github.com/redstone-finance/warp-gateway) for loading the contract interactions,
+In order to use the [Warp Gateway](https://github.com/redstone-finance/redstone-sw-gateway) for loading the contract interactions,
 configure the smartweave instance in the following way:
 
 ```ts
@@ -167,12 +167,12 @@ const warp = WarpNodeFactory.memCachedBased(arweave).useWarpGateway().build();
 ```
 
 The gateway is currently available under [https://gateway.redstone.finance](https://gateway.redstone.finance) url.  
-Full API reference is available [here](https://github.com/redstone-finance/warp-gateway#http-api-reference).
+Full API reference is available [here](https://github.com/redstone-finance/redstone-sw-gateway#http-api-reference).
 
 Optionally - you can pass the second argument to the `useWarpGateway` method that will determine which transactions will be loaded:
 
 1. no parameter - default mode, compatible with how the Arweave Gateway GQL endpoint works - returns
-   all the interactions. There is a risk of returning [corrupted transactions](https://github.com/redstone-finance/warp-gateway#corrupted-transactions).
+   all the interactions. There is a risk of returning [corrupted transactions](https://github.com/redstone-finance/redstone-sw-gateway#corrupted-transactions).
 2. `{confirmed: true}` - returns only confirmed transactions - the most safe mode, eg:
 
 ```ts
@@ -186,11 +186,11 @@ const warp = WarpNodeFactory.memCachedBased(arweave).useWarpGateway({ confirmed:
 const warp = WarpNodeFactory.memCachedBased(arweave).useWarpGateway({ notCorrupted: true }).build();
 ```
 
-More examples can be found [here](https://github.com/redstone-finance/warp-examples/blob/main/src/warp-gateway-example.ts).
+More examples can be found [here](https://github.com/redstone-finance/redstone-smartcontracts-examples/blob/main/src/redstone-gateway-example.ts).
 
 ### WASM
 
-WASM provides proper sandboxing ensuring execution environment isolation which guarantees security to the contracts execution. As for now - **Assemblyscript**, **Rust** and **Go** languages are supported. WASM contracts templates containing example PST contract implementation within tools for compiling contracts to WASM, testing, deploying (locally, on testnet and mainnet) and writing interactions are available in a [dedicated repository](https://github.com/redstone-finance/warp-wasm-templates).
+WASM provides proper sandboxing ensuring execution environment isolation which guarantees security to the contracts execution. As for now - **Assemblyscript**, **Rust** and **Go** languages are supported. WASM contracts templates containing example PST contract implementation within tools for compiling contracts to WASM, testing, deploying (locally, on testnet and mainnet) and writing interactions are available in a [dedicated repository](https://github.com/redstone-finance/redstone-smartcontracts-wasm-templates).
 
 Using SDKs' methods works exactly the same as in case of a regular JS contract.
 
@@ -286,13 +286,13 @@ const smartweave = SmartWeaveWebFactory.memCached(arweave);
 ### Examples
 
 Usage examples can be found in
-a dedicated [repository](https://github.com/redstone-finance/warp-examples).
+a dedicated [repository](https://github.com/redstone-finance/redstone-smartweave-examples).
 Please follow instructions in its README.md (and detail-ish comments in the examples files) to learn more.
-There is also a separate repository with a web application [example](https://github.com/redstone-finance/warp-app).
+There is also a separate repository with a web application [example](https://github.com/redstone-finance/redstone-smartcontracts-app).
 
 We've also created an [academy](https://redstone.academy/) that introduces to the process of writing your own SmartWeave contract from scratch and describes how to interact with it using Warp SDK.
 
 ### Migration Guide
 
-If you're already using Arweave smartweave.js SDK and would like to smoothly migrate to RedStone SmartContracts SDK -
+If you're already using Arweave smartweave.js SDK and would like to smoothly migrate to Warp SDK -
 check out the [migration guide](https://github.com/redstone-finance/warp/blob/main/docs/MIGRATION_GUIDE.md).
