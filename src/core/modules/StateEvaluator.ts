@@ -77,6 +77,7 @@ export class EvalStateResult<State> {
   constructor(
     readonly state: State,
     readonly validity: Record<string, boolean>,
+    readonly errorMessages: Record<string, string>,
     readonly transactionId?: string,
     readonly blockId?: string
   ) {}
