@@ -60,7 +60,7 @@ export const enum SourceType {
  *
  * Passing no flag is the "backwards compatible" mode (ie. it will behave like the original Arweave GQL gateway endpoint).
  * Note that this may result in returning corrupted and/or forked interactions
- * - read more {@link https://github.com/redstone-finance/warp-gateway#corrupted-transactions}.
+ * - read more {@link https://github.com/redstone-finance/redstone-sw-gateway#corrupted-transactions}.
  *
  * Please note that currently caching (ie. {@link CacheableContractInteractionsLoader} is switched off
  * for WarpGatewayInteractionsLoader due to the issue mentioned in the

@@ -7,7 +7,7 @@ import Transaction from 'arweave/node/lib/transaction';
 
 /**
  * An extension to {@link ContractDefinitionLoader} that makes use of
- * Warp Gateway ({@link https://github.com/redstone-finance/warp-gateway})
+ * Warp Gateway ({@link https://github.com/redstone-finance/redstone-sw-gateway})
  * to load Contract Data.
  *
  * If the contract data is not available on Warp Gateway - it fallbacks to default implementation
