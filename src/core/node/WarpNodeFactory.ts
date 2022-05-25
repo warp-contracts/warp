@@ -1,7 +1,10 @@
 import Arweave from 'arweave';
 import {
+  ArweaveGatewayInteractionsLoader,
   CacheableStateEvaluator,
   ConfirmationStatus,
+  ContractDefinitionLoader,
+  EmptyInteractionsSorter,
   HandlerExecutorFactory,
   LexicographicalInteractionsSorter,
   R_GW_URL,
@@ -63,7 +66,7 @@ export class WarpNodeFactory extends WarpWebFactory {
       [new Evolve(definitionLoader, executorFactory)]
     );
 
-    const interactionsSorter = new LexicographicalInteractionsSorter(arweave);
+    const interactionsSorter = new EmptyInteractionsSorter();
 
     return Warp.builder(arweave)
       .setDefinitionLoader(definitionLoader)
@@ -97,7 +100,7 @@ export class WarpNodeFactory extends WarpWebFactory {
       [new Evolve(definitionLoader, executorFactory)]
     );
 
-    const interactionsSorter = new LexicographicalInteractionsSorter(arweave);
+    const interactionsSorter = new EmptyInteractionsSorter();
 
     return Warp.builder(arweave)
       .setDefinitionLoader(definitionLoader)
