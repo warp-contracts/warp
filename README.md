@@ -2,8 +2,7 @@
 
 > ⚠️ Following library has been renamed from **redstone-smartweave** to **warp** from version **1.0.0**! If you are using older version please read [README-LEGACY](README-LEGACY.md).
 
-Warp SDK is the new, written from scratch, implementation of
-the SmartWeave [Protocol](./docs/SMARTWEAVE_PROTOCOL.md).
+Warp SDK is the implementation of the SmartWeave [Protocol](./docs/SMARTWEAVE_PROTOCOL.md).
 
 It works in both web and Node.js environment (requires Node.js 16.5+).
 
@@ -13,7 +12,6 @@ and modularity (e.g. ability to use different types of caches, imported from ext
 We're already using the new SDK on production, both in our webapp and nodes.
 However, if you'd like to use it in production as well, please contact us on [discord](https://discord.com/invite/PVxBZKFr46) to ensure a smooth transition and get help with testing.
 
-The base motivation behind rewriting the original SDK (and roadmap proposal) has been described [here](./docs/ROAD_MAP.md).  
 To further improve contract state evaluation time, one can additionally use AWS CloudFront based Arweave cache described [here](https://github.com/redstone-finance/warp/blob/main/docs/CACHE.md).
 
 - [Architecture](#architecture)
@@ -25,6 +23,7 @@ To further improve contract state evaluation time, one can additionally use AWS 
   - [Using the Warp Gateway](#using-the-warp-gateway)
   - [WASM](#wasm)
   - [VM2](#vm2)
+  - [Internal writes](#internal-writes)
   - [Performance - best practices](#performance---best-practices)
   - [Examples](#examples)
   - [Migration guide](#migration-guide)
@@ -215,6 +214,43 @@ contract = warp.contract(contractTxId).setEvaluationOptions({
 });
 ```
 
+### Internal writes
+
+SmartWeave protocol currently natively does not support writes between contract - contracts can only read each others' state. This lack of interoperability is a big limitation for real-life applications - especially if you want to implement features like staking/vesting, disputes - or even a standard approve/transferFrom flow from ERC-20 tokens.
+
+SmartWeave protocol has been extended in Warp by adding internal writes feature.
+
+A new method has been added to SmartWeave global object. It allows to perform writes on other contracts.
+
+1. The method first evaluates the target (ie. specified by the contractTxId given in the first parameter) contract's state up to the "current" block height (ie. block height of the interaction that is calling the write method) and then applies the input (specified as the secon parameter of the write method). The result is memoized in cache.
+
+```
+await SmartWeave.contracts.write(contractTxId, { function: 'add' });
+```
+
+2. For each newly created interaction with given contract - a dry run is performed and the call report of the dry-run is analysed. A list of all inner-calls between contracts is generated. For each generated inner call - an additional tag is generated: {'interactWrite': contractTxId}- where contractTxId is the callee contract.
+
+3. When state is evaluated for the given contract ("Contract A") all the interactions - `direct` and `internalWrites`. If it is an `internalWrite` interaction - contract specified in the `internalWrite` ("Contract B") tag is loaded and its state is evaluate. This will cause the `write` method (described in p.1) to be called. After evaluating the "Contract B" contract state - the latest state of the "Contract A" is loaded from cache (it has been updated by the write method) and evaluation moves to next interaction.
+
+In order for internal calls to work you need to set `evaluationOptions` to `true`:
+
+```
+const callingContract = smartweave
+   .contract<ExampleContractState>(calleeTxId)
+   .setEvaluationOptions({
+      internalWrites: true
+   })
+   .connect(wallet);
+```
+
+You can also perform internal read to the contract (originally introduced by the protocol):
+
+```
+await SmartWeave.contracts.readContractState(action.input.contractId);
+```
+
+You can view some more examples in the [internal writes test directory](https://github.com/redstone-finance/redstone-smartcontracts/tree/main/src/__tests__/integration/internal-writes). If you would like to read whole specification and motivation which stands behind introducing internal writes feature, please read [following issue](https://github.com/redstone-finance/redstone-smartcontracts/issues/37).
+
 ### Performance - best practices
 
 In order to get the best performance on production environment (or while performing benchmarks ;-)), please follow these simple rules:
@@ -260,13 +296,3 @@ We've also created an [academy](https://redstone.academy/) that introduces to th
 
 If you're already using Arweave smartweave.js SDK and would like to smoothly migrate to RedStone SmartContracts SDK -
 check out the [migration guide](https://github.com/redstone-finance/warp/blob/main/docs/MIGRATION_GUIDE.md).
-
-### Documentation
-
-TSDocs can be found [here](https://smartweave.docs.redstone.finance/).
-
-### Missing features
-
-Some features from the original Arweave's smartweave.js are not yet implemented. They will be either added soon to the core SDK, or as separate libraries, built on top of the SDK:
-
-- CLI (though not sure if that is a necessary - even if, it should be probably a separate lib built on top of the base SDK).

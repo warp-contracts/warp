@@ -10,7 +10,6 @@ and modularity (e.g. ability to use different types of caches, imported from ext
 We're already using the new SDK on production, both in our webapp and nodes.
 However, if you'd like to use it in production as well, please contact us on [discord](https://discord.com/invite/PVxBZKFr46) to ensure a smooth transition and get help with testing.
 
-The base motivation behind rewriting the original SDK (and roadmap proposal) has been described [here](./docs/ROAD_MAP.md).  
 To further improve contract state evaluation time, one can additionally use AWS CloudFront based Arweave cache described [here](https://github.com/redstone-finance/redstone-smartweave-contracts/blob/main/docs/CACHE.md).
 
 - [Architecture](#architecture)
@@ -24,8 +23,6 @@ To further improve contract state evaluation time, one can additionally use AWS 
   - [Performance - best practices](#performance---best-practices)
   - [Examples](#examples)
   - [Migration guide](#migration-guide)
-  - [Documentation](#documentation)
-  - [Missing features](#missing-features)
    
 ## Architecture
 RedStone SmartContracts SDK consists of main 3 layers:
@@ -186,6 +183,11 @@ contract = smartweave.contract(contractTxId).setEvaluationOptions({
       useVM2: true
     });
 ```
+
+### Internal writes
+SmartWeave protocol currently natively does not support writes between contract - contracts can only read each others' state. This lack of interoperability is a big limitation for real-life applications - especially if you want to implement features like staking/vesting, disputes - or even a standard approve/transferFrom flow from ERC-20 tokens.
+
+We proposed a new solution
 ### Performance - best practices
 In order to get the best performance on production environment (or while performing benchmarks ;-)), please follow these simple rules:
 1. Do NOT use the `TsLoggerFactory` - it is good for development, as it formats the logs nicely, but might slow down the state evaluation

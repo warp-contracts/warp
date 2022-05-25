@@ -1,6 +1,6 @@
 # Migration Guide from Arweave's SmartWeave SDK to Warp SDK
 
-This guide describes <strong>the simplest</strong> way to switch to the new version of SmartWeave. It uses `WebNodeFactory` for Node and `WarpWebFactory` for Web to quickly obtain fully configured, mem-cacheable SmartWeave instance. To see a more detailed explanation of all the core modules visit the [Warp documentation](https://smartweave.docs.redstone.finance/) or check out the [source code.](https://github.com/redstone-finance/warp)
+This guide describes <strong>the simplest</strong> way to switch to the new version of SmartWeave. It uses `WebNodeFactory` for Node and `WarpWebFactory` for Web to quickly obtain fully configured, mem-cacheable SmartWeave instance. To see a more detailed explanation of all the core modules check out the [source code.](https://github.com/redstone-finance/warp)
 
 ### You can watch this tutorial on YouTube 🎬
 - [Youtube link](https://www.youtube.com/watch?v=fNjUV7mHFqw)
@@ -135,7 +135,7 @@ Instead of updaitng all logger options you can simply set the new minimum logger
 LoggerFactory.INST.logLevel("info");
 ```
 
-Available log levels are listed [here.](https://github.com/redstone-finance/redstone-smartweave/blob/main/src/logging/RedStoneLogger.ts#L1)
+Available log levels are listed [here.](https://github.com/redstone-finance/warp/blob/main/src/logging/RedStoneLogger.ts#L1)
 
 
 ## 3. Test everything 🔥
