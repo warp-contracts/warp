@@ -1,4 +1,4 @@
-# RedStone SmartContracts SDK
+# RedStone Warp SDK
 
 ### The issues with original smartweave.js SDK
 * low performance (unnecessary calls to Arweave http api, no easy option to add caching layer, etc.)

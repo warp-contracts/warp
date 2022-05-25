@@ -1,24 +1,24 @@
-# Migration Guide from Arweave's SmartWeave SDK to RedStone SmartContracts SDK
+# Migration Guide from Arweave's SmartWeave SDK to Warp SDK
 
-This guide describes <strong>the simplest</strong> way to switch to the new version of SmartWeave. It uses `SmartWeaveNodeFactory` for Node and `SmartWeaveWebFactory` for Web to quickly obtain fully configured, mem-cacheable SmartWeave instance. To see a more detailed explanation of all the core modules visit the [SmartWeave v2 documentation](https://smartweave.docs.redstone.finance/) or check out the [source code.](https://github.com/redstone-finance/redstone-smartweave)
+This guide describes <strong>the simplest</strong> way to switch to the new version of SmartWeave. It uses `WebNodeFactory` for Node and `WarpWebFactory` for Web to quickly obtain fully configured, mem-cacheable SmartWeave instance. To see a more detailed explanation of all the core modules visit the [Warp documentation](https://smartweave.docs.redstone.finance/) or check out the [source code.](https://github.com/redstone-finance/warp)
 
 ### You can watch this tutorial on YouTube 🎬
 - [Youtube link](https://www.youtube.com/watch?v=fNjUV7mHFqw)
 
-[![redstone smartcontracts migration guide](https://img.youtube.com/vi/fNjUV7mHFqw/0.jpg)](https://www.youtube.com/watch?v=fNjUV7mHFqw)
+[![warp migration guide](https://img.youtube.com/vi/fNjUV7mHFqw/0.jpg)](https://www.youtube.com/watch?v=fNjUV7mHFqw)
 
 ### Need help? 🙋‍♂️
 Please feel free to contact us [on Discord](https://redstone.finance/discord) if you face any problems.
 
 ## 1. Update dependencies 📦
 
-#### 1.1 Install smartweave v2
+#### 1.1 Install Warp
 ```bash
 # Yarn
-yarn add redstone-smartweave
+yarn add warp
 
 # or NPM
-npm install redstone-smartweave
+npm install warp
 ```
 #### 1.2 Remove smartweave v1
 If smartweave was installed globally, add `-g` flag to npm or use `yarn global`
@@ -33,15 +33,15 @@ npm uninstall smartweave
 #### 1.3 Replace imports
 You can import the full API or individual modules.
 ```typescript
-import * as SmartWeaveSdk from 'redstone-smartweave';
-import { SmartWeave, Contract, ... } from 'redstone-smartweave';
+import * as WarpSdk from 'warp';
+import { Warp, Contract, ... } from 'warp';
 ```
 
 ## 2. Update your implementation 🧑‍💻
-### 2.1 Initialize a SmartWeave client
+### 2.1 Initialize a Warp client
 ```typescript
 import Arweave from 'arweave';
-import { SmartWeaveNodeFactory } from 'redstone-smartweave';
+import { WarpNodeFactory } from 'warp';
 
 // Create an Arweave instance
 const arweave = Arweave.init({
@@ -52,28 +52,28 @@ const arweave = Arweave.init({
   logging: false,
 });
 
-// Create a SmartWeave client
-const smartweave = SmartWeaveNodeFactory.memCached(arweave);
+// Create a Warp client
+const smartweave = WarpNodeFactory.memCached(arweave);
 ```
 
-For Web environment you should use `SmartWeaveWebFactory` instead of `SmartWeaveNodeFactory`.
+For Web environment you should use `WarpWebFactory` instead of `WarpNodeFactory`.
 
 In this example we've used the `memCached` method. You can see other available methods in documentation:
 - [For Web](https://smartweave.docs.redstone.finance/classes/SmartWeaveWebFactory.html)
 - [For Node.js](https://smartweave.docs.redstone.finance/classes/SmartWeaveNodeFactory.html)
 
 #### [Optional] Custom modules 🛠
-Smartweave V2 has a modular architecture, which allows you to connect custom modules to any part of the SmartWeave client implementation. See [custom-client-example.ts](https://github.com/redstone-finance/redstone-smartweave-examples/blob/main/src/custom-client-example.ts) to learn more.
+Warp has a modular architecture, which allows you to connect custom modules to any part of the Warp client implementation. See [custom-client-example.ts](https://github.com/redstone-finance/redstone-smartweave-examples/blob/main/src/custom-client-example.ts) to learn more.
 
 ### 2.2 Initialize contract object
 ```typescript
 // Simple connection (allows to read state)
-const contract = smartweave.contract("YOUR_CONTRACT_TX_ID");
+const contract = warp.contract("YOUR_CONTRACT_TX_ID");
 ```
 💡 Note! For being able to write interactions to blockchain you need to connect wallet to contract object.
 
 ```typescript
-const contract = smartweave
+const contract = warp
   .contract("YOUR_CONTRACT_TX_ID")
   .connect(jwk) // jwk should be a valid private key (in JSON Web Key format)
   .setEvaluationOptions({
@@ -115,7 +115,7 @@ const result = await contract.writeInteraction({
 💡 You can read detailed explanation of each contract method [here.](CONTRACT_METHODS.md)
 
 ### [Optional] 2.4 Confgure logging
-Smartweave V2 uses `tslog` library for logging. By default logger is set to "debug" level, which means that all messages with level "debug" or higher are logged.
+Warp uses `tslog` library for logging. By default logger is set to "debug" level, which means that all messages with level "debug" or higher are logged.
 
 #### Update logger options
 ```typescript
