@@ -1,10 +1,10 @@
 import Arweave from 'arweave';
-import { CacheableContractInteractionsLoader, CacheableExecutorFactory, Evolve } from '@warp/plugins';
+import { CacheableExecutorFactory, Evolve } from '@warp/plugins';
 import {
   CacheableStateEvaluator,
   ConfirmationStatus,
+  EmptyInteractionsSorter,
   HandlerExecutorFactory,
-  LexicographicalInteractionsSorter,
   R_GW_URL,
   WarpGatewayContractDefinitionLoader,
   WarpGatewayInteractionsLoader,
@@ -47,7 +47,7 @@ export class WarpWebFactory {
       [new Evolve(definitionLoader, executorFactory)]
     );
 
-    const interactionsSorter = new LexicographicalInteractionsSorter(arweave);
+    const interactionsSorter = new EmptyInteractionsSorter();
 
     return Warp.builder(arweave)
       .setDefinitionLoader(definitionLoader)
