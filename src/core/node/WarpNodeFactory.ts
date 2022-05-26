@@ -76,11 +76,7 @@ export class WarpNodeFactory extends WarpWebFactory {
       .setStateEvaluator(stateEvaluator);
   }
 
-  static async knexCached(
-    arweave: Arweave,
-    dbConnection: Knex,
-    maxStoredInMemoryBlockHeights = 10
-  ): Promise<Warp> {
+  static async knexCached(arweave: Arweave, dbConnection: Knex, maxStoredInMemoryBlockHeights = 10): Promise<Warp> {
     return (await this.knexCachedBased(arweave, dbConnection, maxStoredInMemoryBlockHeights)).build();
   }
 

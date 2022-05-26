@@ -126,14 +126,10 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
       ]);
 
       this.logger.debug('Cache result?:', !this.swGlobal._activeTx.dry);
-      await executionContext.warp.stateEvaluator.onInternalWriteStateUpdate(
-        this.swGlobal._activeTx,
-        contractTxId,
-        {
-          state: result.state as State,
-          validity: {}
-        }
-      );
+      await executionContext.warp.stateEvaluator.onInternalWriteStateUpdate(this.swGlobal._activeTx, contractTxId, {
+        state: result.state as State,
+        validity: {}
+      });
 
       return result;
     };
@@ -176,11 +172,7 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
       });
 
       const { stateEvaluator } = executionContext.warp;
-      const childContract = executionContext.warp.contract(
-        contractTxId,
-        executionContext.contract,
-        interactionTx
-      );
+      const childContract = executionContext.warp.contract(contractTxId, executionContext.contract, interactionTx);
 
       await stateEvaluator.onContractCall(interactionTx, executionContext, currentResult);
 

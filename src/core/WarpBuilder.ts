@@ -41,10 +41,7 @@ export class WarpBuilder {
     return this;
   }
 
-  public setCacheableInteractionsLoader(
-    value: InteractionsLoader,
-    maxStoredInMemoryBlockHeights = 1
-  ): WarpBuilder {
+  public setCacheableInteractionsLoader(value: InteractionsLoader, maxStoredInMemoryBlockHeights = 1): WarpBuilder {
     this._interactionsLoader = new CacheableContractInteractionsLoader(
       value,
       new MemBlockHeightWarpCache(maxStoredInMemoryBlockHeights)
