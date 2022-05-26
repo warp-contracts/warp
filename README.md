@@ -458,6 +458,8 @@ There is also a separate repository with a web application [example](https://git
 
 We've also created an [academy](https://redstone.academy/) that introduces to the process of writing your own SmartWeave contract from scratch and describes how to interact with it using Warp SDK.
 
+A community package - [arweave-jest-fuzzing](https://github.com/Hansa-Network/arweave-jest-fuzzing/blob/master/README.md) has been released thanks to Hansa Network to help SmartWeave developers write fuzzy tests.
+
 ### Migration Guide
 
 If you're already using Arweave smartweave.js SDK and would like to smoothly migrate to Warp SDK -
