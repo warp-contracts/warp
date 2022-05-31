@@ -5,6 +5,14 @@
   "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",
   "types": "./lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./lib/esm/index.js",
+      "require": "./lib/cjs/index.js"
+    },
+    "./esm": "bundles/esm.bundle.js",
+    "./web": "bundles/web.bundle.js"
+  },
   "sideEffects": false,
   "engines": {
     "node": ">=16.5"
