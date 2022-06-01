@@ -1,4 +1,4 @@
-import { BlockHeightCacheResult, CurrentTx, ExecutionContext, GQLNodeInterface } from '@warp';
+import { CurrentTx, ExecutionContext, GQLNodeInterface, SortKeyCacheResult } from '@warp';
 
 /**
  * Implementors of this class are responsible for evaluating contract's state
@@ -53,33 +53,26 @@ export interface StateEvaluator {
   ): Promise<void>;
 
   /**
-   * loads latest available state for given contract for given blockHeight.
-   * - implementors should be aware that there might multiple interactions
-   * for single block - and sort them according to protocol specification.
+   * loads the latest available state for given contract for given sortKey.
    */
   latestAvailableState<State>(
     contractTxId: string,
-    blockHeight: number
-  ): Promise<BlockHeightCacheResult<EvalStateResult<State>> | null>;
+    sortKey?: string
+  ): Promise<SortKeyCacheResult<EvalStateResult<State>> | null>;
 
-  /**
-   * allows to manually flush state cache into underneath storage.
-   */
-  flushCache(): Promise<void>;
+  putInCache<State>(contractTxId: string, transaction: GQLNodeInterface, state: EvalStateResult<State>): Promise<void>;
 
   /**
    * allows to syncState with an external state source (like Warp Distributed Execution Network)
    */
-  syncState(contractTxId: string, blockHeight: number, transactionId: string, state: any, validity: any): Promise<void>;
+  syncState(contractTxId: string, sortKey: string, state: any, validity: any): Promise<void>;
 }
 
 export class EvalStateResult<State> {
   constructor(
     readonly state: State,
     readonly validity: Record<string, boolean>,
-    readonly errorMessages: Record<string, string>,
-    readonly transactionId?: string,
-    readonly blockId?: string
+    readonly errorMessages: Record<string, string>
   ) {}
 }
 
@@ -120,7 +113,7 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   walletBalanceUrl = 'http://nyc-1.dev.arweave.net:1984/';
 }
 
-// an interface for the contract EvaluationOptions - can be used to change the behaviour of some of the features.
+// an interface for the contract EvaluationOptions - can be used to change the behaviour of some features.
 export interface EvaluationOptions {
   // whether exceptions from given transaction interaction should be ignored
   ignoreExceptions: boolean;
