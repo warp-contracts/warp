@@ -6,6 +6,8 @@ const defaultArweaveMs = ''.padEnd(13, '9');
 const defaultArweaveMs_After_Block_973730 = ''.padEnd(13, '0');
 export const block_973730 = 973730;
 
+const sortingLast = ''.padEnd(64, 'z');
+
 /**
  * implementation that is based on current's SDK sorting alg.
  */
@@ -19,19 +21,7 @@ export class LexicographicalInteractionsSorter implements InteractionsSorter {
     const addKeysFuncs = copy.map((tx) => this.addSortKey(tx));
     await Promise.all(addKeysFuncs);
 
-    return copy.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
-  }
-
-  private async addSortKey(txInfo: GQLEdgeInterface) {
-    const { node } = txInfo;
-
-    // might have been already set by the Warp Sequencer
-    if (txInfo.node.sortKey !== undefined && txInfo.node.source == SourceType.WARP_SEQUENCER) {
-      this.logger.debug('Using sortkey from sequencer', txInfo.node.sortKey);
-      txInfo.sortKey = txInfo.node.sortKey;
-    } else {
-      txInfo.sortKey = await this.createSortKey(node.block.id, node.id, node.block.height);
-    }
+    return copy.sort((a, b) => a.node.sortKey.localeCompare(b.node.sortKey));
   }
 
   public async createSortKey(blockId: string, transactionId: string, blockHeight: number) {
@@ -45,5 +35,26 @@ export class LexicographicalInteractionsSorter implements InteractionsSorter {
     const arweaveMs = blockHeight <= block_973730 ? defaultArweaveMs : defaultArweaveMs_After_Block_973730;
 
     return `${blockHeightString},${arweaveMs},${hashed}`;
+  }
+
+  public extractBlockHeight(sortKey?: string): number | null {
+    // I feel sorry for myself...
+    return sortKey ? parseInt(sortKey.split(',')[0]) : null;
+  }
+
+  private async addSortKey(txInfo: GQLEdgeInterface) {
+    const { node } = txInfo;
+
+    // might have been already set by the Warp Sequencer
+    if (txInfo.node.sortKey !== undefined && txInfo.node.source == SourceType.WARP_SEQUENCER) {
+      this.logger.debug('Using sortKey from sequencer', txInfo.node.sortKey);
+    } else {
+      txInfo.node.sortKey = await this.createSortKey(node.block.id, node.id, node.block.height);
+    }
+  }
+
+  generateLastSortKey(blockHeight: number): string {
+    const blockHeightString = `${blockHeight}`.padStart(12, '0');
+    return `${blockHeightString},${defaultArweaveMs},${sortingLast}`;
   }
 }

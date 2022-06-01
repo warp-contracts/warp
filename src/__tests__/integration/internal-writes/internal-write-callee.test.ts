@@ -4,7 +4,7 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, LoggerFactory, Warp, WarpNodeFactory } from '@warp';
+import { Contract, LoggerFactory, Warp, WarpFactory } from '@warp';
 import path from 'path';
 import { addFunds, mineBlock } from '../_helpers';
 
@@ -76,7 +76,7 @@ describe('Testing internal writes', () => {
   });
 
   async function deployContracts() {
-    warp = WarpNodeFactory.forTesting(arweave);
+    warp = WarpFactory.forTesting(arweave);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -253,6 +253,7 @@ describe('Testing internal writes', () => {
       await mineBlock(arweave);
       await calleeContract.writeInteraction({ function: 'add' });
       await mineBlock(arweave);
+
       expect((await calleeContract.readState()).state.counter).toEqual(634);
       expect((await calleeContractVM.readState()).state.counter).toEqual(634);
     });
@@ -263,12 +264,12 @@ describe('Testing internal writes', () => {
     });
 
     it('should properly evaluate state again with a new client', async () => {
-      const calleeContract2 = WarpNodeFactory.forTesting(arweave)
+      const calleeContract2 = WarpFactory.forTesting(arweave)
         .contract<ExampleContractState>(calleeTxId)
         .setEvaluationOptions({
           internalWrites: true
         });
-      const calleeContract2VM = WarpNodeFactory.forTesting(arweave)
+      const calleeContract2VM = WarpFactory.forTesting(arweave)
         .contract<ExampleContractState>(calleeTxId)
         .setEvaluationOptions({
           internalWrites: true,

@@ -4,7 +4,7 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, LoggerFactory, Warp, WarpNodeFactory } from '@warp';
+import { Contract, LoggerFactory, Warp, WarpFactory } from '@warp';
 import path from 'path';
 import { addFunds, mineBlock } from '../_helpers';
 
@@ -73,7 +73,7 @@ describe('Testing internal writes', () => {
   });
 
   async function deployContracts() {
-    warp = WarpNodeFactory.forTesting(arweave);
+    warp = WarpFactory.forTesting(arweave);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -177,11 +177,11 @@ describe('Testing internal writes', () => {
     });
 
     it('should properly evaluate state with a new client', async () => {
-      const contractA2 = WarpNodeFactory.forTesting(arweave)
+      const contractA2 = WarpFactory.forTesting(arweave)
         .contract<any>(contractATxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
-      const contractB2 = WarpNodeFactory.forTesting(arweave)
+      const contractB2 = WarpFactory.forTesting(arweave)
         .contract<any>(contractBTxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
@@ -216,12 +216,12 @@ describe('Testing internal writes', () => {
       expect((await contractB.readState()).state.counter).toEqual(2060);
     });
 
-    it('should properly evaluate state with a new client', async () => {
-      const contractA2 = WarpNodeFactory.forTesting(arweave)
+    xit('should properly evaluate state with a new client', async () => {
+      const contractA2 = WarpFactory.forTesting(arweave)
         .contract<any>(contractATxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
-      const contractB2 = WarpNodeFactory.forTesting(arweave)
+      const contractB2 = WarpFactory.forTesting(arweave)
         .contract<any>(contractBTxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
@@ -280,11 +280,11 @@ describe('Testing internal writes', () => {
     });
 
     xit('should properly evaluate state with a new client', async () => {
-      const contractA2 = WarpNodeFactory.forTesting(arweave)
+      const contractA2 = WarpFactory.forTesting(arweave)
         .contract<any>(contractATxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
-      const contractB2 = WarpNodeFactory.forTesting(arweave)
+      const contractB2 = WarpFactory.forTesting(arweave)
         .contract<any>(contractBTxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
@@ -339,11 +339,11 @@ describe('Testing internal writes', () => {
     });
 
     it('should properly evaluate state with a new client', async () => {
-      const contractA2 = WarpNodeFactory.forTesting(arweave)
+      const contractA2 = WarpFactory.forTesting(arweave)
         .contract<any>(contractATxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
-      const contractB2 = WarpNodeFactory.forTesting(arweave)
+      const contractB2 = WarpFactory.forTesting(arweave)
         .contract<any>(contractBTxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
