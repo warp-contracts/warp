@@ -1,6 +1,6 @@
 import Arweave from 'arweave';
 import { NetworkInfoInterface } from 'arweave/node/network';
-import { GqlReqVariables, LoggerFactory, R_GW_URL } from '@warp';
+import { GqlReqVariables, LoggerFactory, WARP_GW_URL } from '@warp';
 import { AxiosResponse } from 'axios';
 import Transaction from 'arweave/node/lib/transaction';
 import { Buffer as isomorphicBuffer } from 'redstone-isomorphic';
@@ -16,7 +16,7 @@ export class ArweaveWrapper {
   }
 
   async rGwInfo(): Promise<NetworkInfoInterface> {
-    return await this.doFetchInfo(`${R_GW_URL}/gateway/arweave/info`);
+    return await this.doFetchInfo(`${WARP_GW_URL}/gateway/arweave/info`);
   }
 
   async info(): Promise<NetworkInfoInterface> {

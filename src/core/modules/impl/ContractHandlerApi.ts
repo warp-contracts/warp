@@ -126,15 +126,15 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
       ]);
 
       this.logger.debug('Cache result?:', !this.swGlobal._activeTx.dry);
-      await executionContext.warp.stateEvaluator.onInternalWriteStateUpdate(
-        this.swGlobal._activeTx,
-        contractTxId,
-        {
-          state: result.state as State,
-          validity: {},
-          errorMessages: {}
+      await executionContext.warp.stateEvaluator.onInternalWriteStateUpdate(this.swGlobal._activeTx, contractTxId, {
+        state: result.state as State,
+        validity: {
+          [this.swGlobal._activeTx.id]: result.type == 'ok'
+        },
+        errorMessages: {
+          [this.swGlobal._activeTx.id]: result.errorMessage
         }
-      );
+      });
 
       return result;
     };
@@ -163,16 +163,11 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
     currentResult: EvalStateResult<State>,
     interactionTx: GQLNodeInterface
   ) {
-    this.swGlobal.contracts.readContractState = async (
-      contractTxId: string,
-      height?: number,
-      returnValidity?: boolean
-    ) => {
-      const requestedHeight = height || this.swGlobal.block.height;
+    this.swGlobal.contracts.readContractState = async (contractTxId: string, returnValidity?: boolean) => {
       this.logger.debug('swGlobal.readContractState call:', {
         from: this.contractDefinition.txId,
         to: contractTxId,
-        height: requestedHeight,
+        sortKey: interactionTx.sortKey,
         transaction: this.swGlobal.transaction.id
       });
 
@@ -181,14 +176,13 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
 
       await stateEvaluator.onContractCall(interactionTx, executionContext, currentResult);
 
-      const stateWithValidity = await childContract.readState(requestedHeight, [
+      const stateWithValidity = await childContract.readState(interactionTx.sortKey, [
         ...(currentTx || []),
         {
           contractTxId: this.contractDefinition.txId,
           interactionTxId: this.swGlobal.transaction.id
         }
       ]);
-
       // TODO: it should be up to the client's code to decide which part of the result to use
       // (by simply using destructuring operator)...
       // but this (i.e. returning always stateWithValidity from here) would break backwards compatibility
@@ -200,7 +194,10 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
   private assignRefreshState(executionContext: ExecutionContext<State>) {
     this.swGlobal.contracts.refreshState = async () => {
       const stateEvaluator = executionContext.warp.stateEvaluator;
-      const result = await stateEvaluator.latestAvailableState(this.swGlobal.contract.id, this.swGlobal.block.height);
+      const result = await stateEvaluator.latestAvailableState(
+        this.swGlobal.contract.id,
+        this.swGlobal._activeTx.sortKey
+      );
       return result?.cachedValue.state;
     };
   }
