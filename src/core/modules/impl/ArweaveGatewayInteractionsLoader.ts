@@ -3,9 +3,12 @@ import {
   Benchmark,
   EvaluationOptions,
   GQLEdgeInterface,
+  GQLNodeInterface,
   GQLResultInterface,
   GQLTransactionsResultInterface,
   InteractionsLoader,
+  InteractionsSorter,
+  LexicographicalInteractionsSorter,
   LoggerFactory,
   sleep,
   SmartWeaveTags
@@ -21,7 +24,7 @@ interface TagFilter {
 
 interface BlockFilter {
   min?: number;
-  max: number;
+  max?: number;
 }
 
 export interface GqlReqVariables {
@@ -70,18 +73,29 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
   private static readonly _30seconds = 30 * 1000;
 
   private readonly arweaveWrapper: ArweaveWrapper;
+  private readonly sorter: InteractionsSorter;
 
   constructor(protected readonly arweave: Arweave) {
     this.arweaveWrapper = new ArweaveWrapper(arweave);
+    this.sorter = new LexicographicalInteractionsSorter(arweave);
   }
 
   async load(
     contractId: string,
-    fromBlockHeight: number,
-    toBlockHeight: number,
-    evaluationOptions: EvaluationOptions
-  ): Promise<GQLEdgeInterface[]> {
-    this.logger.debug('Loading interactions for', { contractId, fromBlockHeight, toBlockHeight });
+    fromSortKey?: string,
+    toSortKey?: string,
+    evaluationOptions?: EvaluationOptions
+  ): Promise<GQLNodeInterface[]> {
+    this.logger.debug('Loading interactions for', { contractId, fromSortKey, toSortKey });
+
+    const fromBlockHeight = this.sorter.extractBlockHeight(fromSortKey);
+    let toBlockHeight = this.sorter.extractBlockHeight(toSortKey);
+
+    // TODO: temp workaround for https://github.com/textury/arlocal/issues/107
+    if (toBlockHeight == null && this.isLocalEnv()) {
+      toBlockHeight = (await this.arweave.network.getInfo()).height;
+    }
+
     const mainTransactionsVariables: GqlReqVariables = {
       tags: [
         {
@@ -123,14 +137,61 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
       interactions = interactions.concat(innerWritesInteractions);
     }
 
+    /*console.log(await this.arweave.network.getInfo());
+    console.log(JSON.stringify(interactions));
+    console.log(JSON.stringify(mainTransactionsVariables));
+    console.log(`Loaded interactions ${interactions.length}`);*/
+
+    // note: this operation adds the "sortKey" to the interactions
+    let sortedInteractions = await this.sorter.sort(interactions);
+
+    if (fromSortKey || toSortKey) {
+      let fromIndex = null;
+      const maxIndex = sortedInteractions.length - 1;
+      let toIndex = null;
+      let breakFrom = false;
+      let breakTo = false;
+
+      for (let i = 0; i < sortedInteractions.length; i++) {
+        const sortedInteraction = sortedInteractions[i];
+        if (sortedInteraction.node.sortKey == fromSortKey) {
+          fromIndex = i + 1; // +1, because fromSortKey is exclusive
+        }
+        if (sortedInteraction.node.sortKey == toSortKey) {
+          toIndex = i + 1; // + 1, because "end" parameter in slice does not include the last element
+        }
+        if ((fromSortKey && fromIndex != null) || !fromSortKey) {
+          breakFrom = true;
+        }
+        if ((toSortKey && toIndex != null) || !toSortKey) {
+          breakTo = true;
+        }
+        if (breakFrom && breakTo) {
+          break;
+        }
+      }
+
+      this.logger.debug('Slicing:', {
+        fromIndex,
+        toIndex
+      });
+
+      sortedInteractions = sortedInteractions.slice(fromIndex || 0, toIndex || maxIndex + 1);
+    }
+
     this.logger.info('All loaded interactions:', {
-      from: fromBlockHeight,
-      to: toBlockHeight,
-      loaded: interactions.length,
+      from: fromSortKey,
+      to: toSortKey,
+      loaded: sortedInteractions.length,
       time: loadingBenchmark.elapsed()
     });
 
-    return interactions;
+    return sortedInteractions.map((i) => i.node);
+  }
+
+  private isLocalEnv() {
+    const arHost = this.arweave.api.config.host;
+    return arHost.includes('127.0.0.1') || arHost.includes('localhost') || arHost.includes('testnet.redstone.tools');
   }
 
   private async loadPages(variables: GqlReqVariables) {

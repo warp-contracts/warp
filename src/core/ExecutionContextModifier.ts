@@ -1,4 +1,4 @@
-import { ExecutionContext, HandlerApi } from '@smartweave';
+import { ExecutionContext, HandlerApi, SmartWeave } from '@smartweave';
 
 /**
  * This adds ability to modify current execution context based

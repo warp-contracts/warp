@@ -1,9 +1,9 @@
 /* eslint-disable */
 import fs from 'fs';
 import path from 'path';
-import { interactRead, readContract } from 'smartweave';
+import {interactRead, readContract} from 'smartweave';
 import Arweave from 'arweave';
-import { LoggerFactory, SmartWeaveNodeFactory, SmartWeaveWebFactory, SourceType } from '@smartweave';
+import {defaultCacheOptions, defaultWarpGwOptions, LoggerFactory, SmartWeaveFactory, SourceType} from '@smartweave';
 
 const stringify = require('safe-stable-stringify');
 
@@ -23,6 +23,9 @@ const arweave = Arweave.init({
 });
 
 LoggerFactory.INST.logLevel('fatal');
+LoggerFactory.INST.logLevel('info', 'HandlerBasedContract');
+LoggerFactory.INST.logLevel('fatal', 'DefaultStateEvaluator');
+LoggerFactory.INST.logLevel('fatal', 'CacheableStateEvaluator');
 
 const testCases: string[] = JSON.parse(fs.readFileSync(path.join(__dirname, 'test-cases/read-state.json'), 'utf-8'));
 const testCasesGw: string[] = JSON.parse(fs.readFileSync(path.join(__dirname, 'test-cases/gateways.json'), 'utf-8'));
@@ -39,9 +42,21 @@ const originalConsoleLog = console.log;
 describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
   // note: concurrent doesn't seem to be working here, duh...
   // will probably need to manually split all the test cases to separate test files
+
   it.concurrent.each(contracts)(
     '.test %# %o',
     async (contractTxId: string) => {
+      const cacheDir = `./cache/r/v1cs/warp/${contractTxId}`;
+
+      const sdk = SmartWeaveFactory.warpGw(arweave, {
+          ...defaultWarpGwOptions,
+          confirmationStatus: null,
+          source: SourceType.ARWEAVE
+        }, {
+          ...defaultCacheOptions,
+          dbLocation: cacheDir
+        }
+      );
       const blockHeight = 850127;
       console.log('readContract', contractTxId);
       const resultString = fs
@@ -49,11 +64,9 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
         .trim();
       console.log('readState', contractTxId);
       try {
-        console.log = function () {}; // to hide any logs from contracts...
-        const result2 = await SmartWeaveNodeFactory.memCachedBased(arweave, 1)
-          .useRedStoneGateway(null, SourceType.ARWEAVE)
-          .build()
-          .contract(contractTxId)
+        console.log = function () {
+        }; // to hide any logs from contracts...
+        const result2 = await sdk.contract(contractTxId)
           .setEvaluationOptions({
             useFastCopy: true,
             allowUnsafeClient: true
@@ -63,6 +76,7 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
         expect(result2String).toEqual(resultString);
       } finally {
         console.log = originalConsoleLog;
+        fs.rmSync(cacheDir, {recursive: true, force: true});
       }
     },
     800000
@@ -70,27 +84,39 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
 });
 
 describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
-  it.concurrent.each(contracts)(
+  it.each(contracts)(
     '.test %# %o',
     async (contractTxId: string) => {
       const blockHeight = 850127;
+      const cacheDir = `./cache/r/v1vm2cs/warp/${contractTxId}`;
+      const sdk = SmartWeaveFactory.warpGw(arweave, {
+          ...defaultWarpGwOptions,
+          confirmationStatus: null,
+          source: SourceType.ARWEAVE
+        }, {
+          ...defaultCacheOptions,
+          dbLocation: cacheDir
+        }
+      );
       console.log('readContract', contractTxId);
       const resultString = fs
         .readFileSync(path.join(__dirname, 'test-cases', 'contracts', `${contractTxId}.json`), 'utf-8')
         .trim();
       console.log('readState', contractTxId);
-      const result2 = await SmartWeaveNodeFactory.memCachedBased(arweave, 1)
-        .useRedStoneGateway(null, SourceType.ARWEAVE)
-        .build()
-        .contract(contractTxId)
-        .setEvaluationOptions({
-          useFastCopy: true,
-          useVM2: true,
-          allowUnsafeClient: true
-        })
-        .readState(blockHeight);
-      const result2String = stringify(result2.state).trim();
-      expect(result2String).toEqual(resultString);
+      try {
+        const result2 = await sdk.contract(contractTxId)
+          .setEvaluationOptions({
+            useFastCopy: true,
+            useVM2: true,
+            allowUnsafeClient: true
+          })
+          .readState(blockHeight);
+        const result2String = stringify(result2.state).trim();
+        expect(result2String).toEqual(resultString);
+      } finally {
+        console.log = originalConsoleLog;
+        fs.rmSync(cacheDir, {recursive: true, force: true});
+      }
     },
     800000
   );
@@ -99,25 +125,40 @@ describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
 describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
   // note: concurrent doesn't seem to be working here, duh...
   // will probably need to manually split all the test cases to separate test files
-  it.concurrent.each(contracts)(
+  it.each(contracts)(
     '.test %# %o',
     async (contractTxId: string) => {
       const blockHeight = 855134;
-      console.log('readState Redstone Gateway', contractTxId);
-      const smartweaveR = SmartWeaveWebFactory.memCachedBased(arweave, 1)
-        .useRedStoneGateway(null, SourceType.ARWEAVE)
-        .build();
-      const result = await smartweaveR.contract(contractTxId).readState(blockHeight);
-      const resultString = stringify(result.state).trim();
+      const cacheDir1 = `./cache/r/gcs/r/warp/${contractTxId}`;
+      const cacheDir2 = `./cache/r/gcs/a/warp/${contractTxId}`;
 
-      console.log('readState Arweave Gateway', contractTxId);
-      const result2 = await SmartWeaveNodeFactory.memCachedBased(arweave, 1)
-        .useArweaveGateway()
-        .build()
-        .contract(contractTxId)
-        .readState(blockHeight);
-      const result2String = stringify(result2.state).trim();
-      expect(result2String).toEqual(resultString);
+      console.log('readState Redstone Gateway', contractTxId);
+      const smartweaveR = SmartWeaveFactory.warpGw(arweave, {
+          ...defaultWarpGwOptions,
+          confirmationStatus: null,
+          source: SourceType.ARWEAVE
+        }, {
+          ...defaultCacheOptions,
+          dbLocation: cacheDir1
+        }
+      );
+
+      try {
+        const result = await smartweaveR.contract(contractTxId).readState(blockHeight);
+        const resultString = stringify(result.state).trim();
+
+        console.log('readState Arweave Gateway', contractTxId);
+        const result2 = await SmartWeaveFactory.arweaveGw(arweave, {
+          ...defaultCacheOptions,
+          dbLocation: cacheDir2
+        }).contract(contractTxId)
+          .readState(blockHeight);
+        const result2String = stringify(result2.state).trim();
+        expect(result2String).toEqual(resultString);
+      } finally {
+        fs.rmSync(cacheDir1, {recursive: true, force: true});
+        fs.rmSync(cacheDir2, {recursive: true, force: true});
+      }
     },
     800000
   );
@@ -130,17 +171,26 @@ describe('readState', () => {
     const result = await readContract(arweave, contractTxId, blockHeight);
     const resultString = stringify(result).trim();
 
-    const result2 = await SmartWeaveNodeFactory.memCachedBased(arweave, 1)
-      .useRedStoneGateway(null, SourceType.ARWEAVE)
-      .build()
-      .contract(contractTxId)
-      .setEvaluationOptions({
-        allowUnsafeClient: true
-      })
-      .readState(blockHeight);
-    const result2String = stringify(result2.state).trim();
+    const cacheDir = `./cache/r/rdb/1/warp/${contractTxId}`;
+    try {
+      const result2 = await SmartWeaveFactory.warpGw(arweave, {
+        ...defaultWarpGwOptions,
+        confirmationStatus: null,
+        source: SourceType.ARWEAVE
+      }, {
+        ...defaultCacheOptions,
+        dbLocation: cacheDir
+      }).contract(contractTxId)
+        .setEvaluationOptions({
+          allowUnsafeClient: true
+        })
+        .readState(blockHeight);
+      const result2String = stringify(result2.state).trim();
 
-    expect(result2String).toEqual(resultString);
+      expect(result2String).toEqual(resultString);
+    } finally {
+      fs.rmSync(cacheDir, {recursive: true, force: true});
+    }
   }, 800000);
 
   it('should properly check balance of a PST contract', async () => {
@@ -151,16 +201,24 @@ describe('readState', () => {
       target: '6Z-ifqgVi1jOwMvSNwKWs6ewUEQ0gU9eo4aHYC3rN1M'
     });
 
-    const v2Result = await SmartWeaveNodeFactory.memCachedBased(arweave, 1)
-      .useRedStoneGateway(null, SourceType.ARWEAVE)
-      .build()
-      .contract(contractTxId)
-      .connect(jwk)
-      .viewState({
-        function: 'balance',
-        target: '6Z-ifqgVi1jOwMvSNwKWs6ewUEQ0gU9eo4aHYC3rN1M'
-      });
-
-    expect(v1Result).toEqual(v2Result.result);
+    const cacheDir = `./cache/r/rdb/2/warp/${contractTxId}`;
+    try {
+      const v2Result = await SmartWeaveFactory.warpGw(arweave, {
+        ...defaultWarpGwOptions,
+        confirmationStatus: null,
+        source: SourceType.ARWEAVE
+      }, {
+        ...defaultCacheOptions,
+        dbLocation: cacheDir
+      }).contract(contractTxId)
+        .connect(jwk)
+        .viewState({
+          function: 'balance',
+          target: '6Z-ifqgVi1jOwMvSNwKWs6ewUEQ0gU9eo4aHYC3rN1M'
+        });
+      expect(v1Result).toEqual(v2Result.result);
+    } finally {
+      fs.rmSync(cacheDir, {recursive: true, force: true});
+    }
   }, 800000);
 });

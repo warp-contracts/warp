@@ -1,5 +1,10 @@
-import { LoggerFactory, RedstoneGatewayInteractionsLoader } from '@smartweave';
-import { GQLEdgeInterface } from '../../legacy/gqlResult';
+import {
+  GQLNodeInterface,
+  LexicographicalInteractionsSorter,
+  LoggerFactory,
+  RedstoneGatewayInteractionsLoader
+} from '@smartweave';
+import Arweave from 'arweave';
 
 const responseData = {
   paging: {
@@ -76,10 +81,11 @@ const responseDataPaging = {
 
 LoggerFactory.INST.logLevel('error');
 
+const sorter = new LexicographicalInteractionsSorter(Arweave.init({}));
 const contractId = 'SJ3l7474UHh3Dw6dWVT1bzsJ-8JvOewtGoDdOecWIZo';
-const fromBlockHeight = 600000;
-const toBlockHeight = 655393;
-const baseUrl = `http://baseUrl/gateway/interactions-sort-key?contractId=SJ3l7474UHh3Dw6dWVT1bzsJ-8JvOewtGoDdOecWIZo&from=600000&to=655393`;
+const fromBlockHeight = sorter.generateLastSortKey(600000);
+const toBlockHeight = sorter.generateLastSortKey(655393);
+const baseUrl = `http://baseUrl/gateway/interactions-sort-key?contractId=SJ3l7474UHh3Dw6dWVT1bzsJ-8JvOewtGoDdOecWIZo&from=000000600000%2C9999999999999%2Czzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz&to=000000655393%2C9999999999999%2Czzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz`;
 const fetchMock = jest
   .spyOn(global, 'fetch')
   .mockImplementation(
@@ -94,7 +100,7 @@ describe('RedstoneGatewayInteractionsLoader -> load', () => {
   });
   it('should return correct number of interactions', async () => {
     const loader = new RedstoneGatewayInteractionsLoader('http://baseUrl');
-    const response: GQLEdgeInterface[] = await loader.load(contractId, fromBlockHeight, toBlockHeight);
+    const response: GQLNodeInterface[] = await loader.load(contractId, fromBlockHeight, toBlockHeight);
     expect(fetchMock).toHaveBeenCalled();
     expect(response.length).toEqual(2);
   });

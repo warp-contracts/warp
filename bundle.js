@@ -16,9 +16,10 @@ const runBuild = async () => {
     bundle: true,
     outfile: './bundles/web.bundle.js',
     platform: 'browser',
-    target: ['es2020', 'chrome58', 'firefox57', 'safari11'],
+    target: ['esnext'],
     format: 'iife',
-    globalName: 'rsdk'
+    globalName: 'rsdk',
+    external: ['events']
   }).catch((e) => {
     console.log(e);
     process.exit(1);
@@ -30,9 +31,10 @@ const runBuild = async () => {
     bundle: true,
     outfile: './bundles/web.bundle.min.js',
     platform: 'browser',
-    target: ['es2020', 'chrome58', 'firefox57', 'safari11'],
+    target: ['esnext'],
     format: 'iife',
-    globalName: 'rsdk'
+    globalName: 'rsdk',
+    external: ['events']
   }).catch((e) => {
     console.log(e);
     process.exit(1);

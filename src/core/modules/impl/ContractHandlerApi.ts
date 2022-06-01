@@ -163,16 +163,11 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
     currentResult: EvalStateResult<State>,
     interactionTx: GQLNodeInterface
   ) {
-    this.swGlobal.contracts.readContractState = async (
-      contractTxId: string,
-      height?: number,
-      returnValidity?: boolean
-    ) => {
-      const requestedHeight = height || this.swGlobal.block.height;
+    this.swGlobal.contracts.readContractState = async (contractTxId: string, returnValidity?: boolean) => {
       this.logger.debug('swGlobal.readContractState call:', {
         from: this.contractDefinition.txId,
         to: contractTxId,
-        height: requestedHeight,
+        sortKey: interactionTx.sortKey,
         transaction: this.swGlobal.transaction.id
       });
 
@@ -183,16 +178,17 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
         interactionTx
       );
 
-      await stateEvaluator.onContractCall(interactionTx, executionContext, currentResult);
+      // Cannot cache the state from 'current' tx yet! - because it is still being evaluated
+      // it should cache the state from the prev transaction here.
+      //await stateEvaluator.onContractCall(interactionTx, executionContext, currentResult);
 
-      const stateWithValidity = await childContract.readState(requestedHeight, [
+      const stateWithValidity = await childContract.readState(interactionTx.sortKey, [
         ...(currentTx || []),
         {
           contractTxId: this.contractDefinition.txId,
           interactionTxId: this.swGlobal.transaction.id
         }
       ]);
-
       // TODO: it should be up to the client's code to decide which part of the result to use
       // (by simply using destructuring operator)...
       // but this (i.e. returning always stateWithValidity from here) would break backwards compatibility
@@ -204,7 +200,7 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
   private assignRefreshState(executionContext: ExecutionContext<State>) {
     this.swGlobal.contracts.refreshState = async () => {
       const stateEvaluator = executionContext.smartweave.stateEvaluator;
-      const result = await stateEvaluator.latestAvailableState(this.swGlobal.contract.id, this.swGlobal.block.height);
+      const result = await stateEvaluator.latestAvailableState(this.swGlobal.contract.id);
       return result?.cachedValue.state;
     };
   }

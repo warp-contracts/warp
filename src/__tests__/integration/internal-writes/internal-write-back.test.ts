@@ -3,10 +3,10 @@ import fs from 'fs';
 
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
-import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory } from '@smartweave';
+import {JWKInterface} from 'arweave/node/lib/wallet';
+import {Contract, defaultCacheOptions, LoggerFactory, SmartWeave, SmartWeaveFactory} from '@smartweave';
 import path from 'path';
-import { addFunds, mineBlock } from '../_helpers';
+import {addFunds, mineBlock} from '../_helpers';
 
 /**
  * This test verifies "write-backs" between contracts:
@@ -72,8 +72,11 @@ describe('Testing internal writes', () => {
     await arlocal.stop();
   });
 
-  async function deployContracts() {
-    smartweave = SmartWeaveNodeFactory.forTesting(arweave);
+  async function deployContracts(cacheDir: string) {
+    smartweave = SmartWeaveFactory.arweaveGw(arweave, {
+      ...defaultCacheOptions,
+      dbLocation: cacheDir
+    });
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -112,8 +115,14 @@ describe('Testing internal writes', () => {
   }
 
   describe('with read states in between', () => {
+    const cacheDir = `./cache/iw/wb1/warp/`;
+
     beforeAll(async () => {
-      await deployContracts();
+      await deployContracts(cacheDir);
+    });
+
+    afterAll(async () => {
+      fs.rmSync(cacheDir, {recursive: true, force: true});
     });
 
     it('should deploy contracts with initial state', async () => {
@@ -177,16 +186,28 @@ describe('Testing internal writes', () => {
     });
 
     it('should properly evaluate state with a new client', async () => {
-      const contractA2 = SmartWeaveNodeFactory.forTesting(arweave)
-        .contract<any>(contractATxId)
-        .setEvaluationOptions({ internalWrites: true })
-        .connect(wallet);
-      const contractB2 = SmartWeaveNodeFactory.forTesting(arweave)
-        .contract<any>(contractBTxId)
-        .setEvaluationOptions({ internalWrites: true })
-        .connect(wallet);
-      expect((await contractA2.readState()).state.counter).toEqual(1055);
-      expect((await contractB2.readState()).state.counter).toEqual(805);
+      const cacheDirA = `./cache/iw/wb1_1/warp/`;
+      const cacheDirB = `./cache/iw/wb1_2/warp/`;
+
+      try {
+        const contractA2 = SmartWeaveFactory.arweaveGw(arweave, {
+          ...defaultCacheOptions,
+          dbLocation: cacheDirA
+        }).contract<any>(contractATxId)
+          .setEvaluationOptions({internalWrites: true})
+          .connect(wallet);
+        const contractB2 = SmartWeaveFactory.arweaveGw(arweave, {
+          ...defaultCacheOptions,
+          dbLocation: cacheDirB
+        }).contract<any>(contractBTxId)
+          .setEvaluationOptions({internalWrites: true})
+          .connect(wallet);
+        expect((await contractA2.readState()).state.counter).toEqual(1055);
+        expect((await contractB2.readState()).state.counter).toEqual(805);
+      } finally {
+        fs.rmSync(cacheDirA, {recursive: true, force: true});
+        fs.rmSync(cacheDirB, {recursive: true, force: true});
+      }
     });
 
     /**
@@ -217,22 +238,40 @@ describe('Testing internal writes', () => {
     });
 
     it('should properly evaluate state with a new client', async () => {
-      const contractA2 = SmartWeaveNodeFactory.forTesting(arweave)
-        .contract<any>(contractATxId)
-        .setEvaluationOptions({ internalWrites: true })
-        .connect(wallet);
-      const contractB2 = SmartWeaveNodeFactory.forTesting(arweave)
-        .contract<any>(contractBTxId)
-        .setEvaluationOptions({ internalWrites: true })
-        .connect(wallet);
-      expect((await contractA2.readState()).state.counter).toEqual(-805);
-      expect((await contractB2.readState()).state.counter).toEqual(2060);
+      const cacheDirA = `./cache/iw/wb1_3/warp/`;
+      const cacheDirB = `./cache/iw/wb1_4/warp/`;
+
+      try {
+        const contractA2 = SmartWeaveFactory.arweaveGw(arweave, {
+          ...defaultCacheOptions,
+          dbLocation: cacheDirA
+        }).contract<any>(contractATxId)
+          .setEvaluationOptions({internalWrites: true})
+          .connect(wallet);
+        const contractB2 = SmartWeaveFactory.arweaveGw(arweave, {
+          ...defaultCacheOptions,
+          dbLocation: cacheDirB
+        }).contract<any>(contractBTxId)
+          .setEvaluationOptions({internalWrites: true})
+          .connect(wallet);
+        expect((await contractA2.readState()).state.counter).toEqual(-805);
+        expect((await contractB2.readState()).state.counter).toEqual(2060);
+      } finally {
+        fs.rmSync(cacheDirA, {recursive: true, force: true});
+        fs.rmSync(cacheDirB, {recursive: true, force: true});
+      }
     });
   });
 
   describe('with read state at the end', () => {
+    const cacheDir = `./cache/iw/wb2/warp/`;
+
     beforeAll(async () => {
-      await deployContracts();
+      await deployContracts(cacheDir);
+    });
+
+    afterAll(async () => {
+      fs.rmSync(cacheDir, {recursive: true, force: true});
     });
 
     it('should write properly add multiple write back interactions', async () => {
@@ -279,19 +318,19 @@ describe('Testing internal writes', () => {
       expect((await contractB.readState()).state.counter).toEqual(2060);
     });
 
-    xit('should properly evaluate state with a new client', async () => {
-      const contractA2 = SmartWeaveNodeFactory.forTesting(arweave)
-        .contract<any>(contractATxId)
-        .setEvaluationOptions({ internalWrites: true })
-        .connect(wallet);
-      const contractB2 = SmartWeaveNodeFactory.forTesting(arweave)
-        .contract<any>(contractBTxId)
-        .setEvaluationOptions({ internalWrites: true })
-        .connect(wallet);
+    /* xit('should properly evaluate state with a new client', async () => {
+       const contractA2 = SmartWeaveNodeFactory.forTesting(arweave)
+         .contract<any>(contractATxId)
+         .setEvaluationOptions({ internalWrites: true })
+         .connect(wallet);
+       const contractB2 = SmartWeaveNodeFactory.forTesting(arweave)
+         .contract<any>(contractBTxId)
+         .setEvaluationOptions({ internalWrites: true })
+         .connect(wallet);
 
-      expect((await contractA2.readState()).state.counter).toEqual(-805);
-      expect((await contractB2.readState()).state.counter).toEqual(2060);
-    });
+       expect((await contractA2.readState()).state.counter).toEqual(-805);
+       expect((await contractB2.readState()).state.counter).toEqual(2060);
+     });*/
 
     it('should properly evaluate state again', async () => {
       expect((await contractA.readState()).state.counter).toEqual(-805);
@@ -300,8 +339,14 @@ describe('Testing internal writes', () => {
   });
 
   describe('with read state of A contract', () => {
+    const cacheDir = `./cache/iw/wb4/warp/`;
+
     beforeAll(async () => {
-      await deployContracts();
+      await deployContracts(cacheDir);
+    });
+
+    afterAll(async () => {
+      fs.rmSync(cacheDir, {recursive: true, force: true});
     });
 
     it('should deploy contracts with initial state', async () => {
@@ -320,8 +365,14 @@ describe('Testing internal writes', () => {
   });
 
   describe('with read state of B contract', () => {
+    const cacheDir = `./cache/iw/wb5/warp/`;
+
     beforeAll(async () => {
-      await deployContracts();
+      await deployContracts(cacheDir);
+    });
+
+    afterAll(async () => {
+      fs.rmSync(cacheDir, {recursive: true, force: true});
     });
 
     it('should deploy contracts with initial state', async () => {
@@ -339,16 +390,29 @@ describe('Testing internal writes', () => {
     });
 
     it('should properly evaluate state with a new client', async () => {
-      const contractA2 = SmartWeaveNodeFactory.forTesting(arweave)
-        .contract<any>(contractATxId)
-        .setEvaluationOptions({ internalWrites: true })
-        .connect(wallet);
-      const contractB2 = SmartWeaveNodeFactory.forTesting(arweave)
-        .contract<any>(contractBTxId)
-        .setEvaluationOptions({ internalWrites: true })
-        .connect(wallet);
-      expect((await contractA2.readState()).state.counter).toEqual(855);
-      expect((await contractB2.readState()).state.counter).toEqual(755);
+      const cacheDirA = `./cache/iw/wb5_1/warp/`;
+      const cacheDirB = `./cache/iw/wb5_2/warp/`;
+
+      try {
+        const contractA2 = SmartWeaveFactory.arweaveGw(arweave, {
+          ...defaultCacheOptions,
+          dbLocation: cacheDirA
+        }).contract<any>(contractATxId)
+          .setEvaluationOptions({internalWrites: true})
+          .connect(wallet);
+
+        const contractB2 = SmartWeaveFactory.arweaveGw(arweave, {
+          ...defaultCacheOptions,
+          dbLocation: cacheDirB
+        }).contract<any>(contractBTxId)
+          .setEvaluationOptions({internalWrites: true})
+          .connect(wallet);
+        expect((await contractA2.readState()).state.counter).toEqual(855);
+        expect((await contractB2.readState()).state.counter).toEqual(755);
+      } finally {
+        fs.rmSync(cacheDirA, {recursive: true, force: true});
+        fs.rmSync(cacheDirB, {recursive: true, force: true});
+      }
     });
   });
 });

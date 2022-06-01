@@ -3,7 +3,15 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, getTag, LoggerFactory, SmartWeave, SmartWeaveNodeFactory, SmartWeaveTags } from '@smartweave';
+import {
+  Contract,
+  defaultCacheOptions,
+  getTag,
+  LoggerFactory,
+  SmartWeave,
+  SmartWeaveFactory,
+  SmartWeaveTags
+} from '@smartweave';
 import path from 'path';
 import { addFunds, mineBlock } from '../_helpers';
 
@@ -25,6 +33,8 @@ describe('Testing the SmartWeave client for AssemblyScript WASM contract', () =>
   let smartweave: SmartWeave;
   let contract: Contract<ExampleContractState>;
 
+  const cacheDir = `./cache/i/was/warp/`;
+
   beforeAll(async () => {
     // note: each tests suit (i.e. file with tests that Jest is running concurrently
     // with another files has to have ArLocal set to a different port!)
@@ -39,7 +49,10 @@ describe('Testing the SmartWeave client for AssemblyScript WASM contract', () =>
 
     LoggerFactory.INST.logLevel('error');
 
-    smartweave = SmartWeaveNodeFactory.forTesting(arweave);
+    smartweave = SmartWeaveFactory.arweaveGw(arweave, {
+      ...defaultCacheOptions,
+      dbLocation: cacheDir
+    });
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -65,6 +78,7 @@ describe('Testing the SmartWeave client for AssemblyScript WASM contract', () =>
 
   afterAll(async () => {
     await arlocal.stop();
+    fs.rmSync(cacheDir, { recursive: true, force: true });
   });
 
   it('should properly deploy contract', async () => {

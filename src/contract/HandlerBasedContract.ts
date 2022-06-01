@@ -8,7 +8,7 @@ import {
   ContractCallStack,
   ContractInteraction,
   createDummyTx,
-  createTx,
+  createInteractionTx,
   CurrentTx,
   DefaultEvaluationOptions,
   emptyTransfer,
@@ -16,23 +16,22 @@ import {
   EvaluationOptions,
   Evolve,
   ExecutionContext,
-  GQLEdgeInterface,
   GQLNodeInterface,
   HandlerApi,
   InnerWritesEvaluator,
   InteractionCall,
   InteractionData,
   InteractionResult,
+  InteractionsSorter,
+  LexicographicalInteractionsSorter,
   LoggerFactory,
   SigningFunction,
   sleep,
   SmartWeave,
   SmartWeaveTags,
-  SourceType,
   Tags
 } from '@smartweave';
 import { TransactionStatusResponse } from 'arweave/node/transactions';
-import { NetworkInfoInterface } from 'arweave/node/network';
 import stringify from 'safe-stable-stringify';
 import * as crypto from 'crypto';
 import Transaction from 'arweave/node/lib/transaction';
@@ -48,23 +47,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   private _callStack: ContractCallStack;
   private _evaluationOptions: EvaluationOptions = new DefaultEvaluationOptions();
-
-  /**
-   * current Arweave networkInfo that will be used for all operations of the SmartWeave protocol.
-   * Only the 'root' contract call should read this data from Arweave - all the inner calls ("child" contracts)
-   * should reuse this data from the parent ("calling") contract.
-   */
-  private _networkInfo?: Partial<NetworkInfoInterface> = null;
-
-  private _rootBlockHeight: number = null;
-
   private readonly _innerWritesEvaluator = new InnerWritesEvaluator();
-
   private readonly _callDepth: number;
-
   private _benchmarkStats: BenchmarkStats = null;
-
   private readonly _arweaveWrapper: ArweaveWrapper;
+  private _sorter: InteractionsSorter;
 
   /**
    * wallet connected to this contract
@@ -79,9 +66,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
   ) {
     this.waitForConfirmation = this.waitForConfirmation.bind(this);
     this._arweaveWrapper = new ArweaveWrapper(smartweave.arweave);
+    this._sorter = new LexicographicalInteractionsSorter(smartweave.arweave);
     if (_parentContract != null) {
-      this._networkInfo = _parentContract.getNetworkInfo();
-      this._rootBlockHeight = _parentContract.getRootBlockHeight();
       this._evaluationOptions = _parentContract.evaluationOptions();
       this._callDepth = _parentContract.callDepth() + 1;
       const interaction: InteractionCall = _parentContract.getCallStack().getInteraction(_callingInteraction.id);
@@ -93,10 +79,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
           )}`
         );
       }
-      // sanity-check...
-      if (this._networkInfo == null) {
-        throw Error('Calling contract should have the network info already set!');
-      }
       this.logger.debug('Calling interaction id', _callingInteraction.id);
       const callStack = new ContractCallStack(_contractTxId, this._callDepth);
       interaction.interactionInput.foreignContractCalls.set(_contractTxId, callStack);
@@ -107,35 +89,30 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
   }
 
-  async readState(blockHeight?: number, currentTx?: CurrentTx[]): Promise<EvalStateResult<State>> {
-    return this.readStateSequencer(blockHeight, undefined, currentTx);
-  }
-
-  async readStateSequencer(
-    blockHeight: number,
-    upToTransactionId: string,
-    currentTx?: CurrentTx[]
-  ): Promise<EvalStateResult<State>> {
+  async readState(sortKeyOrBlockHeight?: string | number, currentTx?: CurrentTx[]): Promise<EvalStateResult<State>> {
     this.logger.info('Read state for', {
       contractTxId: this._contractTxId,
-      currentTx
+      currentTx,
+      sortKeyOrBlockHeight
     });
     const initBenchmark = Benchmark.measure();
-    this.maybeResetRootContract(blockHeight);
+    this.maybeResetRootContract();
+    if (this._parentContract != null && sortKeyOrBlockHeight == null) {
+      throw new Error('SortKey MUST be always set for non-root contract calls');
+    }
 
     const { stateEvaluator } = this.smartweave;
-    const executionContext = await this.createExecutionContext(
-      this._contractTxId,
-      blockHeight,
-      false,
-      upToTransactionId
-    );
+
+    const sortKey =
+      typeof sortKeyOrBlockHeight == 'number'
+        ? this._sorter.generateLastSortKey(sortKeyOrBlockHeight)
+        : sortKeyOrBlockHeight;
+
+    const executionContext = await this.createExecutionContext(this._contractTxId, sortKey, false);
     this.logger.info('Execution Context', {
-      blockHeight: executionContext.blockHeight,
       srcTxId: executionContext.contractDefinition?.srcTxId,
-      missingInteractions: executionContext.sortedInteractions.length,
-      cachedStateHeight: executionContext.cachedState?.cachedHeight,
-      upToTransactionId
+      missingInteractions: executionContext.sortedInteractions?.length,
+      cachedSortKey: executionContext.cachedState?.sortKey
     });
     initBenchmark.stop();
 
@@ -162,12 +139,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   async viewState<Input, View>(
     input: Input,
-    blockHeight?: number,
     tags: Tags = [],
     transfer: ArTransfer = emptyTransfer
   ): Promise<InteractionResult<State, View>> {
     this.logger.info('View state for', this._contractTxId);
-    return await this.callContract<Input, View>(input, undefined, blockHeight, tags, transfer);
+    return await this.callContract<Input, View>(input, undefined, undefined, tags, transfer);
   }
 
   async viewStateForTx<Input, View>(
@@ -334,7 +310,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       });
     }
 
-    const interactionTx = await createTx(
+    const interactionTx = await createInteractionTx(
       this.smartweave.arweave,
       this.signer,
       this._contractTxId,
@@ -347,16 +323,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return interactionTx;
   }
 
-  txId(): string {
+  contractTxId(): string {
     return this._contractTxId;
   }
 
   getCallStack(): ContractCallStack {
     return this._callStack;
-  }
-
-  getNetworkInfo(): Partial<NetworkInfoInterface> {
-    return this._networkInfo;
   }
 
   connect(signer: ArWallet | SigningFunction): Contract<State> {
@@ -378,10 +350,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return this;
   }
 
-  getRootBlockHeight(): number {
-    return this._rootBlockHeight;
-  }
-
   private async waitForConfirmation(transactionId: string): Promise<TransactionStatusResponse> {
     const { arweave } = this.smartweave;
 
@@ -399,114 +367,46 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   private async createExecutionContext(
     contractTxId: string,
-    blockHeight?: number,
-    forceDefinitionLoad = false,
-    upToTransactionId: string = undefined
+    upToSortKey?: string,
+    forceDefinitionLoad = false
   ): Promise<ExecutionContext<State, HandlerApi<State>>> {
-    const {
-      definitionLoader,
-      interactionsLoader,
-      interactionsSorter,
-      executorFactory,
-      stateEvaluator,
-      useRedstoneGwInfo
-    } = this.smartweave;
-
-    let currentNetworkInfo;
+    const { definitionLoader, interactionsLoader, executorFactory, stateEvaluator } = this.smartweave;
 
     const benchmark = Benchmark.measure();
-    // if this is a "root" call (ie. original call from SmartWeave's client)
-    if (this._parentContract == null) {
-      if (blockHeight) {
-        this._networkInfo = {
-          height: blockHeight
-        };
-      } else {
-        this.logger.debug('Reading network info for root call');
-        currentNetworkInfo = useRedstoneGwInfo
-          ? await this._arweaveWrapper.rGwInfo()
-          : await this._arweaveWrapper.info();
-        this._networkInfo = currentNetworkInfo;
-      }
-    } else {
-      // if that's a call from within contract's source code
-      this.logger.debug('Reusing network info from the calling contract');
-
-      // note: the whole execution tree should use the same network info!
-      // this requirement was not fulfilled in the "v1" SDK - each subsequent
-      // call to contract (from contract's source code) was loading network info independently
-      // if the contract was evaluating for many minutes/hours, this could effectively lead to reading
-      // state on different block heights...
-      currentNetworkInfo = (this._parentContract as HandlerBasedContract<State>)._networkInfo;
-    }
-
-    if (blockHeight == null) {
-      blockHeight = currentNetworkInfo.height;
-    }
-    this.logger.debug('network info', benchmark.elapsed());
-    benchmark.reset();
-
-    const cachedState = await stateEvaluator.latestAvailableState<State>(contractTxId, blockHeight);
-    let cachedBlockHeight = -1;
-    if (cachedState != null) {
-      cachedBlockHeight = cachedState.cachedHeight;
-    }
+    const cachedState = await stateEvaluator.latestAvailableState<State>(contractTxId, upToSortKey);
 
     this.logger.debug('cache lookup', benchmark.elapsed());
     benchmark.reset();
 
     const evolvedSrcTxId = Evolve.evolvedSrcTxId(cachedState?.cachedValue?.state);
+    let handler, contractDefinition, sortedInteractions;
 
-    let contractDefinition,
-      interactions: GQLEdgeInterface[] = [],
-      sortedInteractions: GQLEdgeInterface[] = [],
-      handler;
-    if (cachedBlockHeight != blockHeight) {
-      [contractDefinition, interactions] = await Promise.all([
-        definitionLoader.load<State>(contractTxId, evolvedSrcTxId),
-        // note: "eagerly" loading all of the interactions up to the originally requested block height
-        // (instead of the blockHeight requested for this specific read state call).
-        // as dumb as it may seem - this in fact significantly speeds up the processing
-        // - because the InteractionsLoader (usually CacheableContractInteractionsLoader)
-        // doesn't have to download missing interactions during the contract execution
-        // (eg. if contract is calling different contracts on different block heights).
-        // This basically limits the amount of interactions with Arweave GraphQL endpoint -
-        // each such interaction takes at least ~500ms.
-        interactionsLoader.load(
-          contractTxId,
-          cachedBlockHeight + 1,
-          this._rootBlockHeight || this._networkInfo.height,
-          this._evaluationOptions,
-          upToTransactionId
-        )
-      ]);
-      this.logger.debug('contract and interactions load', benchmark.elapsed());
-      sortedInteractions = await interactionsSorter.sort(interactions);
-      this.logger.trace('Sorted interactions', sortedInteractions);
-      handler = (await executorFactory.create(contractDefinition, this._evaluationOptions)) as HandlerApi<State>;
-    } else {
+    this.logger.debug('Cached state', cachedState, upToSortKey);
+
+    if (cachedState && cachedState.sortKey == upToSortKey) {
       this.logger.debug('State fully cached, not loading interactions.');
       if (forceDefinitionLoad || evolvedSrcTxId) {
         contractDefinition = await definitionLoader.load<State>(contractTxId, evolvedSrcTxId);
         handler = (await executorFactory.create(contractDefinition, this._evaluationOptions)) as HandlerApi<State>;
       }
+    } else {
+      [contractDefinition, sortedInteractions] = await Promise.all([
+        definitionLoader.load<State>(contractTxId, evolvedSrcTxId),
+        interactionsLoader.load(contractTxId, cachedState?.sortKey, upToSortKey, this._evaluationOptions)
+      ]);
+      this.logger.debug('contract and interactions load', benchmark.elapsed());
+      handler = (await executorFactory.create(contractDefinition, this._evaluationOptions)) as HandlerApi<State>;
     }
 
-    const containsInteractionsFromSequencer = interactions.some((i) => i.node.source == SourceType.REDSTONE_SEQUENCER);
-    this.logger.debug('containsInteractionsFromSequencer', containsInteractionsFromSequencer);
-
     return {
-      contractDefinition,
-      blockHeight,
-      sortedInteractions,
-      handler,
       smartweave: this.smartweave,
       contract: this,
+      contractDefinition,
+      sortedInteractions,
       evaluationOptions: this._evaluationOptions,
-      currentNetworkInfo,
+      handler,
       cachedState,
-      containsInteractionsFromSequencer,
-      upToTransactionId
+      requestedSortKey: upToSortKey
     };
   }
 
@@ -514,65 +414,28 @@ export class HandlerBasedContract<State> implements Contract<State> {
     contractTxId: string,
     transaction: GQLNodeInterface
   ): Promise<ExecutionContext<State, HandlerApi<State>>> {
-    const benchmark = Benchmark.measure();
-    const { definitionLoader, interactionsLoader, interactionsSorter, executorFactory, stateEvaluator } =
-      this.smartweave;
-    const blockHeight = transaction.block.height;
     const caller = transaction.owner.address;
+    const sortKey = transaction.sortKey;
 
-    const cachedState = await stateEvaluator.latestAvailableState<State>(contractTxId, blockHeight);
-    let cachedBlockHeight = -1;
-    if (cachedState != null) {
-      cachedBlockHeight = cachedState.cachedHeight;
-    }
-
-    let contractDefinition,
-      interactions = [],
-      sortedInteractions = [];
-
-    if (cachedBlockHeight != blockHeight) {
-      [contractDefinition, interactions] = await Promise.all([
-        definitionLoader.load<State>(contractTxId),
-        await interactionsLoader.load(contractTxId, 0, blockHeight, this._evaluationOptions)
-      ]);
-      sortedInteractions = await interactionsSorter.sort(interactions);
-    } else {
-      this.logger.debug('State fully cached, not loading interactions.');
-      contractDefinition = await definitionLoader.load<State>(contractTxId);
-    }
-    const handler = (await executorFactory.create(contractDefinition, this._evaluationOptions)) as HandlerApi<State>;
-
-    this.logger.debug('Creating execution context from tx:', benchmark.elapsed());
-
-    const containsInteractionsFromSequencer = interactions.some((i) => i.node.source == SourceType.REDSTONE_SEQUENCER);
+    const baseContext = await this.createExecutionContext(contractTxId, sortKey, true);
 
     return {
-      contractDefinition,
-      blockHeight,
-      sortedInteractions,
-      handler,
-      smartweave: this.smartweave,
-      contract: this,
-      evaluationOptions: this._evaluationOptions,
-      caller,
-      cachedState,
-      containsInteractionsFromSequencer
+      ...baseContext,
+      caller
     };
   }
 
-  private maybeResetRootContract(blockHeight?: number) {
+  private maybeResetRootContract() {
     if (this._parentContract == null) {
-      this.logger.debug('Clearing network info and call stack for the root contract');
-      this._networkInfo = null;
-      this._callStack = new ContractCallStack(this.txId(), 0);
-      this._rootBlockHeight = blockHeight;
+      this.logger.debug('Clearing call stack for the root contract');
+      this._callStack = new ContractCallStack(this.contractTxId(), 0);
     }
   }
 
   private async callContract<Input, View = unknown>(
     input: Input,
     caller?: string,
-    blockHeight?: number,
+    sortKey?: string,
     tags: Tags = [],
     transfer: ArTransfer = emptyTransfer
   ): Promise<InteractionResult<State, View>> {
@@ -583,27 +446,20 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
     const { arweave, stateEvaluator } = this.smartweave;
     // create execution context
-    let executionContext = await this.createExecutionContext(this._contractTxId, blockHeight, true);
+    let executionContext = await this.createExecutionContext(this._contractTxId, sortKey, true);
 
-    // add block data to execution context
-    if (!executionContext.currentBlockData) {
-      const currentBlockData = executionContext.currentNetworkInfo?.current
-        ? // trying to optimise calls to arweave as much as possible...
-          await arweave.blocks.get(executionContext.currentNetworkInfo.current)
-        : await arweave.blocks.getCurrent();
-
-      executionContext = {
-        ...executionContext,
-        currentBlockData
-      };
-    }
+    const currentBlockData = await arweave.blocks.getCurrent();
 
     // add caller info to execution context
     let effectiveCaller;
     if (caller) {
       effectiveCaller = caller;
     } else if (this.signer) {
-      const dummyTx = await arweave.createTransaction({ data: Math.random().toString().slice(-4) });
+      const dummyTx = await arweave.createTransaction({
+        data: Math.random().toString().slice(-4),
+        reward: '72600854',
+        last_tx: 'p7vc1iSP6bvH_fCeUFa9LqoV5qiyW-jdEKouAT0XMoSwrNraB9mgpi29Q10waEpO'
+      });
       await this.signer(dummyTx);
       effectiveCaller = await arweave.wallets.ownerToAddress(dummyTx.owner);
     } else {
@@ -618,6 +474,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     // eval current state
     const evalStateResult = await stateEvaluator.eval<State>(executionContext, []);
+    this.logger.info('Current state', evalStateResult.state);
 
     // create interaction transaction
     const interaction: ContractInteraction<Input> = {
@@ -626,16 +483,18 @@ export class HandlerBasedContract<State> implements Contract<State> {
     };
 
     this.logger.debug('interaction', interaction);
-    const tx = await createTx(
+    const tx = await createInteractionTx(
       arweave,
       this.signer,
       this._contractTxId,
       input,
       tags,
       transfer.target,
-      transfer.winstonQty
+      transfer.winstonQty,
+      true
     );
-    const dummyTx = createDummyTx(tx, executionContext.caller, executionContext.currentBlockData);
+    const dummyTx = createDummyTx(tx, executionContext.caller, currentBlockData);
+    dummyTx.sortKey = await this._sorter.createSortKey(dummyTx.block.id, dummyTx.id, dummyTx.block.height);
 
     const handleResult = await this.evalInteraction<Input, View>(
       {
@@ -674,7 +533,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     const interaction: ContractInteraction<Input> = {
       input,
-      caller: this._parentContract.txId()
+      caller: this._parentContract.contractTxId()
     };
 
     const interactionData: InteractionData<Input> = {
@@ -743,7 +602,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   async syncState(nodeAddress: string): Promise<Contract> {
     const { stateEvaluator } = this.smartweave;
-    const response = await fetch(`${nodeAddress}/state?id=${this._contractTxId}&validity=true&safeHeight=true`)
+    const response = await fetch(`${nodeAddress}/state?id=${this._contractTxId}&validity=true`)
       .then((res) => {
         return res.ok ? res.json() : Promise.reject(res);
       })
@@ -754,13 +613,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
         throw new Error(`Unable to retrieve state. ${error.status}: ${error.body?.message}`);
       });
 
-    await stateEvaluator.syncState(
-      this._contractTxId,
-      response.height,
-      response.lastTransactionId,
-      response.state,
-      response.validity
-    );
+    await stateEvaluator.syncState(this._contractTxId, response.sortKey, response.state, response.validity);
 
     return this;
   }

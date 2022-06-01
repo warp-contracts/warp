@@ -47,7 +47,7 @@ export interface GQLNodeInterface {
     id: string;
   };
   dry?: boolean;
-  sortKey?: string; // added dynamically by RedStone Sequencer
+  sortKey?: string; // added dynamically by Warp Sequencer
   confirmationStatus?: string;
   source?: string;
   bundlerTxId?: string;
@@ -62,9 +62,6 @@ export interface VrfData {
 }
 
 export interface GQLEdgeInterface {
-  // added dynamically by the LexicographicalInteractionsSorter
-  // or rewritten from GQLNodeInterface.sortKey (if added there by RedStone Sequencer)
-  sortKey?: string;
   cursor: string;
   node: GQLNodeInterface;
 }

@@ -4,7 +4,13 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory } from '@smartweave';
+import {
+  Contract,
+  defaultCacheOptions,
+  LoggerFactory,
+  SmartWeave,
+  SmartWeaveFactory
+} from '@smartweave';
 import path from 'path';
 import { TsLogFactory } from '../../../logging/node/TsLogFactory';
 import { addFunds, mineBlock } from '../_helpers';
@@ -82,8 +88,11 @@ describe('Testing internal writes', () => {
     await arlocal.stop();
   });
 
-  async function deployContracts() {
-    smartweave = SmartWeaveNodeFactory.forTesting(arweave);
+  async function deployContracts(cacheDir: string) {
+    smartweave = SmartWeaveFactory.arweaveGw(arweave, {
+      ...defaultCacheOptions,
+      dbLocation: cacheDir
+    });
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -119,8 +128,14 @@ describe('Testing internal writes', () => {
   }
 
   describe('with read states in between', () => {
+    const cacheDir = `./cache/iw/mi1/warp/`;
+
     beforeAll(async () => {
-      await deployContracts();
+      await deployContracts(cacheDir);
+    });
+
+    afterAll(async () => {
+      fs.rmSync(cacheDir, {recursive: true, force: true});
     });
 
     it('should deploy contracts with initial state', async () => {
@@ -248,8 +263,14 @@ describe('Testing internal writes', () => {
   });
 
   describe('with read state at the end', () => {
+    const cacheDir = `./cache/iw/mi2/warp/`;
+
     beforeAll(async () => {
-      await deployContracts();
+      await deployContracts(cacheDir);
+    });
+
+    afterAll(async () => {
+      fs.rmSync(cacheDir, {recursive: true, force: true});
     });
 
     it('should properly create multiple internal calls', async () => {
@@ -340,16 +361,28 @@ describe('Testing internal writes', () => {
     });
 
     it('should properly evaluate state with a new client', async () => {
-      const contractB2 = SmartWeaveNodeFactory.forTesting(arweave)
-        .contract<any>(contractBTxId)
-        .setEvaluationOptions({ internalWrites: true })
-        .connect(wallet);
-      const contractC2 = SmartWeaveNodeFactory.forTesting(arweave)
-        .contract<any>(contractCTxId)
-        .setEvaluationOptions({ internalWrites: true })
-        .connect(wallet);
-      expect((await contractB2.readState()).state.counter).toEqual(634);
-      expect((await contractC2.readState()).state.counter).toEqual(276);
+      const cacheDirA = `./cache/iw/d2_1/warp/`;
+      const cacheDirB = `./cache/iw/d2_2/warp/`;
+
+      try {
+        const contractB2 = SmartWeaveFactory.arweaveGw(arweave, {
+          ...defaultCacheOptions,
+          dbLocation: cacheDirA
+        }).contract<any>(contractBTxId)
+          .setEvaluationOptions({internalWrites: true})
+          .connect(wallet);
+        const contractC2 = SmartWeaveFactory.arweaveGw(arweave, {
+          ...defaultCacheOptions,
+          dbLocation: cacheDirB
+        }).contract<any>(contractCTxId)
+          .setEvaluationOptions({internalWrites: true})
+          .connect(wallet);
+        expect((await contractB2.readState()).state.counter).toEqual(634);
+        expect((await contractC2.readState()).state.counter).toEqual(276);
+      } finally {
+        fs.rmSync(cacheDirA, {recursive: true, force: true});
+        fs.rmSync(cacheDirB, {recursive: true, force: true});
+      }
     });
   });
 });

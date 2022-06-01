@@ -2,6 +2,11 @@ export async function handle(state, action) {
   if (state.counter === undefined) {
     state.counter = 0;
   }
+  if (action.input.function === 'div') {
+    state.counter = state.counter / 2;
+    return { state };
+  }
+
   if (action.input.function === 'add') {
     state.counter++;
     return { state };

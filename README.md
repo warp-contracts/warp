@@ -114,7 +114,7 @@ All exports are stored under `rsdk` global variable.
 
 ```html
 <script>
-  const smartweave = rsdk.SmartWeaveWebFactory.memCachedBased(arweave);
+  const smartweave = rsdk.SmartWeaveFactory.memCachedBased(arweave);
 </script>
 ```
 
@@ -198,7 +198,7 @@ LoggerFactory.INST.logLevel("fatal");
 LoggerFactory.INST.logLevel("error");
 
 // then create an instance of smartweave sdk
-const smartweave = SmartWeaveWebFactory.memCached(arweave);
+const smartweave = SmartWeaveFactory.memCached(arweave);
 ```
 Logging on `info` or `debug` level is good for development, but turning it on globally might slow down the evaluation by a factor of 2.  
 Keep in mind that you can fine tune the log level of each module separately. For example you can switch the `fatal` globally, but `debug`
@@ -210,7 +210,7 @@ LoggerFactory.INST.logLevel("fatal");
 LoggerFactory.INST.logLevel("debug", "ArweaveGatewayInteractionsLoader");
 
 // then create an instance of smartweave sdk
-const smartweave = SmartWeaveWebFactory.memCached(arweave);
+const smartweave = SmartWeaveFactory.memCached(arweave);
 ```
 
 ### Examples

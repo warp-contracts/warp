@@ -28,10 +28,8 @@ export class SmartWeave {
     readonly arweave: Arweave,
     readonly definitionLoader: DefinitionLoader,
     readonly interactionsLoader: InteractionsLoader,
-    readonly interactionsSorter: InteractionsSorter,
     readonly executorFactory: ExecutorFactory<HandlerApi<unknown>>,
-    readonly stateEvaluator: StateEvaluator,
-    readonly useRedstoneGwInfo: boolean = false
+    readonly stateEvaluator: StateEvaluator
   ) {
     this.createContract = new DefaultCreateContract(arweave);
   }
@@ -59,9 +57,5 @@ export class SmartWeave {
    */
   pst(contractTxId: string): PstContract {
     return new PstContractImpl(contractTxId, this);
-  }
-
-  async flushCache(): Promise<void> {
-    await this.stateEvaluator.flushCache();
   }
 }

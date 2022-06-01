@@ -1,6 +1,6 @@
 # Migration Guide from Arweave's SmartWeave SDK to RedStone SmartContracts SDK
 
-This guide describes <strong>the simplest</strong> way to switch to the new version of SmartWeave. It uses `SmartWeaveNodeFactory` for Node and `SmartWeaveWebFactory` for Web to quickly obtain fully configured, mem-cacheable SmartWeave instance. To see a more detailed explanation of all the core modules visit the [SmartWeave v2 documentation](https://smartweave.docs.redstone.finance/) or check out the [source code.](https://github.com/redstone-finance/redstone-smartweave)
+This guide describes <strong>the simplest</strong> way to switch to the new version of SmartWeave. It uses `SmartWeaveNodeFactory` for Node and `SmartWeaveFactory` for Web to quickly obtain fully configured, mem-cacheable SmartWeave instance. To see a more detailed explanation of all the core modules visit the [SmartWeave v2 documentation](https://smartweave.docs.redstone.finance/) or check out the [source code.](https://github.com/redstone-finance/redstone-smartweave)
 
 ### You can watch this tutorial on YouTube 🎬
 - [Youtube link](https://www.youtube.com/watch?v=fNjUV7mHFqw)
@@ -56,7 +56,7 @@ const arweave = Arweave.init({
 const smartweave = SmartWeaveNodeFactory.memCached(arweave);
 ```
 
-For Web environment you should use `SmartWeaveWebFactory` instead of `SmartWeaveNodeFactory`.
+For Web environment you should use `SmartWeaveFactory` instead of `SmartWeaveNodeFactory`.
 
 In this example we've used the `memCached` method. You can see other available methods in documentation:
 - [For Web](https://smartweave.docs.redstone.finance/classes/SmartWeaveWebFactory.html)

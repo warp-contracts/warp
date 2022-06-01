@@ -5,15 +5,16 @@ import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import {
   ArweaveGatewayInteractionsLoader,
+  defaultCacheOptions,
   EvaluationOptions,
-  GQLEdgeInterface,
+  GQLNodeInterface,
   InteractionsLoader,
   LexicographicalInteractionsSorter,
   LoggerFactory,
   PstContract,
   PstState,
   SmartWeave,
-  SmartWeaveNodeFactory
+  SmartWeaveFactory
 } from '@smartweave';
 import path from 'path';
 import { addFunds, mineBlock } from '../_helpers';
@@ -41,6 +42,8 @@ describe('Testing the Profit Sharing Token', () => {
   let pst: PstContract;
   let loader: InteractionsLoader;
 
+  const cacheDir = `./cache/i/vrf/warp/`;
+
   beforeAll(async () => {
     // note: each tests suit (i.e. file with tests that Jest is running concurrently
     // with another files has to have ArLocal set to a different port!)
@@ -56,7 +59,10 @@ describe('Testing the Profit Sharing Token', () => {
     loader = new VrfDecorator(arweave);
     LoggerFactory.INST.logLevel('error');
 
-    smartweave = SmartWeaveNodeFactory.memCachedBased(arweave)
+    smartweave = SmartWeaveFactory.levelDbCached(arweave, {
+      ...defaultCacheOptions,
+      dbLocation: cacheDir
+    })
       .useArweaveGateway()
       .setInteractionsLoader(loader)
       .build();
@@ -96,6 +102,7 @@ describe('Testing the Profit Sharing Token', () => {
 
   afterAll(async () => {
     await arlocal.stop();
+    fs.rmSync(cacheDir, { recursive: true, force: true });
   });
 
   it('should properly return random numbers', async () => {
@@ -146,24 +153,24 @@ class VrfDecorator extends ArweaveGatewayInteractionsLoader {
 
   async load(
     contractId: string,
-    fromBlockHeight: number,
-    toBlockHeight: number,
+    fromSortKey: string,
+    toSortKey: string,
     evaluationOptions: EvaluationOptions
-  ): Promise<GQLEdgeInterface[]> {
-    const result = await super.load(contractId, fromBlockHeight, toBlockHeight, evaluationOptions);
+  ): Promise<GQLNodeInterface[]> {
+    const result: GQLNodeInterface[] = await super.load(contractId, fromSortKey, toSortKey, evaluationOptions);
     const arUtils = this.arweave.utils;
 
     const sorter = new LexicographicalInteractionsSorter(this.arweave);
 
     for (const r of result) {
-      r.node.sortKey = await sorter.createSortKey(r.node.block.id, r.node.id, r.node.block.height);
-      const data = arUtils.stringToBuffer(r.node.sortKey);
+      r.sortKey = await sorter.createSortKey(r.block.id, r.id, r.block.height);
+      const data = arUtils.stringToBuffer(r.sortKey);
       const [index, proof] = Evaluate(key.getPrivate().toArray(), data);
-      r.node.vrf = {
-        index: useWrongIndex.includes(r.node.id)
+      r.vrf = {
+        index: useWrongIndex.includes(r.id)
           ? arUtils.bufferTob64Url(Uint8Array.of(1, 2, 3))
           : arUtils.bufferTob64Url(index),
-        proof: useWrongProof.includes(r.node.id)
+        proof: useWrongProof.includes(r.id)
           ? 'pK5HGnXo_rJkZPJorIX7TBCAEikcemL2DgJaPB3Pfm2D6tZUdK9mDuBSRUkcHUDNnrO02O0-ogq1e32JVEuVvgR4i5YFa-UV9MEoHgHg4yv0e318WNfzNWPc9rlte7P7RoO57idHu5SSkm7Qj0f4pBjUR7lWODVKBYp9fEJ-PObZ'
           : arUtils.bufferTob64Url(proof),
         bigint: bufToBn(index).toString(),

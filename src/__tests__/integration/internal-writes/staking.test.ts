@@ -4,7 +4,13 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory } from '@smartweave';
+import {
+  Contract,
+  defaultCacheOptions,
+  LoggerFactory,
+  SmartWeave,
+  SmartWeaveFactory
+} from '@smartweave';
 import path from 'path';
 import { TsLogFactory } from '../../../logging/node/TsLogFactory';
 import { addFunds, mineBlock } from '../_helpers';
@@ -56,8 +62,11 @@ describe('Testing internal writes', () => {
     await arlocal.stop();
   });
 
-  async function deployContracts() {
-    smartweave = SmartWeaveNodeFactory.forTesting(arweave);
+  async function deployContracts(cacheDir: string) {
+    smartweave = SmartWeaveFactory.arweaveGw(arweave, {
+      ...defaultCacheOptions,
+      dbLocation: cacheDir
+    });
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -103,8 +112,14 @@ describe('Testing internal writes', () => {
   }
 
   describe('with read states in between', () => {
+    const cacheDir = `./cache/iw/st1/warp/`;
+
     beforeAll(async () => {
-      await deployContracts();
+      await deployContracts(cacheDir);
+    });
+
+    afterAll(async () => {
+      fs.rmSync(cacheDir, {recursive: true, force: true});
     });
 
     it('should deploy contracts with initial state', async () => {
@@ -197,8 +212,14 @@ describe('Testing internal writes', () => {
   });
 
   describe('with read states at the end', () => {
+    const cacheDir = `./cache/iw/st2/warp/`;
+
     beforeAll(async () => {
-      await deployContracts();
+      await deployContracts(cacheDir);
+    });
+
+    afterAll(async () => {
+      fs.rmSync(cacheDir, {recursive: true, force: true});
     });
 
     it('should stake tokens', async () => {

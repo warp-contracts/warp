@@ -81,14 +81,13 @@ export class RedstoneGatewayInteractionsLoader implements InteractionsLoader {
 
   async load(
     contractId: string,
-    fromBlockHeight: number,
-    toBlockHeight: number,
-    evaluationOptions?: EvaluationOptions,
-    upToTransactionId?: string
-  ): Promise<GQLEdgeInterface[]> {
-    this.logger.debug('Loading interactions: for ', { contractId, fromBlockHeight, toBlockHeight });
+    fromSortKey?: string,
+    toSortKey?: string,
+    evaluationOptions?: EvaluationOptions
+  ): Promise<GQLNodeInterface[]> {
+    this.logger.debug('Loading interactions: for ', { contractId, fromSortKey, toSortKey });
 
-    const interactions: GQLEdgeInterface[] = [];
+    const interactions: GQLNodeInterface[] = [];
     let page = 0;
     let totalPages = 0;
 
@@ -96,17 +95,15 @@ export class RedstoneGatewayInteractionsLoader implements InteractionsLoader {
     do {
       const benchmarkRequestTime = Benchmark.measure();
 
-      // to make caching in cloudfront possible
       const url = `${this.baseUrl}/gateway/interactions-sort-key`;
 
       const response = await fetch(
         `${url}?${new URLSearchParams({
           contractId: contractId,
-          from: fromBlockHeight.toString(),
-          to: toBlockHeight.toString(),
+          ...(fromSortKey ? { from: fromSortKey } : ''),
+          ...(toSortKey ? { to: toSortKey } : ''),
           page: (++page).toString(),
           minimize: 'true',
-          ...(upToTransactionId ? { upToTransactionId } : ''),
           ...(this.confirmationStatus && this.confirmationStatus.confirmed ? { confirmationStatus: 'confirmed' } : ''),
           ...(this.confirmationStatus && this.confirmationStatus.notCorrupted
             ? { confirmationStatus: 'not_corrupted' }
@@ -129,24 +126,19 @@ export class RedstoneGatewayInteractionsLoader implements InteractionsLoader {
         `Loading interactions: page ${page} of ${totalPages} loaded in ${benchmarkRequestTime.elapsed()}`
       );
 
-      response.interactions.forEach((interaction) =>
+      response.interactions.forEach((interaction) => {
         interactions.push({
-          cursor: '',
-          node: {
-            ...interaction.interaction,
-            confirmationStatus: interaction.status
-          }
-        })
-      );
+          ...interaction.interaction,
+          confirmationStatus: interaction.status
+        });
+      });
 
-      this.logger.debug(
-        `Loaded interactions length: ${interactions.length}, from: ${fromBlockHeight}, to: ${toBlockHeight}`
-      );
+      this.logger.debug(`Loaded interactions length: ${interactions.length}, from: ${fromSortKey}, to: ${toSortKey}`);
     } while (page < totalPages);
 
     this.logger.debug('All loaded interactions:', {
-      from: fromBlockHeight,
-      to: toBlockHeight,
+      from: fromSortKey,
+      to: toSortKey,
       loaded: interactions.length,
       time: benchmarkTotalTime.elapsed()
     });

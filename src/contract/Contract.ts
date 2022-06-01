@@ -8,7 +8,6 @@ import {
   InteractionResult,
   Tags
 } from '@smartweave';
-import { NetworkInfoInterface } from 'arweave/node/network';
 import Transaction from 'arweave/node/lib/transaction';
 
 export type CurrentTx = { interactionTxId: string; contractTxId: string };
@@ -24,7 +23,7 @@ export interface Contract<State = unknown> {
   /**
    * Returns the Arweave transaction id of this contract.
    */
-  txId(): string;
+  contractTxId(): string;
 
   /**
    * Allows to connect a signer to a contract.
@@ -47,20 +46,13 @@ export interface Contract<State = unknown> {
    * Returns state of the contract at required blockHeight.
    * Similar to {@link readContract} from the current version.
    *
-   * @param blockHeight - block height at which state should be read. If not passed
-   * current Arweave block height from the network info will be used.
+   * @param sortKeyOrBlockHeight - either a sortKey or block height at which the contract should be read
    *
    * @param currentTx - a set of currently evaluating interactions, that should
    * be skipped during contract inner calls - to prevent the infinite call loop issue
-   * (mostly related to contracts that use the Foreign Call Protocol)
+   * (mostly related to contract that use the Foreign Call Protocol)
    */
-  readState(blockHeight?: number, currentTx?: CurrentTx[]): Promise<EvalStateResult<State>>;
-
-  readStateSequencer(
-    blockHeight: number,
-    upToTransactionId: string,
-    currentTx?: CurrentTx[]
-  ): Promise<EvalStateResult<State>>;
+  readState(sortKeyOrBlockHeight?: string | number, currentTx?: CurrentTx[]): Promise<EvalStateResult<State>>;
 
   /**
    * Returns the "view" of the state, computed by the SWC -
@@ -73,15 +65,12 @@ export interface Contract<State = unknown> {
    * with specified input.
    *
    * @param input - the input to the contract - eg. function name and parameters
-   * @param blockHeight - the height at which the contract state will be evaluated
-   * before applying last interaction transaction - ie. transaction with 'input'
    * @param tags - a set of tags that can be added to the interaction transaction
    * @param transfer - additional {@link ArTransfer} data that can be attached to the interaction
    * transaction
    */
   viewState<Input = unknown, View = unknown>(
     input: Input,
-    blockHeight?: number,
     tags?: Tags,
     transfer?: ArTransfer
   ): Promise<InteractionResult<State, View>>;
@@ -161,23 +150,6 @@ export interface Contract<State = unknown> {
    * interaction with contract (eg. after reading state)
    */
   getCallStack(): ContractCallStack;
-
-  /**
-   * Gets network info assigned to this contract.
-   * Network info is refreshed between interactions with
-   * given contract (eg. between consecutive calls to {@link Contract.readState})
-   * but reused within given execution tree (ie. only "root" contract loads the
-   * network info - eg. if readState calls other contracts, these calls will use the
-   * "root" contract network info - so that the whole execution is performed with the
-   * same network info)
-   */
-  getNetworkInfo(): Partial<NetworkInfoInterface>;
-
-  /**
-   * Get the block height requested by user for the given interaction with contract
-   * (eg. readState or viewState call)
-   */
-  getRootBlockHeight(): number | null;
 
   /**
    * Gets the parent contract - ie. contract that called THIS contract during the

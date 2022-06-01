@@ -5,12 +5,13 @@ import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import {
   ArweaveWrapper,
+  defaultCacheOptions,
   getTag,
   LoggerFactory,
   PstContract,
   PstState,
   SmartWeave,
-  SmartWeaveNodeFactory,
+  SmartWeaveFactory,
   SmartWeaveTags
 } from '@smartweave';
 import path from 'path';
@@ -35,6 +36,8 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
 
   let arweaveWrapper;
 
+  const cacheDir = `./cache/i/wr/warp/`;
+
   beforeAll(async () => {
     // note: each tests suit (i.e. file with tests that Jest is running concurrently
     // with another files has to have ArLocal set to a different port!)
@@ -51,7 +54,10 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
 
     LoggerFactory.INST.logLevel('error');
 
-    smartweave = SmartWeaveNodeFactory.forTesting(arweave);
+    smartweave = SmartWeaveFactory.arweaveGw(arweave, {
+      ...defaultCacheOptions,
+      dbLocation: cacheDir
+    });
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -119,6 +125,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
 
   afterAll(async () => {
     await arlocal.stop();
+    fs.rmSync(cacheDir, { recursive: true, force: true });
   });
 
   it('should properly deploy contract', async () => {
