@@ -1,6 +1,6 @@
 # Migration Guide from Arweave's SmartWeave SDK to Warp SDK
 
-This guide describes <strong>the simplest</strong> way to switch to the new version of SmartWeave. It uses `WebNodeFactory` for Node and `WarpWebFactory` for Web to quickly obtain fully configured, mem-cacheable SmartWeave instance. To see a more detailed explanation of all the core modules check out the [source code.](https://github.com/redstone-finance/warp)
+This guide describes <strong>the simplest</strong> way to switch to the new version of SmartWeave. It uses `WarpFactory` for Web to quickly obtain fully configured, mem-cacheable SmartWeave instance. To see a more detailed explanation of all the core modules check out the [source code.](https://github.com/redstone-finance/warp)
 
 ### You can watch this tutorial on YouTube 🎬
 
@@ -65,8 +65,6 @@ const arweave = Arweave.init({
 // Create a Warp client
 const smartweave = WarpNodeFactory.memCached(arweave);
 ```
-
-For Web environment you should use `WarpWebFactory` instead of `WarpNodeFactory`.
 
 In this example we've used the `memCached` method. You can see other available methods in documentation:
 

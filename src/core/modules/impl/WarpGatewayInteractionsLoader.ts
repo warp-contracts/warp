@@ -1,7 +1,6 @@
 import {
   Benchmark,
   EvaluationOptions,
-  GQLEdgeInterface,
   GQLNodeInterface,
   InteractionsLoader,
   LoggerFactory,
@@ -60,11 +59,7 @@ export const enum SourceType {
  *
  * Passing no flag is the "backwards compatible" mode (ie. it will behave like the original Arweave GQL gateway endpoint).
  * Note that this may result in returning corrupted and/or forked interactions
- * - read more {@link https://github.com/redstone-finance/redstone-sw-gateway#corrupted-transactions}.
- *
- * Please note that currently caching (ie. {@link CacheableContractInteractionsLoader} is switched off
- * for WarpGatewayInteractionsLoader due to the issue mentioned in the
- * following comment {@link https://github.com/redstone-finance/warp/pull/62#issuecomment-995249264}
+ * - read more {@link https://github.com/warp-contracts/redstone-sw-gateway#corrupted-transactions}.
  */
 export class WarpGatewayInteractionsLoader implements InteractionsLoader {
   constructor(
@@ -81,14 +76,13 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
 
   async load(
     contractId: string,
-    fromBlockHeight: number,
-    toBlockHeight: number,
-    evaluationOptions?: EvaluationOptions,
-    upToTransactionId?: string
-  ): Promise<GQLEdgeInterface[]> {
-    this.logger.debug('Loading interactions: for ', { contractId, fromBlockHeight, toBlockHeight });
+    fromSortKey?: string,
+    toSortKey?: string,
+    evaluationOptions?: EvaluationOptions
+  ): Promise<GQLNodeInterface[]> {
+    this.logger.debug('Loading interactions: for ', { contractId, fromSortKey, toSortKey });
 
-    const interactions: GQLEdgeInterface[] = [];
+    const interactions: GQLNodeInterface[] = [];
     let page = 0;
     let totalPages = 0;
 
@@ -96,17 +90,15 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
     do {
       const benchmarkRequestTime = Benchmark.measure();
 
-      // to make caching in cloudfront possible
       const url = `${this.baseUrl}/gateway/interactions-sort-key`;
 
       const response = await fetch(
         `${url}?${new URLSearchParams({
           contractId: contractId,
-          from: fromBlockHeight.toString(),
-          to: toBlockHeight.toString(),
+          ...(fromSortKey ? { from: fromSortKey } : ''),
+          ...(toSortKey ? { to: toSortKey } : ''),
           page: (++page).toString(),
           minimize: 'true',
-          ...(upToTransactionId ? { upToTransactionId } : ''),
           ...(this.confirmationStatus && this.confirmationStatus.confirmed ? { confirmationStatus: 'confirmed' } : ''),
           ...(this.confirmationStatus && this.confirmationStatus.notCorrupted
             ? { confirmationStatus: 'not_corrupted' }
@@ -129,24 +121,19 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
         `Loading interactions: page ${page} of ${totalPages} loaded in ${benchmarkRequestTime.elapsed()}`
       );
 
-      response.interactions.forEach((interaction) =>
+      response.interactions.forEach((interaction) => {
         interactions.push({
-          cursor: '',
-          node: {
-            ...interaction.interaction,
-            confirmationStatus: interaction.status
-          }
-        })
-      );
+          ...interaction.interaction,
+          confirmationStatus: interaction.status
+        });
+      });
 
-      this.logger.debug(
-        `Loaded interactions length: ${interactions.length}, from: ${fromBlockHeight}, to: ${toBlockHeight}`
-      );
+      this.logger.debug(`Loaded interactions length: ${interactions.length}, from: ${fromSortKey}, to: ${toSortKey}`);
     } while (page < totalPages);
 
     this.logger.debug('All loaded interactions:', {
-      from: fromBlockHeight,
-      to: toBlockHeight,
+      from: fromSortKey,
+      to: toSortKey,
       loaded: interactions.length,
       time: benchmarkTotalTime.elapsed()
     });

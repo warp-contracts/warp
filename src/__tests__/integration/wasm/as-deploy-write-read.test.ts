@@ -3,7 +3,7 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, getTag, LoggerFactory, Warp, WarpNodeFactory, SmartWeaveTags } from '@warp';
+import { Contract, getTag, LoggerFactory, Warp, WarpFactory, SmartWeaveTags } from '@warp';
 import path from 'path';
 import { addFunds, mineBlock } from '../_helpers';
 
@@ -39,7 +39,7 @@ describe('Testing the Warp client for AssemblyScript WASM contract', () => {
 
     LoggerFactory.INST.logLevel('error');
 
-    warp = WarpNodeFactory.forTesting(arweave);
+    warp = WarpFactory.forTesting(arweave);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
