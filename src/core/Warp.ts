@@ -3,7 +3,6 @@ import {
   ExecutorFactory,
   HandlerApi,
   InteractionsLoader,
-  InteractionsSorter,
   WarpBuilder,
   StateEvaluator
 } from '@warp/core';
@@ -33,10 +32,8 @@ export class Warp {
     readonly arweave: Arweave,
     readonly definitionLoader: DefinitionLoader,
     readonly interactionsLoader: InteractionsLoader,
-    readonly interactionsSorter: InteractionsSorter,
     readonly executorFactory: ExecutorFactory<HandlerApi<unknown>>,
-    readonly stateEvaluator: StateEvaluator,
-    readonly useWarpGwInfo: boolean = false
+    readonly stateEvaluator: StateEvaluator
   ) {
     this.createContract = new DefaultCreateContract(arweave);
   }
@@ -64,9 +61,5 @@ export class Warp {
    */
   pst(contractTxId: string): PstContract {
     return new PstContractImpl(contractTxId, this);
-  }
-
-  async flushCache(): Promise<void> {
-    await this.stateEvaluator.flushCache();
   }
 }
