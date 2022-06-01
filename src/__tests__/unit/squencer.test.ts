@@ -19,7 +19,7 @@ describe('Sequencer', () => {
   const wallet = JSON.parse(fs.readFileSync(path.join(__dirname, '/test-wallet.json')).toString());
 
   function mapSorted(s: GQLEdgeInterface) {
-    return `[${s.node.id}] : ${s.sortKey}`;
+    return `[${s.node.id}] : ${s.node.sortKey}`;
   }
 
   it('should properly assign sequence for transactions within the same block', async () => {

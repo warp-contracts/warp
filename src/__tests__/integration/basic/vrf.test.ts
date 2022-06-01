@@ -5,6 +5,7 @@ import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import {
   ArweaveGatewayInteractionsLoader,
+  defaultCacheOptions,
   EvaluationOptions,
   GQLEdgeInterface,
   InteractionsLoader,
@@ -13,7 +14,7 @@ import {
   PstContract,
   PstState,
   Warp,
-  WarpNodeFactory
+  WarpFactory
 } from '@warp';
 import path from 'path';
 import { addFunds, mineBlock } from '../_helpers';
@@ -56,7 +57,13 @@ describe('Testing the Profit Sharing Token', () => {
     loader = new VrfDecorator(arweave);
     LoggerFactory.INST.logLevel('error');
 
-    warp = WarpNodeFactory.memCachedBased(arweave).useArweaveGateway().setInteractionsLoader(loader).build();
+    warp = WarpFactory.levelDbCached(arweave, {
+      ...defaultCacheOptions,
+      inMemory: true
+    })
+      .useArweaveGateway()
+      .setInteractionsLoader(loader)
+      .build();
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);

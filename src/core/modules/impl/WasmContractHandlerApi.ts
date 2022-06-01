@@ -38,7 +38,7 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
       this.swGlobal._activeTx = interactionTx;
       this.swGlobal.caller = interaction.caller; // either contract tx id (for internal writes) or transaction.owner
       // TODO: this should be rather set on the HandlerFactory level..
-      //  but currently no access evaluationOptions there
+      //  but currently no access to evaluationOptions there
       this.swGlobal.gasLimit = executionContext.evaluationOptions.gasLimit;
       this.swGlobal.gasUsed = 0;
 
@@ -192,9 +192,9 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
       const { stateEvaluator } = executionContext.warp;
       const childContract = executionContext.warp.contract(contractTxId, executionContext.contract, interactionTx);
 
-      await stateEvaluator.onContractCall(interactionTx, executionContext, currentResult);
+      // await stateEvaluator.onContractCall(interactionTx, executionContext, currentResult);
 
-      const stateWithValidity = await childContract.readState(requestedHeight, [
+      const stateWithValidity = await childContract.readState(interactionTx.sortKey, [
         ...(currentTx || []),
         {
           contractTxId: this.contractDefinition.txId,
@@ -240,15 +240,11 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
       ]);
 
       this.logger.debug('Cache result?:', !this.swGlobal._activeTx.dry);
-      await executionContext.warp.stateEvaluator.onInternalWriteStateUpdate(
-        this.swGlobal._activeTx,
-        contractTxId,
-        {
-          state: result.state as State,
-          validity: {},
-          errorMessages: {}
-        }
-      );
+      await executionContext.warp.stateEvaluator.onInternalWriteStateUpdate(this.swGlobal._activeTx, contractTxId, {
+        state: result.state as State,
+        validity: {},
+        errorMessages: {}
+      });
 
       return result;
     };
