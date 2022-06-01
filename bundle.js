@@ -16,9 +16,10 @@ const runBuild = async () => {
     bundle: true,
     outfile: './bundles/web.bundle.js',
     platform: 'browser',
-    target: ['es2020', 'chrome58', 'firefox57', 'safari11'],
+    target: ['esnext'],
     format: 'iife',
-    globalName: 'warp'
+    globalName: 'warp',
+    external: ['events']
   }).catch((e) => {
     console.log(e);
     process.exit(1);
@@ -30,9 +31,10 @@ const runBuild = async () => {
     bundle: true,
     outfile: './bundles/web.bundle.min.js',
     platform: 'browser',
-    target: ['es2020', 'chrome58', 'firefox57', 'safari11'],
+    target: ['esnext'],
     format: 'iife',
-    globalName: 'rsdk'
+    globalName: 'warp',
+    external: ['events']
   }).catch((e) => {
     console.log(e);
     process.exit(1);
@@ -44,9 +46,10 @@ const runBuild = async () => {
     bundle: true,
     outfile: './bundles/esm.bundle.js',
     platform: 'browser',
-    target: ['es2020', 'chrome58', 'firefox57', 'safari11'],
+    target: ['esnext'],
     format: 'esm',
-    globalName: 'rsdk'
+    globalName: 'warp',
+    external: ['events']
   }).catch((e) => {
     console.log(e);
     process.exit(1);
@@ -58,9 +61,10 @@ const runBuild = async () => {
     bundle: true,
     outfile: './bundles/esm.bundle.min.js',
     platform: 'browser',
-    target: ['es2020', 'chrome58', 'firefox57', 'safari11'],
+    target: ['esnext'],
     format: 'esm',
-    globalName: 'rsdk'
+    globalName: 'warp',
+    external: ['events']
   }).catch((e) => {
     console.log(e);
     process.exit(1);

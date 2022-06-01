@@ -140,7 +140,7 @@ All exports are stored under `warp` global variable.
 
 ```html
 <script>
-  const warp = warp.WarpWebFactory.memCachedBased(arweave);
+  const warp = warp.WarpFactory.memCachedBased(arweave);
 </script>
 ```
 
@@ -432,7 +432,7 @@ LoggerFactory.INST.logLevel('fatal');
 LoggerFactory.INST.logLevel('error');
 
 // then create an instance of smartweave sdk
-const warp = WarpWebFactory.memCached(arweave);
+const warp = WarpFactory.memCached(arweave);
 ```
 
 Logging on `info` or `debug` level is good for development, but turning it on globally might slow down the evaluation by a factor of 2.  
@@ -446,7 +446,7 @@ LoggerFactory.INST.logLevel('fatal');
 LoggerFactory.INST.logLevel('debug', 'ArweaveGatewayInteractionsLoader');
 
 // then create an instance of smartweave sdk
-const smartweave = SmartWeaveWebFactory.memCached(arweave);
+const smartweave = SmartWeaveFactory.memCached(arweave);
 ```
 
 ### Examples
