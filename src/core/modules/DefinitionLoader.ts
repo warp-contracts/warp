@@ -1,4 +1,4 @@
-import { ContractDefinition } from '@smartweave';
+import { ContractDefinition, ContractSource } from '@smartweave';
 
 /**
  * Implementors of this interface are responsible for loading contract's definitions -
@@ -7,4 +7,5 @@ import { ContractDefinition } from '@smartweave';
  */
 export interface DefinitionLoader {
   load<State>(contractTxId: string, evolvedSrcTxId?: string): Promise<ContractDefinition<State>>;
+  loadContractSource(srcTxId: string): Promise<ContractSource>;
 }
