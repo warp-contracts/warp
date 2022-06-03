@@ -2,6 +2,7 @@ import {
   ArweaveWrapper,
   Benchmark,
   ContractDefinition,
+  ContractSource,
   ContractType,
   DefinitionLoader,
   getTag,
@@ -53,10 +54,37 @@ export class ContractDefinitionLoader implements DefinitionLoader {
     const minFee = getTag(contractTx, SmartWeaveTags.MIN_FEE);
     this.logger.debug('Tags decoding', benchmark.elapsed());
     benchmark.reset();
+    const s = await this.evalInitialState(contractTx);
+    this.logger.debug('init state', s);
+    const initState = JSON.parse(await this.evalInitialState(contractTx));
+    this.logger.debug('Parsing src and init state', benchmark.elapsed());
+
+    const { src, srcBinary, srcWasmLang, contractType, metadata, srcTx } = await this.loadContractSource(
+      contractSrcTxId
+    );
+
+    return {
+      txId: contractTxId,
+      srcTxId: contractSrcTxId,
+      src,
+      srcBinary,
+      srcWasmLang,
+      initState,
+      minFee,
+      owner,
+      contractType,
+      metadata,
+      contractTx: contractTx.toJSON(),
+      srcTx
+    };
+  }
+
+  async loadContractSource(contractSrcTxId: string): Promise<ContractSource> {
+    const benchmark = Benchmark.measure();
 
     const contractSrcTx = await this.arweaveWrapper.tx(contractSrcTxId);
     const srcContentType = getTag(contractSrcTx, SmartWeaveTags.CONTENT_TYPE);
-    if (supportedSrcContentTypes.indexOf(srcContentType) == -1) {
+    if (!supportedSrcContentTypes.includes(srcContentType)) {
       throw new Error(`Contract source content type ${srcContentType} not supported`);
     }
     const contractType: ContractType = srcContentType == 'application/javascript' ? 'js' : 'wasm';
@@ -80,23 +108,13 @@ export class ContractDefinitionLoader implements DefinitionLoader {
 
     this.logger.debug('Contract src tx load', benchmark.elapsed());
     benchmark.reset();
-    const s = await this.evalInitialState(contractTx);
-    this.logger.debug('init state', s);
-    const initState = JSON.parse(await this.evalInitialState(contractTx));
-    this.logger.debug('Parsing src and init state', benchmark.elapsed());
 
     return {
-      txId: contractTxId,
-      srcTxId: contractSrcTxId,
       src: contractType == 'js' ? (src as string) : null,
       srcBinary: contractType == 'wasm' ? wasmSrc.wasmBinary() : null,
       srcWasmLang,
-      initState,
-      minFee,
-      owner,
       contractType,
       metadata: srcMetaData,
-      contractTx: contractTx.toJSON(),
       srcTx: contractSrcTx.toJSON()
     };
   }
