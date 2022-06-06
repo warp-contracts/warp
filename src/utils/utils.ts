@@ -2,7 +2,7 @@
 import cloneDeep from 'lodash/cloneDeep';
 import copy from 'fast-copy';
 
-export const isNode = new Function("try {return this===global;}catch(e){return false;}");
+export const isNode = new Function('try {return this===global;}catch(e){return false;}');
 
 export const sleep = (ms: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, ms));
