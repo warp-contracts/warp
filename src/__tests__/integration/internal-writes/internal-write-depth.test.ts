@@ -50,7 +50,7 @@ import { addFunds, mineBlock } from '../_helpers';
  *                 │ amount)     │
  *                 └─────────────┘
  */
-xdescribe('Testing internal writes', () => {
+describe('Testing internal writes', () => {
   let contractASrc: string;
   let contractAInitialState: string;
   let contractBSrc: string;
