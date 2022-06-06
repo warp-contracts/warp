@@ -4,13 +4,7 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import {
-  Contract,
-  defaultCacheOptions,
-  LoggerFactory,
-  SmartWeave,
-  SmartWeaveFactory
-} from '@smartweave';
+import { Contract, defaultCacheOptions, LoggerFactory, SmartWeave, SmartWeaveFactory } from '@smartweave';
 import path from 'path';
 import { TsLogFactory } from '../../../logging/node/TsLogFactory';
 import { addFunds, mineBlock } from '../_helpers';
@@ -135,7 +129,7 @@ describe('Testing internal writes', () => {
     });
 
     afterAll(async () => {
-      fs.rmSync(cacheDir, {recursive: true, force: true});
+      fs.rmSync(cacheDir, { recursive: true, force: true });
     });
 
     it('should deploy contracts with initial state', async () => {
@@ -270,7 +264,7 @@ describe('Testing internal writes', () => {
     });
 
     afterAll(async () => {
-      fs.rmSync(cacheDir, {recursive: true, force: true});
+      fs.rmSync(cacheDir, { recursive: true, force: true });
     });
 
     it('should properly create multiple internal calls', async () => {
@@ -368,20 +362,22 @@ describe('Testing internal writes', () => {
         const contractB2 = SmartWeaveFactory.arweaveGw(arweave, {
           ...defaultCacheOptions,
           dbLocation: cacheDirA
-        }).contract<any>(contractBTxId)
-          .setEvaluationOptions({internalWrites: true})
+        })
+          .contract<any>(contractBTxId)
+          .setEvaluationOptions({ internalWrites: true })
           .connect(wallet);
         const contractC2 = SmartWeaveFactory.arweaveGw(arweave, {
           ...defaultCacheOptions,
           dbLocation: cacheDirB
-        }).contract<any>(contractCTxId)
-          .setEvaluationOptions({internalWrites: true})
+        })
+          .contract<any>(contractCTxId)
+          .setEvaluationOptions({ internalWrites: true })
           .connect(wallet);
         expect((await contractB2.readState()).state.counter).toEqual(634);
         expect((await contractC2.readState()).state.counter).toEqual(276);
       } finally {
-        fs.rmSync(cacheDirA, {recursive: true, force: true});
-        fs.rmSync(cacheDirB, {recursive: true, force: true});
+        fs.rmSync(cacheDirA, { recursive: true, force: true });
+        fs.rmSync(cacheDirB, { recursive: true, force: true });
       }
     });
   });

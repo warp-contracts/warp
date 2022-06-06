@@ -1,9 +1,9 @@
 /* eslint-disable */
 import fs from 'fs';
 import path from 'path';
-import {interactRead, readContract} from 'smartweave';
+import { interactRead, readContract } from 'smartweave';
 import Arweave from 'arweave';
-import {defaultCacheOptions, defaultWarpGwOptions, LoggerFactory, SmartWeaveFactory, SourceType} from '@smartweave';
+import { defaultCacheOptions, defaultWarpGwOptions, LoggerFactory, SmartWeaveFactory, SourceType } from '@smartweave';
 
 const stringify = require('safe-stable-stringify');
 
@@ -48,11 +48,14 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
     async (contractTxId: string) => {
       const cacheDir = `./cache/r/v1cs/warp/${contractTxId}`;
 
-      const sdk = SmartWeaveFactory.warpGw(arweave, {
+      const sdk = SmartWeaveFactory.warpGw(
+        arweave,
+        {
           ...defaultWarpGwOptions,
           confirmationStatus: null,
           source: SourceType.ARWEAVE
-        }, {
+        },
+        {
           ...defaultCacheOptions,
           dbLocation: cacheDir
         }
@@ -64,9 +67,9 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
         .trim();
       console.log('readState', contractTxId);
       try {
-        console.log = function () {
-        }; // to hide any logs from contracts...
-        const result2 = await sdk.contract(contractTxId)
+        console.log = function () {}; // to hide any logs from contracts...
+        const result2 = await sdk
+          .contract(contractTxId)
           .setEvaluationOptions({
             useFastCopy: true,
             allowUnsafeClient: true
@@ -76,7 +79,7 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
         expect(result2String).toEqual(resultString);
       } finally {
         console.log = originalConsoleLog;
-        fs.rmSync(cacheDir, {recursive: true, force: true});
+        fs.rmSync(cacheDir, { recursive: true, force: true });
       }
     },
     800000
@@ -89,11 +92,14 @@ describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
     async (contractTxId: string) => {
       const blockHeight = 850127;
       const cacheDir = `./cache/r/v1vm2cs/warp/${contractTxId}`;
-      const sdk = SmartWeaveFactory.warpGw(arweave, {
+      const sdk = SmartWeaveFactory.warpGw(
+        arweave,
+        {
           ...defaultWarpGwOptions,
           confirmationStatus: null,
           source: SourceType.ARWEAVE
-        }, {
+        },
+        {
           ...defaultCacheOptions,
           dbLocation: cacheDir
         }
@@ -104,7 +110,8 @@ describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
         .trim();
       console.log('readState', contractTxId);
       try {
-        const result2 = await sdk.contract(contractTxId)
+        const result2 = await sdk
+          .contract(contractTxId)
           .setEvaluationOptions({
             useFastCopy: true,
             useVM2: true,
@@ -115,7 +122,7 @@ describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
         expect(result2String).toEqual(resultString);
       } finally {
         console.log = originalConsoleLog;
-        fs.rmSync(cacheDir, {recursive: true, force: true});
+        fs.rmSync(cacheDir, { recursive: true, force: true });
       }
     },
     800000
@@ -133,11 +140,14 @@ describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
       const cacheDir2 = `./cache/r/gcs/a/warp/${contractTxId}`;
 
       console.log('readState Redstone Gateway', contractTxId);
-      const smartweaveR = SmartWeaveFactory.warpGw(arweave, {
+      const smartweaveR = SmartWeaveFactory.warpGw(
+        arweave,
+        {
           ...defaultWarpGwOptions,
           confirmationStatus: null,
           source: SourceType.ARWEAVE
-        }, {
+        },
+        {
           ...defaultCacheOptions,
           dbLocation: cacheDir1
         }
@@ -151,13 +161,14 @@ describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
         const result2 = await SmartWeaveFactory.arweaveGw(arweave, {
           ...defaultCacheOptions,
           dbLocation: cacheDir2
-        }).contract(contractTxId)
+        })
+          .contract(contractTxId)
           .readState(blockHeight);
         const result2String = stringify(result2.state).trim();
         expect(result2String).toEqual(resultString);
       } finally {
-        fs.rmSync(cacheDir1, {recursive: true, force: true});
-        fs.rmSync(cacheDir2, {recursive: true, force: true});
+        fs.rmSync(cacheDir1, { recursive: true, force: true });
+        fs.rmSync(cacheDir2, { recursive: true, force: true });
       }
     },
     800000
@@ -173,14 +184,19 @@ describe('readState', () => {
 
     const cacheDir = `./cache/r/rdb/1/warp/${contractTxId}`;
     try {
-      const result2 = await SmartWeaveFactory.warpGw(arweave, {
-        ...defaultWarpGwOptions,
-        confirmationStatus: null,
-        source: SourceType.ARWEAVE
-      }, {
-        ...defaultCacheOptions,
-        dbLocation: cacheDir
-      }).contract(contractTxId)
+      const result2 = await SmartWeaveFactory.warpGw(
+        arweave,
+        {
+          ...defaultWarpGwOptions,
+          confirmationStatus: null,
+          source: SourceType.ARWEAVE
+        },
+        {
+          ...defaultCacheOptions,
+          dbLocation: cacheDir
+        }
+      )
+        .contract(contractTxId)
         .setEvaluationOptions({
           allowUnsafeClient: true
         })
@@ -189,7 +205,7 @@ describe('readState', () => {
 
       expect(result2String).toEqual(resultString);
     } finally {
-      fs.rmSync(cacheDir, {recursive: true, force: true});
+      fs.rmSync(cacheDir, { recursive: true, force: true });
     }
   }, 800000);
 
@@ -203,14 +219,19 @@ describe('readState', () => {
 
     const cacheDir = `./cache/r/rdb/2/warp/${contractTxId}`;
     try {
-      const v2Result = await SmartWeaveFactory.warpGw(arweave, {
-        ...defaultWarpGwOptions,
-        confirmationStatus: null,
-        source: SourceType.ARWEAVE
-      }, {
-        ...defaultCacheOptions,
-        dbLocation: cacheDir
-      }).contract(contractTxId)
+      const v2Result = await SmartWeaveFactory.warpGw(
+        arweave,
+        {
+          ...defaultWarpGwOptions,
+          confirmationStatus: null,
+          source: SourceType.ARWEAVE
+        },
+        {
+          ...defaultCacheOptions,
+          dbLocation: cacheDir
+        }
+      )
+        .contract(contractTxId)
         .connect(jwk)
         .viewState({
           function: 'balance',
@@ -218,7 +239,7 @@ describe('readState', () => {
         });
       expect(v1Result).toEqual(v2Result.result);
     } finally {
-      fs.rmSync(cacheDir, {recursive: true, force: true});
+      fs.rmSync(cacheDir, { recursive: true, force: true });
     }
   }, 800000);
 });

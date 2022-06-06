@@ -4,13 +4,7 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import {
-  Contract,
-  defaultCacheOptions,
-  LoggerFactory,
-  SmartWeave,
-  SmartWeaveFactory
-} from '@smartweave';
+import { Contract, defaultCacheOptions, LoggerFactory, SmartWeave, SmartWeaveFactory } from '@smartweave';
 import path from 'path';
 import { TsLogFactory } from '../../../logging/node/TsLogFactory';
 import { addFunds, mineBlock } from '../_helpers';
@@ -142,7 +136,7 @@ describe('Testing internal writes', () => {
     });
 
     afterAll(async () => {
-      fs.rmSync(cacheDir, {recursive: true, force: true});
+      fs.rmSync(cacheDir, { recursive: true, force: true });
     });
 
     it('should deploy contracts with initial state', async () => {
@@ -195,9 +189,8 @@ describe('Testing internal writes', () => {
     });
 
     afterAll(async () => {
-      fs.rmSync(cacheDir, {recursive: true, force: true});
+      fs.rmSync(cacheDir, { recursive: true, force: true });
     });
-
 
     it('should write direct interactions', async () => {
       await calleeContract.writeInteraction({ function: 'add' });

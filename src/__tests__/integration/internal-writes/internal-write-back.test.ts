@@ -3,10 +3,10 @@ import fs from 'fs';
 
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
-import {JWKInterface} from 'arweave/node/lib/wallet';
-import {Contract, defaultCacheOptions, LoggerFactory, SmartWeave, SmartWeaveFactory} from '@smartweave';
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import { Contract, defaultCacheOptions, LoggerFactory, SmartWeave, SmartWeaveFactory } from '@smartweave';
 import path from 'path';
-import {addFunds, mineBlock} from '../_helpers';
+import { addFunds, mineBlock } from '../_helpers';
 
 /**
  * This test verifies "write-backs" between contracts:
@@ -122,7 +122,7 @@ describe('Testing internal writes', () => {
     });
 
     afterAll(async () => {
-      fs.rmSync(cacheDir, {recursive: true, force: true});
+      fs.rmSync(cacheDir, { recursive: true, force: true });
     });
 
     it('should deploy contracts with initial state', async () => {
@@ -193,20 +193,22 @@ describe('Testing internal writes', () => {
         const contractA2 = SmartWeaveFactory.arweaveGw(arweave, {
           ...defaultCacheOptions,
           dbLocation: cacheDirA
-        }).contract<any>(contractATxId)
-          .setEvaluationOptions({internalWrites: true})
+        })
+          .contract<any>(contractATxId)
+          .setEvaluationOptions({ internalWrites: true })
           .connect(wallet);
         const contractB2 = SmartWeaveFactory.arweaveGw(arweave, {
           ...defaultCacheOptions,
           dbLocation: cacheDirB
-        }).contract<any>(contractBTxId)
-          .setEvaluationOptions({internalWrites: true})
+        })
+          .contract<any>(contractBTxId)
+          .setEvaluationOptions({ internalWrites: true })
           .connect(wallet);
         expect((await contractA2.readState()).state.counter).toEqual(1055);
         expect((await contractB2.readState()).state.counter).toEqual(805);
       } finally {
-        fs.rmSync(cacheDirA, {recursive: true, force: true});
-        fs.rmSync(cacheDirB, {recursive: true, force: true});
+        fs.rmSync(cacheDirA, { recursive: true, force: true });
+        fs.rmSync(cacheDirB, { recursive: true, force: true });
       }
     });
 
@@ -245,20 +247,22 @@ describe('Testing internal writes', () => {
         const contractA2 = SmartWeaveFactory.arweaveGw(arweave, {
           ...defaultCacheOptions,
           dbLocation: cacheDirA
-        }).contract<any>(contractATxId)
-          .setEvaluationOptions({internalWrites: true})
+        })
+          .contract<any>(contractATxId)
+          .setEvaluationOptions({ internalWrites: true })
           .connect(wallet);
         const contractB2 = SmartWeaveFactory.arweaveGw(arweave, {
           ...defaultCacheOptions,
           dbLocation: cacheDirB
-        }).contract<any>(contractBTxId)
-          .setEvaluationOptions({internalWrites: true})
+        })
+          .contract<any>(contractBTxId)
+          .setEvaluationOptions({ internalWrites: true })
           .connect(wallet);
         expect((await contractA2.readState()).state.counter).toEqual(-805);
         expect((await contractB2.readState()).state.counter).toEqual(2060);
       } finally {
-        fs.rmSync(cacheDirA, {recursive: true, force: true});
-        fs.rmSync(cacheDirB, {recursive: true, force: true});
+        fs.rmSync(cacheDirA, { recursive: true, force: true });
+        fs.rmSync(cacheDirB, { recursive: true, force: true });
       }
     });
   });
@@ -271,7 +275,7 @@ describe('Testing internal writes', () => {
     });
 
     afterAll(async () => {
-      fs.rmSync(cacheDir, {recursive: true, force: true});
+      fs.rmSync(cacheDir, { recursive: true, force: true });
     });
 
     it('should write properly add multiple write back interactions', async () => {
@@ -346,7 +350,7 @@ describe('Testing internal writes', () => {
     });
 
     afterAll(async () => {
-      fs.rmSync(cacheDir, {recursive: true, force: true});
+      fs.rmSync(cacheDir, { recursive: true, force: true });
     });
 
     it('should deploy contracts with initial state', async () => {
@@ -372,7 +376,7 @@ describe('Testing internal writes', () => {
     });
 
     afterAll(async () => {
-      fs.rmSync(cacheDir, {recursive: true, force: true});
+      fs.rmSync(cacheDir, { recursive: true, force: true });
     });
 
     it('should deploy contracts with initial state', async () => {
@@ -397,21 +401,23 @@ describe('Testing internal writes', () => {
         const contractA2 = SmartWeaveFactory.arweaveGw(arweave, {
           ...defaultCacheOptions,
           dbLocation: cacheDirA
-        }).contract<any>(contractATxId)
-          .setEvaluationOptions({internalWrites: true})
+        })
+          .contract<any>(contractATxId)
+          .setEvaluationOptions({ internalWrites: true })
           .connect(wallet);
 
         const contractB2 = SmartWeaveFactory.arweaveGw(arweave, {
           ...defaultCacheOptions,
           dbLocation: cacheDirB
-        }).contract<any>(contractBTxId)
-          .setEvaluationOptions({internalWrites: true})
+        })
+          .contract<any>(contractBTxId)
+          .setEvaluationOptions({ internalWrites: true })
           .connect(wallet);
         expect((await contractA2.readState()).state.counter).toEqual(855);
         expect((await contractB2.readState()).state.counter).toEqual(755);
       } finally {
-        fs.rmSync(cacheDirA, {recursive: true, force: true});
-        fs.rmSync(cacheDirB, {recursive: true, force: true});
+        fs.rmSync(cacheDirA, { recursive: true, force: true });
+        fs.rmSync(cacheDirB, { recursive: true, force: true });
       }
     });
   });

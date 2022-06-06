@@ -3,7 +3,7 @@ import fs from 'fs';
 
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
-import {JWKInterface} from 'arweave/node/lib/wallet';
+import { JWKInterface } from 'arweave/node/lib/wallet';
 import {
   CacheableStateEvaluator,
   Contract,
@@ -13,7 +13,7 @@ import {
   SmartWeaveFactory
 } from '@smartweave';
 import path from 'path';
-import {addFunds, mineBlock} from '../_helpers';
+import { addFunds, mineBlock } from '../_helpers';
 
 interface ExampleContractState {
   counter: number;
@@ -147,7 +147,7 @@ describe('Testing internal writes', () => {
     });
 
     afterAll(async () => {
-      fs.rmSync(cacheDir, {recursive: true, force: true});
+      fs.rmSync(cacheDir, { recursive: true, force: true });
     });
 
     it('should deploy callee contract with initial state', async () => {
@@ -155,8 +155,8 @@ describe('Testing internal writes', () => {
     });
 
     it('should write direct interactions', async () => {
-      await calleeContract.writeInteraction({function: 'add'});
-      await calleeContract.writeInteraction({function: 'add'});
+      await calleeContract.writeInteraction({ function: 'add' });
+      await calleeContract.writeInteraction({ function: 'add' });
       await mineBlock(arweave);
 
       expect((await calleeContract.readState()).state.counter).toEqual(557);
@@ -164,60 +164,60 @@ describe('Testing internal writes', () => {
     });
 
     it('should write one direct and one internal interaction', async () => {
-      await calleeContract.writeInteraction({function: 'add'});
-      await callingContract.writeInteraction({function: 'writeContract', contractId: calleeTxId, amount: 10});
+      await calleeContract.writeInteraction({ function: 'add' });
+      await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
       await mineBlock(arweave);
       expect((await calleeContract.readState()).state.counter).toEqual(568);
       expect((await calleeContractVM.readState()).state.counter).toEqual(568);
     });
 
     it('should write another direct interaction', async () => {
-      await calleeContract.writeInteraction({function: 'add'});
+      await calleeContract.writeInteraction({ function: 'add' });
       await mineBlock(arweave);
       expect((await calleeContract.readState()).state.counter).toEqual(569);
       expect((await calleeContractVM.readState()).state.counter).toEqual(569);
     });
 
     it('should write double internal interaction with direct interaction', async () => {
-      await callingContract.writeInteraction({function: 'writeContract', contractId: calleeTxId, amount: 10});
-      await callingContract.writeInteraction({function: 'writeContract', contractId: calleeTxId, amount: 10});
+      await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
+      await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
       await mineBlock(arweave);
-      await calleeContract.writeInteraction({function: 'add'});
+      await calleeContract.writeInteraction({ function: 'add' });
       await mineBlock(arweave);
       expect((await calleeContract.readState()).state.counter).toEqual(590);
       expect((await calleeContractVM.readState()).state.counter).toEqual(590);
     });
 
     it('should write combination of internal and direct interaction', async () => {
-      await callingContract.writeInteraction({function: 'writeContract', contractId: calleeTxId, amount: 10});
+      await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
       await mineBlock(arweave);
-      await calleeContract.writeInteraction({function: 'add'});
+      await calleeContract.writeInteraction({ function: 'add' });
       await mineBlock(arweave);
       expect((await calleeContract.readState()).state.counter).toEqual(601);
       expect((await calleeContractVM.readState()).state.counter).toEqual(601);
     });
 
     it('should write combination of internal and direct interaction', async () => {
-      await callingContract.writeInteraction({function: 'writeContract', contractId: calleeTxId, amount: 10});
+      await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
       await mineBlock(arweave);
-      await calleeContract.writeInteraction({function: 'add'});
+      await calleeContract.writeInteraction({ function: 'add' });
       await mineBlock(arweave);
       expect((await calleeContract.readState()).state.counter).toEqual(612);
       expect((await calleeContractVM.readState()).state.counter).toEqual(612);
     });
 
     it('should write combination of direct and internal interaction - at one block', async () => {
-      await calleeContract.writeInteraction({function: 'add'});
-      await callingContract.writeInteraction({function: 'writeContract', contractId: calleeTxId, amount: 10});
+      await calleeContract.writeInteraction({ function: 'add' });
+      await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
       await mineBlock(arweave);
       expect((await calleeContract.readState()).state.counter).toEqual(623);
       expect((await calleeContractVM.readState()).state.counter).toEqual(623);
     });
 
     it('should write combination of direct and internal interaction - on different blocks', async () => {
-      await callingContract.writeInteraction({function: 'writeContract', contractId: calleeTxId, amount: 10});
+      await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
       await mineBlock(arweave);
-      await calleeContract.writeInteraction({function: 'add'});
+      await calleeContract.writeInteraction({ function: 'add' });
       await mineBlock(arweave);
       expect((await calleeContract.readState()).state.counter).toEqual(634);
       expect((await calleeContractVM.readState()).state.counter).toEqual(634);
@@ -237,54 +237,53 @@ describe('Testing internal writes', () => {
     });
 
     afterAll(async () => {
-      fs.rmSync(cacheDir, {recursive: true, force: true});
+      fs.rmSync(cacheDir, { recursive: true, force: true });
     });
 
     it('should properly write a combination of direct and internal interactions', async () => {
-      await calleeContract.writeInteraction({function: 'add'});
-      await calleeContract.writeInteraction({function: 'add'});
+      await calleeContract.writeInteraction({ function: 'add' });
+      await calleeContract.writeInteraction({ function: 'add' });
       await mineBlock(arweave);
 
-      await calleeContract.writeInteraction({function: 'add'});
-      await callingContract.writeInteraction({function: 'writeContract', contractId: calleeTxId, amount: 10});
+      await calleeContract.writeInteraction({ function: 'add' });
+      await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
       await mineBlock(arweave);
 
       /*expect((await calleeContract.readState()).state.counter).toEqual(568);
       expect((await calleeContractVM.readState()).state.counter).toEqual(568)*/
 
-      await calleeContract.writeInteraction({function: 'add'});
+      await calleeContract.writeInteraction({ function: 'add' });
       await mineBlock(arweave);
 
-      await callingContract.writeInteraction({function: 'writeContract', contractId: calleeTxId, amount: 10});
-      await callingContract.writeInteraction({function: 'writeContract', contractId: calleeTxId, amount: 10});
+      await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
+      await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
       await mineBlock(arweave);
-      await calleeContract.writeInteraction({function: 'add'});
+      await calleeContract.writeInteraction({ function: 'add' });
       await mineBlock(arweave);
 
       /*expect((await calleeContract.readState()).state.counter).toEqual(590);
       expect((await calleeContractVM.readState()).state.counter).toEqual(590)*/
 
-
-      await callingContract.writeInteraction({function: 'writeContract', contractId: calleeTxId, amount: 10});
+      await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
       await mineBlock(arweave);
-      await calleeContract.writeInteraction({function: 'add'});
-      await mineBlock(arweave);
-
-      await callingContract.writeInteraction({function: 'writeContract', contractId: calleeTxId, amount: 10});
-      await mineBlock(arweave);
-      await calleeContract.writeInteraction({function: 'add'});
+      await calleeContract.writeInteraction({ function: 'add' });
       await mineBlock(arweave);
 
-      await calleeContract.writeInteraction({function: 'add'});
-      await callingContract.writeInteraction({function: 'writeContract', contractId: calleeTxId, amount: 10});
+      await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
+      await mineBlock(arweave);
+      await calleeContract.writeInteraction({ function: 'add' });
+      await mineBlock(arweave);
+
+      await calleeContract.writeInteraction({ function: 'add' });
+      await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
       await mineBlock(arweave);
 
       /*expect((await calleeContract.readState()).state.counter).toEqual(623);
       expect((await calleeContractVM.readState()).state.counter).toEqual(623)*/
 
-      await callingContract.writeInteraction({function: 'writeContract', contractId: calleeTxId, amount: 10});
+      await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
       await mineBlock(arweave);
-      await calleeContract.writeInteraction({function: 'add'});
+      await calleeContract.writeInteraction({ function: 'add' });
       await mineBlock(arweave);
       expect((await calleeContract.readState()).state.counter).toEqual(634);
       expect((await calleeContractVM.readState()).state.counter).toEqual(634);
@@ -303,14 +302,16 @@ describe('Testing internal writes', () => {
         const calleeContract2 = SmartWeaveFactory.arweaveGw(arweave, {
           ...defaultCacheOptions,
           dbLocation: cacheDir
-        }).contract<ExampleContractState>(calleeTxId)
+        })
+          .contract<ExampleContractState>(calleeTxId)
           .setEvaluationOptions({
             internalWrites: true
           });
         const calleeContract2VM = SmartWeaveFactory.arweaveGw(arweave, {
           ...defaultCacheOptions,
           dbLocation: cacheDirVm
-        }).contract<ExampleContractState>(calleeTxId)
+        })
+          .contract<ExampleContractState>(calleeTxId)
           .setEvaluationOptions({
             internalWrites: true,
             useVM2: true
@@ -318,8 +319,8 @@ describe('Testing internal writes', () => {
         expect((await calleeContract2.readState()).state.counter).toEqual(634);
         expect((await calleeContract2VM.readState()).state.counter).toEqual(634);
       } finally {
-        fs.rmSync(cacheDir, {recursive: true, force: true});
-        fs.rmSync(cacheDirVm, {recursive: true, force: true});
+        fs.rmSync(cacheDir, { recursive: true, force: true });
+        fs.rmSync(cacheDirVm, { recursive: true, force: true });
       }
     });
   });
