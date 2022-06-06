@@ -97,22 +97,22 @@ SDK requires node.js version 16.5+.
 
 #### Using npm
 
-`npm install warp`
+`npm install warp-contracts`
 
 #### Using yarn
 
-`yarn add warp`
+`yarn add warp-contracts`
 
 ### Import
 
 You can import the full API or individual modules.
 
 ```typescript
-import * as WarpSdk from 'warp';
+import * as WarpSdk from 'warp-contracts';
 ```
 
 ```typescript
-import { Warp, Contract, ... } from 'warp'
+import { Warp, Contract, ... } from 'warp-contracts'
 ```
 
 The SDK is available in both the ESM and CJS format - to make it possible for web bundlers (like webpack) to effectively
