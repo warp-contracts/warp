@@ -174,9 +174,7 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
       const { stateEvaluator } = executionContext.warp;
       const childContract = executionContext.warp.contract(contractTxId, executionContext.contract, interactionTx);
 
-      // Cannot cache the state from 'current' tx yet! - because it is still being evaluated
-      // it should cache the state from the prev transaction here.
-      //await stateEvaluator.onContractCall(interactionTx, executionContext, currentResult);
+      await stateEvaluator.onContractCall(interactionTx, executionContext, currentResult);
 
       const stateWithValidity = await childContract.readState(interactionTx.sortKey, [
         ...(currentTx || []),
