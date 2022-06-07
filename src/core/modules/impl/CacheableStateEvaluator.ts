@@ -111,8 +111,8 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     nthInteraction?: number
   ): Promise<void> {
     if (
-      executionContext.evaluationOptions.updateCacheForEachInteraction ||
-      executionContext.evaluationOptions.internalWrites /*||
+      executionContext.evaluationOptions.updateCacheForEachInteraction /*||
+      executionContext.evaluationOptions.internalWrites*/ /*||
       (nthInteraction || 1) % 100 == 0*/
     ) {
       await this.putInCache(executionContext.contractDefinition.txId, transaction, state);
@@ -155,7 +155,16 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>
   ): Promise<void> {
-    await this.putInCache(executionContext.contractDefinition.txId, transaction, state);
+    if (executionContext.sortedInteractions?.length == 0) {
+      return;
+    }
+    const txIndex = executionContext.sortedInteractions.indexOf(transaction);
+    const prevIndex = Math.max(0, txIndex - 1);
+    await this.putInCache(
+      executionContext.contractDefinition.txId,
+      executionContext.sortedInteractions[prevIndex],
+      state
+    );
   }
 
   public async putInCache<State>(
