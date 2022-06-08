@@ -26,8 +26,6 @@ export class RedstoneGatewayContractDefinitionLoader extends ContractDefinitionL
   }
 
   async doLoad<State>(contractTxId: string, forcedSrcTxId?: string): Promise<ContractDefinition<State>> {
-    this.rLogger.debug('forcedSrcTxId:', forcedSrcTxId);
-
     try {
       const result: ContractDefinition<State> = await fetch(
         `${this.baseUrl}/gateway/contract?txId=${contractTxId}${forcedSrcTxId ? `&srcTxId=${forcedSrcTxId}` : ''}`
