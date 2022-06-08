@@ -26,13 +26,12 @@ export class RedstoneGatewayContractDefinitionLoader extends ContractDefinitionL
   }
 
   async doLoad<State>(contractTxId: string, forcedSrcTxId?: string): Promise<ContractDefinition<State>> {
-    if (forcedSrcTxId) {
-      // no support for the evolve yet..
-      return await super.doLoad(contractTxId, forcedSrcTxId);
-    }
+    this.rLogger.debug('forcedSrcTxId:', forcedSrcTxId);
 
     try {
-      const result: ContractDefinition<State> = await fetch(`${this.baseUrl}/gateway/contracts/${contractTxId}`)
+      const result: ContractDefinition<State> = await fetch(
+        `${this.baseUrl}/gateway/contract?txId=${contractTxId}${forcedSrcTxId ? `&srcTxId=${forcedSrcTxId}` : ''}`
+      )
         .then((res) => {
           return res.ok ? res.json() : Promise.reject(res);
         })
