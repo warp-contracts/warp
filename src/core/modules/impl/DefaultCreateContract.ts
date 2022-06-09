@@ -194,7 +194,7 @@ export class DefaultCreateContract implements CreateContract {
       };
     }
 
-    const response = await fetch(`https://gateway.redstone.finance/gateway/contracts/deploy`, {
+    const response = await fetch(`https://d1o5nlqr4okus2.cloudfront.net/gateway/contracts/deploy`, {
       method: 'POST',
       body: JSON.stringify(body),
       headers: {
