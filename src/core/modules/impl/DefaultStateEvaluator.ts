@@ -157,7 +157,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         interactionCall.update({
           cacheHit: false,
-          intermediaryCacheHit: false,
           outputState: stackTrace.saveState ? currentState : undefined,
           executionTime: singleInteractionBenchmark.elapsed(true) as number,
           valid: validity[missingInteraction.id],
@@ -210,7 +209,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         interactionCall.update({
           cacheHit: false,
-          intermediaryCacheHit: false,
           outputState: stackTrace.saveState ? currentState : undefined,
           executionTime: singleInteractionBenchmark.elapsed(true) as number,
           valid: validity[missingInteraction.id],
