@@ -36,7 +36,7 @@ const chunkedVm: string[][][] = [...chunks(testCasesVm, 10)];
 
 const originalConsoleLog = console.log;
 
-describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
+fdescribe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
   // note: concurrent doesn't seem to be working here, duh...
   // will probably need to manually split all the test cases to separate test files
   it.concurrent.each(contracts)(
