@@ -8,6 +8,8 @@ export class LevelDbCache<V = any> implements SortKeySwCache<V> {
   private db: Level;
   private maxStoredTransactions: number;
 
+  private entriesLength: { [contractTxId: string]: number } = {};
+
   constructor(cacheOptions: CacheOptions) {
     let dbLocation = cacheOptions.dbLocation;
     this.logger.info(`Using location ${dbLocation}`);
@@ -21,12 +23,7 @@ export class LevelDbCache<V = any> implements SortKeySwCache<V> {
     }
 
     this.db = new Level<string, any>(dbLocation, { valueEncoding: 'json' });
-    this.maxStoredTransactions = cacheOptions.maxStoredTransactions;
-  }
-
-  async contains(contractTxId: string): Promise<boolean> {
-    // const contractCache = this.db.sublevel<string, any>(contractTxId, { valueEncoding: 'json' });
-    return true;
+    this.maxStoredTransactions = cacheOptions.maxStoredTransactions || 10;
   }
 
   async get(contractTxId: string, sortKey: string, returnDeepCopy?: boolean): Promise<SortKeyCacheResult<V> | null> {
@@ -76,6 +73,22 @@ export class LevelDbCache<V = any> implements SortKeySwCache<V> {
 
   async put(stateCacheKey: StateCacheKey, value: V): Promise<void> {
     const contractCache = this.db.sublevel<string, any>(stateCacheKey.contractTxId, { valueEncoding: 'json' });
+    let entries = this.entriesLength[stateCacheKey.contractTxId];
+
+    if (entries == undefined) {
+      const allEntries = await contractCache.iterator().all();
+      entries = this.entriesLength[stateCacheKey.contractTxId] = allEntries.length;
+    }
+    if (entries >= this.maxStoredTransactions * 2) {
+      await contractCache.clear({ limit: this.maxStoredTransactions });
+      entries = this.entriesLength[stateCacheKey.contractTxId] = entries - this.maxStoredTransactions;
+    }
+
     await contractCache.put(stateCacheKey.sortKey, value);
+    this.entriesLength[stateCacheKey.contractTxId] = entries + 1;
+  }
+
+  close(): Promise<void> {
+    return this.db.close();
   }
 }
