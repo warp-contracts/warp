@@ -70,7 +70,6 @@ export class InteractionInput {
 export class InteractionOutput {
   constructor(
     public readonly cacheHit: boolean,
-    public readonly intermediaryCacheHit: boolean,
     public readonly outputState: any,
     public readonly executionTime: number,
     public readonly valid: boolean,

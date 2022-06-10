@@ -16,10 +16,7 @@ export interface SortKeySwCache<V> {
    */
   put(stateCacheKey: StateCacheKey, value: V): Promise<void>;
 
-  /**
-   * checks whether cache has any value stored for given cache key
-   */
-  contains(contractTxId: string): Promise<boolean>;
+  close(): Promise<void>;
 }
 
 export class StateCacheKey {

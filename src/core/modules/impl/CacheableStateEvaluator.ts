@@ -111,8 +111,8 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     nthInteraction?: number
   ): Promise<void> {
     if (
-      executionContext.evaluationOptions.updateCacheForEachInteraction /*||
-      executionContext.evaluationOptions.internalWrites*/ /*||
+      executionContext.evaluationOptions.updateCacheForEachInteraction ||
+      executionContext.evaluationOptions.internalWrites /*||
       (nthInteraction || 1) % 100 == 0*/
     ) {
       await this.putInCache(executionContext.contractDefinition.txId, transaction, state);

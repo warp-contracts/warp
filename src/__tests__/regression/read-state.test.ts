@@ -24,8 +24,10 @@ const arweave = Arweave.init({
 
 LoggerFactory.INST.logLevel('fatal');
 LoggerFactory.INST.logLevel('info', 'HandlerBasedContract');
+LoggerFactory.INST.logLevel('info', 'HandlerBasedContract');
 LoggerFactory.INST.logLevel('fatal', 'DefaultStateEvaluator');
 LoggerFactory.INST.logLevel('fatal', 'CacheableStateEvaluator');
+LoggerFactory.INST.logLevel('fatal', 'LevelDbCache');
 
 const testCases: string[] = JSON.parse(fs.readFileSync(path.join(__dirname, 'test-cases/read-state.json'), 'utf-8'));
 const testCasesGw: string[] = JSON.parse(fs.readFileSync(path.join(__dirname, 'test-cases/gateways.json'), 'utf-8'));
@@ -39,7 +41,7 @@ const chunkedVm: string[][][] = [...chunks(testCasesVm, 10)];
 
 const originalConsoleLog = console.log;
 
-describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
+fdescribe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
   // note: concurrent doesn't seem to be working here, duh...
   // will probably need to manually split all the test cases to separate test files
 
