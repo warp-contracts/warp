@@ -36,7 +36,9 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
   ): Promise<EvalStateResult<State>> {
     const cachedState = executionContext.cachedState;
     if (cachedState && cachedState.sortKey == executionContext.requestedSortKey) {
-      this.cLogger.info(`Exact cache hit for sortKey ${cachedState.sortKey}`);
+      this.cLogger.info(
+        `Exact cache hit for sortKey ${executionContext?.contractDefinition?.txId}:${cachedState.sortKey}`
+      );
       executionContext.handler?.initState(cachedState.cachedValue.state);
       return cachedState.cachedValue;
     }
@@ -58,7 +60,8 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
           this.cLogger.debug('Inf. Loop fix - removing interaction', {
             height: missingInteractions[index].block.height,
             contractTxId: entry.contractTxId,
-            interactionTxId: entry.interactionTxId
+            interactionTxId: entry.interactionTxId,
+            sortKey: missingInteractions[index].sortKey
           });
           missingInteractions.splice(index);
         }
@@ -66,7 +69,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     }
 
     if (missingInteractions.length == 0) {
-      this.cLogger.info(`No missing interactions`);
+      this.cLogger.info(`No missing interactions ${contractTxId}`);
       if (cachedState) {
         executionContext.handler?.initState(cachedState.cachedValue.state);
         return cachedState.cachedValue;
@@ -97,7 +100,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     state: EvalStateResult<State>
   ): Promise<void> {
     const contractTxId = executionContext.contractDefinition.txId;
-    this.cLogger.debug(`onStateEvaluated: cache update for contract ${contractTxId} [${transaction.block.height}]`);
+    this.cLogger.debug(`onStateEvaluated: cache update for contract ${contractTxId} [${transaction.sortKey}]`);
 
     // this will be problematic if we decide to cache only "onStateEvaluated" and containsInteractionsFromSequencer = true
     // as a workaround, we're now caching every 100 interactions
@@ -115,6 +118,9 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       executionContext.evaluationOptions.internalWrites /*||
       (nthInteraction || 1) % 100 == 0*/
     ) {
+      this.cLogger.debug(
+        `onStateUpdate: cache update for contract ${executionContext.contractDefinition.txId} [${transaction.sortKey}]`
+      );
       await this.putInCache(executionContext.contractDefinition.txId, transaction, state);
     }
   }
@@ -129,7 +135,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
         EvalStateResult<State>
       >;
       if (stateCache) {
-        this.cLogger.debug('Latest available state at', stateCache.sortKey);
+        this.cLogger.debug(`Latest available state at ${contractTxId}: ${stateCache.sortKey}`);
       }
       return stateCache;
     } else {
@@ -143,9 +149,10 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     state: EvalStateResult<State>
   ): Promise<void> {
     this.cLogger.debug('Internal write state update:', {
-      height: transaction.block.height,
+      sortKey: transaction.sortKey,
+      dry: transaction.dry,
       contractTxId,
-      state
+      state: state.state
     });
     await this.putInCache(contractTxId, transaction, state);
   }
@@ -184,6 +191,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       contractTxId,
       transaction: transaction.id,
       sortKey: transaction.sortKey,
+      dry: transaction.dry,
       state: stateToCache.state
     });
 
