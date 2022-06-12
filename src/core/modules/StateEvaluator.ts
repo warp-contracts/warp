@@ -66,6 +66,8 @@ export interface StateEvaluator {
    * allows to syncState with an external state source (like Warp Distributed Execution Network)
    */
   syncState(contractTxId: string, sortKey: string, state: any, validity: any): Promise<void>;
+
+  dumpCache(): Promise<any>;
 }
 
 export class EvalStateResult<State> {
