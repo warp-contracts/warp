@@ -86,7 +86,7 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
 
   waitForConfirmation = false;
 
-  updateCacheForEachInteraction = true;
+  updateCacheForEachInteraction = false;
 
   internalWrites = false;
 

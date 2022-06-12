@@ -564,7 +564,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     interactionCall.update({
       cacheHit: false,
-      intermediaryCacheHit: false,
       outputState: this._evaluationOptions.stackTrace.saveState ? result.state : undefined,
       executionTime: benchmark.elapsed(true) as number,
       valid: result.type === 'ok',
