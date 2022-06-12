@@ -616,4 +616,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     return this;
   }
+
+  async dumpCache(): Promise<any> {
+    const { stateEvaluator } = this.smartweave;
+    return await stateEvaluator.dumpCache();
+  }
 }

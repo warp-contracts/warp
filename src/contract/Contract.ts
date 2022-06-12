@@ -189,4 +189,6 @@ export interface Contract<State = unknown> {
    * @param nodeAddress - distributed execution network node address
    */
   syncState(nodeAddress: string): Promise<Contract>;
+
+  dumpCache(): Promise<any>;
 }

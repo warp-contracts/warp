@@ -74,8 +74,7 @@ describe('Testing internal writes', () => {
       protocol: 'http'
     });
 
-    LoggerFactory.INST.logLevel('fatal');
-    LoggerFactory.INST.logLevel('debug', 'DefaultStateEvaluator');
+    LoggerFactory.INST.logLevel('error');
     // LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
   });
 
@@ -230,7 +229,7 @@ describe('Testing internal writes', () => {
     });
   });
 
-  fdescribe('with read state at the end', () => {
+  describe('with read state at the end', () => {
     const cacheDir = `./cache/iw/ce2/warp/`;
 
     beforeAll(async () => {
@@ -243,57 +242,59 @@ describe('Testing internal writes', () => {
 
     it('should properly write a combination of direct and internal interactions', async () => {
       await calleeContract.writeInteraction({ function: 'add' });
+      await calleeContract.writeInteraction({ function: 'add' });
+      await mineBlock(arweave);
+
+      await calleeContract.writeInteraction({ function: 'add' });
       await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
       await mineBlock(arweave);
 
-      await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
-      await mineBlock(arweave);
+      /*expect((await calleeContract.readState()).state.counter).toEqual(568);
+      expect((await calleeContractVM.readState()).state.counter).toEqual(568)*/
 
-      expect((await calleeContract.readState()).state.counter).toEqual(21);
-
-      /*await calleeContract.writeInteraction({ function: 'add' });
+      await calleeContract.writeInteraction({ function: 'add' });
       await mineBlock(arweave);
 
       await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
       await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
       await mineBlock(arweave);
       await calleeContract.writeInteraction({ function: 'add' });
-      await mineBlock(arweave);*/
+      await mineBlock(arweave);
 
       /*expect((await calleeContract.readState()).state.counter).toEqual(590);
       expect((await calleeContractVM.readState()).state.counter).toEqual(590)*/
 
-      /* await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
-       await mineBlock(arweave);
-       await calleeContract.writeInteraction({ function: 'add' });
-       await mineBlock(arweave);
+      await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
+      await mineBlock(arweave);
+      await calleeContract.writeInteraction({ function: 'add' });
+      await mineBlock(arweave);
 
-       await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
-       await mineBlock(arweave);
-       await calleeContract.writeInteraction({ function: 'add' });
-       await mineBlock(arweave);
+      await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
+      await mineBlock(arweave);
+      await calleeContract.writeInteraction({ function: 'add' });
+      await mineBlock(arweave);
 
-       await calleeContract.writeInteraction({ function: 'add' });
-       await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
-       await mineBlock(arweave);
+      await calleeContract.writeInteraction({ function: 'add' });
+      await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
+      await mineBlock(arweave);
 
-       /!*expect((await calleeContract.readState()).state.counter).toEqual(623);
-       expect((await calleeContractVM.readState()).state.counter).toEqual(623)*!/
+      /*expect((await calleeContract.readState()).state.counter).toEqual(623);
+      expect((await calleeContractVM.readState()).state.counter).toEqual(623)*/
 
-       await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
-       await mineBlock(arweave);
-       await calleeContract.writeInteraction({ function: 'add' });
-       await mineBlock(arweave);
-       expect((await calleeContract.readState()).state.counter).toEqual(634);*/
-      //expect((await calleeContractVM.readState()).state.counter).toEqual(634);
-    });
-
-    xit('should properly evaluate state again', async () => {
+      await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
+      await mineBlock(arweave);
+      await calleeContract.writeInteraction({ function: 'add' });
+      await mineBlock(arweave);
       expect((await calleeContract.readState()).state.counter).toEqual(634);
       expect((await calleeContractVM.readState()).state.counter).toEqual(634);
     });
 
-    xit('should properly evaluate state again with a new client', async () => {
+    it('should properly evaluate state again', async () => {
+      expect((await calleeContract.readState()).state.counter).toEqual(634);
+      expect((await calleeContractVM.readState()).state.counter).toEqual(634);
+    });
+
+    it('should properly evaluate state again with a new client', async () => {
       const cacheDir = `./cache/iw/ce3/warp/`;
       const cacheDirVm = `./cache/iw/ce4/warp/`;
 
