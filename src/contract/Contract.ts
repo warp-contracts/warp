@@ -216,4 +216,6 @@ export interface Contract<State = unknown> extends Source {
    * @param newSrcTxId - result of the {@link save} method call.
    */
   evolve(newSrcTxId: string, useBundler?: boolean): Promise<string | null>;
+
+  dumpCache(): Promise<any>;
 }

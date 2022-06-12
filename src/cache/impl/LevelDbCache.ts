@@ -91,4 +91,9 @@ export class LevelDbCache<V = any> implements SortKeySwCache<V> {
   close(): Promise<void> {
     return this.db.close();
   }
+
+  async dump(): Promise<any> {
+    const result = await this.db.iterator().all();
+    return result;
+  }
 }
