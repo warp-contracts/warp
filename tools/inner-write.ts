@@ -30,6 +30,8 @@ async function main() {
   LoggerFactory.use(new TsLogFactory());
   LoggerFactory.INST.logLevel('fatal');
   LoggerFactory.INST.logLevel('debug', 'inner-write');
+  LoggerFactory.INST.logLevel('trace', 'LevelDbCache');
+  LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
   const logger = LoggerFactory.INST.create('inner-write');
 
   const arlocal = new ArLocal(1985, false);
@@ -124,8 +126,8 @@ async function main() {
   }
 
   function showCache(dump: any) {
-    return dump.filter(i => i[0].includes(calleeTxId))
-      .map(i => `${i[0]}: ${i[1].state.counter}`);
+    return dump/*.filter(i => i[0].includes(calleeTxId))*/
+      .map(i => i[0].includes(calleeTxId) ? `${i[0]}: ${i[1].state.counter}` : `${i[0]}: ${i[1].state.ticker}`);
   }
 }
 
