@@ -81,4 +81,8 @@ export class LmdbCache<V = any> implements SortKeySwCache<V> {
     }
     return this.openedDbs[contractTxId];
   }
+
+  dump(): Promise<any> {
+    return Promise.resolve(undefined);
+  }
 }

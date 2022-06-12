@@ -194,4 +194,8 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     const stateToCache = new EvalStateResult(state, validity, {});
     await this.cache.put(new StateCacheKey(contractTxId, sortKey), stateToCache);
   }
+
+  async dumpCache(): Promise<any> {
+    return await this.cache.dump();
+  }
 }

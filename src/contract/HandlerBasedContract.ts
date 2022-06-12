@@ -638,4 +638,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     return srcTx.id;
   }
+
+  async dumpCache(): Promise<any> {
+    const { stateEvaluator } = this.warp;
+    return await stateEvaluator.dumpCache();
+  }
 }

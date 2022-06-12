@@ -17,6 +17,8 @@ export interface SortKeySwCache<V> {
   put(stateCacheKey: StateCacheKey, value: V): Promise<void>;
 
   close(): Promise<void>;
+
+  dump(): Promise<any>;
 }
 
 export class StateCacheKey {
