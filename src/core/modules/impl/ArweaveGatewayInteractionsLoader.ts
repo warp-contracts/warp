@@ -92,9 +92,10 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
     let toBlockHeight = this.sorter.extractBlockHeight(toSortKey);
 
     // TODO: temp workaround for https://github.com/textury/arlocal/issues/107
-    if (toBlockHeight == null && this.isLocalEnv()) {
+    /*if (toBlockHeight == null && this.isLocalEnv()) {
+      this.logger.debug('Loading network info for local env');
       toBlockHeight = (await this.arweave.network.getInfo()).height;
-    }
+    }*/
 
     const mainTransactionsVariables: GqlReqVariables = {
       tags: [
@@ -136,6 +137,8 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
       this.logger.debug('Inner writes interactions length:', innerWritesInteractions.length);
       interactions = interactions.concat(innerWritesInteractions);
     }
+
+    interactions = interactions.filter((i) => i.node.block && i.node.block.id && i.node.block.height);
 
     /*console.log(await this.arweave.network.getInfo());
     console.log(JSON.stringify(interactions));

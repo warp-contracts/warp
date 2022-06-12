@@ -334,4 +334,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
   ): Promise<void>;
 
   abstract syncState(contractTxId: string, sortKey: string, state: any, validity: any): Promise<void>;
+
+  abstract dumpCache(): Promise<any>;
 }
