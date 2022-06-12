@@ -109,8 +109,9 @@ export class DefaultCreateContract implements CreateContract {
     // note: in case of useBundler = true, we're posting both
     // src tx and contract tx in one request.
     let responseOk = true;
+    let response;
     if (!useBundler) {
-      const response = await this.arweave.transactions.post(srcTx);
+      response = await this.arweave.transactions.post(srcTx);
       responseOk = response.status === 200 || response.status === 208;
     }
 
@@ -127,7 +128,7 @@ export class DefaultCreateContract implements CreateContract {
         srcTx
       );
     } else {
-      throw new Error(`Unable to write Contract Source`);
+      throw new Error(`Unable to write Contract Source: ${JSON.stringify(response)}`);
     }
   }
 

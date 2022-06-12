@@ -1,11 +1,18 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import { Contract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory } from '../src';
+import {
+  Contract,
+  defaultCacheOptions,
+  LoggerFactory,
+  SmartWeave,
+  SmartWeaveFactory
+} from '../src';
 import { TsLogFactory } from '../src/logging/node/TsLogFactory';
 import fs from 'fs';
 import path from 'path';
 import ArLocal from 'arlocal';
 import { JWKInterface } from 'arweave/node/lib/wallet';
+import {mineBlock} from "../src/__tests__/integration/_helpers";
 
 async function main() {
   let callingContractSrc: string;
@@ -22,11 +29,6 @@ async function main() {
 
   LoggerFactory.use(new TsLogFactory());
   LoggerFactory.INST.logLevel('debug');
-  //LoggerFactory.INST.logLevel('debug', 'HandlerBasedContract');
-  /*LoggerFactory.INST.logLevel('debug', 'DefaultStateEvaluator');
-  LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
-  LoggerFactory.INST.logLevel('debug', 'ContractHandler');
-  LoggerFactory.INST.logLevel('debug', 'MemBlockHeightSwCache');*/
   const logger = LoggerFactory.INST.create('inner-write');
 
   const arlocal = new ArLocal(1985, false);
@@ -37,11 +39,16 @@ async function main() {
     protocol: 'http'
   });
 
+  const cacheDir = './cache/tools/'
   try {
-    smartweave = SmartWeaveNodeFactory.memCached(arweave);
+    smartweave = SmartWeaveFactory.arweaveGw(arweave, {
+      ...defaultCacheOptions,
+      dbLocation: cacheDir
+    });
 
     wallet = await arweave.wallets.generate();
     walletAddress = await arweave.wallets.jwkToAddress(wallet);
+    await arweave.api.get(`/mint/${walletAddress}/1000000000000000`);
 
     callingContractSrc = fs.readFileSync(
       path.join(__dirname, '../src/__tests__/integration/', 'data/writing-contract.js'),
@@ -55,7 +62,7 @@ async function main() {
     // deploying contract using the new SDK.
     calleeTxId = await smartweave.createContract.deploy({
       wallet,
-      initState: JSON.stringify({ counter: 100 }),
+      initState: JSON.stringify({ counter: 0 }),
       src: calleeContractSrc
     });
 
@@ -77,39 +84,20 @@ async function main() {
 
     await calleeContract.writeInteraction({ function: 'add' });
     await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
-    await mine(); // 113
-    /*logger.info('==== READ STATE 1 ====');
-    const result1 = await calleeContract.readState();
-    logger.info('Read state 1', result1.state);*/
+    await mineBlock(arweave);
 
     await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
-    await calleeContract.writeInteraction({ function: 'add' });
-    await mine(); //124
+    await mineBlock(arweave);
 
-    logger.info('==== READ STATE 2 ====');
+    logger.info('==== READ STATE  ====');
     const result2 = await calleeContract.readState();
-    logger.error('Read state 2', result2.state);
+    logger.info('Result (should be 21):', result2.state.counter);
 
-    /*await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
-    await mine(); // 123
 
-    logger.info('==== READ STATE 2 ====');
-    const result2 = await calleeContract.readState();
-    logger.info('Read state 2', result2.state);
-
-    await calleeContract.writeInteraction({ function: 'add' });
-    await mine(); // 124
-
-    await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
-    await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
-    await calleeContract.writeInteraction({ function: 'add' });
-    await mine(); // 145
-
-    const result3 = await calleeContract.readState();
-    logger.info('Read state 3', result3.state);*/
 
 
   } finally {
+    fs.rmSync(cacheDir, { recursive: true, force: true });
     await arlocal.stop();
   }
 
