@@ -6,7 +6,8 @@ import {
   EvaluationOptions,
   GQLNodeInterface,
   InteractionResult,
-  Tags
+  Tags,
+  SaveSource
 } from '@smartweave';
 import { NetworkInfoInterface } from 'arweave/node/network';
 import Transaction from 'arweave/node/lib/transaction';
@@ -17,10 +18,26 @@ export type BenchmarkStats = { gatewayCommunication: number; stateEvaluation: nu
 export type SigningFunction = (tx: Transaction) => Promise<void>;
 
 /**
+ * Interface describing state for all Evolve-compatible contracts.
+ */
+export interface EvolveState {
+  settings: any[] | unknown | null;
+  /**
+   * whether contract is allowed to evolve. seems to default to true..
+   */
+  canEvolve: boolean;
+
+  /**
+   * the transaction id of the Arweave transaction with the updated source code.
+   */
+  evolve: string;
+}
+
+/**
  * A base interface to be implemented by SmartWeave Contracts clients
  * - contains "low-level" methods that allow to interact with any contract
  */
-export interface Contract<State = unknown> {
+export interface Contract<State = unknown> extends SaveSource {
   /**
    * Returns the Arweave transaction id of this contract.
    */
@@ -217,4 +234,14 @@ export interface Contract<State = unknown> {
    * @param nodeAddress - distributed execution network node address
    */
   syncState(nodeAddress: string): Promise<Contract>;
+
+  /**
+   * Evolve is a feature that allows to change contract's source
+   * code, without having to deploy a new contract.
+   * This method effectively evolves the contract to the source.
+   * This requires the {@link saveSource} to be called first
+   * and its transaction to be confirmed by the network.
+   * @param newSrcTxId - result of the {@link saveSource} method call.
+   */
+  evolve(newSrcTxId: string): Promise<string | null>;
 }
