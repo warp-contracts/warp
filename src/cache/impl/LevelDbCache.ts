@@ -79,11 +79,11 @@ export class LevelDbCache<V = any> implements SortKeySwCache<V> {
     const alreadyCached = await this.get(stateCacheKey.contractTxId, stateCacheKey.sortKey);
     if (alreadyCached != null) {
       if (stringify((alreadyCached.cachedValue as any).state) != stringify((value as any).state)) {
-        throw new Error(
+        /*throw new Error(
           `Value ${stringify((value as any).state)} for sortKey ${stateCacheKey.contractTxId}:${
             stateCacheKey.sortKey
           } already cached: ${stringify((alreadyCached.cachedValue as any).state)}`
-        );
+        );*/
       }
     }
 
