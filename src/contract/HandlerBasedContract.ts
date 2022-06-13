@@ -246,17 +246,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
       throw new BundleInteractionError('NoWalletConnected', "Wallet not connected. Use 'connect' method first.");
     }
 
-    let interactionTx: Transaction;
-    try {
-      interactionTx = await this.createInteraction(input, tags, emptyTransfer, strict);
-    } catch (e) {
-      if (e instanceof InteractionsLoaderError) {
-        throw new BundleInteractionError('BadGatewayResponse', `${e}`, e);
-      } else {
-        throw new BundleInteractionError('InvalidInteraction', `${e}`, e);
-      }
-    }
-
     options = {
       tags: [],
       strict: false,
@@ -264,14 +253,23 @@ export class HandlerBasedContract<State> implements Contract<State> {
       ...options
     };
 
-    const interactionTx = await this.createInteraction(
-      input,
-      options.tags,
-      emptyTransfer,
-      options.strict,
-      true,
-      options.vrf
-    );
+    let interactionTx: Transaction;
+    try {
+      interactionTx = await this.createInteraction(
+        input,
+        options.tags,
+        emptyTransfer,
+        options.strict,
+        true,
+        options.vrf
+      );
+    } catch (e) {
+      if (e instanceof InteractionsLoaderError) {
+        throw new BundleInteractionError('BadGatewayResponse', `${e}`, e);
+      } else {
+        throw new BundleInteractionError('InvalidInteraction', `${e}`, e);
+      }
+    }
 
     const response = await fetch(`${this._evaluationOptions.bundlerUrl}gateway/sequencer/register`, {
       method: 'POST',
