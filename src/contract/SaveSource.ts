@@ -9,7 +9,7 @@ export interface SaveSource {
    */
   saveSource(
     contractSource: SaveSourceData,
-    signer: ArWallet | SigningFunction,
+    signer?: ArWallet | SigningFunction,
     useBundler?: boolean
   ): Promise<string | null>;
 }
