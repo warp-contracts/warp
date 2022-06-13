@@ -243,5 +243,5 @@ export interface Contract<State = unknown> extends Source {
    * and its transaction to be confirmed by the network.
    * @param newSrcTxId - result of the {@link save} method call.
    */
-  evolve(newSrcTxId: string): Promise<string | null>;
+  evolve(newSrcTxId: string, useBundler?: boolean): Promise<string | null>;
 }

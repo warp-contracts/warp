@@ -767,8 +767,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return this;
   }
 
-  async evolve(newSrcTxId: string): Promise<string | null> {
-    return await this.writeInteraction<any>({ function: 'evolve', value: newSrcTxId });
+  async evolve(newSrcTxId: string, useBundler = false): Promise<string | null> {
+    if (useBundler) {
+      return await this.bundleInteraction<any>({ function: 'evolve', value: newSrcTxId });
+    } else {
+      return await this.writeInteraction<any>({ function: 'evolve', value: newSrcTxId });
+    }
   }
 
   async save(sourceData: SourceData): Promise<any> {
