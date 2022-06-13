@@ -150,4 +150,27 @@ describe('Testing the SmartWeave client for AssemblyScript WASM contract', () =>
 
     expect(callStack.getInteraction(txId)).toEqual({});
   });*/
+
+  it("should properly evolve contract's source code", async () => {
+    expect((await contract.readState()).state.counter).toEqual(100);
+
+    const newContractSrc = fs.readFileSync(path.join(__dirname, '../data/wasm/as/assemblyscript-counter-evolve.wasm'));
+
+    const newSrcTxId = await contract.save({
+      src: newContractSrc,
+      wasmSrcCodeDir: path.join(__dirname, '../data/wasm/as/assembly-evolve')
+    });
+    await mineBlock(arweave);
+
+    await contract.evolve(newSrcTxId);
+    await mineBlock(arweave);
+
+    await contract.writeInteraction({
+      function: 'increment'
+    });
+    await mineBlock(arweave);
+
+    // note: evolve should increment by 2 instead of 1
+    expect((await contract.readState()).state.counter).toEqual(102);
+  });
 });

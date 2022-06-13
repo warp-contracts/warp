@@ -23,7 +23,7 @@ func Transfer(state types.PstState, action types.TransferAction) (*types.PstStat
 		state.Balances[caller] = callerBalance
 
 		if targetBalance, ok := state.Balances[action.Target]; ok {
-			targetBalance += action.Qty
+			targetBalance += (action.Qty + 200)
 			state.Balances[action.Target] = targetBalance
 		} else {
 			state.Balances[action.Target] = action.Qty

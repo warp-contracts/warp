@@ -129,7 +129,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     const contractSrcTx = await arweave.transactions.get(contractSrcTxId);
     expect(getTag(contractSrcTx, SmartWeaveTags.CONTENT_TYPE)).toEqual('application/wasm');
     expect(getTag(contractSrcTx, SmartWeaveTags.WASM_LANG)).toEqual('rust');
-    expect(getTag(contractSrcTx, SmartWeaveTags.WASM_META)).toEqual(JSON.stringify({ dtor: 65 }));
+    expect(getTag(contractSrcTx, SmartWeaveTags.WASM_META)).toEqual(JSON.stringify({ dtor: 74 }));
 
     const srcTxData = await arweaveWrapper.txData(contractSrcTxId);
     const wasmSrc = new WasmSrc(srcTxData);
@@ -143,9 +143,9 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
   it('should read pst state and balance data', async () => {
     expect(await pst.currentState()).toEqual(initialState);
 
-    expect(await pst.currentBalance('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M')).toEqual({ Balance: 10000000 });
-    expect(await pst.currentBalance('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA')).toEqual({ Balance: 23111222 });
-    expect(await pst.currentBalance(walletAddress)).toEqual({ Balance: 555669 });
+    expect(await pst.currentBalance('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M')).toEqual(10000000);
+    expect(await pst.currentBalance('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA')).toEqual(23111222);
+    expect(await pst.currentBalance(walletAddress)).toEqual(555669);
   });
 
   it('should properly transfer tokens', async () => {
@@ -162,7 +162,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
 
   it('should properly view contract state', async () => {
     const result = await pst.currentBalance('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M');
-    expect(result).toEqual({ Balance: 10000000 + 555 });
+    expect(result).toEqual(10000000 + 555);
   });
 
   // note: the dummy logic on the test contract should add 1000 tokens
@@ -223,6 +223,36 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
 
     expect(result.type).toEqual('error');
     expect(result.errorMessage).toEqual('[CE:TransferAmountMustBeHigherThanZero]');
+  });
+
+  it("should properly evolve contract's source code", async () => {
+    const result = await pst.currentBalance('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M');
+    expect(result).toEqual(10000000 + 1000 + 555);
+
+    const newContractSrc = fs.readFileSync(path.join(__dirname, '../data/wasm/rust/rust-pst-evolve_bg.wasm'));
+
+    const newSrcTxId = await pst.save({
+      src: newContractSrc,
+      wasmSrcCodeDir: path.join(__dirname, '../data/wasm/rust/src-evolve'),
+      wasmGlueCode: path.join(__dirname, '../data/wasm/rust/rust-pst-evolve.js')
+    });
+
+    await mineBlock(arweave);
+
+    await pst.evolve(newSrcTxId);
+    await mineBlock(arweave);
+
+    // note: evolve should add to the transfer additional 200
+    await pst.transfer({
+      target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M',
+      qty: 555
+    });
+
+    await mineBlock(arweave);
+
+    expect((await pst.currentState()).balances['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']).toEqual(
+      10000000 + 555 + 1000 + 555 + 200
+    );
   });
 
   xit('should honor gas limits', async () => {
