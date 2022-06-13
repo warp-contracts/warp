@@ -30,8 +30,13 @@ async function main() {
   LoggerFactory.use(new TsLogFactory());
   LoggerFactory.INST.logLevel('fatal');
   LoggerFactory.INST.logLevel('debug', 'inner-write');
+  /*
   LoggerFactory.INST.logLevel('trace', 'LevelDbCache');
   LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
+  LoggerFactory.INST.logLevel('debug', 'HandlerBasedContract');
+  LoggerFactory.INST.logLevel('debug', 'DefaultStateEvaluator');
+  LoggerFactory.INST.logLevel('debug', 'ContractHandlerApi');
+  */
   const logger = LoggerFactory.INST.create('inner-write');
 
   const arlocal = new ArLocal(1985, false);
@@ -87,34 +92,37 @@ async function main() {
 
 
     await calleeContract.writeInteraction({ function: 'add' });
-    logger.debug("1", showCache(await calleeContract.dumpCache()));
-
+    logger.debug("Cache dump 1", showCache(await calleeContract.dumpCache()));
     await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
-    logger.debug("2", showCache(await calleeContract.dumpCache()));
+    logger.debug("Cache dump 2", showCache(await calleeContract.dumpCache()));
     await mineBlock(arweave);
 
     await calleeContract.writeInteraction({ function: 'add' });
-    logger.debug("3", showCache(await calleeContract.dumpCache()));
+    logger.debug("Cache dump 3", showCache(await calleeContract.dumpCache()));
     await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
-    logger.debug("4", showCache(await calleeContract.dumpCache()));
+    logger.debug("Cache dump 4", showCache(await calleeContract.dumpCache()));
     await mineBlock(arweave);
 
     await calleeContract.writeInteraction({ function: 'add' });
-    logger.debug("5", showCache(await calleeContract.dumpCache()));
+    logger.debug("Cache dump 5", showCache(await calleeContract.dumpCache()));
     await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
-    logger.debug("6", showCache(await calleeContract.dumpCache()));
+    logger.debug("Cache dump 6", showCache(await calleeContract.dumpCache()));
     await mineBlock(arweave);
 
     await calleeContract.writeInteraction({ function: 'add' });
-    logger.debug("7", showCache(await calleeContract.dumpCache()));
+    logger.debug("Cache dump 7", showCache(await calleeContract.dumpCache()));
     await callingContract.writeInteraction({ function: 'writeContract', contractId: calleeTxId, amount: 10 });
-    logger.debug("8", showCache(await calleeContract.dumpCache()));
+    logger.debug("Cache dump 8", showCache(await calleeContract.dumpCache()));
     await mineBlock(arweave);
 
     const result2 = await calleeContract.readState();
-    logger.debug("9", showCache(await calleeContract.dumpCache()));
-
+    logger.debug("Cache dump 9", showCache(await calleeContract.dumpCache()));
     logger.info('Result (should be 44):', result2.state.counter);
+
+    /*const result = await callingContract.readState();
+    logger.debug("4", showCache(await callingContract.dumpCache()));
+
+    logger.info('Result (should be 21):', result.state);*/
 
   } finally {
     fs.rmSync(cacheDir, { recursive: true, force: true });

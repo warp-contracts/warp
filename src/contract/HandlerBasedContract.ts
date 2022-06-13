@@ -643,4 +643,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const { stateEvaluator } = this.warp;
     return await stateEvaluator.dumpCache();
   }
+
+  get callingInteraction(): GQLNodeInterface | null {
+    return this._callingInteraction;
+  }
 }
