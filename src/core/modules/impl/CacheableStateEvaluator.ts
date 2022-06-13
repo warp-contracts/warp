@@ -114,12 +114,17 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     nthInteraction?: number
   ): Promise<void> {
     if (
-      executionContext.evaluationOptions.updateCacheForEachInteraction ||
-      executionContext.evaluationOptions.internalWrites /*||
+      executionContext.evaluationOptions.updateCacheForEachInteraction /*||
+      executionContext.evaluationOptions.internalWrites*/ /*||
       (nthInteraction || 1) % 100 == 0*/
     ) {
       this.cLogger.debug(
-        `onStateUpdate: cache update for contract ${executionContext.contractDefinition.txId} [${transaction.sortKey}]`
+        `onStateUpdate: cache update for contract ${executionContext.contractDefinition.txId} [${transaction.sortKey}]`,
+        {
+          contract: executionContext.contractDefinition.txId,
+          state: state.state,
+          sortKey: transaction.sortKey
+        }
       );
       await this.putInCache(executionContext.contractDefinition.txId, transaction, state);
     }
@@ -205,5 +210,12 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
 
   async dumpCache(): Promise<any> {
     return await this.cache.dump();
+  }
+
+  async internalWriteState<State>(
+    contractTxId: string,
+    sortKey: string
+  ): Promise<SortKeyCacheResult<EvalStateResult<State>> | null> {
+    return (await this.cache.get(contractTxId, sortKey)) as SortKeyCacheResult<EvalStateResult<State>>;
   }
 }
