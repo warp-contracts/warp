@@ -44,7 +44,7 @@ describe('Testing the SmartWeave client', () => {
 
     LoggerFactory.INST.logLevel('error');
 
-    smartweave = SmartWeaveNodeFactory.fileCached(arweave, cacheDir);
+    smartweave = SmartWeaveNodeFactory.fileCachedBased(arweave, cacheDir).useArweaveGateway().build();
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -108,11 +108,15 @@ describe('Testing the SmartWeave client', () => {
   });
 
   it('should properly read state with a fresh client', async () => {
-    const contract2 = SmartWeaveNodeFactory.fileCached(arweave, cacheDir)
+    const contract2 = SmartWeaveNodeFactory.fileCachedBased(arweave, cacheDir)
+      .useArweaveGateway()
+      .build()
       .contract<ExampleContractState>(contract.txId())
       .connect(wallet);
 
-    const contract2VM = SmartWeaveNodeFactory.fileCached(arweave, cacheDir)
+    const contract2VM = SmartWeaveNodeFactory.fileCachedBased(arweave, cacheDir)
+      .useArweaveGateway()
+      .build()
       .contract<ExampleContractState>(contract.txId())
       .connect(wallet);
     expect((await contract2.readState()).state.counter).toEqual(559);
@@ -127,10 +131,14 @@ describe('Testing the SmartWeave client', () => {
   });
 
   it('should properly read state with another fresh client', async () => {
-    const contract3 = SmartWeaveNodeFactory.fileCached(arweave, cacheDir)
+    const contract3 = SmartWeaveNodeFactory.fileCachedBased(arweave, cacheDir)
+      .useArweaveGateway()
+      .build()
       .contract<ExampleContractState>(contract.txId())
       .connect(wallet);
-    const contract3VM = SmartWeaveNodeFactory.fileCached(arweave, cacheDir)
+    const contract3VM = SmartWeaveNodeFactory.fileCachedBased(arweave, cacheDir)
+      .useArweaveGateway()
+      .build()
       .contract<ExampleContractState>(contract.txId())
       .setEvaluationOptions({
         useVM2: true
@@ -153,10 +161,14 @@ describe('Testing the SmartWeave client', () => {
     await contract.writeInteraction({ function: 'add' });
     await mineBlock(arweave);
 
-    const contract4 = SmartWeaveNodeFactory.fileCached(arweave, cacheDir)
+    const contract4 = SmartWeaveNodeFactory.fileCachedBased(arweave, cacheDir)
+      .useArweaveGateway()
+      .build()
       .contract<ExampleContractState>(contract.txId())
       .connect(wallet);
-    const contract4VM = SmartWeaveNodeFactory.fileCached(arweave, cacheDir)
+    const contract4VM = SmartWeaveNodeFactory.fileCachedBased(arweave, cacheDir)
+      .useArweaveGateway()
+      .build()
       .contract<ExampleContractState>(contract.txId())
       .setEvaluationOptions({
         useVM2: true

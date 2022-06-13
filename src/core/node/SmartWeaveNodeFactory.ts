@@ -2,9 +2,13 @@ import Arweave from 'arweave';
 import {
   ArweaveGatewayInteractionsLoader,
   CacheableStateEvaluator,
+  ConfirmationStatus,
   ContractDefinitionLoader,
   HandlerExecutorFactory,
   LexicographicalInteractionsSorter,
+  R_GW_URL,
+  RedstoneGatewayContractDefinitionLoader,
+  RedstoneGatewayInteractionsLoader,
   SmartWeave,
   SmartWeaveBuilder,
   SmartWeaveWebFactory
@@ -18,6 +22,13 @@ import { KnexStateCache } from '../../cache/impl/KnexStateCache';
  * A {@link SmartWeave} factory that can be safely used only in Node.js env.
  */
 export class SmartWeaveNodeFactory extends SmartWeaveWebFactory {
+  /**
+   * Returns a fully configured, memcached {@link SmartWeave} that is suitable for tests with ArLocal
+   */
+  static forTesting(arweave: Arweave): SmartWeave {
+    return this.memCachedBased(arweave).useArweaveGateway().build();
+  }
+
   /**
    * Returns a fully configured {@link SmartWeave} that is using file-based cache for {@link StateEvaluator} layer
    * and mem cache for the rest.
@@ -41,12 +52,11 @@ export class SmartWeaveNodeFactory extends SmartWeaveWebFactory {
   static fileCachedBased(
     arweave: Arweave,
     cacheBasePath?: string,
-    maxStoredInMemoryBlockHeights = 10
+    maxStoredInMemoryBlockHeights = 10,
+    confirmationStatus: ConfirmationStatus = { notCorrupted: true }
   ): SmartWeaveBuilder {
-    const definitionLoader = new ContractDefinitionLoader(arweave, new MemCache());
-
-    const gatewayInteractionsLoader = new ArweaveGatewayInteractionsLoader(arweave);
-
+    const interactionsLoader = new RedstoneGatewayInteractionsLoader(R_GW_URL, confirmationStatus);
+    const definitionLoader = new RedstoneGatewayContractDefinitionLoader(R_GW_URL, arweave, new MemCache());
     const executorFactory = new CacheableExecutorFactory(arweave, new HandlerExecutorFactory(arweave), new MemCache());
 
     const stateEvaluator = new CacheableStateEvaluator(
@@ -59,7 +69,8 @@ export class SmartWeaveNodeFactory extends SmartWeaveWebFactory {
 
     return SmartWeave.builder(arweave)
       .setDefinitionLoader(definitionLoader)
-      .setCacheableInteractionsLoader(gatewayInteractionsLoader)
+      .setInteractionsLoader(interactionsLoader)
+      .useRedStoneGwInfo()
       .setInteractionsSorter(interactionsSorter)
       .setExecutorFactory(executorFactory)
       .setStateEvaluator(stateEvaluator);
@@ -78,11 +89,11 @@ export class SmartWeaveNodeFactory extends SmartWeaveWebFactory {
   static async knexCachedBased(
     arweave: Arweave,
     dbConnection: Knex,
-    maxStoredInMemoryBlockHeights = 10
+    maxStoredInMemoryBlockHeights = 10,
+    confirmationStatus: ConfirmationStatus = { notCorrupted: true }
   ): Promise<SmartWeaveBuilder> {
-    const definitionLoader = new ContractDefinitionLoader(arweave, new MemCache());
-
-    const gatewayInteractionsLoader = new ArweaveGatewayInteractionsLoader(arweave);
+    const interactionsLoader = new RedstoneGatewayInteractionsLoader(R_GW_URL, confirmationStatus);
+    const definitionLoader = new RedstoneGatewayContractDefinitionLoader(R_GW_URL, arweave, new MemCache());
 
     const executorFactory = new CacheableExecutorFactory(arweave, new HandlerExecutorFactory(arweave), new MemCache());
 
@@ -96,7 +107,8 @@ export class SmartWeaveNodeFactory extends SmartWeaveWebFactory {
 
     return SmartWeave.builder(arweave)
       .setDefinitionLoader(definitionLoader)
-      .setCacheableInteractionsLoader(gatewayInteractionsLoader)
+      .setInteractionsLoader(interactionsLoader)
+      .useRedStoneGwInfo()
       .setInteractionsSorter(interactionsSorter)
       .setExecutorFactory(executorFactory)
       .setStateEvaluator(stateEvaluator);

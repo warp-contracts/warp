@@ -18,10 +18,7 @@ async function main() {
   });
 
   try {
-    const smartweave = SmartWeaveNodeFactory
-      .memCachedBased(arweave)
-      .useRedStoneGateway()
-      .build();
+    const smartweave = SmartWeaveNodeFactory.memCached(arweave);
 
     const jsContractSrc = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.js'), 'utf8');
     const wasmContractSrc = fs.readFileSync(path.join(__dirname, 'data/rust/rust-pst_bg.wasm'));
@@ -57,9 +54,27 @@ async function main() {
       srcTxId: "5wXT-A0iugP9pWEyw-iTbB0plZ_AbmvlNKyBfGS3AUY",
     }, true);*/
 
-    const {state, validity} = await smartweave.contract(contractTxId).readState();
+    const contract = smartweave.contract(contractTxId).connect(wallet);
 
-    //logger.info("Result", state);
+    await contract.bundleInteraction<any>({
+      function: "storeBalance",
+      target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+    });
+
+    await contract.bundleInteraction<any>({
+      function: "storeBalance",
+      target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+    });
+
+    await contract.bundleInteraction<any>({
+      function: "storeBalance",
+      target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+    });
+
+    const {state, validity} = await contract.readState();
+
+    logger.info("Result", state);
+    logger.info("Validity", validity);
 
   } catch (e) {
     logger.error(e)

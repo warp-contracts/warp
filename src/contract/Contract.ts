@@ -156,13 +156,17 @@ export interface Contract<State = unknown> {
   /**
    * Creates a new "interaction" transaction using RedStone Sequencer - this, with combination with
    * RedStone Gateway, gives instant transaction availability and finality guaranteed by Bundlr.
-   *
    * @param input -  new input to the contract that will be assigned with this interactions transaction
-   * @param tags - additional tags that can be attached to the newly created interaction transaction
-   * @param transfer - additional {@link ArTransfer} than can be attached to the interaction transaction
-   * @param strict - transaction will be posted on Arweave only if the dry-run of the input result is "ok"
+   * @param options
    */
-  bundleInteraction<Input = unknown>(input: Input, tags?: Tags, strict?: boolean): Promise<any | null>;
+  bundleInteraction<Input = unknown>(
+    input: Input,
+    options?: {
+      tags?: Tags;
+      strict?: boolean;
+      vrf?: boolean;
+    }
+  ): Promise<any | null>;
 
   /**
    * Returns the full call tree report the last

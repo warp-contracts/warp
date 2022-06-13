@@ -8,6 +8,15 @@ export class ContractMetadata {
   dtor: number;
 }
 
+export type ContractSource = {
+  src: string | null;
+  srcBinary: Buffer | null;
+  srcWasmLang: string | null;
+  contractType: ContractType;
+  srcTx: any;
+  metadata?: ContractMetadata;
+};
+
 export type ContractDefinition<State> = {
   txId: string;
   srcTxId: string;

@@ -59,6 +59,15 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance, dtorVal
       write: async function (contractId: string, input: any) {
         return await swGlobal.contracts.write(contractId, input);
       }
+    },
+    Vrf: {
+      value: function (): string {
+        return swGlobal.vrf.value;
+      },
+
+      randomInt: function (maxValue: number): number {
+        return swGlobal.vrf.randomInt(maxValue);
+      }
     }
   };
 
@@ -253,6 +262,22 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance, dtorVal
     __wbindgen_string_new: function (arg0, arg1) {
       var ret = getStringFromWasm0(arg0, arg1);
       return addHeapObject(ret);
+    },
+    __wbg_value: function (arg0) {
+      var ret = rawImports.Vrf.value();
+      var ptr0 = passStringToWasm0(
+        ret,
+        wasmInstance.exports.__wbindgen_malloc,
+        wasmInstance.exports.__wbindgen_realloc
+      );
+      var len0 = WASM_VECTOR_LEN;
+      getInt32Memory0()[arg0 / 4 + 1] = len0;
+      getInt32Memory0()[arg0 / 4 + 0] = ptr0;
+    },
+
+    __wbg_randomInt: function (arg0, arg1) {
+      var ret = rawImports.Vrf.randomInt(arg1);
+      return ret;
     }
   };
 

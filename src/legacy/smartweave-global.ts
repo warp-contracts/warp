@@ -1,6 +1,8 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import { GQLNodeInterface, GQLTagInterface } from './gqlResult';
+import { GQLNodeInterface, GQLTagInterface, VrfData } from './gqlResult';
+import { EvaluationOptions } from '@smartweave/core';
+import { kMaxLength } from 'buffer';
 
 /**
  *
@@ -33,6 +35,8 @@ export class SmartWeaveGlobal {
   gasLimit: number;
   transaction: Transaction;
   block: Block;
+  vrf: Vrf;
+  evaluationOptions: EvaluationOptions;
   arweave: Pick<Arweave, 'ar' | 'wallets' | 'utils' | 'crypto'>;
   contract: {
     id: string;
@@ -51,15 +55,37 @@ export class SmartWeaveGlobal {
 
   caller?: string;
 
-  constructor(arweave: Arweave, contract: { id: string; owner: string }, gasLimit = Number.MAX_SAFE_INTEGER) {
+  constructor(arweave: Arweave, contract: { id: string; owner: string }, evaluationOptions: EvaluationOptions) {
     this.gasUsed = 0;
-    this.gasLimit = gasLimit;
+    this.gasLimit = Number.MAX_SAFE_INTEGER;
     this.unsafeClient = arweave;
     this.arweave = {
       ar: arweave.ar,
       utils: arweave.utils,
       wallets: arweave.wallets,
       crypto: arweave.crypto
+    };
+
+    this.evaluationOptions = evaluationOptions;
+
+    this.arweave.wallets.getBalance = async (address: string): Promise<string> => {
+      if (!this._activeTx) {
+        throw new Error('Cannot read balance - active tx is not set.');
+      }
+      if (!this.block.height) {
+        throw new Error('Cannot read balance - block height not set.');
+      }
+
+      // http://nyc-1.dev.arweave.net:1984/block/height/914387/wallet/M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI/balance
+      return await fetch(
+        `${evaluationOptions.walletBalanceUrl}block/height/${this.block.height}/wallet/${address}/balance`
+      )
+        .then((res) => {
+          return res.ok ? res.text() : Promise.reject(res);
+        })
+        .catch((error) => {
+          throw new Error(`Unable to read wallet balance. ${error.status}. ${error.body?.message}`);
+        });
     };
     this.contract = contract;
     this.transaction = new Transaction(this);
@@ -81,8 +107,10 @@ export class SmartWeaveGlobal {
         throw new Error('Not implemented - should be set by HandlerApi implementor');
       }
     };
+    this.vrf = new Vrf(this);
 
     this.useGas = this.useGas.bind(this);
+    this.getBalance = this.getBalance.bind(this);
   }
 
   useGas(gas: number) {
@@ -93,6 +121,28 @@ export class SmartWeaveGlobal {
     if (this.gasUsed > this.gasLimit) {
       throw new Error(`[RE:OOG] Out of gas! Used: ${this.gasUsed}, limit: ${this.gasLimit}`);
     }
+  }
+
+  async getBalance(address: string, height?: number): Promise<string> {
+    if (!this._activeTx) {
+      throw new Error('Cannot read balance - active tx is not set.');
+    }
+    if (!this.block.height) {
+      throw new Error('Cannot read balance - block height not set.');
+    }
+
+    const effectiveHeight = height || this.block.height;
+
+    // http://nyc-1.dev.arweave.net:1984/block/height/914387/wallet/M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI/balance
+    return await fetch(
+      `${this.evaluationOptions.walletBalanceUrl}block/height/${effectiveHeight}/wallet/${address}/balance`
+    )
+      .then((res) => {
+        return res.ok ? res.text() : Promise.reject(res);
+      })
+      .catch((error) => {
+        throw new Error(`Unable to read wallet balance. ${error.status}. ${error.body?.message}`);
+      });
   }
 }
 
@@ -166,5 +216,32 @@ class Block {
       throw new Error('No current tx');
     }
     return this.global._activeTx.block.timestamp;
+  }
+}
+
+class Vrf {
+  constructor(private readonly global: SmartWeaveGlobal) {}
+
+  get data(): VrfData {
+    return this.global._activeTx.vrf;
+  }
+
+  // returns the original generated random number as a BigInt string;
+  get value(): string {
+    return this.global._activeTx.vrf.bigint;
+  }
+
+  // returns a random value in a range from 1 to maxValue
+  randomInt(maxValue: number): number {
+    if (!Number.isInteger(maxValue)) {
+      throw new Error('Integer max value required for random integer generation');
+    }
+    const result = (BigInt(this.global._activeTx.vrf.bigint) % BigInt(maxValue)) + BigInt(1);
+
+    if (result > Number.MAX_SAFE_INTEGER || result < Number.MIN_SAFE_INTEGER) {
+      throw new Error('Random int cannot be cast to number');
+    }
+
+    return Number(result);
   }
 }

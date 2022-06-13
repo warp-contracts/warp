@@ -1,8 +1,48 @@
-export function handle(state, action) {
+export async function handle(state, action) {
   const balances = state.balances;
   const canEvolve = state.canEvolve;
   const input = action.input;
   const caller = action.caller;
+
+  if (input.function === 'storeBalance') {
+    const target = input.target;
+    const height = SmartWeave.block.height;
+    if (state.wallets.height === undefined) {
+      state.wallets[height] = {};
+    }
+    state.wallets[height][target] = await SmartWeave.arweave.wallets.getBalance(target);
+
+    return { state };
+  }
+
+  if (input.function === 'vrf') {
+    if (!state.vrf) {
+      state.vrf = {};
+    }
+
+    state.vrf[SmartWeave.transaction.id] = {
+      vrf: SmartWeave.vrf.data,
+      value: SmartWeave.vrf.value,
+
+      random_6_1: SmartWeave.vrf.randomInt(6),
+      random_6_2: SmartWeave.vrf.randomInt(6),
+      random_6_3: SmartWeave.vrf.randomInt(6),
+
+      random_12_1: SmartWeave.vrf.randomInt(12),
+      random_12_2: SmartWeave.vrf.randomInt(12),
+      random_12_3: SmartWeave.vrf.randomInt(12),
+
+      random_46_1: SmartWeave.vrf.randomInt(46),
+      random_46_2: SmartWeave.vrf.randomInt(46),
+      random_46_3: SmartWeave.vrf.randomInt(46),
+
+      random_99_1: SmartWeave.vrf.randomInt(99),
+      random_99_2: SmartWeave.vrf.randomInt(99),
+      random_99_3: SmartWeave.vrf.randomInt(99),
+    }
+
+    return {state};
+  }
 
   if (input.function === 'transfer') {
     const target = input.target;
@@ -34,7 +74,7 @@ export function handle(state, action) {
       balances[target] = qty;
     }
 
-    return { state };
+    return {state};
   }
 
   if (input.function === 'balance') {
@@ -49,7 +89,7 @@ export function handle(state, action) {
       throw new ContractError('Cannot get balance, target does not exist');
     }
 
-    return { result: { target, ticker, balance: balances[target] } };
+    return {result: {target, ticker, balance: balances[target]}};
   }
 
   if (input.function === 'evolve' && canEvolve) {
@@ -59,8 +99,9 @@ export function handle(state, action) {
 
     state.evolve = input.value;
 
-    return { state };
+    return {state};
   }
+
 
   throw new ContractError(`No function supplied or function not recognised: "${input.function}"`);
 }
