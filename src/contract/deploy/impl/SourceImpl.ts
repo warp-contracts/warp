@@ -1,11 +1,12 @@
-import { ArWallet, ContractData, ContractType, SmartWeaveTags } from '@smartweave/core';
+import { SmartWeaveTags } from '@smartweave/core';
 import { LoggerFactory } from '@smartweave/logging';
-import { SaveSource, SigningFunction } from '@smartweave';
+import { Source, SigningFunction } from '@smartweave';
 import metering from 'redstone-wasm-metering';
 import Arweave from 'arweave';
-import { Go } from '../core/modules/impl/wasm/go-wasm-imports';
+import { Go } from '../../../core/modules/impl/wasm/go-wasm-imports';
 import fs, { PathOrFileDescriptor } from 'fs';
-import { matchMutClosureDtor } from '../core/modules/impl/wasm/wasm-bindgen-tools';
+import { matchMutClosureDtor } from '../../../core/modules/impl/wasm/wasm-bindgen-tools';
+import { ArWallet, ContractType } from '../CreateContract';
 
 const wasmTypeMapping: Map<number, string> = new Map([
   [1, 'assemblyscript'],
@@ -15,18 +16,18 @@ const wasmTypeMapping: Map<number, string> = new Map([
   [5, 'c']*/
 ]);
 
-export interface SaveSourceData {
+export interface SourceData {
   src: string | Buffer;
   wasmSrcCodeDir?: string;
   wasmGlueCode?: string;
 }
 
-export class SaveSourceImpl implements SaveSource {
-  private readonly logger = LoggerFactory.INST.create('SaveSource');
+export class SourceImpl implements Source {
+  private readonly logger = LoggerFactory.INST.create('Source');
   constructor(private readonly arweave: Arweave) {}
 
-  async saveSource(contractData: SaveSourceData, signer: ArWallet | SigningFunction, useBundler = false): Promise<any> {
-    this.logger.debug('Creating new contract');
+  async save(contractData: SourceData, signer: ArWallet | SigningFunction, useBundler = false): Promise<any> {
+    this.logger.debug('Creating new contract source');
 
     const { src, wasmSrcCodeDir, wasmGlueCode } = contractData;
 

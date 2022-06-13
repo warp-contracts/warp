@@ -1,9 +1,9 @@
 /* eslint-disable */
-import { ContractData, ContractType, CreateContract, FromSrcTxContractData, SmartWeaveTags } from '@smartweave/core';
+import { SmartWeaveTags } from '@smartweave/core';
 import Arweave from 'arweave';
 import { LoggerFactory } from '@smartweave/logging';
 import Transaction from 'arweave/node/lib/transaction';
-import { SaveSourceImpl } from '@smartweave/contract';
+import { ContractData, CreateContract, FromSrcTxContractData, SourceImpl } from '@smartweave/contract';
 
 export class DefaultCreateContract implements CreateContract {
   private readonly logger = LoggerFactory.INST.create('DefaultCreateContract');
@@ -15,9 +15,9 @@ export class DefaultCreateContract implements CreateContract {
   async deploy(contractData: ContractData, useBundler = false): Promise<string> {
     const { wallet, initState, tags, transfer } = contractData;
 
-    const source = new SaveSourceImpl(this.arweave);
+    const source = new SourceImpl(this.arweave);
 
-    const srcTx = await source.saveSource(contractData, wallet, useBundler);
+    const srcTx = await source.save(contractData, wallet, useBundler);
     this.logger.debug('Creating new contract');
 
     return await this.deployFromSourceTx(

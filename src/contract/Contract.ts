@@ -7,7 +7,7 @@ import {
   GQLNodeInterface,
   InteractionResult,
   Tags,
-  SaveSource
+  Source
 } from '@smartweave';
 import { NetworkInfoInterface } from 'arweave/node/network';
 import Transaction from 'arweave/node/lib/transaction';
@@ -37,7 +37,7 @@ export interface EvolveState {
  * A base interface to be implemented by SmartWeave Contracts clients
  * - contains "low-level" methods that allow to interact with any contract
  */
-export interface Contract<State = unknown> extends SaveSource {
+export interface Contract<State = unknown> extends Source {
   /**
    * Returns the Arweave transaction id of this contract.
    */
@@ -239,9 +239,9 @@ export interface Contract<State = unknown> extends SaveSource {
    * Evolve is a feature that allows to change contract's source
    * code, without having to deploy a new contract.
    * This method effectively evolves the contract to the source.
-   * This requires the {@link saveSource} to be called first
+   * This requires the {@link save} to be called first
    * and its transaction to be confirmed by the network.
-   * @param newSrcTxId - result of the {@link saveSource} method call.
+   * @param newSrcTxId - result of the {@link save} method call.
    */
   evolve(newSrcTxId: string): Promise<string | null>;
 }

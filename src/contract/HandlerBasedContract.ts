@@ -30,8 +30,8 @@ import {
   SmartWeaveTags,
   SourceType,
   Tags,
-  SaveSourceImpl,
-  SaveSourceData
+  SourceImpl,
+  SourceData
 } from '@smartweave';
 import { TransactionStatusResponse } from 'arweave/node/transactions';
 import { NetworkInfoInterface } from 'arweave/node/network';
@@ -771,14 +771,14 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return await this.writeInteraction<any>({ function: 'evolve', value: newSrcTxId });
   }
 
-  async saveSource(saveSourceData: SaveSourceData): Promise<any> {
+  async save(sourceData: SourceData): Promise<any> {
     if (!this.signer) {
       throw new Error("Wallet not connected. Use 'connect' method first.");
     }
     const { arweave } = this.smartweave;
-    const source = new SaveSourceImpl(arweave);
+    const source = new SourceImpl(arweave);
 
-    const srcTx = await source.saveSource(saveSourceData, this.signer);
+    const srcTx = await source.save(sourceData, this.signer);
 
     return srcTx.id;
   }

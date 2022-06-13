@@ -1,6 +1,4 @@
 import {
-  CreateContract,
-  DefaultCreateContract,
   DefinitionLoader,
   ExecutorFactory,
   HandlerApi,
@@ -10,7 +8,7 @@ import {
   StateEvaluator
 } from '@smartweave/core';
 import Arweave from 'arweave';
-import { Contract, HandlerBasedContract, PstContract, PstContractImpl } from '@smartweave/contract';
+import { Contract, CreateContract, DefaultCreateContract, HandlerBasedContract, PstContract, PstContractImpl } from '@smartweave/contract';
 import { GQLNodeInterface } from '@smartweave/legacy';
 
 /**
