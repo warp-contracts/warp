@@ -120,18 +120,12 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
          This in turn will cause the state of THIS contract to be
          updated in cache - see {@link ContractHandlerApi.assignWrite}
          */
-        await writingContract.readState(missingInteraction.sortKey, [
-          ...(currentTx || []),
-          {
-            contractTxId: contractDefinition.txId, //not: writingContractTxId!
-            interactionTxId: missingInteraction.id
-          }
-        ]);
+        await writingContract.readState(missingInteraction.sortKey, currentTx);
 
         // loading latest state of THIS contract from cache
-        const newState = await this.latestAvailableState<State>(contractDefinition.txId);
+        const newState = await this.internalWriteState<State>(contractDefinition.txId, missingInteraction.sortKey);
         this.logger.debug('New state:', {
-          height: missingInteraction.block.height,
+          sortKey: missingInteraction.sortKey,
           newState,
           txId: contractDefinition.txId
         });
@@ -140,6 +134,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           currentState = newState.cachedValue.state;
           // we need to update the state in the wasm module
           executionContext?.handler.initState(currentState);
+
+          // FIXME: validity here is broken
           validity[missingInteraction.id] = newState.cachedValue.validity[missingInteraction.id];
 
           const toCache = new EvalStateResult(currentState, validity, errorMessages);
@@ -336,4 +332,9 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
   abstract syncState(contractTxId: string, sortKey: string, state: any, validity: any): Promise<void>;
 
   abstract dumpCache(): Promise<any>;
+
+  abstract internalWriteState<State>(
+    contractTxId: string,
+    sortKey: string
+  ): Promise<SortKeyCacheResult<EvalStateResult<State>> | null>;
 }
