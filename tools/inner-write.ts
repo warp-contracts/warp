@@ -2,7 +2,6 @@
 import Arweave from 'arweave';
 import {
   Contract,
-  defaultCacheOptions,
   LoggerFactory,
   SmartWeave,
   SmartWeaveFactory
@@ -17,7 +16,6 @@ import {mineBlock} from "../src/__tests__/integration/_helpers";
 async function main() {
   let callingContractSrc: string;
   let calleeContractSrc: string;
-  let calleeInitialState: string;
 
   let wallet: JWKInterface;
   let walletAddress: string;
@@ -49,10 +47,7 @@ async function main() {
 
   const cacheDir = './cache/tools/'
   try {
-    smartweave = SmartWeaveFactory.arweaveGw(arweave, {
-      ...defaultCacheOptions,
-      dbLocation: cacheDir
-    });
+    smartweave = SmartWeaveFactory.forTesting(arweave);
 
     wallet = await arweave.wallets.generate();
     walletAddress = await arweave.wallets.jwkToAddress(wallet);

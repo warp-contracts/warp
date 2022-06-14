@@ -2,28 +2,33 @@ import { SortKeySwCache, StateCacheKey, SortKeyCacheResult } from '../SortKeySwC
 import { CacheOptions, isNode, LoggerFactory } from '@smartweave';
 import { Level } from 'level';
 import stringify from 'safe-stable-stringify';
+import { MemoryLevel } from 'memory-level';
 
 export class LevelDbCache<V = any> implements SortKeySwCache<V> {
   private readonly logger = LoggerFactory.INST.create('LevelDbCache');
 
-  private db: Level;
+  private db: MemoryLevel;
   private maxStoredTransactions: number;
 
   private entriesLength: { [contractTxId: string]: number } = {};
 
   constructor(cacheOptions: CacheOptions) {
-    let dbLocation = cacheOptions.dbLocation;
-    this.logger.info(`Using location ${dbLocation}`);
-    if (!dbLocation) {
-      if (isNode()) {
-        dbLocation = `./cache/warp`;
-      } else {
-        // this is effectively IndexedDB browser db
-        dbLocation = 'warp-cache';
+    if (cacheOptions.inMemory) {
+      this.db = new MemoryLevel({ valueEncoding: 'json' });
+    } else {
+      let dbLocation = cacheOptions.dbLocation;
+      this.logger.info(`Using location ${dbLocation}`);
+      if (!dbLocation) {
+        if (isNode()) {
+          dbLocation = `./cache/warp`;
+        } else {
+          // this is effectively IndexedDB browser db
+          dbLocation = 'warp-cache';
+        }
       }
-    }
 
-    this.db = new Level<string, any>(dbLocation, { valueEncoding: 'json' });
+      this.db = new Level<string, any>(dbLocation, { valueEncoding: 'json' });
+    }
     this.maxStoredTransactions = cacheOptions.maxStoredTransactions || 10;
   }
 

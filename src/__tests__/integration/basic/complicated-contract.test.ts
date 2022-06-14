@@ -3,17 +3,17 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, LoggerFactory, Warp, WarpNodeFactory } from '@warp';
+import { Contract, LoggerFactory, SmartWeave, SmartWeaveFactory } from '@smartweave';
 import path from 'path';
 import { addFunds, mineBlock } from '../_helpers';
 
 let arweave: Arweave;
 let arlocal: ArLocal;
-let warp: Warp;
+let smartweave: SmartWeave;
 let contract: Contract<any>;
 let contractVM: Contract<any>;
 
-describe('Testing the Warp client', () => {
+describe('Testing the SmartWeave client', () => {
   let contractSrc: string;
 
   let wallet: JWKInterface;
@@ -32,7 +32,7 @@ describe('Testing the Warp client', () => {
 
     LoggerFactory.INST.logLevel('error');
 
-    warp = WarpNodeFactory.forTesting(arweave);
+    smartweave = SmartWeaveFactory.forTesting(arweave);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -40,14 +40,14 @@ describe('Testing the Warp client', () => {
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/very-complicated-contract.js'), 'utf8');
 
     // deploying contract using the new SDK.
-    const contractTxId = await warp.createContract.deploy({
+    const contractTxId = await smartweave.createContract.deploy({
       wallet,
       initState: JSON.stringify({}),
       src: contractSrc
     });
 
-    contract = warp.contract(contractTxId);
-    contractVM = warp.contract(contractTxId).setEvaluationOptions({
+    contract = smartweave.contract(contractTxId);
+    contractVM = smartweave.contract(contractTxId).setEvaluationOptions({
       useVM2: true
     });
     contract.connect(wallet);

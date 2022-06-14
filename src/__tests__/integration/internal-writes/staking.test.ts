@@ -4,7 +4,7 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, LoggerFactory, Warp, WarpNodeFactory } from '@warp';
+import { Contract, defaultCacheOptions, LoggerFactory, SmartWeave, SmartWeaveFactory } from '@smartweave';
 import path from 'path';
 import { TsLogFactory } from '../../../logging/node/TsLogFactory';
 import { addFunds, mineBlock } from '../_helpers';
@@ -34,7 +34,7 @@ describe('Testing internal writes', () => {
 
   let arweave: Arweave;
   let arlocal: ArLocal;
-  let warp: Warp;
+  let smartweave: SmartWeave;
 
   beforeAll(async () => {
     // note: each tests suit (i.e. file with tests that Jest is running concurrently
@@ -57,7 +57,7 @@ describe('Testing internal writes', () => {
   });
 
   async function deployContracts() {
-    warp = WarpNodeFactory.forTesting(arweave);
+    smartweave = SmartWeaveFactory.forTesting(arweave);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -71,8 +71,7 @@ describe('Testing internal writes', () => {
       'utf8'
     );
 
-    console.log('wallet address', walletAddress);
-    tokenContractTxId = await warp.createContract.deploy({
+    tokenContractTxId = await smartweave.createContract.deploy({
       wallet,
       initState: JSON.stringify({
         ...JSON.parse(tokenContractInitialState),
@@ -81,7 +80,7 @@ describe('Testing internal writes', () => {
       src: tokenContractSrc
     });
 
-    stakingContractTxId = await warp.createContract.deploy({
+    stakingContractTxId = await smartweave.createContract.deploy({
       wallet,
       initState: JSON.stringify({
         ...JSON.parse(stakingContractInitialState),
@@ -90,8 +89,14 @@ describe('Testing internal writes', () => {
       src: stakingContractSrc
     });
 
-    tokenContract = warp.contract(tokenContractTxId).setEvaluationOptions({ internalWrites: true }).connect(wallet);
-    stakingContract = warp.contract(stakingContractTxId).setEvaluationOptions({ internalWrites: true }).connect(wallet);
+    tokenContract = smartweave
+      .contract(tokenContractTxId)
+      .setEvaluationOptions({ internalWrites: true })
+      .connect(wallet);
+    stakingContract = smartweave
+      .contract(stakingContractTxId)
+      .setEvaluationOptions({ internalWrites: true })
+      .connect(wallet);
 
     await mineBlock(arweave);
   }
