@@ -8,7 +8,14 @@ import {
   StateEvaluator
 } from '@warp/core';
 import Arweave from 'arweave';
-import { Contract, HandlerBasedContract, CreateContract, DefaultCreateContract, PstContract, PstContractImpl } from '@warp/contract';
+import {
+  Contract,
+  HandlerBasedContract,
+  CreateContract,
+  DefaultCreateContract,
+  PstContract,
+  PstContractImpl
+} from '@warp/contract';
 import { GQLNodeInterface } from '@warp/legacy';
 
 /**

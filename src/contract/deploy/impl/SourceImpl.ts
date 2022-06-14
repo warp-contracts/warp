@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import { SmartWeaveTags } from '@warp/core';
 import { LoggerFactory } from '@warp/logging';
 import { Source, SigningFunction } from '@warp';
