@@ -17,7 +17,7 @@ import {
 } from '@smartweave';
 import path from 'path';
 import { addFunds, mineBlock } from '../_helpers';
-import exp from "constants";
+import exp from 'constants';
 
 let arweave: Arweave;
 let arlocal: ArLocal;
@@ -179,5 +179,4 @@ describe('Testing the SmartWeave client', () => {
     expect(interactions2[2].sortKey).toEqual(interactions[8].sortKey);
     expect(interactions2[3].sortKey).toEqual(interactions[9].sortKey);
   });
-
 });
