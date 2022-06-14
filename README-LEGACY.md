@@ -69,7 +69,7 @@ The diagram above and description assume the most basic “mem-cached” SDK cli
 
 ## Development
 
-PRs are welcome! :-) Also, feel free to submit [issues](https://github.com/redstone-finance/redstone-smartcontracts/issues) - with both bugs and feature proposals.
+PRs are welcome! :-) Also, feel free to submit [issues](https://github.com/redstone-finance/warp/issues) - with both bugs and feature proposals.
 In case of creating a PR - please use [semantic commit messages](https://gist.github.com/joshbuchea/6f47e86d2510bce28f8e7f42ae84c716).
 
 ### Installation
