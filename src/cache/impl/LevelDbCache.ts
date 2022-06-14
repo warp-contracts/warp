@@ -1,7 +1,7 @@
 import { SortKeySwCache, StateCacheKey, SortKeyCacheResult } from '../SortKeySwCache';
 import { CacheOptions, isNode, LoggerFactory } from '@smartweave';
 import { Level } from 'level';
-import stringify from "safe-stable-stringify";
+import stringify from 'safe-stable-stringify';
 
 export class LevelDbCache<V = any> implements SortKeySwCache<V> {
   private readonly logger = LoggerFactory.INST.create('LevelDbCache');
