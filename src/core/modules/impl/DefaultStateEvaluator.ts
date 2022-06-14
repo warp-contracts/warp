@@ -120,7 +120,14 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
          This in turn will cause the state of THIS contract to be
          updated in cache - see {@link ContractHandlerApi.assignWrite}
          */
-        await writingContract.readState(missingInteraction.sortKey, currentTx);
+        //await writingContract.readState(missingInteraction.sortKey, currentTx);
+        await writingContract.readState(missingInteraction.sortKey, [
+          ...(currentTx || []),
+          {
+            contractTxId: contractDefinition.txId, //not: writingContractTxId!
+            interactionTxId: missingInteraction.id
+          }
+        ]);
 
         // loading latest state of THIS contract from cache
         const newState = await this.internalWriteState<State>(contractDefinition.txId, missingInteraction.sortKey);
