@@ -90,14 +90,8 @@ describe('Testing internal writes', () => {
       src: stakingContractSrc
     });
 
-    tokenContract = warp
-      .contract(tokenContractTxId)
-      .setEvaluationOptions({ internalWrites: true })
-      .connect(wallet);
-    stakingContract = warp
-      .contract(stakingContractTxId)
-      .setEvaluationOptions({ internalWrites: true })
-      .connect(wallet);
+    tokenContract = warp.contract(tokenContractTxId).setEvaluationOptions({ internalWrites: true }).connect(wallet);
+    stakingContract = warp.contract(stakingContractTxId).setEvaluationOptions({ internalWrites: true }).connect(wallet);
 
     await mineBlock(arweave);
   }
