@@ -11,7 +11,6 @@ import {
   SourceType
 } from '@smartweave/core';
 import { LevelDbCache, MemCache } from '@smartweave/cache';
-import { LmdbCache } from '../cache/impl/LmdbCache';
 
 export type GatewayOptions = {
   confirmationStatus: ConfirmationStatus;
@@ -21,6 +20,7 @@ export type GatewayOptions = {
 
 export type CacheOptions = {
   maxStoredTransactions: number;
+  inMemory: boolean;
   dbLocation?: string;
 };
 
@@ -31,7 +31,8 @@ export const defaultWarpGwOptions: GatewayOptions = {
 };
 
 export const defaultCacheOptions: CacheOptions = {
-  maxStoredTransactions: 10
+  maxStoredTransactions: 10,
+  inMemory: false
 };
 /**
  * A factory that simplifies the process of creating different versions of {@link SmartWeave}.
@@ -40,12 +41,25 @@ export const defaultCacheOptions: CacheOptions = {
 export class SmartWeaveFactory {
   /**
    * Returns a fully configured {@link SmartWeave} that is using arweave.net compatible gateway
+   * (with a GQL endpoint) for loading the interactions and in memory cache.
+   * Suitable for testing.
+   */
+  static forTesting(arweave: Arweave): SmartWeave {
+    return this.arweaveGw(arweave, {
+      maxStoredTransactions: 20,
+      inMemory: true
+    });
+  }
+
+  /**
+   * Returns a fully configured {@link SmartWeave} that is using arweave.net compatible gateway
    * (with a GQL endpoint) for loading the interactions.
    */
   static arweaveGw(
     arweave: Arweave,
     cacheOptions: CacheOptions = {
-      maxStoredTransactions: 20
+      maxStoredTransactions: 20,
+      inMemory: false
     }
   ): SmartWeave {
     return this.levelDbCached(arweave, cacheOptions).useArweaveGateway().build();
@@ -58,7 +72,8 @@ export class SmartWeaveFactory {
     arweave: Arweave,
     gatewayOptions: GatewayOptions = defaultWarpGwOptions,
     cacheOptions: CacheOptions = {
-      maxStoredTransactions: 20
+      maxStoredTransactions: 20,
+      inMemory: false
     }
   ): SmartWeave {
     return this.levelDbCached(arweave, cacheOptions)

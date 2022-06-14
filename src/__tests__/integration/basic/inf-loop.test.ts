@@ -3,20 +3,20 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, LoggerFactory, Warp, WarpNodeFactory, timeout } from '@warp';
+import { Contract, defaultCacheOptions, LoggerFactory, SmartWeave, SmartWeaveFactory, timeout } from '@smartweave';
 import path from 'path';
 import { addFunds, mineBlock } from '../_helpers';
 
 let arweave: Arweave;
 let arlocal: ArLocal;
-let warp: Warp;
+let smartweave: SmartWeave;
 let contract: Contract<ExampleContractState>;
 
 interface ExampleContractState {
   counter: number;
 }
 
-describe('Testing the Warp client', () => {
+describe('Testing the SmartWeave client', () => {
   let contractSrc: string;
 
   let wallet: JWKInterface;
@@ -35,7 +35,7 @@ describe('Testing the Warp client', () => {
 
     LoggerFactory.INST.logLevel('error');
 
-    warp = WarpNodeFactory.forTesting(arweave);
+    smartweave = SmartWeaveFactory.forTesting(arweave);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -43,7 +43,7 @@ describe('Testing the Warp client', () => {
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/inf-loop-contract.js'), 'utf8');
 
     // deploying contract using the new SDK.
-    const contractTxId = await warp.createContract.deploy({
+    const contractTxId = await smartweave.createContract.deploy({
       wallet,
       initState: JSON.stringify({
         counter: 10
@@ -51,7 +51,7 @@ describe('Testing the Warp client', () => {
       src: contractSrc
     });
 
-    contract = warp
+    contract = smartweave
       .contract<ExampleContractState>(contractTxId)
       .setEvaluationOptions({
         maxInteractionEvaluationTimeSeconds: 1

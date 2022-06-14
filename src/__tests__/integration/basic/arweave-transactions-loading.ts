@@ -6,18 +6,15 @@ import { JWKInterface } from 'arweave/node/lib/wallet';
 import {
   ArweaveGatewayInteractionsLoader,
   Contract,
-  defaultCacheOptions,
   DefaultEvaluationOptions,
   GQLNodeInterface,
   LexicographicalInteractionsSorter,
   LoggerFactory,
   SmartWeave,
-  SmartWeaveFactory,
-  timeout
+  SmartWeaveFactory
 } from '@smartweave';
 import path from 'path';
 import { addFunds, mineBlock } from '../_helpers';
-import exp from 'constants';
 
 let arweave: Arweave;
 let arlocal: ArLocal;
@@ -33,7 +30,6 @@ describe('Testing the SmartWeave client', () => {
   let wallet: JWKInterface;
   let loader: ArweaveGatewayInteractionsLoader;
 
-  const cacheDir = `./cache/i/tl/warp/`;
   const evalOptions = new DefaultEvaluationOptions();
   let sorter: LexicographicalInteractionsSorter;
   let interactions: GQLNodeInterface[];
@@ -42,21 +38,18 @@ describe('Testing the SmartWeave client', () => {
     LoggerFactory.INST.logLevel('error');
     // note: each tests suit (i.e. file with tests that Jest is running concurrently
     // with another files has to have ArLocal set to a different port!)
-    arlocal = new ArLocal(1830, false);
+    arlocal = new ArLocal(1831, false);
     await arlocal.start();
 
     arweave = Arweave.init({
       host: 'localhost',
-      port: 1830,
+      port: 1831,
       protocol: 'http'
     });
 
     loader = new ArweaveGatewayInteractionsLoader(arweave);
     sorter = new LexicographicalInteractionsSorter(arweave);
-    smartweave = SmartWeaveFactory.arweaveGw(arweave, {
-      ...defaultCacheOptions,
-      dbLocation: cacheDir
-    });
+    smartweave = SmartWeaveFactory.forTesting(arweave);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -82,7 +75,6 @@ describe('Testing the SmartWeave client', () => {
 
   afterAll(async () => {
     await arlocal.stop();
-    fs.rmSync(cacheDir, { recursive: true, force: true });
   });
 
   it('should add interactions on one block', async () => {

@@ -3,11 +3,11 @@ import fs from 'fs';
 
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
-import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, LoggerFactory, Warp, WarpNodeFactory } from '@warp';
+import {JWKInterface} from 'arweave/node/lib/wallet';
+import {Contract, LoggerFactory, SmartWeave, SmartWeaveFactory} from '@smartweave';
 import path from 'path';
-import { TsLogFactory } from '../../../logging/node/TsLogFactory';
-import { addFunds, mineBlock } from '../_helpers';
+import {TsLogFactory} from '../../../logging/node/TsLogFactory';
+import {addFunds, mineBlock} from '../_helpers';
 
 /**
  * This verifies whether combination of read and write state works properly.
@@ -61,7 +61,7 @@ describe('Testing internal writes', () => {
 
   let arweave: Arweave;
   let arlocal: ArLocal;
-  let warp: Warp;
+  let smartweave: SmartWeave;
   let calleeContract: Contract<any>;
   let callingContract: Contract<any>;
   let calleeTxId;
@@ -87,7 +87,7 @@ describe('Testing internal writes', () => {
   });
 
   async function deployContracts() {
-    warp = WarpNodeFactory.forTesting(arweave);
+    smartweave = SmartWeaveFactory.forTesting(arweave);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -97,25 +97,25 @@ describe('Testing internal writes', () => {
     calleeContractSrc = fs.readFileSync(path.join(__dirname, '../data/example-contract.js'), 'utf8');
     calleeInitialState = fs.readFileSync(path.join(__dirname, '../data/example-contract-state.json'), 'utf8');
 
-    calleeTxId = await warp.createContract.deploy({
+    calleeTxId = await smartweave.createContract.deploy({
       wallet,
       initState: calleeInitialState,
       src: calleeContractSrc
     });
 
-    const callingTxId = await warp.createContract.deploy({
+    const callingTxId = await smartweave.createContract.deploy({
       wallet,
       initState: callingContractInitialState,
       src: callingContractSrc
     });
 
-    calleeContract = warp
+    calleeContract = smartweave
       .contract(calleeTxId)
       .setEvaluationOptions({
         internalWrites: true
       })
       .connect(wallet);
-    callingContract = warp
+    callingContract = smartweave
       .contract(callingTxId)
       .setEvaluationOptions({
         internalWrites: true
@@ -136,7 +136,7 @@ describe('Testing internal writes', () => {
     });
 
     it('should write direct interactions', async () => {
-      await calleeContract.writeInteraction({ function: 'add' });
+      await calleeContract.writeInteraction({function: 'add'});
       await mineBlock(arweave);
       await callingContract.writeInteraction({
         function: 'writeContractCheck',
@@ -178,7 +178,7 @@ describe('Testing internal writes', () => {
     });
 
     it('should write direct interactions', async () => {
-      await calleeContract.writeInteraction({ function: 'add' });
+      await calleeContract.writeInteraction({function: 'add'});
       await mineBlock(arweave);
       await callingContract.writeInteraction({
         function: 'writeContractCheck',
