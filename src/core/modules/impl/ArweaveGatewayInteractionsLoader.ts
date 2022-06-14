@@ -89,7 +89,7 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
     this.logger.debug('Loading interactions for', { contractId, fromSortKey, toSortKey });
 
     const fromBlockHeight = this.sorter.extractBlockHeight(fromSortKey);
-    let toBlockHeight = this.sorter.extractBlockHeight(toSortKey);
+    const toBlockHeight = this.sorter.extractBlockHeight(toSortKey);
 
     // TODO: temp workaround for https://github.com/textury/arlocal/issues/107
     /*if (toBlockHeight == null && this.isLocalEnv()) {
