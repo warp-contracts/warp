@@ -1,18 +1,19 @@
 /* eslint-disable */
 import {
-  ArweaveGatewayInteractionsLoader, DefaultEvaluationOptions,
+  ArweaveGatewayInteractionsLoader,
+  DefaultEvaluationOptions,
   GQLEdgeInterface,
   GQLResultInterface,
   GQLTransactionsResultInterface,
   LoggerFactory
-} from '@smartweave';
+} from '@warp';
 import Arweave from 'arweave';
 import fs from 'fs';
 import path from 'path';
-import {TsLogFactory} from '../src/logging/node/TsLogFactory';
+import { TsLogFactory } from '../src/logging/node/TsLogFactory';
 import Transaction from 'arweave/node/lib/transaction';
-import ArweaveWrapper from "../src/utils/ArweaveWrapper";
-import knex from "knex";
+import ArweaveWrapper from '../src/utils/ArweaveWrapper';
+import knex from 'knex';
 
 // max number of results returned from single query.
 // If set more, arweave.net/graphql will still limit to 100 (not sure if that's a bug or feature).
@@ -37,22 +38,21 @@ query Transactions($tags: [TagFilter!]!, $after: String) {
     }
   }`;
 
-
 async function main() {
   const db = knex({
     client: 'pg',
     connection: 'postgresql://postgres:@localhost:5432/stats',
     useNullAsDefault: true,
     pool: {
-      "min": 5,
-      "max": 30,
-      "createTimeoutMillis": 3000,
-      "acquireTimeoutMillis": 30000,
-      "idleTimeoutMillis": 30000,
-      "reapIntervalMillis": 1000,
-      "createRetryIntervalMillis": 100,
-      "propagateCreateError": false
-    },
+      min: 5,
+      max: 30,
+      createTimeoutMillis: 3000,
+      acquireTimeoutMillis: 30000,
+      idleTimeoutMillis: 30000,
+      reapIntervalMillis: 1000,
+      createRetryIntervalMillis: 100,
+      propagateCreateError: false
+    }
   });
 
   if (!(await db.schema.hasTable('transactions'))) {
@@ -98,15 +98,13 @@ async function main() {
    order by count(ts.value) desc;
    */
 
-
-
   const file = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', `swc-stats.json`), 'utf-8'));
   console.log(`Checking ${file.length} contracts`);
 
   for (let row of file) {
     console.log('inserting', row.node.id);
     await db('transactions').insert({
-      id: row.node.id,
+      id: row.node.id
     });
     for (let tag of row.node.tags) {
       await db('tags').insert({
@@ -116,8 +114,6 @@ async function main() {
       });
     }
   }
-
-
 }
 
 main().then(() => {
@@ -145,12 +141,10 @@ async function sendQuery(arweave: Arweave, variables: any, query: string) {
 }
 
 async function getNextPage(arweave, variables, query: string): Promise<GQLTransactionsResultInterface | null> {
-
-  console.log("loading page after", variables.after);
-
+  console.log('loading page after', variables.after);
 
   const wrapper = new ArweaveWrapper(arweave);
-  const response = await wrapper.gql(query, variables);/*await arweave.api.post('graphql', {
+  const response = await wrapper.gql(query, variables); /*await arweave.api.post('graphql', {
     query,
     variables
   });*/

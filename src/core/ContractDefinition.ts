@@ -1,7 +1,7 @@
 /**
  * This type contains all data and meta-data of the given contact.
  */
-import { ContractType } from '@smartweave/contract';
+import { ContractType } from '@warp/contract';
 
 export class ContractMetadata {
   dtor: number;

@@ -9,10 +9,10 @@ import {
   LoggerFactory,
   PstContract,
   PstState,
-  SmartWeave,
-  SmartWeaveNodeFactory,
+  Warp,
+  WarpNodeFactory,
   SmartWeaveTags
-} from '@smartweave';
+} from '@warp';
 import path from 'path';
 import { addFunds, mineBlock } from '../_helpers';
 import { WasmSrc } from '../../../core/modules/impl/wasm/WasmSrc';
@@ -25,7 +25,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
 
   let arweave: Arweave;
   let arlocal: ArLocal;
-  let smartweave: SmartWeave;
+  let warp: Warp;
   let pst: PstContract;
 
   let contractTxId: string;
@@ -51,7 +51,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
 
     LoggerFactory.INST.logLevel('error');
 
-    smartweave = SmartWeaveNodeFactory.forTesting(arweave);
+    warp = WarpNodeFactory.forTesting(arweave);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -72,7 +72,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     };
 
     // deploying contract using the new SDK.
-    contractTxId = await smartweave.createContract.deploy({
+    contractTxId = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify(initialState),
       src: contractSrc,
@@ -80,7 +80,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
       wasmGlueCode: path.join(__dirname, '../data/wasm/rust/rust-pst.js')
     });
 
-    properForeignContractTxId = await smartweave.createContract.deploy({
+    properForeignContractTxId = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify({
         ...initialState,
@@ -94,7 +94,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
       wasmGlueCode: path.join(__dirname, '../data/wasm/rust/rust-pst.js')
     });
 
-    wrongForeignContractTxId = await smartweave.createContract.deploy({
+    wrongForeignContractTxId = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify({
         ...initialState,
@@ -109,7 +109,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     });
 
     // connecting to the PST contract
-    pst = smartweave.pst(contractTxId);
+    pst = warp.pst(contractTxId);
 
     // connecting wallet to the PST contract
     pst.connect(wallet);

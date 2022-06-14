@@ -1,4 +1,4 @@
-import { ContractCallStack, InteractionCall } from '@smartweave';
+import { ContractCallStack, InteractionCall } from '@warp';
 
 export class InnerWritesEvaluator {
   eval(callStack: ContractCallStack): Array<string> {

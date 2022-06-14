@@ -7,30 +7,30 @@ import {
   HandlerExecutorFactory,
   LexicographicalInteractionsSorter,
   R_GW_URL,
-  RedstoneGatewayContractDefinitionLoader,
-  RedstoneGatewayInteractionsLoader,
-  SmartWeave,
-  SmartWeaveBuilder,
-  SmartWeaveWebFactory
-} from '@smartweave/core';
-import { CacheableExecutorFactory, Evolve } from '@smartweave/plugins';
-import { FileBlockHeightSwCache, MemCache } from '@smartweave/cache';
+  WarpGatewayContractDefinitionLoader,
+  WarpGatewayInteractionsLoader,
+  Warp,
+  WarpBuilder,
+  WarpWebFactory
+} from '@warp/core';
+import { CacheableExecutorFactory, Evolve } from '@warp/plugins';
+import { FileBlockHeightWarpCache, MemCache } from '@warp/cache';
 import { Knex } from 'knex';
 import { KnexStateCache } from '../../cache/impl/KnexStateCache';
 
 /**
- * A {@link SmartWeave} factory that can be safely used only in Node.js env.
+ * A {@link Warp} factory that can be safely used only in Node.js env.
  */
-export class SmartWeaveNodeFactory extends SmartWeaveWebFactory {
+export class WarpNodeFactory extends WarpWebFactory {
   /**
-   * Returns a fully configured, memcached {@link SmartWeave} that is suitable for tests with ArLocal
+   * Returns a fully configured, memcached {@link Warp} that is suitable for tests with ArLocal
    */
-  static forTesting(arweave: Arweave): SmartWeave {
+  static forTesting(arweave: Arweave): Warp {
     return this.memCachedBased(arweave).useArweaveGateway().build();
   }
 
   /**
-   * Returns a fully configured {@link SmartWeave} that is using file-based cache for {@link StateEvaluator} layer
+   * Returns a fully configured {@link Warp} that is using file-based cache for {@link StateEvaluator} layer
    * and mem cache for the rest.
    *
    * @param cacheBasePath - path where cache files will be stored
@@ -38,13 +38,13 @@ export class SmartWeaveNodeFactory extends SmartWeaveWebFactory {
    * the underneath mem-cache
    *
    */
-  static fileCached(arweave: Arweave, cacheBasePath?: string, maxStoredInMemoryBlockHeights = 10): SmartWeave {
+  static fileCached(arweave: Arweave, cacheBasePath?: string, maxStoredInMemoryBlockHeights = 10): Warp {
     return this.fileCachedBased(arweave, cacheBasePath, maxStoredInMemoryBlockHeights).build();
   }
 
   /**
-   * Returns a preconfigured, fileCached {@link SmartWeaveBuilder}, that allows for customization of the SmartWeave instance.
-   * Use {@link SmartWeaveBuilder.build()} to finish the configuration.
+   * Returns a preconfigured, fileCached {@link WarpBuilder}, that allows for customization of the Warp instance.
+   * Use {@link WarpBuilder.build()} to finish the configuration.
    * @param cacheBasePath - see {@link fileCached.cacheBasePath}
    * @param maxStoredInMemoryBlockHeights - see {@link fileCached.maxStoredInMemoryBlockHeights}
    *
@@ -54,33 +54,29 @@ export class SmartWeaveNodeFactory extends SmartWeaveWebFactory {
     cacheBasePath?: string,
     maxStoredInMemoryBlockHeights = 10,
     confirmationStatus: ConfirmationStatus = { notCorrupted: true }
-  ): SmartWeaveBuilder {
-    const interactionsLoader = new RedstoneGatewayInteractionsLoader(R_GW_URL, confirmationStatus);
-    const definitionLoader = new RedstoneGatewayContractDefinitionLoader(R_GW_URL, arweave, new MemCache());
+  ): WarpBuilder {
+    const interactionsLoader = new WarpGatewayInteractionsLoader(R_GW_URL, confirmationStatus);
+    const definitionLoader = new WarpGatewayContractDefinitionLoader(R_GW_URL, arweave, new MemCache());
     const executorFactory = new CacheableExecutorFactory(arweave, new HandlerExecutorFactory(arweave), new MemCache());
 
     const stateEvaluator = new CacheableStateEvaluator(
       arweave,
-      new FileBlockHeightSwCache(cacheBasePath, maxStoredInMemoryBlockHeights),
+      new FileBlockHeightWarpCache(cacheBasePath, maxStoredInMemoryBlockHeights),
       [new Evolve(definitionLoader, executorFactory)]
     );
 
     const interactionsSorter = new LexicographicalInteractionsSorter(arweave);
 
-    return SmartWeave.builder(arweave)
+    return Warp.builder(arweave)
       .setDefinitionLoader(definitionLoader)
       .setInteractionsLoader(interactionsLoader)
-      .useRedStoneGwInfo()
+      .useWarpGwInfo()
       .setInteractionsSorter(interactionsSorter)
       .setExecutorFactory(executorFactory)
       .setStateEvaluator(stateEvaluator);
   }
 
-  static async knexCached(
-    arweave: Arweave,
-    dbConnection: Knex,
-    maxStoredInMemoryBlockHeights = 10
-  ): Promise<SmartWeave> {
+  static async knexCached(arweave: Arweave, dbConnection: Knex, maxStoredInMemoryBlockHeights = 10): Promise<Warp> {
     return (await this.knexCachedBased(arweave, dbConnection, maxStoredInMemoryBlockHeights)).build();
   }
 
@@ -91,9 +87,9 @@ export class SmartWeaveNodeFactory extends SmartWeaveWebFactory {
     dbConnection: Knex,
     maxStoredInMemoryBlockHeights = 10,
     confirmationStatus: ConfirmationStatus = { notCorrupted: true }
-  ): Promise<SmartWeaveBuilder> {
-    const interactionsLoader = new RedstoneGatewayInteractionsLoader(R_GW_URL, confirmationStatus);
-    const definitionLoader = new RedstoneGatewayContractDefinitionLoader(R_GW_URL, arweave, new MemCache());
+  ): Promise<WarpBuilder> {
+    const interactionsLoader = new WarpGatewayInteractionsLoader(R_GW_URL, confirmationStatus);
+    const definitionLoader = new WarpGatewayContractDefinitionLoader(R_GW_URL, arweave, new MemCache());
 
     const executorFactory = new CacheableExecutorFactory(arweave, new HandlerExecutorFactory(arweave), new MemCache());
 
@@ -105,10 +101,10 @@ export class SmartWeaveNodeFactory extends SmartWeaveWebFactory {
 
     const interactionsSorter = new LexicographicalInteractionsSorter(arweave);
 
-    return SmartWeave.builder(arweave)
+    return Warp.builder(arweave)
       .setDefinitionLoader(definitionLoader)
       .setInteractionsLoader(interactionsLoader)
-      .useRedStoneGwInfo()
+      .useWarpGwInfo()
       .setInteractionsSorter(interactionsSorter)
       .setExecutorFactory(executorFactory)
       .setStateEvaluator(stateEvaluator);

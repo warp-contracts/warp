@@ -4,7 +4,7 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory } from '@smartweave';
+import { Contract, LoggerFactory, Warp, WarpNodeFactory } from '@warp';
 import path from 'path';
 import { TsLogFactory } from '../../../logging/node/TsLogFactory';
 import { addFunds, mineBlock } from '../_helpers';
@@ -34,7 +34,7 @@ describe('Testing internal writes', () => {
 
   let arweave: Arweave;
   let arlocal: ArLocal;
-  let smartweave: SmartWeave;
+  let warp: Warp;
 
   beforeAll(async () => {
     // note: each tests suit (i.e. file with tests that Jest is running concurrently
@@ -57,7 +57,7 @@ describe('Testing internal writes', () => {
   });
 
   async function deployContracts() {
-    smartweave = SmartWeaveNodeFactory.forTesting(arweave);
+    warp = WarpNodeFactory.forTesting(arweave);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -72,7 +72,7 @@ describe('Testing internal writes', () => {
     );
 
     console.log('wallet address', walletAddress);
-    tokenContractTxId = await smartweave.createContract.deploy({
+    tokenContractTxId = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify({
         ...JSON.parse(tokenContractInitialState),
@@ -81,7 +81,7 @@ describe('Testing internal writes', () => {
       src: tokenContractSrc
     });
 
-    stakingContractTxId = await smartweave.createContract.deploy({
+    stakingContractTxId = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify({
         ...JSON.parse(stakingContractInitialState),
@@ -90,11 +90,11 @@ describe('Testing internal writes', () => {
       src: stakingContractSrc
     });
 
-    tokenContract = smartweave
+    tokenContract = warp
       .contract(tokenContractTxId)
       .setEvaluationOptions({ internalWrites: true })
       .connect(wallet);
-    stakingContract = smartweave
+    stakingContract = warp
       .contract(stakingContractTxId)
       .setEvaluationOptions({ internalWrites: true })
       .connect(wallet);

@@ -1,4 +1,4 @@
-import { Contract } from '@smartweave';
+import { Contract } from '@warp';
 import { EvolveState } from './Contract';
 
 /**

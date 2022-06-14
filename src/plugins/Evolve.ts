@@ -8,7 +8,7 @@ import {
   LoggerFactory,
   SmartWeaveError,
   SmartWeaveErrorType
-} from '@smartweave';
+} from '@warp';
 
 /*
 ...I'm still not fully convinced to the whole "evolve" idea.

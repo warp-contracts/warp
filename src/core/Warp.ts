@@ -1,27 +1,25 @@
 import {
-  CreateContract,
-  DefaultCreateContract,
   DefinitionLoader,
   ExecutorFactory,
   HandlerApi,
   InteractionsLoader,
   InteractionsSorter,
-  SmartWeaveBuilder,
+  WarpBuilder,
   StateEvaluator
 } from '@warp/core';
 import Arweave from 'arweave';
-import { Contract, HandlerBasedContract, PstContract, PstContractImpl } from '@warp/contract';
+import { Contract, HandlerBasedContract, CreateContract, DefaultCreateContract, PstContract, PstContractImpl } from '@warp/contract';
 import { GQLNodeInterface } from '@warp/legacy';
 
 /**
- * The SmartWeave "motherboard" ;-).
+ * The Warp "motherboard" ;-).
  * This is the base class that supplies the implementation of the SmartWeave protocol
  * Allows to plug-in different implementation of all the modules defined in the constructor.
  *
  * After being fully configured, it allows to "connect" to
  * contract and perform operations on them (see {@link Contract})
  */
-export class SmartWeave {
+export class Warp {
   readonly createContract: CreateContract;
 
   constructor(
@@ -31,13 +29,13 @@ export class SmartWeave {
     readonly interactionsSorter: InteractionsSorter,
     readonly executorFactory: ExecutorFactory<HandlerApi<unknown>>,
     readonly stateEvaluator: StateEvaluator,
-    readonly useRedstoneGwInfo: boolean = false
+    readonly useWarpGwInfo: boolean = false
   ) {
     this.createContract = new DefaultCreateContract(arweave);
   }
 
-  static builder(arweave: Arweave): SmartWeaveBuilder {
-    return new SmartWeaveBuilder(arweave);
+  static builder(arweave: Arweave): WarpBuilder {
+    return new WarpBuilder(arweave);
   }
 
   /**

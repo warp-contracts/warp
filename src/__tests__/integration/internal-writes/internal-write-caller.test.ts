@@ -4,7 +4,7 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory } from '@smartweave';
+import { Contract, LoggerFactory, Warp, WarpNodeFactory } from '@warp';
 import path from 'path';
 import { TsLogFactory } from '../../../logging/node/TsLogFactory';
 import { addFunds, mineBlock } from '../_helpers';
@@ -61,7 +61,7 @@ describe('Testing internal writes', () => {
 
   let arweave: Arweave;
   let arlocal: ArLocal;
-  let smartweave: SmartWeave;
+  let warp: Warp;
   let calleeContract: Contract<any>;
   let callingContract: Contract<any>;
   let calleeTxId;
@@ -87,7 +87,7 @@ describe('Testing internal writes', () => {
   });
 
   async function deployContracts() {
-    smartweave = SmartWeaveNodeFactory.forTesting(arweave);
+    warp = WarpNodeFactory.forTesting(arweave);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -97,25 +97,25 @@ describe('Testing internal writes', () => {
     calleeContractSrc = fs.readFileSync(path.join(__dirname, '../data/example-contract.js'), 'utf8');
     calleeInitialState = fs.readFileSync(path.join(__dirname, '../data/example-contract-state.json'), 'utf8');
 
-    calleeTxId = await smartweave.createContract.deploy({
+    calleeTxId = await warp.createContract.deploy({
       wallet,
       initState: calleeInitialState,
       src: calleeContractSrc
     });
 
-    const callingTxId = await smartweave.createContract.deploy({
+    const callingTxId = await warp.createContract.deploy({
       wallet,
       initState: callingContractInitialState,
       src: callingContractSrc
     });
 
-    calleeContract = smartweave
+    calleeContract = warp
       .contract(calleeTxId)
       .setEvaluationOptions({
         internalWrites: true
       })
       .connect(wallet);
-    callingContract = smartweave
+    callingContract = warp
       .contract(callingTxId)
       .setEvaluationOptions({
         internalWrites: true

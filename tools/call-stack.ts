@@ -4,7 +4,7 @@ import { LoggerFactory, mapReplacer } from '../src';
 import { TsLogFactory } from '../src/logging/node/TsLogFactory';
 import fs from 'fs';
 import path from 'path';
-import { SmartWeaveWebFactory } from '../src/core/web/SmartWeaveWebFactory';
+import { WarpWebFactory } from '../src/core/web/WarpWebFactory';
 
 async function main() {
   LoggerFactory.use(new TsLogFactory());
@@ -20,9 +20,9 @@ async function main() {
 
   const contractTxId = 'LppT1p3wri4FCKzW5buohsjWxpJHC58_rgIO-rYTMB8';
 
-  const smartweave = SmartWeaveWebFactory.memCached(arweave);
+  const warp = WarpWebFactory.memCached(arweave);
 
-  const contract = smartweave.contract(contractTxId).setEvaluationOptions({
+  const contract = warp.contract(contractTxId).setEvaluationOptions({
     ignoreExceptions: false,
     stackTrace: {
       saveState: false

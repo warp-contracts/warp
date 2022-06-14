@@ -1,4 +1,4 @@
-import { EvaluationOptions, GQLEdgeInterface } from '@smartweave';
+import { EvaluationOptions, GQLEdgeInterface } from '@warp';
 
 /**
  * Implementors of this interface add functionality of loading contract's interaction transactions.

@@ -1,4 +1,4 @@
-import { ContractDefinition, EvaluationOptions, ExecutorFactory } from '@smartweave/core';
+import { ContractDefinition, EvaluationOptions, ExecutorFactory } from '@warp/core';
 
 /**
  * An ExecutorFactory that allows to substitute original contract's source code.

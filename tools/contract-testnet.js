@@ -6,7 +6,7 @@ const {TsLogFactory} = require('../lib/cjs/logging/node/TsLogFactory');
 const fs = require('fs');
 const path =require('path');
 const {readContract} = require("smartweave");
-const {SmartWeaveNodeFactory} = require("../lib/cjs/core/node/SmartWeaveNodeFactory");
+const {WarpNodeFactory} = require("../lib/cjs/core/node/WarpNodeFactory");
 
 const logger = LoggerFactory.INST.create('Contract');
 
@@ -20,7 +20,7 @@ async function main() {
     protocol: 'https',
     port: 443,
   });
-  /*const result = await SmartWeaveNodeFactory
+  /*const result = await WarpNodeFactory
       .memCached(arweave)
       .contract("dKR4CTZUei9Q7L0n37WXs8pOOMP-WOyg0_2DSprdag4")
       .readState();*/

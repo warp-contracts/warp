@@ -1,10 +1,10 @@
 /**
  * A cache that stores its values depending on block height (eg.: contract's state cache).
- * See {@link BsonFileBlockHeightSwCache} or {@link MemBlockHeightSwCache}
+ * See {@link BsonFileBlockHeightWarpCache} or {@link MemBlockHeightWarpCache}
  *
  * @typeParam V - type of value stored in cache, defaults to `any`.
  */
-export interface BlockHeightSwCache<V> {
+export interface BlockHeightWarpCache<V> {
   /**
    * returns cached value for the highest available in cache block that is not higher than `blockHeight`.
    */

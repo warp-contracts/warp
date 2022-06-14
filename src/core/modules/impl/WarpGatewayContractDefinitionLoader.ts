@@ -1,26 +1,25 @@
-import { ContractDefinition, getTag, LoggerFactory, stripTrailingSlash, SwCache } from '@warp';
+import { ContractDefinition, getTag, LoggerFactory, SmartWeaveTags, stripTrailingSlash, WarpCache } from '@warp';
 import Arweave from 'arweave';
 import { ContractDefinitionLoader } from './ContractDefinitionLoader';
 import 'redstone-isomorphic';
 import { WasmSrc } from './wasm/WasmSrc';
 import Transaction from 'arweave/node/lib/transaction';
-import { SmartWeaveTags } from '@warp/core';
 
 /**
  * An extension to {@link ContractDefinitionLoader} that makes use of
- * Redstone Gateway ({@link https://github.com/redstone-finance/redstone-sw-gateway})
+ * Warp Gateway ({@link https://github.com/redstone-finance/redstone-sw-gateway})
  * to load Contract Data.
  *
- * If the contract data is not available on RedStone Gateway - it fallbacks to default implementation
+ * If the contract data is not available on Warp Gateway - it fallbacks to default implementation
  * in {@link ContractDefinitionLoader} - i.e. loads the definition from Arweave gateway.
  */
-export class RedstoneGatewayContractDefinitionLoader extends ContractDefinitionLoader {
-  private readonly rLogger = LoggerFactory.INST.create('RedstoneGatewayContractDefinitionLoader');
+export class WarpGatewayContractDefinitionLoader extends ContractDefinitionLoader {
+  private readonly rLogger = LoggerFactory.INST.create('WarpGatewayContractDefinitionLoader');
 
   constructor(
     private readonly baseUrl: string,
     arweave: Arweave,
-    cache?: SwCache<string, ContractDefinition<unknown>>
+    cache?: WarpCache<string, ContractDefinition<unknown>>
   ) {
     super(arweave, cache);
     this.baseUrl = stripTrailingSlash(baseUrl);
@@ -39,7 +38,7 @@ export class RedstoneGatewayContractDefinitionLoader extends ContractDefinitionL
             this.rLogger.error(error.body.message);
           }
           throw new Error(
-            `Unable to retrieve contract data. Redstone gateway responded with status ${error.status}:${error.body?.message}`
+            `Unable to retrieve contract data. Warp gateway responded with status ${error.status}:${error.body?.message}`
           );
         });
       if (result.srcBinary != null && !(result.srcBinary instanceof Buffer)) {

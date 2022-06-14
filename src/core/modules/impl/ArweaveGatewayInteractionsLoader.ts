@@ -9,7 +9,7 @@ import {
   LoggerFactory,
   sleep,
   SmartWeaveTags
-} from '@smartweave';
+} from '@warp';
 import Arweave from 'arweave';
 
 const MAX_REQUEST = 100;

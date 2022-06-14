@@ -6,7 +6,7 @@ import {
   InteractionsLoader,
   LoggerFactory,
   stripTrailingSlash
-} from '@smartweave';
+} from '@warp';
 import 'redstone-isomorphic';
 
 interface Paging {
@@ -24,7 +24,7 @@ interface Interaction {
   interaction: GQLNodeInterface;
 }
 
-export interface RedstoneGatewayInteractions {
+export interface WarpGatewayInteractions {
   paging: Paging;
   interactions: Interaction[];
   message?: string;
@@ -42,12 +42,12 @@ export type ConfirmationStatus =
 
 export const enum SourceType {
   ARWEAVE = 'arweave',
-  REDSTONE_SEQUENCER = 'redstone-sequencer'
+  WARP_SEQUENCER = 'redstone-sequencer'
 }
 
 /**
  * The aim of this implementation of the {@link InteractionsLoader} is to make use of
- * Redstone Gateway ({@link https://github.com/redstone-finance/redstone-sw-gateway})
+ * Warp Gateway ({@link https://github.com/redstone-finance/redstone-sw-gateway})
  * endpoint and retrieve contracts' interactions.
  *
  * Optionally - it is possible to pass:
@@ -63,10 +63,10 @@ export const enum SourceType {
  * - read more {@link https://github.com/redstone-finance/redstone-sw-gateway#corrupted-transactions}.
  *
  * Please note that currently caching (ie. {@link CacheableContractInteractionsLoader} is switched off
- * for RedstoneGatewayInteractionsLoader due to the issue mentioned in the
- * following comment {@link https://github.com/redstone-finance/redstone-smartcontracts/pull/62#issuecomment-995249264}
+ * for WarpGatewayInteractionsLoader due to the issue mentioned in the
+ * following comment {@link https://github.com/redstone-finance/warp/pull/62#issuecomment-995249264}
  */
-export class RedstoneGatewayInteractionsLoader implements InteractionsLoader {
+export class WarpGatewayInteractionsLoader implements InteractionsLoader {
   constructor(
     private readonly baseUrl: string,
     private readonly confirmationStatus: ConfirmationStatus = null,
@@ -77,7 +77,7 @@ export class RedstoneGatewayInteractionsLoader implements InteractionsLoader {
     this.source = source;
   }
 
-  private readonly logger = LoggerFactory.INST.create('RedstoneGatewayInteractionsLoader');
+  private readonly logger = LoggerFactory.INST.create('WarpGatewayInteractionsLoader');
 
   async load(
     contractId: string,
@@ -123,7 +123,7 @@ export class RedstoneGatewayInteractionsLoader implements InteractionsLoader {
           if (error.body?.message) {
             this.logger.error(error.body.message);
           }
-          throw new Error(`Unable to retrieve transactions. Redstone gateway responded with status ${error.status}.`);
+          throw new Error(`Unable to retrieve transactions. Warp gateway responded with status ${error.status}.`);
         });
       totalPages = response.paging.pages;
 

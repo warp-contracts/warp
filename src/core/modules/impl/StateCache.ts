@@ -1,4 +1,4 @@
-import { EvalStateResult, GQLNodeInterface } from '@smartweave';
+import { EvalStateResult, GQLNodeInterface } from '@warp';
 
 //export type StateCache<State> = Array<EvalStateResult<State>>;
 export type StateCache<State> = EvalStateResult<State>;

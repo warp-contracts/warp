@@ -4,7 +4,7 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory } from '@smartweave';
+import { Contract, LoggerFactory, Warp, WarpNodeFactory } from '@warp';
 import path from 'path';
 import { addFunds, mineBlock } from '../_helpers';
 
@@ -47,7 +47,7 @@ describe('Testing internal writes', () => {
 
   let arweave: Arweave;
   let arlocal: ArLocal;
-  let smartweave: SmartWeave;
+  let warp: Warp;
   let contractA: Contract<any>;
   let contractB: Contract<any>;
   let contractATxId;
@@ -73,7 +73,7 @@ describe('Testing internal writes', () => {
   });
 
   async function deployContracts() {
-    smartweave = SmartWeaveNodeFactory.forTesting(arweave);
+    warp = WarpNodeFactory.forTesting(arweave);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -83,25 +83,25 @@ describe('Testing internal writes', () => {
     contractBSrc = fs.readFileSync(path.join(__dirname, '../data/example-contract.js'), 'utf8');
     contractBInitialState = fs.readFileSync(path.join(__dirname, '../data/example-contract-state.json'), 'utf8');
 
-    contractATxId = await smartweave.createContract.deploy({
+    contractATxId = await warp.createContract.deploy({
       wallet,
       initState: contractAInitialState,
       src: contractASrc
     });
 
-    contractBTxId = await smartweave.createContract.deploy({
+    contractBTxId = await warp.createContract.deploy({
       wallet,
       initState: contractBInitialState,
       src: contractBSrc
     });
 
-    contractA = smartweave
+    contractA = warp
       .contract(contractATxId)
       .setEvaluationOptions({
         internalWrites: true
       })
       .connect(wallet);
-    contractB = smartweave
+    contractB = warp
       .contract(contractBTxId)
       .setEvaluationOptions({
         internalWrites: true
@@ -177,11 +177,11 @@ describe('Testing internal writes', () => {
     });
 
     it('should properly evaluate state with a new client', async () => {
-      const contractA2 = SmartWeaveNodeFactory.forTesting(arweave)
+      const contractA2 = WarpNodeFactory.forTesting(arweave)
         .contract<any>(contractATxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
-      const contractB2 = SmartWeaveNodeFactory.forTesting(arweave)
+      const contractB2 = WarpNodeFactory.forTesting(arweave)
         .contract<any>(contractBTxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
@@ -217,11 +217,11 @@ describe('Testing internal writes', () => {
     });
 
     it('should properly evaluate state with a new client', async () => {
-      const contractA2 = SmartWeaveNodeFactory.forTesting(arweave)
+      const contractA2 = WarpNodeFactory.forTesting(arweave)
         .contract<any>(contractATxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
-      const contractB2 = SmartWeaveNodeFactory.forTesting(arweave)
+      const contractB2 = WarpNodeFactory.forTesting(arweave)
         .contract<any>(contractBTxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
@@ -280,11 +280,11 @@ describe('Testing internal writes', () => {
     });
 
     xit('should properly evaluate state with a new client', async () => {
-      const contractA2 = SmartWeaveNodeFactory.forTesting(arweave)
+      const contractA2 = WarpNodeFactory.forTesting(arweave)
         .contract<any>(contractATxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
-      const contractB2 = SmartWeaveNodeFactory.forTesting(arweave)
+      const contractB2 = WarpNodeFactory.forTesting(arweave)
         .contract<any>(contractBTxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
@@ -339,11 +339,11 @@ describe('Testing internal writes', () => {
     });
 
     it('should properly evaluate state with a new client', async () => {
-      const contractA2 = SmartWeaveNodeFactory.forTesting(arweave)
+      const contractA2 = WarpNodeFactory.forTesting(arweave)
         .contract<any>(contractATxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
-      const contractB2 = SmartWeaveNodeFactory.forTesting(arweave)
+      const contractB2 = WarpNodeFactory.forTesting(arweave)
         .contract<any>(contractBTxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);

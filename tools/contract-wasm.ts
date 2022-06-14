@@ -5,8 +5,8 @@ import {
   BlockHeightInteractionsSorter,
   Contract, DefaultEvaluationOptions, LexicographicalInteractionsSorter,
   LoggerFactory,
-  SmartWeave,
-  SmartWeaveNodeFactory
+  Warp,
+  WarpNodeFactory
 } from '../src';
 import {TsLogFactory} from '../src/logging/node/TsLogFactory';
 import fs from 'fs';
@@ -16,7 +16,7 @@ import {JWKInterface} from 'arweave/node/lib/wallet';
 
 async function main() {
   let wallet: JWKInterface;
-  let smartweave: SmartWeave;
+  let warp: Warp;
 
   LoggerFactory.use(new TsLogFactory());
   LoggerFactory.INST.logLevel('error');
@@ -34,7 +34,7 @@ async function main() {
   });
 
   try {
-    smartweave = SmartWeaveNodeFactory.memCached(arweave);
+    warp = WarpNodeFactory.memCached(arweave);
 
     wallet = await arweave.wallets.generate();
     const walletAddress = await arweave.wallets.getAddress(wallet);
@@ -44,13 +44,13 @@ async function main() {
     const initialState = fs.readFileSync(path.join(__dirname, 'data/wasm/counter-init-state.json'), 'utf8');
 
 
-    const contractTxId = await smartweave.createContract.deploy({
+    const contractTxId = await warp.createContract.deploy({
       wallet,
       initState: initialState,
       src: contractSrc
     });
 
-    const contract = smartweave.contract(contractTxId).connect(wallet).setEvaluationOptions({
+    const contract = warp.contract(contractTxId).connect(wallet).setEvaluationOptions({
       ignoreExceptions: true,
       gasLimit: 12000000
     });
