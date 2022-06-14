@@ -3,7 +3,7 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, LoggerFactory, Warp, WarpNodeFactory } from '@warp';
+import { Contract, defaultCacheOptions, LoggerFactory, SmartWeave, SmartWeaveFactory } from '@smartweave';
 import path from 'path';
 import { addFunds, mineBlock } from '../_helpers';
 
@@ -12,7 +12,7 @@ interface ExampleContractState {
 }
 
 /**
- * This integration test should verify whether the basic functions of the Warp client
+ * This integration test should verify whether the basic functions of the SmartWeave client
  * work properly.
  * It first deploys the new contract and verifies its initial state.
  * Then it subsequently creates new interactions - to verify, whether
@@ -20,7 +20,7 @@ interface ExampleContractState {
  * work properly (ie. they do download the not yet cached interactions and evaluate state
  * for them).
  */
-describe('Testing the Warp client', () => {
+describe('Testing the SmartWeave client', () => {
   let contractSrc: string;
   let initialState: string;
 
@@ -28,7 +28,7 @@ describe('Testing the Warp client', () => {
 
   let arweave: Arweave;
   let arlocal: ArLocal;
-  let warp: Warp;
+  let smartweave: SmartWeave;
   let contract: Contract<ExampleContractState>;
   let contractVM: Contract<ExampleContractState>;
 
@@ -46,7 +46,7 @@ describe('Testing the Warp client', () => {
 
     LoggerFactory.INST.logLevel('error');
 
-    warp = WarpNodeFactory.forTesting(arweave);
+    smartweave = SmartWeaveFactory.forTesting(arweave);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -55,14 +55,14 @@ describe('Testing the Warp client', () => {
     initialState = fs.readFileSync(path.join(__dirname, '../data/example-contract-state.json'), 'utf8');
 
     // deploying contract using the new SDK.
-    const contractTxId = await warp.createContract.deploy({
+    const contractTxId = await smartweave.createContract.deploy({
       wallet,
       initState: initialState,
       src: contractSrc
     });
 
-    contract = warp.contract(contractTxId);
-    contractVM = warp.contract<ExampleContractState>(contractTxId).setEvaluationOptions({
+    contract = smartweave.contract(contractTxId);
+    contractVM = smartweave.contract<ExampleContractState>(contractTxId).setEvaluationOptions({
       useVM2: true
     });
     contract.connect(wallet);
