@@ -91,6 +91,20 @@ describe('Testing the SmartWeave client', () => {
     await contract.writeInteraction({ function: 'add' });
     await contract.writeInteraction({ function: 'add' });
     await contract.writeInteraction({ function: 'add' });
+    await mineBlock(arweave);
+
+    await contract.writeInteraction({ function: 'add' });
+    await contract.writeInteraction({ function: 'add' });
+    await contract.writeInteraction({ function: 'add' });
+    await contract.writeInteraction({ function: 'add' });
+    await contract.writeInteraction({ function: 'add' });
+    await contract.writeInteraction({ function: 'add' });
+    await contract.writeInteraction({ function: 'add' });
+    await contract.writeInteraction({ function: 'add' });
+    await contract.writeInteraction({ function: 'add' });
+    await contract.writeInteraction({ function: 'add' });
+    await mineBlock(arweave);
+
     await contract.writeInteraction({ function: 'add' });
     await contract.writeInteraction({ function: 'add' });
     await contract.writeInteraction({ function: 'add' });
@@ -101,7 +115,7 @@ describe('Testing the SmartWeave client', () => {
 
   it('should load all interactions', async () => {
     interactions = await loader.load(contract.contractTxId(), null, null, evalOptions);
-    expect(interactions.length).toBe(10);
+    expect(interactions.length).toBe(20);
   });
 
   it('should return properly sorted interactions', async () => {
@@ -170,13 +184,108 @@ describe('Testing the SmartWeave client', () => {
     expect(interactions2[3].sortKey).toEqual(interactions[9].sortKey);
   });
 
-  it('should properly limit results (6,7,8,9) - no upper bound', async () => {
+  it('should properly limit results (6-19) - no upper bound', async () => {
     const interactions2 = await loader.load(contract.contractTxId(), interactions[5].sortKey, null, evalOptions);
-    expect(interactions2.length).toBe(4);
+    expect(interactions2.length).toBe(14);
 
     expect(interactions2[0].sortKey).toEqual(interactions[6].sortKey);
     expect(interactions2[1].sortKey).toEqual(interactions[7].sortKey);
     expect(interactions2[2].sortKey).toEqual(interactions[8].sortKey);
     expect(interactions2[3].sortKey).toEqual(interactions[9].sortKey);
+  });
+
+  it('should properly limit results (2-11)', async () => {
+    const interactions2 = await loader.load(
+      contract.contractTxId(),
+      interactions[1].sortKey,
+      interactions[11].sortKey,
+      evalOptions
+    );
+    expect(interactions2.length).toBe(10);
+
+    expect(interactions2[0].sortKey).toEqual(interactions[2].sortKey);
+    expect(interactions2[0].block.height).toEqual(2);
+    expect(interactions2[1].sortKey).toEqual(interactions[3].sortKey);
+    expect(interactions2[1].block.height).toEqual(2);
+    expect(interactions2[2].sortKey).toEqual(interactions[4].sortKey);
+    expect(interactions2[2].block.height).toEqual(2);
+
+    expect(interactions2[3].sortKey).toEqual(interactions[5].sortKey);
+    expect(interactions2[3].block.height).toEqual(3);
+    expect(interactions2[4].sortKey).toEqual(interactions[6].sortKey);
+    expect(interactions2[4].block.height).toEqual(3);
+    expect(interactions2[5].sortKey).toEqual(interactions[7].sortKey);
+    expect(interactions2[5].block.height).toEqual(3);
+    expect(interactions2[6].sortKey).toEqual(interactions[8].sortKey);
+    expect(interactions2[6].block.height).toEqual(3);
+    expect(interactions2[7].sortKey).toEqual(interactions[9].sortKey);
+    expect(interactions2[7].block.height).toEqual(3);
+    expect(interactions2[8].sortKey).toEqual(interactions[10].sortKey);
+    expect(interactions2[8].block.height).toEqual(3);
+    expect(interactions2[9].sortKey).toEqual(interactions[11].sortKey);
+    expect(interactions2[9].block.height).toEqual(3);
+  });
+
+  it('should properly limit results (13-17)', async () => {
+    const interactions2 = await loader.load(
+      contract.contractTxId(),
+      interactions[12].sortKey,
+      interactions[17].sortKey,
+      evalOptions
+    );
+    expect(interactions2.length).toBe(5);
+
+    expect(interactions2[0].sortKey).toEqual(interactions[13].sortKey);
+    expect(interactions2[0].block.height).toEqual(3);
+    expect(interactions2[1].sortKey).toEqual(interactions[14].sortKey);
+    expect(interactions2[1].block.height).toEqual(3);
+
+    expect(interactions2[2].sortKey).toEqual(interactions[15].sortKey);
+    expect(interactions2[2].block.height).toEqual(4);
+    expect(interactions2[3].sortKey).toEqual(interactions[16].sortKey);
+    expect(interactions2[3].block.height).toEqual(4);
+    expect(interactions2[4].sortKey).toEqual(interactions[17].sortKey);
+    expect(interactions2[4].block.height).toEqual(4);
+  });
+
+  it('should properly limit results (13-17)', async () => {
+    const interactions2 = await loader.load(
+      contract.contractTxId(),
+      interactions[3].sortKey,
+      interactions[17].sortKey,
+      evalOptions
+    );
+    expect(interactions2.length).toBe(14);
+
+    expect(interactions2[0].sortKey).toEqual(interactions[4].sortKey);
+    expect(interactions2[0].block.height).toEqual(2);
+
+    expect(interactions2[1].sortKey).toEqual(interactions[5].sortKey);
+    expect(interactions2[1].block.height).toEqual(3);
+    expect(interactions2[2].sortKey).toEqual(interactions[6].sortKey);
+    expect(interactions2[2].block.height).toEqual(3);
+    expect(interactions2[3].sortKey).toEqual(interactions[7].sortKey);
+    expect(interactions2[3].block.height).toEqual(3);
+    expect(interactions2[4].sortKey).toEqual(interactions[8].sortKey);
+    expect(interactions2[4].block.height).toEqual(3);
+    expect(interactions2[5].sortKey).toEqual(interactions[9].sortKey);
+    expect(interactions2[5].block.height).toEqual(3);
+    expect(interactions2[6].sortKey).toEqual(interactions[10].sortKey);
+    expect(interactions2[6].block.height).toEqual(3);
+    expect(interactions2[7].sortKey).toEqual(interactions[11].sortKey);
+    expect(interactions2[7].block.height).toEqual(3);
+    expect(interactions2[8].sortKey).toEqual(interactions[12].sortKey);
+    expect(interactions2[8].block.height).toEqual(3);
+    expect(interactions2[9].sortKey).toEqual(interactions[13].sortKey);
+    expect(interactions2[9].block.height).toEqual(3);
+    expect(interactions2[10].sortKey).toEqual(interactions[14].sortKey);
+    expect(interactions2[10].block.height).toEqual(3);
+    expect(interactions2[11].sortKey).toEqual(interactions[15].sortKey);
+
+    expect(interactions2[11].block.height).toEqual(4);
+    expect(interactions2[12].sortKey).toEqual(interactions[16].sortKey);
+    expect(interactions2[12].block.height).toEqual(4);
+    expect(interactions2[13].sortKey).toEqual(interactions[17].sortKey);
+    expect(interactions2[13].block.height).toEqual(4);
   });
 });
