@@ -1,12 +1,18 @@
 /* eslint-disable */
 import {Level} from "level";
 
+import { MemoryLevel } from 'memory-level';
+
+// Create a database
+
+
 async function test() {
   const db = new Level<string, any>('./leveldb', {valueEncoding: 'json'});
+  const dbMem = new MemoryLevel({ valueEncoding: 'json' })
 
-  const contractA = db.sublevel<string, any>('contract_a', {valueEncoding: 'json'});
-  const contractB = db.sublevel<string, any>('contract_b', {valueEncoding: 'json'});
-  const contractC = db.sublevel<string, any>('contract_c', {valueEncoding: 'json'});
+  const contractA = dbMem.sublevel<string, any>('contract_a', {valueEncoding: 'json'});
+  const contractB = dbMem.sublevel<string, any>('contract_b', {valueEncoding: 'json'});
+  const contractC = dbMem.sublevel<string, any>('contract_c', {valueEncoding: 'json'});
 
   contractA.put("01a", {state: "01a"});
   contractA.put("01b", {state: "01b"});
