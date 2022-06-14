@@ -770,7 +770,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     if (!this.signer) {
       throw new Error("Wallet not connected. Use 'connect' method first.");
     }
-    const { arweave } = this.smartweave;
+    const { arweave } = this.warp;
     const source = new SourceImpl(arweave);
 
     const srcTx = await source.save(sourceData, this.signer);

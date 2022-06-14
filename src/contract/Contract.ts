@@ -10,6 +10,7 @@ import {
 } from '@warp';
 import { NetworkInfoInterface } from 'arweave/node/network';
 import Transaction from 'arweave/node/lib/transaction';
+import { Source } from './deploy/Source';
 
 export type CurrentTx = { interactionTxId: string; contractTxId: string };
 export type BenchmarkStats = { gatewayCommunication: number; stateEvaluation: number; total: number };

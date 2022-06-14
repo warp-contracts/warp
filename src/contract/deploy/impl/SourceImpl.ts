@@ -1,4 +1,4 @@
-import { WarpTags } from '@warp/core';
+import { SmartWeaveTags } from '@warp/core';
 import { LoggerFactory } from '@warp/logging';
 import { Source, SigningFunction } from '@warp';
 import metering from 'redstone-wasm-metering';
@@ -98,7 +98,7 @@ export class SourceImpl implements Source {
       srcTx = await this.arweave.createTransaction({ data: allData }, signer);
     }
 
-    srcTx.addTag(WarpTags.APP_NAME, 'SmartWeaveContractSource');
+    srcTx.addTag(SmartWeaveTags.APP_NAME, 'SmartWeaveContractSource');
     // TODO: version should be taken from the current package.json version.
     srcTx.addTag(SmartWeaveTags.APP_VERSION, '0.3.0');
     srcTx.addTag(SmartWeaveTags.SDK, 'Warp');

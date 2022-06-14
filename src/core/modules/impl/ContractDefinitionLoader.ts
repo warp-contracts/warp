@@ -7,9 +7,8 @@ import {
   DefinitionLoader,
   getTag,
   LoggerFactory,
-  SmartWeaveTags,
   WarpCache,
-  WarpTags
+  SmartWeaveTags
 } from '@warp';
 import Arweave from 'arweave';
 import Transaction from 'arweave/web/lib/transaction';
@@ -84,7 +83,7 @@ export class ContractDefinitionLoader implements DefinitionLoader {
     const benchmark = Benchmark.measure();
 
     const contractSrcTx = await this.arweaveWrapper.tx(contractSrcTxId);
-    const srcContentType = getTag(contractSrcTx, WarpTags.CONTENT_TYPE);
+    const srcContentType = getTag(contractSrcTx, SmartWeaveTags.CONTENT_TYPE);
     if (!supportedSrcContentTypes.includes(srcContentType)) {
       throw new Error(`Contract source content type ${srcContentType} not supported`);
     }

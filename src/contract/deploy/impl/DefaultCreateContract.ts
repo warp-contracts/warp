@@ -1,9 +1,9 @@
 /* eslint-disable */
-import { SmartWeaveTags } from '@smartweave/core';
+import { SmartWeaveTags } from '@warp/core';
 import Arweave from 'arweave';
-import { LoggerFactory } from '@smartweave/logging';
+import { LoggerFactory } from '@warp/logging';
 import Transaction from 'arweave/node/lib/transaction';
-import { ContractData, CreateContract, FromSrcTxContractData, SourceImpl } from '@smartweave/contract';
+import { ContractData, CreateContract, FromSrcTxContractData, SourceImpl } from '@warp/contract';
 
 export class DefaultCreateContract implements CreateContract {
   private readonly logger = LoggerFactory.INST.create('DefaultCreateContract');
