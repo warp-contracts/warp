@@ -196,6 +196,35 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
     expect(result.errorMessage).toEqual('[RE:WTF] unknown function: ');
   });
 
+  it("should properly evolve contract's source code", async () => {
+    const result = (await pst.currentBalance('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M')).balance;
+    expect(result).toEqual(10000000 + 1000 + 555);
+
+    const newContractSrc = fs.readFileSync(path.join(__dirname, '../data/wasm/go/go-pst-evolve.wasm'));
+
+    const newSrcTxId = await pst.save({
+      src: newContractSrc,
+      wasmSrcCodeDir: path.join(__dirname, '../data/wasm/go/src-evolve')
+    });
+
+    await mineBlock(arweave);
+
+    await pst.evolve(newSrcTxId);
+    await mineBlock(arweave);
+
+    // note: evolve should add to the transfer additional 200
+    await pst.transfer({
+      target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M',
+      qty: 555
+    });
+
+    await mineBlock(arweave);
+
+    expect((await pst.currentState()).balances['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']).toEqual(
+      10000000 + 555 + 1000 + 555 + 200
+    );
+  });
+
   it('should properly handle contract errors', async () => {
     const result = await pst.dryWrite({
       function: 'transfer',

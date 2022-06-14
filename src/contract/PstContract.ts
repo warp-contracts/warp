@@ -1,4 +1,5 @@
 import { Contract } from '@smartweave';
+import { EvolveState } from './Contract';
 
 /**
  * The result from the "balance" view method on the PST Contract.
@@ -7,44 +8,6 @@ export interface BalanceResult {
   target: string;
   ticker: string;
   balance: number;
-}
-
-/**
- * Interface for all contracts the implement the {@link Evolve} feature.
- * Evolve is a feature that allows to change contract's source
- * code, without having to deploy a new contract.
- * See ({@link Evolve})
- */
-export interface EvolvingContract {
-  /**
-   * allows to post new contract source on Arweave
-   * @param newContractSource - new contract source...
-   */
-  saveNewSource(newContractSource: string): Promise<string | null>;
-
-  /**
-   * effectively evolves the contract to the source.
-   * This requires the {@link saveNewSource} to be called first
-   * and its transaction to be confirmed by the network.
-   * @param newSrcTxId - result of the {@link saveNewSource} method call.
-   */
-  evolve(newSrcTxId: string): Promise<string | null>;
-}
-
-/**
- * Interface describing state for all Evolve-compatible contracts.
- */
-export interface EvolveState {
-  settings: any[] | unknown | null;
-  /**
-   * whether contract is allowed to evolve. seems to default to true..
-   */
-  canEvolve: boolean;
-
-  /**
-   * the transaction id of the Arweave transaction with the updated source code.
-   */
-  evolve: string;
 }
 
 /**
@@ -70,7 +33,7 @@ export interface TransferInput {
  * A type of {@link Contract} designed specifically for the interaction with
  * Profit Sharing Token contract.
  */
-export interface PstContract extends Contract<PstState>, EvolvingContract {
+export interface PstContract extends Contract<PstState> {
   /**
    * return the current balance for the given wallet
    * @param target - wallet address

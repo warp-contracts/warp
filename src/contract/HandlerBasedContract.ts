@@ -29,14 +29,15 @@ import {
   SmartWeave,
   SmartWeaveTags,
   SourceType,
-  Tags
+  Tags,
+  SourceImpl,
+  SourceData
 } from '@smartweave';
 import { TransactionStatusResponse } from 'arweave/node/transactions';
 import { NetworkInfoInterface } from 'arweave/node/network';
 import stringify from 'safe-stable-stringify';
 import * as crypto from 'crypto';
 import Transaction from 'arweave/node/lib/transaction';
-import { options } from 'tsconfig-paths/lib/options';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -764,5 +765,25 @@ export class HandlerBasedContract<State> implements Contract<State> {
     );
 
     return this;
+  }
+
+  async evolve(newSrcTxId: string, useBundler = false): Promise<string | null> {
+    if (useBundler) {
+      return await this.bundleInteraction<any>({ function: 'evolve', value: newSrcTxId });
+    } else {
+      return await this.writeInteraction<any>({ function: 'evolve', value: newSrcTxId });
+    }
+  }
+
+  async save(sourceData: SourceData): Promise<any> {
+    if (!this.signer) {
+      throw new Error("Wallet not connected. Use 'connect' method first.");
+    }
+    const { arweave } = this.smartweave;
+    const source = new SourceImpl(arweave);
+
+    const srcTx = await source.save(sourceData, this.signer);
+
+    return srcTx.id;
   }
 }

@@ -1,14 +1,12 @@
-/* eslint-disable */
-import { ContractData, ContractType, CreateContract, FromSrcTxContractData, SmartWeaveTags } from '@smartweave/core';
-import Arweave from 'arweave';
+import { SmartWeaveTags } from '@smartweave/core';
 import { LoggerFactory } from '@smartweave/logging';
-import { Go } from './wasm/go-wasm-imports';
+import { Source, SigningFunction } from '@smartweave';
 import metering from 'redstone-wasm-metering';
+import Arweave from 'arweave';
+import { Go } from '../../../core/modules/impl/wasm/go-wasm-imports';
 import fs, { PathOrFileDescriptor } from 'fs';
-import { matchMutClosureDtor } from './wasm/wasm-bindgen-tools';
-import { parseInt } from 'lodash';
-import Transaction from 'arweave/node/lib/transaction';
-import stringify from 'safe-stable-stringify';
+import { matchMutClosureDtor } from '../../../core/modules/impl/wasm/wasm-bindgen-tools';
+import { ArWallet, ContractType } from '../CreateContract';
 
 const wasmTypeMapping: Map<number, string> = new Map([
   [1, 'assemblyscript'],
@@ -18,17 +16,21 @@ const wasmTypeMapping: Map<number, string> = new Map([
   [5, 'c']*/
 ]);
 
-export class DefaultCreateContract implements CreateContract {
-  private readonly logger = LoggerFactory.INST.create('DefaultCreateContract');
+export interface SourceData {
+  src: string | Buffer;
+  wasmSrcCodeDir?: string;
+  wasmGlueCode?: string;
+}
 
-  constructor(private readonly arweave: Arweave) {
-    this.deployFromSourceTx = this.deployFromSourceTx.bind(this);
-  }
+export class SourceImpl implements Source {
+  private readonly logger = LoggerFactory.INST.create('Source');
+  constructor(private readonly arweave: Arweave) {}
 
-  async deploy(contractData: ContractData, useBundler = false): Promise<string> {
-    this.logger.debug('Creating new contract');
+  async save(contractData: SourceData, signer: ArWallet | SigningFunction, useBundler = false): Promise<any> {
+    this.logger.debug('Creating new contract source');
 
-    const { wallet, src, initState, tags, transfer, wasmSrcCodeDir, wasmGlueCode } = contractData;
+    const { src, wasmSrcCodeDir, wasmGlueCode } = contractData;
+
     const contractType: ContractType = src instanceof Buffer ? 'wasm' : 'js';
     let srcTx;
     let wasmLang = null;
@@ -45,7 +47,7 @@ export class DefaultCreateContract implements CreateContract {
 
       const wasmModule = await WebAssembly.compile(src as Buffer);
       const moduleImports = WebAssembly.Module.imports(wasmModule);
-      let lang;
+      let lang: number;
 
       if (this.isGoModule(moduleImports)) {
         const go = new Go(null);
@@ -90,7 +92,12 @@ export class DefaultCreateContract implements CreateContract {
 
     const allData = contractType == 'wasm' ? this.joinBuffers(data) : src;
 
-    srcTx = await this.arweave.createTransaction({ data: allData }, wallet);
+    if (typeof signer == 'function') {
+      srcTx = await this.arweave.createTransaction({ data: allData });
+    } else {
+      srcTx = await this.arweave.createTransaction({ data: allData }, signer);
+    }
+
     srcTx.addTag(SmartWeaveTags.APP_NAME, 'SmartWeaveContractSource');
     // TODO: version should be taken from the current package.json version.
     srcTx.addTag(SmartWeaveTags.APP_VERSION, '0.3.0');
@@ -103,7 +110,11 @@ export class DefaultCreateContract implements CreateContract {
       srcTx.addTag(SmartWeaveTags.WASM_META, JSON.stringify(metadata));
     }
 
-    await this.arweave.transactions.sign(srcTx, wallet);
+    if (typeof signer == 'function') {
+      await signer(srcTx);
+    } else {
+      await this.arweave.transactions.sign(srcTx, signer);
+    }
     this.logger.debug('Posting transaction with source');
 
     // note: in case of useBundler = true, we're posting both
@@ -115,99 +126,9 @@ export class DefaultCreateContract implements CreateContract {
     }
 
     if (responseOk) {
-      return await this.deployFromSourceTx(
-        {
-          srcTxId: srcTx.id,
-          wallet,
-          initState,
-          tags,
-          transfer
-        },
-        useBundler,
-        srcTx
-      );
+      return srcTx;
     } else {
       throw new Error(`Unable to write Contract Source`);
-    }
-  }
-
-  async deployFromSourceTx(
-    contractData: FromSrcTxContractData,
-    useBundler = false,
-    srcTx: Transaction = null
-  ): Promise<string> {
-    this.logger.debug('Creating new contract from src tx');
-    const { wallet, srcTxId, initState, tags, transfer } = contractData;
-
-    let contractTX = await this.arweave.createTransaction({ data: initState }, wallet);
-
-    if (+transfer?.winstonQty > 0 && transfer.target.length) {
-      this.logger.debug('Creating additional transaction with AR transfer', transfer);
-      contractTX = await this.arweave.createTransaction(
-        {
-          data: initState,
-          target: transfer.target,
-          quantity: transfer.winstonQty
-        },
-        wallet
-      );
-    }
-
-    if (tags?.length) {
-      for (const tag of tags) {
-        contractTX.addTag(tag.name.toString(), tag.value.toString());
-      }
-    }
-    contractTX.addTag(SmartWeaveTags.APP_NAME, 'SmartWeaveContract');
-    contractTX.addTag(SmartWeaveTags.APP_VERSION, '0.3.0');
-    contractTX.addTag(SmartWeaveTags.CONTRACT_SRC_TX_ID, srcTxId);
-    contractTX.addTag(SmartWeaveTags.SDK, 'RedStone');
-    contractTX.addTag(SmartWeaveTags.CONTENT_TYPE, 'application/json');
-
-    await this.arweave.transactions.sign(contractTX, wallet);
-
-    let responseOk;
-    if (useBundler) {
-      const result = await this.post(contractTX, srcTx);
-      this.logger.debug(result);
-      responseOk = true;
-    } else {
-      const response = await this.arweave.transactions.post(contractTX);
-      responseOk = response.status === 200 || response.status === 208;
-    }
-
-    if (responseOk) {
-      return contractTX.id;
-    } else {
-      throw new Error(`Unable to write Contract`);
-    }
-  }
-
-  private async post(contractTx: Transaction, srcTx: Transaction = null): Promise<any> {
-    let body: any = {
-      contractTx
-    };
-    if (srcTx) {
-      body = {
-        ...body,
-        srcTx
-      };
-    }
-
-    const response = await fetch(`https://d1o5nlqr4okus2.cloudfront.net/gateway/contracts/deploy`, {
-      method: 'POST',
-      body: JSON.stringify(body),
-      headers: {
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Content-Type': 'application/json',
-        Accept: 'application/json'
-      }
-    });
-
-    if (response.ok) {
-      return response.json();
-    } else {
-      throw new Error(`Error while posting contract ${response.statusText}`);
     }
   }
 
@@ -240,7 +161,7 @@ export class DefaultCreateContract implements CreateContract {
     const archive = archiver('zip', {
       zlib: { level: 9 } // Sets the compression level.
     });
-    archive.on('error', function (err) {
+    archive.on('error', function (err: any) {
       throw err;
     });
     archive.pipe(outputStreamBuffer);
