@@ -3,11 +3,11 @@ import fs from 'fs';
 
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
-import {JWKInterface} from 'arweave/node/lib/wallet';
-import {Contract, LoggerFactory, Warp, WarpFactory} from '@warp';
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import { Contract, LoggerFactory, Warp, WarpFactory } from '@warp';
 import path from 'path';
-import {TsLogFactory} from '../../../logging/node/TsLogFactory';
-import {addFunds, mineBlock} from '../_helpers';
+import { TsLogFactory } from '../../../logging/node/TsLogFactory';
+import { addFunds, mineBlock } from '../_helpers';
 
 /**
  * This test verifies "deep" writes between
@@ -113,7 +113,7 @@ describe('Testing internal writes', () => {
 
     contractCTxId = await warp.createContract.deploy({
       wallet,
-      initState: JSON.stringify({counter: 200}),
+      initState: JSON.stringify({ counter: 200 }),
       src: contractBSrc
     });
 
@@ -151,9 +151,9 @@ describe('Testing internal writes', () => {
     });
 
     it('should properly create multiple internal calls (1)', async () => {
-      await contractB.writeInteraction({function: 'add'});
-      await contractB.writeInteraction({function: 'add'});
-      await contractC.writeInteraction({function: 'add'});
+      await contractB.writeInteraction({ function: 'add' });
+      await contractB.writeInteraction({ function: 'add' });
+      await contractC.writeInteraction({ function: 'add' });
       await mineBlock(arweave);
 
       expect((await contractB.readState()).state.counter).toEqual(557);
@@ -185,9 +185,9 @@ describe('Testing internal writes', () => {
     });
 
     it('should properly create multiple internal calls', async () => {
-      await contractB.writeInteraction({function: 'add'});
-      await contractB.writeInteraction({function: 'add'});
-      await contractC.writeInteraction({function: 'add'});
+      await contractB.writeInteraction({ function: 'add' });
+      await contractB.writeInteraction({ function: 'add' });
+      await contractC.writeInteraction({ function: 'add' });
       await mineBlock(arweave);
 
       await contractA.writeInteraction({
@@ -210,12 +210,12 @@ describe('Testing internal writes', () => {
     it('should properly evaluate state with a new client', async () => {
       const contractB2 = WarpFactory.forTesting(arweave)
         .contract<any>(contractBTxId)
-        .setEvaluationOptions({internalWrites: true})
+        .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
 
       const contractC2 = WarpFactory.forTesting(arweave)
         .contract<any>(contractCTxId)
-        .setEvaluationOptions({internalWrites: true})
+        .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
       expect((await contractB2.readState()).state.counter).toEqual(567);
       expect((await contractC2.readState()).state.counter).toEqual(231);
@@ -228,9 +228,9 @@ describe('Testing internal writes', () => {
     });
 
     it('should properly create multiple internal calls', async () => {
-      await contractB.writeInteraction({function: 'add'});
-      await contractB.writeInteraction({function: 'add'});
-      await contractC.writeInteraction({function: 'add'});
+      await contractB.writeInteraction({ function: 'add' });
+      await contractB.writeInteraction({ function: 'add' });
+      await contractC.writeInteraction({ function: 'add' });
       await mineBlock(arweave);
 
       await contractA.writeInteraction({
@@ -260,9 +260,9 @@ describe('Testing internal writes', () => {
     });
 
     it('should properly create multiple internal calls', async () => {
-      await contractB.writeInteraction({function: 'add'});
-      await contractB.writeInteraction({function: 'add'});
-      await contractC.writeInteraction({function: 'add'});
+      await contractB.writeInteraction({ function: 'add' });
+      await contractB.writeInteraction({ function: 'add' });
+      await contractC.writeInteraction({ function: 'add' });
       await mineBlock(arweave);
 
       await contractA.writeInteraction({
@@ -296,9 +296,9 @@ describe('Testing internal writes', () => {
         maxCallDepth: 3
       });
 
-      await contractB.writeInteraction({function: 'add'});
-      await contractB.writeInteraction({function: 'add'});
-      await contractC.writeInteraction({function: 'add'});
+      await contractB.writeInteraction({ function: 'add' });
+      await contractB.writeInteraction({ function: 'add' });
+      await contractC.writeInteraction({ function: 'add' });
       await mineBlock(arweave);
 
       await contractA.writeInteraction({
@@ -319,9 +319,9 @@ describe('Testing internal writes', () => {
         ignoreExceptions: false
       });
 
-      await contractB.writeInteraction({function: 'add'});
-      await contractB.writeInteraction({function: 'add'});
-      await contractC.writeInteraction({function: 'add'});
+      await contractB.writeInteraction({ function: 'add' });
+      await contractB.writeInteraction({ function: 'add' });
+      await contractC.writeInteraction({ function: 'add' });
       await mineBlock(arweave);
 
       await contractA.writeInteraction({

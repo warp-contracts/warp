@@ -4,7 +4,7 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import {Contract, LoggerFactory, Warp, WarpFactory} from '@warp';
+import { Contract, LoggerFactory, Warp, WarpFactory } from '@warp';
 import path from 'path';
 import { TsLogFactory } from '../../../logging/node/TsLogFactory';
 import { addFunds, mineBlock } from '../_helpers';
@@ -89,14 +89,8 @@ describe('Testing internal writes', () => {
       src: stakingContractSrc
     });
 
-    tokenContract = warp
-      .contract(tokenContractTxId)
-      .setEvaluationOptions({ internalWrites: true })
-      .connect(wallet);
-    stakingContract = warp
-      .contract(stakingContractTxId)
-      .setEvaluationOptions({ internalWrites: true })
-      .connect(wallet);
+    tokenContract = warp.contract(tokenContractTxId).setEvaluationOptions({ internalWrites: true }).connect(wallet);
+    stakingContract = warp.contract(stakingContractTxId).setEvaluationOptions({ internalWrites: true }).connect(wallet);
 
     await mineBlock(arweave);
   }

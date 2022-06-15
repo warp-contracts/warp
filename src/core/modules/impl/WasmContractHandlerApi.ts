@@ -240,15 +240,11 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
       ]);
 
       this.logger.debug('Cache result?:', !this.swGlobal._activeTx.dry);
-      await executionContext.warp.stateEvaluator.onInternalWriteStateUpdate(
-        this.swGlobal._activeTx,
-        contractTxId,
-        {
-          state: result.state as State,
-          validity: {},
-          errorMessages: {}
-        }
-      );
+      await executionContext.warp.stateEvaluator.onInternalWriteStateUpdate(this.swGlobal._activeTx, contractTxId, {
+        state: result.state as State,
+        validity: {},
+        errorMessages: {}
+      });
 
       return result;
     };
