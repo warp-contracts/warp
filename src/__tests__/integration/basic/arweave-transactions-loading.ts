@@ -10,15 +10,15 @@ import {
   GQLNodeInterface,
   LexicographicalInteractionsSorter,
   LoggerFactory,
-  SmartWeave,
-  SmartWeaveFactory
-} from '@smartweave';
+  Warp,
+  WarpFactory
+} from '@warp';
 import path from 'path';
 import { addFunds, mineBlock } from '../_helpers';
 
 let arweave: Arweave;
 let arlocal: ArLocal;
-let smartweave: SmartWeave;
+let warp: Warp;
 let contract: Contract<ExampleContractState>;
 
 interface ExampleContractState {
@@ -49,13 +49,13 @@ describe('Testing the SmartWeave client', () => {
 
     loader = new ArweaveGatewayInteractionsLoader(arweave);
     sorter = new LexicographicalInteractionsSorter(arweave);
-    smartweave = SmartWeaveFactory.forTesting(arweave);
+    warp = WarpFactory.forTesting(arweave);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
 
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/inf-loop-contract.js'), 'utf8');
-    const contractTxId = await smartweave.createContract.deploy({
+    const contractTxId = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify({
         counter: 10
@@ -63,7 +63,7 @@ describe('Testing the SmartWeave client', () => {
       src: contractSrc
     });
 
-    contract = smartweave
+    contract = warp
       .contract<ExampleContractState>(contractTxId)
       .setEvaluationOptions({
         maxInteractionEvaluationTimeSeconds: 1
