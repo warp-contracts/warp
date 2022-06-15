@@ -1,6 +1,6 @@
 # Warp SDK
 
-> ⚠️ Following library has been renamed from **redstone-smartweave** to **warp** from version **1.0.0**! If you are using older version please read [README-LEGACY](README-LEGACY.md).
+> ⚠️ Following library has been renamed from **[redstone-smartweave](https://www.npmjs.com/package/redstone-smartweave)** to **warp-contracts** from version **1.0.0**! If you are using older version please read [README-LEGACY](README-LEGACY.md).
 
 Warp SDK is the implementation of the SmartWeave [Protocol](./docs/SMARTWEAVE_PROTOCOL.md).
 
