@@ -372,7 +372,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     upToSortKey?: string,
     forceDefinitionLoad = false
   ): Promise<ExecutionContext<State, HandlerApi<State>>> {
-    const { definitionLoader, interactionsLoader, executorFactory, stateEvaluator } = this.smartweave;
+    const { definitionLoader, interactionsLoader, executorFactory, stateEvaluator } = this.warp;
 
     const benchmark = Benchmark.measure();
     const cachedState = await stateEvaluator.latestAvailableState<State>(contractTxId, upToSortKey);

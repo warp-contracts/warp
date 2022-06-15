@@ -4,7 +4,7 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import {JWKInterface} from 'arweave/node/lib/wallet';
-import {Contract, LoggerFactory, SmartWeave, SmartWeaveFactory} from '@smartweave';
+import {Contract, LoggerFactory, Warp, WarpFactory} from '@warp';
 import path from 'path';
 import {addFunds, mineBlock} from '../_helpers';
 
@@ -48,7 +48,7 @@ describe('Testing internal writes', () => {
 
   let arweave: Arweave;
   let arlocal: ArLocal;
-  let smartweave: SmartWeave;
+  let warp: Warp;
   let calleeContract: Contract<ExampleContractState>;
   let calleeContractVM: Contract<ExampleContractState>;
   let callingContract: Contract;
@@ -76,7 +76,7 @@ describe('Testing internal writes', () => {
   });
 
   async function deployContracts() {
-    smartweave = SmartWeaveFactory.forTesting(arweave);
+    warp = WarpFactory.forTesting(arweave);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -86,25 +86,25 @@ describe('Testing internal writes', () => {
     calleeContractSrc = fs.readFileSync(path.join(__dirname, '../data/example-contract.js'), 'utf8');
     calleeInitialState = fs.readFileSync(path.join(__dirname, '../data/example-contract-state.json'), 'utf8');
 
-    calleeTxId = await smartweave.createContract.deploy({
+    calleeTxId = await warp.createContract.deploy({
       wallet,
       initState: calleeInitialState,
       src: calleeContractSrc
     });
 
-    const callingTxId = await smartweave.createContract.deploy({
+    const callingTxId = await warp.createContract.deploy({
       wallet,
       initState: callingContractInitialState,
       src: callingContractSrc
     });
 
-    calleeContract = smartweave
+    calleeContract = warp
       .contract<ExampleContractState>(calleeTxId)
       .setEvaluationOptions({
         internalWrites: true
       })
       .connect(wallet);
-    calleeContractVM = smartweave
+    calleeContractVM = warp
       .contract<ExampleContractState>(calleeTxId)
       .setEvaluationOptions({
         internalWrites: true,
@@ -112,13 +112,13 @@ describe('Testing internal writes', () => {
       })
       .connect(wallet);
 
-    callingContract = smartweave
+    callingContract = warp
       .contract(callingTxId)
       .setEvaluationOptions({
         internalWrites: true
       })
       .connect(wallet);
-    callingContractVM = smartweave
+    callingContractVM = warp
       .contract(callingTxId)
       .setEvaluationOptions({
         internalWrites: true,
@@ -227,9 +227,6 @@ describe('Testing internal writes', () => {
       await callingContract.writeInteraction({function: 'writeContract', contractId: calleeTxId, amount: 10});
       await mineBlock(arweave);
 
-      /*expect((await calleeContract.readState()).state.counter).toEqual(568);
-      expect((await calleeContractVM.readState()).state.counter).toEqual(568)*/
-
       await calleeContract.writeInteraction({function: 'add'});
       await mineBlock(arweave);
 
@@ -238,9 +235,6 @@ describe('Testing internal writes', () => {
       await mineBlock(arweave);
       await calleeContract.writeInteraction({function: 'add'});
       await mineBlock(arweave);
-
-      /*expect((await calleeContract.readState()).state.counter).toEqual(590);
-      expect((await calleeContractVM.readState()).state.counter).toEqual(590)*/
 
       await callingContract.writeInteraction({function: 'writeContract', contractId: calleeTxId, amount: 10});
       await mineBlock(arweave);
@@ -256,13 +250,11 @@ describe('Testing internal writes', () => {
       await callingContract.writeInteraction({function: 'writeContract', contractId: calleeTxId, amount: 10});
       await mineBlock(arweave);
 
-      /*expect((await calleeContract.readState()).state.counter).toEqual(623);
-      expect((await calleeContractVM.readState()).state.counter).toEqual(623)*/
-
       await callingContract.writeInteraction({function: 'writeContract', contractId: calleeTxId, amount: 10});
       await mineBlock(arweave);
       await calleeContract.writeInteraction({function: 'add'});
       await mineBlock(arweave);
+
       expect((await calleeContract.readState()).state.counter).toEqual(634);
       expect((await calleeContractVM.readState()).state.counter).toEqual(634);
     });
@@ -273,12 +265,12 @@ describe('Testing internal writes', () => {
     });
 
     it('should properly evaluate state again with a new client', async () => {
-      const calleeContract2 = SmartWeaveFactory.forTesting(arweave)
+      const calleeContract2 = WarpFactory.forTesting(arweave)
         .contract<ExampleContractState>(calleeTxId)
         .setEvaluationOptions({
           internalWrites: true
         });
-      const calleeContract2VM = SmartWeaveFactory.forTesting(arweave)
+      const calleeContract2VM = WarpFactory.forTesting(arweave)
         .contract<ExampleContractState>(calleeTxId)
         .setEvaluationOptions({
           internalWrites: true,
