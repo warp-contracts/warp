@@ -1,6 +1,6 @@
 {
-  "name": "redstone-smartweave",
-  "version": "0.5.7",
+  "name": "warp-contracts",
+  "version": "1.1.1",
   "description": "An implementation of the SmartWeave smart contract protocol.",
   "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",
@@ -59,14 +59,14 @@
     "arweave"
   ],
   "bugs": {
-    "url": "https://github.com/redstone-finance/redstone-smartweave/issues"
+    "url": "https://github.com/warp-contracts/warp/issues"
   },
-  "homepage": "https://github.com/redstone-finance/redstone-smartweave#readme",
+  "homepage": "https://github.com/warp-contracts/warp#readme",
   "dependencies": {
     "@assemblyscript/loader": "^0.19.23",
     "@idena/vrf-js": "^1.0.1",
     "archiver": "^5.3.0",
-    "arweave": "1.10.23",
+    "arweave": "1.11.4",
     "bignumber.js": "^9.0.1",
     "elliptic": "^6.5.4",
     "fast-copy": "^2.1.1",
@@ -86,7 +86,7 @@
     "@types/node": "^17.0.21",
     "@typescript-eslint/eslint-plugin": "^4.29.2",
     "@typescript-eslint/parser": "^4.29.2",
-    "arlocal": "1.1.30",
+    "arlocal": "1.1.42",
     "cheerio": "^1.0.0-rc.10",
     "cli-table": "0.3.11",
     "colors": "^1.4.0",
@@ -115,6 +115,7 @@
     "crypto": false,
     "vm2": false,
     "archiver": false,
-    "stream-buffers": false
+    "stream-buffers": false,
+    "constants": false
   }
 }

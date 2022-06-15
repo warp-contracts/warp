@@ -1,6 +1,6 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import { Contract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory } from '../src';
+import { Contract, LoggerFactory, Warp, WarpNodeFactory } from '../src';
 import { TsLogFactory } from '../src/logging/node/TsLogFactory';
 import fs from 'fs';
 import path from 'path';
@@ -16,7 +16,7 @@ async function main() {
   let wallet: JWKInterface;
   let walletAddress: string;
 
-  let smartweave: SmartWeave;
+  let warp: Warp;
   let contractA: Contract<any>;
   let contractB: Contract<any>;
   let contractC: Contract<any>;
@@ -31,7 +31,7 @@ async function main() {
    LoggerFactory.INST.logLevel('debug', 'DefaultStateEvaluator');
    LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
    LoggerFactory.INST.logLevel('debug', 'ContractHandler');
-   LoggerFactory.INST.logLevel('debug', 'MemBlockHeightSwCache');
+   LoggerFactory.INST.logLevel('debug', 'MemBlockHeightWarpCache');
  */ const logger = LoggerFactory.INST.create('inner-write');
 
   const arlocal = new ArLocal(1982, false);
@@ -43,7 +43,7 @@ async function main() {
   });
 
   try {
-    smartweave = SmartWeaveNodeFactory.memCached(arweave);
+    warp = WarpNodeFactory.memCached(arweave);
 
     wallet = await arweave.wallets.generate();
 
@@ -64,20 +64,20 @@ async function main() {
       'utf8'
     );
 
-    contractATxId = await smartweave.createContract.deploy({
+    contractATxId = await warp.createContract.deploy({
       wallet,
       initState: contractAInitialState,
       src: contractASrc
     });
 
-    contractBTxId = await smartweave.createContract.deploy({
+    contractBTxId = await warp.createContract.deploy({
       wallet,
       initState: contractBInitialState,
       src: contractBSrc
     });
 
-    contractA = smartweave.contract(contractATxId).setEvaluationOptions({ internalWrites: true }).connect(wallet);
-    contractB = smartweave.contract(contractBTxId).setEvaluationOptions({ internalWrites: true }).connect(wallet);
+    contractA = warp.contract(contractATxId).setEvaluationOptions({ internalWrites: true }).connect(wallet);
+    contractB = warp.contract(contractBTxId).setEvaluationOptions({ internalWrites: true }).connect(wallet);
 
     await mine();
 
@@ -132,11 +132,11 @@ async function main() {
     logger.info('ContractA -805 :', (await contractA.readState()).state.counter);
     logger.info('ContractB -2060 :', (await contractB.readState()).state.counter);
 
-    const contractA2 = SmartWeaveNodeFactory.memCached(arweave)
+    const contractA2 = WarpNodeFactory.memCached(arweave)
       .contract<any>(contractATxId)
       .setEvaluationOptions({ internalWrites: true })
       .connect(wallet);
-    const contractB2 = SmartWeaveNodeFactory.memCached(arweave)
+    const contractB2 = WarpNodeFactory.memCached(arweave)
       .contract<any>(contractBTxId)
       .setEvaluationOptions({ internalWrites: true })
       .connect(wallet);

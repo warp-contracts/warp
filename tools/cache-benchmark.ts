@@ -2,7 +2,7 @@
 import Arweave from 'arweave';
 import { LoggerFactory } from '../src';
 import { TsLogFactory } from '../src/logging/node/TsLogFactory';
-import { MemBlockHeightSwCache } from '../src/cache/impl/MemBlockHeightCache';
+import { MemBlockHeightWarpCache } from '../src/cache/impl/MemBlockHeightCache';
 
 type Cache = {
   ticker: string;
@@ -14,8 +14,8 @@ async function main() {
 
   LoggerFactory.INST.logLevel('debug');
 
-  const objectCache = new MemBlockHeightSwCache<Cache>();
-  const arrayCache = new MemBlockHeightSwCache<Array<Cache>>();
+  const objectCache = new MemBlockHeightWarpCache<Cache>();
+  const arrayCache = new MemBlockHeightWarpCache<Array<Cache>>();
 
   console.time('benchmark_object');
   for (let i = 0; i < 10_000_000; i++) {

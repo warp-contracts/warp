@@ -3,7 +3,7 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { LoggerFactory, PstContract, PstState, SmartWeave, SmartWeaveNodeFactory } from '@smartweave';
+import { LoggerFactory, PstContract, PstState, Warp, WarpNodeFactory } from '@warp';
 import path from 'path';
 import { addFunds, mineBlock } from '../_helpers';
 
@@ -17,7 +17,7 @@ describe('Testing the Profit Sharing Token', () => {
 
   let arweave: Arweave;
   let arlocal: ArLocal;
-  let smartweave: SmartWeave;
+  let warp: Warp;
   let pst: PstContract;
   let contractTxId;
 
@@ -39,7 +39,7 @@ describe('Testing the Profit Sharing Token', () => {
 
     LoggerFactory.INST.logLevel('error');
 
-    smartweave = SmartWeaveNodeFactory.fileCachedBased(arweave, cacheDir).useArweaveGateway().build();
+    warp = WarpNodeFactory.fileCachedBased(arweave, cacheDir).useArweaveGateway().build();
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -60,14 +60,14 @@ describe('Testing the Profit Sharing Token', () => {
     };
 
     // deploying contract using the new SDK.
-    contractTxId = await smartweave.createContract.deploy({
+    contractTxId = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify(initialState),
       src: contractSrc
     });
 
     // connecting to the PST contract
-    pst = smartweave.pst(contractTxId);
+    pst = warp.pst(contractTxId);
 
     // connecting wallet to the PST contract
     pst.connect(wallet);
@@ -112,7 +112,7 @@ describe('Testing the Profit Sharing Token', () => {
 
     const newSource = fs.readFileSync(path.join(__dirname, '../data/token-evolve.js'), 'utf8');
 
-    const newSrcTxId = await pst.saveNewSource(newSource);
+    const newSrcTxId = await pst.save({ src: newSource });
     await mineBlock(arweave);
 
     await pst.evolve(newSrcTxId);
@@ -123,9 +123,9 @@ describe('Testing the Profit Sharing Token', () => {
   });
 
   it('should load updated source code', async () => {
-    const smartweave2 = SmartWeaveNodeFactory.fileCachedBased(arweave, cacheDir).useArweaveGateway().build();
+    const warp2 = WarpNodeFactory.fileCachedBased(arweave, cacheDir).useArweaveGateway().build();
     // connecting to the PST contract
-    pst = smartweave2.pst(contractTxId);
+    pst = warp2.pst(contractTxId);
 
     // connecting wallet to the PST contract
     pst.connect(wallet);

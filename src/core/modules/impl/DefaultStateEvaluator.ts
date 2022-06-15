@@ -17,7 +17,7 @@ import {
   StateEvaluator,
   TagsParser,
   VrfData
-} from '@smartweave';
+} from '@warp';
 import Arweave from 'arweave';
 
 import { ProofHoHash } from '@idena/vrf-js';
@@ -109,7 +109,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           .addInteractionData({ interaction: null, interactionTx, currentTx });
 
         // creating a Contract instance for the "writing" contract
-        const writingContract = executionContext.smartweave.contract(
+        const writingContract = executionContext.warp.contract(
           writingContractTxId,
           executionContext.contract,
           interactionTx
@@ -147,7 +147,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           const toCache = new EvalStateResult(currentState, validity);
 
           // TODO: probably a separate hook should be created here
-          // to fix https://github.com/redstone-finance/redstone-smartcontracts/issues/109
+          // to fix https://github.com/redstone-finance/warp/issues/109
           await this.onStateUpdate<State>(interactionTx, executionContext, toCache);
           if (canBeCached(interactionTx)) {
             lastConfirmedTxState = {

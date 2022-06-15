@@ -8,7 +8,7 @@ import {
   LoggerFactory,
   SmartWeaveError,
   SmartWeaveErrorType
-} from '@smartweave';
+} from '@warp';
 
 /*
 ...I'm still not fully convinced to the whole "evolve" idea.
@@ -79,7 +79,7 @@ export class Evolve implements ExecutionContextModifier {
           //FIXME: side-effect...
           executionContext.contractDefinition = newContractDefinition;
           executionContext.handler = newHandler;
-
+          executionContext.handler.initState(state);
           this.logger.debug('evolved to:', {
             evolve: evolvedSrcTxId,
             newSrcTxId: executionContext.contractDefinition.srcTxId,

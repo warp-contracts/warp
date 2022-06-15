@@ -1,6 +1,6 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import {LoggerFactory, SmartWeaveNodeFactory} from '../src';
+import {LoggerFactory, WarpNodeFactory} from '../src';
 import fs from 'fs';
 import {JWKInterface} from 'arweave/node/lib/wallet';
 import {TsLogFactory} from "../src/logging/node/TsLogFactory";
@@ -17,7 +17,7 @@ async function main() {
   });
 
   try {
-    const contract = await SmartWeaveNodeFactory.memCached(arweave)
+    const contract = await WarpNodeFactory.memCached(arweave)
       .contract("XIutiOKujGI21_ywULlBeyy-L9d8goHxt0ZyUayGaDg")
       .syncState("http://134.209.84.136:8080");
 

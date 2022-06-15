@@ -1,4 +1,4 @@
-import { BlockHeightCacheResult, CurrentTx, ExecutionContext, GQLNodeInterface } from '@smartweave';
+import { BlockHeightCacheResult, CurrentTx, ExecutionContext, GQLNodeInterface } from '@warp';
 
 /**
  * Implementors of this class are responsible for evaluating contract's state
@@ -68,7 +68,7 @@ export interface StateEvaluator {
   flushCache(): Promise<void>;
 
   /**
-   * allows to syncState with an external state source (like RedStone Distributed Execution Network)
+   * allows to syncState with an external state source (like Warp Distributed Execution Network)
    */
   syncState(contractTxId: string, blockHeight: number, transactionId: string, state: any, validity: any): Promise<void>;
 }
@@ -104,7 +104,7 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
     saveState: false
   };
 
-  bundlerUrl = 'https://gateway.redstone.finance/';
+  bundlerUrl = `https://d1o5nlqr4okus2.cloudfront.net/`;
 
   gasLimit = Number.MAX_SAFE_INTEGER;
 
@@ -137,7 +137,7 @@ export interface EvaluationOptions {
   // - quite often scenario in FCP)
   // 2. after evaluating all the contract interactions.
 
-  // https://github.com/redstone-finance/redstone-smartcontracts/issues/53
+  // https://github.com/redstone-finance/warp/issues/53
   updateCacheForEachInteraction: boolean;
 
   // a new, experimental enhancement of the protocol that allows for interactWrites from

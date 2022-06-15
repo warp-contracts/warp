@@ -1,9 +1,9 @@
-import { SwCache } from '@smartweave/cache';
+import { WarpCache } from '@warp/cache';
 
 /**
  * A simple, in-memory cache, with keys being transaction ids (e.g. contract transaction id).
  */
-export class MemCache<V = any> implements SwCache<string, V> {
+export class MemCache<V = any> implements WarpCache<string, V> {
   private readonly storage: { [key: string]: V } = {};
 
   clearAll() {
