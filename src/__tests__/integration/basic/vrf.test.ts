@@ -13,9 +13,9 @@ import {
   LoggerFactory,
   PstContract,
   PstState,
-  SmartWeave,
-  SmartWeaveFactory
-} from '@smartweave';
+  Warp,
+  WarpFactory
+} from '@warp';
 import path from 'path';
 import { addFunds, mineBlock } from '../_helpers';
 import { Evaluate } from '@idena/vrf-js';
@@ -38,7 +38,7 @@ describe('Testing the Profit Sharing Token', () => {
 
   let arweave: Arweave;
   let arlocal: ArLocal;
-  let smartweave: SmartWeave;
+  let warp: Warp;
   let pst: PstContract;
   let loader: InteractionsLoader;
 
@@ -57,7 +57,7 @@ describe('Testing the Profit Sharing Token', () => {
     loader = new VrfDecorator(arweave);
     LoggerFactory.INST.logLevel('error');
 
-    smartweave = SmartWeaveFactory.levelDbCached(arweave, {
+    warp = WarpFactory.levelDbCached(arweave, {
       ...defaultCacheOptions,
       inMemory: true
     })
@@ -83,14 +83,14 @@ describe('Testing the Profit Sharing Token', () => {
       }
     };
 
-    const contractTxId = await smartweave.createContract.deploy({
+    const contractTxId = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify(initialState),
       src: contractSrc
     });
 
     // connecting to the PST contract
-    pst = smartweave.pst(contractTxId);
+    pst = warp.pst(contractTxId);
 
     // connecting wallet to the PST contract
     pst.connect(wallet);

@@ -28,7 +28,7 @@ export class Evolve implements ExecutionContextModifier {
     state: State,
     executionContext: ExecutionContext<State, HandlerApi<State>>
   ): Promise<ExecutionContext<State, HandlerApi<State>>> {
-    const { definitionLoader, executorFactory } = executionContext.smartweave;
+    const { definitionLoader, executorFactory } = executionContext.warp;
 
     const contractTxId = executionContext.contractDefinition.txId;
     const evolvedSrcTxId = Evolve.evolvedSrcTxId(state);

@@ -1,4 +1,4 @@
-import { SortKeyCacheResult, SortKeySwCache, StateCacheKey } from '@smartweave/cache';
+import { SortKeyCacheResult, SortKeyCache, StateCacheKey } from '@warp/cache';
 import {
   DefaultStateEvaluator,
   EvalStateResult,
@@ -24,7 +24,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
 
   constructor(
     arweave: Arweave,
-    private readonly cache: SortKeySwCache<EvalStateResult<unknown>>,
+    private readonly cache: SortKeyCache<EvalStateResult<unknown>>,
     executionContextModifiers: ExecutionContextModifier[] = []
   ) {
     super(arweave, executionContextModifiers);

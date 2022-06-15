@@ -3,7 +3,7 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { InteractionResult, LoggerFactory, PstContract, PstState, SmartWeave, SmartWeaveFactory } from '@smartweave';
+import { InteractionResult, LoggerFactory, PstContract, PstState, Warp, WarpFactory } from '@warp';
 import path from 'path';
 import { addFunds, mineBlock } from '../_helpers';
 
@@ -17,7 +17,7 @@ describe('Testing the Profit Sharing Token', () => {
 
   let arweave: Arweave;
   let arlocal: ArLocal;
-  let smartweave: SmartWeave;
+  let warp: Warp;
   let pst: PstContract;
   let pstVM: PstContract;
 
@@ -35,7 +35,7 @@ describe('Testing the Profit Sharing Token', () => {
 
     LoggerFactory.INST.logLevel('error');
 
-    smartweave = SmartWeaveFactory.forTesting(arweave);
+    warp = WarpFactory.forTesting(arweave);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -56,15 +56,15 @@ describe('Testing the Profit Sharing Token', () => {
     };
 
     // deploying contract using the new SDK.
-    const contractTxId = await smartweave.createContract.deploy({
+    const contractTxId = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify(initialState),
       src: contractSrc
     });
 
     // connecting to the PST contract
-    pst = smartweave.pst(contractTxId);
-    pstVM = smartweave.pst(contractTxId).setEvaluationOptions({
+    pst = warp.pst(contractTxId);
+    pstVM = warp.pst(contractTxId).setEvaluationOptions({
       useVM2: true
     }) as PstContract;
 
@@ -124,7 +124,7 @@ describe('Testing the Profit Sharing Token', () => {
 
     const newSource = fs.readFileSync(path.join(__dirname, '../data/token-evolve.js'), 'utf8');
 
-    const newSrcTxId = await pst.saveNewSource(newSource);
+    const newSrcTxId = await pst.save({ src: newSource });
     await mineBlock(arweave);
 
     await pst.evolve(newSrcTxId);

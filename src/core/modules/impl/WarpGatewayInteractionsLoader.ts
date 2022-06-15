@@ -1,7 +1,6 @@
 import {
   Benchmark,
   EvaluationOptions,
-  GQLEdgeInterface,
   GQLNodeInterface,
   InteractionsLoader,
   LoggerFactory,

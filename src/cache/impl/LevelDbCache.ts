@@ -1,14 +1,13 @@
-import { SortKeySwCache, StateCacheKey, SortKeyCacheResult } from '../SortKeySwCache';
-import { CacheOptions, isNode, LoggerFactory } from '@smartweave';
+import { SortKeyCache, StateCacheKey, SortKeyCacheResult } from '../SortKeyCache';
+import { CacheOptions, isNode, LoggerFactory } from '@warp';
 import { Level } from 'level';
-import stringify from 'safe-stable-stringify';
 import { MemoryLevel } from 'memory-level';
 
-export class LevelDbCache<V = any> implements SortKeySwCache<V> {
+export class LevelDbCache<V = any> implements SortKeyCache<V> {
   private readonly logger = LoggerFactory.INST.create('LevelDbCache');
 
   private db: MemoryLevel;
-  private maxStoredTransactions: number;
+  private readonly maxStoredTransactions: number;
 
   private entriesLength: { [contractTxId: string]: number } = {};
 
@@ -81,16 +80,16 @@ export class LevelDbCache<V = any> implements SortKeySwCache<V> {
     const contractCache = this.db.sublevel<string, any>(stateCacheKey.contractTxId, { valueEncoding: 'json' });
     let entries = this.entriesLength[stateCacheKey.contractTxId];
 
-    const alreadyCached = await this.get(stateCacheKey.contractTxId, stateCacheKey.sortKey);
+    /*const alreadyCached = await this.get(stateCacheKey.contractTxId, stateCacheKey.sortKey);
     if (alreadyCached != null) {
       if (stringify((alreadyCached.cachedValue as any).state) != stringify((value as any).state)) {
-        /*throw new Error(
+        throw new Error(
           `Value ${stringify((value as any).state)} for sortKey ${stateCacheKey.contractTxId}:${
             stateCacheKey.sortKey
           } already cached: ${stringify((alreadyCached.cachedValue as any).state)}`
-        );*/
+        );
       }
-    }
+    }*/
 
     if (entries == undefined) {
       const allEntries = await contractCache.iterator().all();
