@@ -5,7 +5,7 @@ import {
   ConfirmationStatus,
   EvalStateResult,
   HandlerExecutorFactory,
-  R_GW_URL,
+  WARP_GW_URL,
   SourceType,
   Warp,
   WarpBuilder
@@ -27,7 +27,7 @@ export type CacheOptions = {
 export const defaultWarpGwOptions: GatewayOptions = {
   confirmationStatus: { notCorrupted: true },
   source: null,
-  address: R_GW_URL
+  address: WARP_GW_URL
 };
 
 export const defaultCacheOptions: CacheOptions = {
