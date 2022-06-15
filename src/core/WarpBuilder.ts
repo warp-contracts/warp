@@ -16,7 +16,7 @@ import {
   StateEvaluator
 } from '@warp';
 
-export const R_GW_URL = 'https://d1o5nlqr4okus2.cloudfront.net';
+export const WARP_GW_URL = 'https://d1o5nlqr4okus2.cloudfront.net';
 
 export class WarpBuilder {
   private _definitionLoader?: DefinitionLoader;
@@ -57,7 +57,7 @@ export class WarpBuilder {
   public useWarpGateway(
     confirmationStatus: ConfirmationStatus = null,
     source: SourceType = null,
-    address = R_GW_URL
+    address = WARP_GW_URL
   ): WarpBuilder {
     this._interactionsLoader = new WarpGatewayInteractionsLoader(address, confirmationStatus, source);
     this._definitionLoader = new WarpGatewayContractDefinitionLoader(address, this._arweave, new MemCache());
