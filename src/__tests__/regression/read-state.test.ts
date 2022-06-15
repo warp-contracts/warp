@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { interactRead, readContract } from 'smartweave';
 import Arweave from 'arweave';
-import {defaultCacheOptions, LoggerFactory, SourceType, WarpFactory} from '@warp';
+import { defaultCacheOptions, LoggerFactory, SourceType, WarpFactory } from '@warp';
 
 const stringify = require('safe-stable-stringify');
 
@@ -113,7 +113,9 @@ describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
       const warpR = await WarpFactory.levelDbCached(arweave, {
         ...defaultCacheOptions,
         inMemory: true
-      }).useWarpGateway(null, SourceType.ARWEAVE).build();
+      })
+        .useWarpGateway(null, SourceType.ARWEAVE)
+        .build();
       const result = await warpR.contract(contractTxId).readState(blockHeight);
       const resultString = stringify(result.state).trim();
 

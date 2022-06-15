@@ -3,11 +3,11 @@ import fs from 'fs';
 
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
-import {JWKInterface} from 'arweave/node/lib/wallet';
-import {Contract, LoggerFactory, Warp, WarpFactory} from '@warp';
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import { Contract, LoggerFactory, Warp, WarpFactory } from '@warp';
 import path from 'path';
-import {TsLogFactory} from '../../../logging/node/TsLogFactory';
-import {addFunds, mineBlock} from '../_helpers';
+import { TsLogFactory } from '../../../logging/node/TsLogFactory';
+import { addFunds, mineBlock } from '../_helpers';
 
 /**
  * This verifies whether combination of read and write state works properly.
@@ -136,7 +136,7 @@ describe('Testing internal writes', () => {
     });
 
     it('should write direct interactions', async () => {
-      await calleeContract.writeInteraction({function: 'add'});
+      await calleeContract.writeInteraction({ function: 'add' });
       await mineBlock(arweave);
       await callingContract.writeInteraction({
         function: 'writeContractCheck',
@@ -178,7 +178,7 @@ describe('Testing internal writes', () => {
     });
 
     it('should write direct interactions', async () => {
-      await calleeContract.writeInteraction({function: 'add'});
+      await calleeContract.writeInteraction({ function: 'add' });
       await mineBlock(arweave);
       await callingContract.writeInteraction({
         function: 'writeContractCheck',
