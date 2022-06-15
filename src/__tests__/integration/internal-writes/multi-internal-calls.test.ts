@@ -3,8 +3,8 @@ import fs from 'fs';
 
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
-import {JWKInterface} from 'arweave/node/lib/wallet';
-import {Contract, LoggerFactory, Warp, WarpFactory,} from '@warp';
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import { Contract, LoggerFactory, Warp, WarpFactory } from '@warp';
 import path from 'path';
 import { TsLogFactory } from '../../../logging/node/TsLogFactory';
 import { addFunds, mineBlock } from '../_helpers';
