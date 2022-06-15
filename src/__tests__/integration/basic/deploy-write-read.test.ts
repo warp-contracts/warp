@@ -3,7 +3,7 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, defaultCacheOptions, LoggerFactory, SmartWeave, SmartWeaveFactory } from '@smartweave';
+import { Contract, LoggerFactory, Warp, WarpFactory } from '@warp';
 import path from 'path';
 import { addFunds, mineBlock } from '../_helpers';
 
@@ -20,7 +20,7 @@ interface ExampleContractState {
  * work properly (ie. they do download the not yet cached interactions and evaluate state
  * for them).
  */
-describe('Testing the SmartWeave client', () => {
+describe('Testing the Warp client', () => {
   let contractSrc: string;
   let initialState: string;
 
@@ -28,7 +28,7 @@ describe('Testing the SmartWeave client', () => {
 
   let arweave: Arweave;
   let arlocal: ArLocal;
-  let smartweave: SmartWeave;
+  let warp: Warp;
   let contract: Contract<ExampleContractState>;
   let contractVM: Contract<ExampleContractState>;
 
@@ -46,7 +46,7 @@ describe('Testing the SmartWeave client', () => {
 
     LoggerFactory.INST.logLevel('error');
 
-    smartweave = SmartWeaveFactory.forTesting(arweave);
+    warp = WarpFactory.forTesting(arweave);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -55,14 +55,14 @@ describe('Testing the SmartWeave client', () => {
     initialState = fs.readFileSync(path.join(__dirname, '../data/example-contract-state.json'), 'utf8');
 
     // deploying contract using the new SDK.
-    const contractTxId = await smartweave.createContract.deploy({
+    const contractTxId = await warp.createContract.deploy({
       wallet,
       initState: initialState,
       src: contractSrc
     });
 
-    contract = smartweave.contract(contractTxId);
-    contractVM = smartweave.contract<ExampleContractState>(contractTxId).setEvaluationOptions({
+    contract = warp.contract(contractTxId);
+    contractVM = warp.contract<ExampleContractState>(contractTxId).setEvaluationOptions({
       useVM2: true
     });
     contract.connect(wallet);

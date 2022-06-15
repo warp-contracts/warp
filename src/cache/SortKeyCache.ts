@@ -1,4 +1,4 @@
-export interface SortKeySwCache<V> {
+export interface SortKeyCache<V> {
   getLessOrEqual(key: string, sortKey: string): Promise<SortKeyCacheResult<V> | null>;
 
   /**
@@ -18,6 +18,9 @@ export interface SortKeySwCache<V> {
 
   close(): Promise<void>;
 
+  /**
+   * used mostly for debugging, allows to dump the current content cache
+   */
   dump(): Promise<any>;
 }
 

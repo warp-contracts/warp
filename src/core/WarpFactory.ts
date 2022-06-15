@@ -1,16 +1,16 @@
 import Arweave from 'arweave';
-import { CacheableExecutorFactory, Evolve } from '@smartweave/plugins';
+import { CacheableExecutorFactory, Evolve } from '@warp/plugins';
 import {
   CacheableStateEvaluator,
   ConfirmationStatus,
   EvalStateResult,
   HandlerExecutorFactory,
   R_GW_URL,
-  SmartWeave,
-  SmartWeaveBuilder,
-  SourceType
-} from '@smartweave/core';
-import { LevelDbCache, MemCache } from '@smartweave/cache';
+  SourceType,
+  Warp,
+  WarpBuilder
+} from '@warp/core';
+import { LevelDbCache, MemCache } from '@warp/cache';
 
 export type GatewayOptions = {
   confirmationStatus: ConfirmationStatus;
@@ -35,16 +35,16 @@ export const defaultCacheOptions: CacheOptions = {
   inMemory: false
 };
 /**
- * A factory that simplifies the process of creating different versions of {@link SmartWeave}.
+ * A factory that simplifies the process of creating different versions of {@link Warp}.
  * All versions use the {@link Evolve} plugin.
  */
-export class SmartWeaveFactory {
+export class WarpFactory {
   /**
    * Returns a fully configured {@link SmartWeave} that is using arweave.net compatible gateway
    * (with a GQL endpoint) for loading the interactions and in memory cache.
    * Suitable for testing.
    */
-  static forTesting(arweave: Arweave): SmartWeave {
+  static forTesting(arweave: Arweave): Warp {
     return this.arweaveGw(arweave, {
       maxStoredTransactions: 20,
       inMemory: true
@@ -52,7 +52,7 @@ export class SmartWeaveFactory {
   }
 
   /**
-   * Returns a fully configured {@link SmartWeave} that is using arweave.net compatible gateway
+   * Returns a fully configured {@link Warp} that is using arweave.net compatible gateway
    * (with a GQL endpoint) for loading the interactions.
    */
   static arweaveGw(
@@ -61,7 +61,7 @@ export class SmartWeaveFactory {
       maxStoredTransactions: 20,
       inMemory: false
     }
-  ): SmartWeave {
+  ): Warp {
     return this.levelDbCached(arweave, cacheOptions).useArweaveGateway().build();
   }
 
@@ -75,13 +75,13 @@ export class SmartWeaveFactory {
       maxStoredTransactions: 20,
       inMemory: false
     }
-  ): SmartWeave {
+  ): Warp {
     return this.levelDbCached(arweave, cacheOptions)
-      .useRedStoneGateway(gatewayOptions.confirmationStatus, gatewayOptions.source, gatewayOptions.address)
+      .useWarpGateway(gatewayOptions.confirmationStatus, gatewayOptions.source, gatewayOptions.address)
       .build();
   }
 
-  static levelDbCached(arweave: Arweave, cacheOptions: CacheOptions): SmartWeaveBuilder {
+  static levelDbCached(arweave: Arweave, cacheOptions: CacheOptions): WarpBuilder {
     const executorFactory = new CacheableExecutorFactory(arweave, new HandlerExecutorFactory(arweave), new MemCache());
     const stateEvaluator = new CacheableStateEvaluator(
       arweave,
@@ -89,6 +89,6 @@ export class SmartWeaveFactory {
       [new Evolve()]
     );
 
-    return SmartWeave.builder(arweave).setExecutorFactory(executorFactory).setStateEvaluator(stateEvaluator);
+    return Warp.builder(arweave).setExecutorFactory(executorFactory).setStateEvaluator(stateEvaluator);
   }
 }

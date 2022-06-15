@@ -41,7 +41,7 @@ export class LexicographicalInteractionsSorter implements InteractionsSorter {
     const { node } = txInfo;
 
     // might have been already set by the RedStone Sequencer
-    if (txInfo.node.sortKey !== undefined && txInfo.node.source == SourceType.REDSTONE_SEQUENCER) {
+    if (txInfo.node.sortKey !== undefined && txInfo.node.source == SourceType.WARP_SEQUENCER) {
       this.logger.debug('Using sortKey from sequencer', txInfo.node.sortKey);
     } else {
       txInfo.node.sortKey = await this.createSortKey(node.block.id, node.id, node.block.height);

@@ -126,15 +126,11 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
       ]);
 
       this.logger.debug('Cache result?:', !this.swGlobal._activeTx.dry);
-      await executionContext.warp.stateEvaluator.onInternalWriteStateUpdate(
-        this.swGlobal._activeTx,
-        contractTxId,
-        {
-          state: result.state as State,
-          validity: {},
-          errorMessages: {}
-        }
-      );
+      await executionContext.warp.stateEvaluator.onInternalWriteStateUpdate(this.swGlobal._activeTx, contractTxId, {
+        state: result.state as State,
+        validity: {},
+        errorMessages: {}
+      });
 
       return result;
     };
@@ -194,7 +190,10 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
   private assignRefreshState(executionContext: ExecutionContext<State>) {
     this.swGlobal.contracts.refreshState = async () => {
       const stateEvaluator = executionContext.warp.stateEvaluator;
-      const result = await stateEvaluator.latestAvailableState(this.swGlobal.contract.id, this.swGlobal.block.height);
+      const result = await stateEvaluator.latestAvailableState(
+        this.swGlobal.contract.id,
+        this.swGlobal._activeTx.sortKey
+      );
       return result?.cachedValue.state;
     };
   }
