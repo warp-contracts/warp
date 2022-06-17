@@ -7,7 +7,7 @@ import { EvaluationOptions, GQLNodeInterface } from '@warp';
 export interface InteractionsLoader {
   /**
    * This method loads interactions for a given contract.
-   * If param fromSortKey and/or param toSortKey are present, the loaded interactions should
+   * If param fromSortKey and/or param toSortKey are present, the loaded interactions do
    * conform the condition: i.sortKey > fromSortKey && i.sortKey <= toSortKey
    *
    * @param contractTxId - contract tx id to load the interactions

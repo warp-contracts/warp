@@ -16,7 +16,7 @@ interface ExampleContractState {
   counter: number;
 }
 
-describe('Testing the SmartWeave client', () => {
+describe('Testing the Warp client', () => {
   let contractSrc: string;
 
   let wallet: JWKInterface;

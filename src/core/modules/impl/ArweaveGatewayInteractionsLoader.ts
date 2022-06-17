@@ -91,12 +91,6 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
     const fromBlockHeight = this.sorter.extractBlockHeight(fromSortKey);
     const toBlockHeight = this.sorter.extractBlockHeight(toSortKey);
 
-    // TODO: temp workaround for https://github.com/textury/arlocal/issues/107
-    /*if (toBlockHeight == null && this.isLocalEnv()) {
-      this.logger.debug('Loading network info for local env');
-      toBlockHeight = (await this.arweave.network.getInfo()).height;
-    }*/
-
     const mainTransactionsVariables: GqlReqVariables = {
       tags: [
         {
@@ -138,12 +132,12 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
       interactions = interactions.concat(innerWritesInteractions);
     }
 
+    /**
+     * Because the behaviour of the Arweave gateway in case of passing null to min/max block height
+     * in the gql query params is unknown (https://discord.com/channels/908759493943394334/908766823342801007/983643012947144725)
+     * - we're removing all the interactions, that have null block data.
+     */
     interactions = interactions.filter((i) => i.node.block && i.node.block.id && i.node.block.height);
-
-    /*console.log(await this.arweave.network.getInfo());
-    console.log(JSON.stringify(interactions));
-    console.log(JSON.stringify(mainTransactionsVariables));
-    console.log(`Loaded interactions ${interactions.length}`);*/
 
     // note: this operation adds the "sortKey" to the interactions
     let sortedInteractions = await this.sorter.sort(interactions);
@@ -179,6 +173,7 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
         toIndex
       });
 
+      // maxIndex + 1, because "end" parameter in slice does not include the last element
       sortedInteractions = sortedInteractions.slice(fromIndex || 0, toIndex || maxIndex + 1);
     }
 
@@ -190,11 +185,6 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
     });
 
     return sortedInteractions.map((i) => i.node);
-  }
-
-  private isLocalEnv() {
-    const arHost = this.arweave.api.config.host;
-    return arHost.includes('127.0.0.1') || arHost.includes('localhost') || arHost.includes('testnet.redstone.tools');
   }
 
   private async loadPages(variables: GqlReqVariables) {
