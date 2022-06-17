@@ -31,13 +31,16 @@ import {
   SourceType,
   Tags,
   SourceImpl,
-  SourceData
+  SourceData,
+  InteractionError,
+  NoWalletError
 } from '@warp';
 import { TransactionStatusResponse } from 'arweave/node/transactions';
 import { NetworkInfoInterface } from 'arweave/node/network';
 import stringify from 'safe-stable-stringify';
 import * as crypto from 'crypto';
 import Transaction from 'arweave/node/lib/transaction';
+import { err, ok, Result } from 'neverthrow';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -204,15 +207,18 @@ export class HandlerBasedContract<State> implements Contract<State> {
     tags: Tags = [],
     transfer: ArTransfer = emptyTransfer,
     strict = false
-  ): Promise<string | null> {
+  ): Promise<Result<string, InteractionError | NoWalletError>> {
     this.logger.info('Write interaction input', input);
     if (!this.signer) {
-      throw new Error("Wallet not connected. Use 'connect' method first.");
+      return err({ error: 'noWalletConnected' });
     }
     const { arweave } = this.warp;
 
     const interactionTx = await this.createInteraction(input, tags, transfer, strict);
-    const response = await arweave.transactions.post(interactionTx);
+    if (interactionTx.isErr()) {
+      return err(interactionTx.error);
+    }
+    const response = await arweave.transactions.post(interactionTx.value);
 
     if (response.status !== 200) {
       this.logger.error('Error while posting transaction', response);
@@ -220,12 +226,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
 
     if (this._evaluationOptions.waitForConfirmation) {
-      this.logger.info('Waiting for confirmation of', interactionTx.id);
+      this.logger.info('Waiting for confirmation of', interactionTx.value.id);
       const benchmark = Benchmark.measure();
-      await this.waitForConfirmation(interactionTx.id);
+      await this.waitForConfirmation(interactionTx.value.id);
       this.logger.info('Transaction confirmed after', benchmark.elapsed());
     }
-    return interactionTx.id;
+    return ok(interactionTx.value.id);
   }
 
   async bundleInteraction<Input>(
@@ -239,10 +245,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
       strict: false,
       vrf: false
     }
-  ): Promise<any | null> {
+  ): Promise<Result<any, InteractionError | NoWalletError>> {
     this.logger.info('Bundle interaction input', input);
     if (!this.signer) {
-      throw new Error("Wallet not connected. Use 'connect' method first.");
+      return err({ error: 'noWalletConnected' });
     }
 
     options = {
@@ -261,9 +267,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
       options.vrf
     );
 
+    if (interactionTx.isErr()) {
+      return err(interactionTx.error);
+    }
+
     const response = await fetch(`${this._evaluationOptions.bundlerUrl}gateway/sequencer/register`, {
       method: 'POST',
-      body: JSON.stringify(interactionTx),
+      body: JSON.stringify(interactionTx.value),
       headers: {
         'Accept-Encoding': 'gzip, deflate, br',
         'Content-Type': 'application/json',
@@ -282,10 +292,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
         throw new Error(`Unable to bundle interaction: ${JSON.stringify(error)}`);
       });
 
-    return {
+    return ok({
       bundlrResponse: response,
-      originalTxId: interactionTx.id
-    };
+      originalTxId: interactionTx.value.id
+    });
   }
 
   private async createInteraction<Input>(
@@ -295,7 +305,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     strict: boolean,
     bundle = false,
     vrf = false
-  ) {
+  ): Promise<Result<Transaction, { error: 'invalidInteraction'; message: string }>> {
     if (this._evaluationOptions.internalWrites) {
       // Call contract and verify if there are any internal writes:
       // 1. Evaluate current contract state
@@ -324,7 +334,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       if (strict) {
         const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer);
         if (handlerResult.type !== 'ok') {
-          throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
+          return err({ error: 'invalidInteraction', message: handlerResult.errorMessage });
         }
       }
     }
@@ -346,7 +356,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       transfer.winstonQty,
       bundle
     );
-    return interactionTx;
+    return ok(interactionTx);
   }
 
   txId(): string {
@@ -758,7 +768,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return this;
   }
 
-  async evolve(newSrcTxId: string, useBundler = false): Promise<string | null> {
+  async evolve(newSrcTxId: string, useBundler = false): Promise<Result<any, InteractionError | NoWalletError>> {
     if (useBundler) {
       return await this.bundleInteraction<any>({ function: 'evolve', value: newSrcTxId });
     } else {

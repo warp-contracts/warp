@@ -11,11 +11,21 @@ import {
 import { NetworkInfoInterface } from 'arweave/node/network';
 import Transaction from 'arweave/node/lib/transaction';
 import { Source } from './deploy/Source';
+import { Result } from 'neverthrow';
 
 export type CurrentTx = { interactionTxId: string; contractTxId: string };
 export type BenchmarkStats = { gatewayCommunication: number; stateEvaluation: number; total: number };
 
 export type SigningFunction = (tx: Transaction) => Promise<void>;
+
+export type InteractionError = {
+  error: 'invalidInteraction';
+  message: string;
+};
+
+export type NoWalletError = {
+  error: 'noWalletConnected';
+};
 
 /**
  * Interface describing state for all Evolve-compatible contracts.
@@ -156,7 +166,7 @@ export interface Contract<State = unknown> extends Source {
     tags?: Tags,
     transfer?: ArTransfer,
     strict?: boolean
-  ): Promise<string | null>;
+  ): Promise<Result<string, InteractionError | NoWalletError>>;
 
   /**
    * Creates a new "interaction" transaction using Warp Sequencer - this, with combination with
@@ -171,7 +181,7 @@ export interface Contract<State = unknown> extends Source {
       strict?: boolean;
       vrf?: boolean;
     }
-  ): Promise<any | null>;
+  ): Promise<Result<any, InteractionError | NoWalletError>>;
 
   /**
    * Returns the full call tree report the last
@@ -243,5 +253,5 @@ export interface Contract<State = unknown> extends Source {
    * and its transaction to be confirmed by the network.
    * @param newSrcTxId - result of the {@link save} method call.
    */
-  evolve(newSrcTxId: string, useBundler?: boolean): Promise<string | null>;
+  evolve(newSrcTxId: string, useBundler?: boolean): Promise<Result<any, InteractionError | NoWalletError>>;
 }
