@@ -50,7 +50,7 @@ export interface Contract<State = unknown> extends Source {
   /**
    * Returns the Arweave transaction id of this contract.
    */
-  contractTxId(): string;
+  txId(): string;
 
   /**
    * Allows to connect a signer to a contract.

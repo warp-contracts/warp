@@ -140,7 +140,7 @@ All exports are stored under `warp` global variable.
 
 ```html
 <script>
-  const warp = warp.WarpFactory.arweaveGw(arweave);
+  const warp = warp.WarpFactory.warpGw(arweave);
 </script>
 ```
 
@@ -183,6 +183,22 @@ const warp = WarpFactory.arweaveGw(arweave);
 ```
 
 More examples can be found [here](https://github.com/redstone-finance/redstone-smartcontracts-examples/blob/main/src/redstone-gateway-example.ts).
+
+### Testing on ArLocal
+All our integration tests are using ArLocal and we strongly suggest using it for testing your
+own contracts.
+In order to make the testing easier, a dedicated factory method has been added:
+
+```ts
+import {WarpFactory} from "./WarpFactory";
+
+const warp = WarpFactory.forTesting(arweave);
+```
+
+It creates a `Warp` instance that can be used with the ArLocal.
+Additionally, it is using the in-memory implementation of the LevelDB
+([memory-level](https://www.npmjs.com/package/memory-level)) - so that manually cleaning
+the cache storage is not required.
 
 ### Contract methods
 

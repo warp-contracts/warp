@@ -2,9 +2,7 @@
 import Arweave from 'arweave';
 import {
   Contract,
-  LoggerFactory,
-  SmartWeave,
-  SmartWeaveFactory
+  LoggerFactory, Warp, WarpFactory
 } from '../src';
 import { TsLogFactory } from '../src/logging/node/TsLogFactory';
 import fs from 'fs';
@@ -20,7 +18,7 @@ async function main() {
   let wallet: JWKInterface;
   let walletAddress: string;
 
-  let smartweave: SmartWeave;
+  let smartweave: Warp;
   let calleeContract: Contract<any>;
   let callingContract: Contract;
   let calleeTxId;
@@ -47,7 +45,7 @@ async function main() {
 
   const cacheDir = './cache/tools/'
   try {
-    smartweave = SmartWeaveFactory.forTesting(arweave);
+    smartweave = WarpFactory.forTesting(arweave);
 
     wallet = await arweave.wallets.generate();
     walletAddress = await arweave.wallets.jwkToAddress(wallet);

@@ -120,7 +120,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
          This in turn will cause the state of THIS contract to be
          updated in cache - see {@link ContractHandlerApi.assignWrite}
          */
-        //await writingContract.readState(missingInteraction.sortKey, currentTx);
         await writingContract.readState(missingInteraction.sortKey, [
           ...(currentTx || []),
           {
@@ -142,8 +141,10 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           // we need to update the state in the wasm module
           executionContext?.handler.initState(currentState);
 
-          // FIXME: validity here is broken
           validity[missingInteraction.id] = newState.cachedValue.validity[missingInteraction.id];
+          if (newState.cachedValue.errorMessages?.[missingInteraction.id]) {
+            errorMessages[missingInteraction.id] = newState.cachedValue.errorMessages[missingInteraction.id];
+          }
 
           const toCache = new EvalStateResult(currentState, validity, errorMessages);
 

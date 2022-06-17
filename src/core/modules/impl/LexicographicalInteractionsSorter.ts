@@ -40,17 +40,11 @@ export class LexicographicalInteractionsSorter implements InteractionsSorter {
   private async addSortKey(txInfo: GQLEdgeInterface) {
     const { node } = txInfo;
 
-    // might have been already set by the RedStone Sequencer
+    // might have been already set by the Warp Sequencer
     if (txInfo.node.sortKey !== undefined && txInfo.node.source == SourceType.WARP_SEQUENCER) {
       this.logger.debug('Using sortKey from sequencer', txInfo.node.sortKey);
     } else {
       txInfo.node.sortKey = await this.createSortKey(node.block.id, node.id, node.block.height);
-      /*console.log('Generating sortKey', {
-        blockId: node.block.id,
-        transactionId: node.id,
-        height: node.block.height,
-        sortKey: txInfo.node.sortKey
-      });*/
     }
   }
 
