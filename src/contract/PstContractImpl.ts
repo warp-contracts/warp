@@ -1,4 +1,13 @@
-import { BalanceResult, HandlerBasedContract, PstContract, PstState, TransferInput } from '@warp/contract';
+import {
+  BalanceResult,
+  HandlerBasedContract,
+  InteractionError,
+  NoWalletError,
+  PstContract,
+  PstState,
+  TransferInput
+} from '@warp/contract';
+import { Result } from 'neverthrow';
 
 interface BalanceInput {
   function: string;
@@ -18,7 +27,7 @@ export class PstContractImpl extends HandlerBasedContract<PstState> implements P
     return (await super.readState()).state;
   }
 
-  async transfer(transfer: TransferInput): Promise<string | null> {
+  async transfer(transfer: TransferInput): Promise<Result<string, InteractionError | NoWalletError>> {
     return await this.writeInteraction<any>({ function: 'transfer', ...transfer });
   }
 }

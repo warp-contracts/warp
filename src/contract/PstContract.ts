@@ -1,5 +1,6 @@
 import { Contract } from '@warp';
-import { EvolveState } from './Contract';
+import { Result } from 'neverthrow';
+import { EvolveState, InteractionError, NoWalletError } from './Contract';
 
 /**
  * The result from the "balance" view method on the PST Contract.
@@ -49,5 +50,5 @@ export interface PstContract extends Contract<PstState> {
    * allows to transfer PSTs between wallets
    * @param transfer - data required to perform a transfer, see {@link transfer}
    */
-  transfer(transfer: TransferInput): Promise<string | null>;
+  transfer(transfer: TransferInput): Promise<Result<string, InteractionError | NoWalletError>>;
 }
