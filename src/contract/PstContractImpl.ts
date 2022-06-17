@@ -1,7 +1,7 @@
 import {
   BalanceResult,
   HandlerBasedContract,
-  InteractionError,
+  InvalidInteractionError,
   NoWalletError,
   PstContract,
   PstState,
@@ -27,7 +27,7 @@ export class PstContractImpl extends HandlerBasedContract<PstState> implements P
     return (await super.readState()).state;
   }
 
-  async transfer(transfer: TransferInput): Promise<Result<string, InteractionError | NoWalletError>> {
+  async transfer(transfer: TransferInput): Promise<Result<string, InvalidInteractionError | NoWalletError>> {
     return await this.writeInteraction<any>({ function: 'transfer', ...transfer });
   }
 }

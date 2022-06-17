@@ -32,8 +32,8 @@ import {
   Tags,
   SourceImpl,
   SourceData,
-  InteractionError,
-  NoWalletError
+  NoWalletError,
+  InvalidInteractionError
 } from '@warp';
 import { TransactionStatusResponse } from 'arweave/node/transactions';
 import { NetworkInfoInterface } from 'arweave/node/network';
@@ -207,10 +207,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
     tags: Tags = [],
     transfer: ArTransfer = emptyTransfer,
     strict = false
-  ): Promise<Result<string, InteractionError | NoWalletError>> {
+  ): Promise<Result<string, InvalidInteractionError | NoWalletError>> {
     this.logger.info('Write interaction input', input);
     if (!this.signer) {
-      return err({ error: 'noWalletConnected' });
+      return err({ type: 'noWalletConnected' });
     }
     const { arweave } = this.warp;
 
@@ -245,10 +245,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
       strict: false,
       vrf: false
     }
-  ): Promise<Result<any, InteractionError | NoWalletError>> {
+  ): Promise<Result<any, InvalidInteractionError | NoWalletError>> {
     this.logger.info('Bundle interaction input', input);
     if (!this.signer) {
-      return err({ error: 'noWalletConnected' });
+      return err({ type: 'noWalletConnected' });
     }
 
     options = {
@@ -305,7 +305,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     strict: boolean,
     bundle = false,
     vrf = false
-  ): Promise<Result<Transaction, { error: 'invalidInteraction'; message: string }>> {
+  ): Promise<Result<Transaction, InvalidInteractionError>> {
     if (this._evaluationOptions.internalWrites) {
       // Call contract and verify if there are any internal writes:
       // 1. Evaluate current contract state
@@ -334,7 +334,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       if (strict) {
         const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer);
         if (handlerResult.type !== 'ok') {
-          return err({ error: 'invalidInteraction', message: handlerResult.errorMessage });
+          return err({ type: 'invalidInteraction', message: handlerResult.errorMessage });
         }
       }
     }
@@ -768,7 +768,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return this;
   }
 
-  async evolve(newSrcTxId: string, useBundler = false): Promise<Result<any, InteractionError | NoWalletError>> {
+  async evolve(newSrcTxId: string, useBundler = false): Promise<Result<any, InvalidInteractionError | NoWalletError>> {
     if (useBundler) {
       return await this.bundleInteraction<any>({ function: 'evolve', value: newSrcTxId });
     } else {

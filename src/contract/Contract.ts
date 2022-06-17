@@ -18,13 +18,13 @@ export type BenchmarkStats = { gatewayCommunication: number; stateEvaluation: nu
 
 export type SigningFunction = (tx: Transaction) => Promise<void>;
 
-export type InteractionError = {
-  error: 'invalidInteraction';
+export type InvalidInteractionError = {
+  type: 'invalidInteraction';
   message: string;
 };
 
 export type NoWalletError = {
-  error: 'noWalletConnected';
+  type: 'noWalletConnected';
 };
 
 /**
@@ -166,7 +166,7 @@ export interface Contract<State = unknown> extends Source {
     tags?: Tags,
     transfer?: ArTransfer,
     strict?: boolean
-  ): Promise<Result<string, InteractionError | NoWalletError>>;
+  ): Promise<Result<string, InvalidInteractionError | NoWalletError>>;
 
   /**
    * Creates a new "interaction" transaction using Warp Sequencer - this, with combination with
@@ -181,7 +181,7 @@ export interface Contract<State = unknown> extends Source {
       strict?: boolean;
       vrf?: boolean;
     }
-  ): Promise<Result<any, InteractionError | NoWalletError>>;
+  ): Promise<Result<any, InvalidInteractionError | NoWalletError>>;
 
   /**
    * Returns the full call tree report the last
@@ -253,5 +253,5 @@ export interface Contract<State = unknown> extends Source {
    * and its transaction to be confirmed by the network.
    * @param newSrcTxId - result of the {@link save} method call.
    */
-  evolve(newSrcTxId: string, useBundler?: boolean): Promise<Result<any, InteractionError | NoWalletError>>;
+  evolve(newSrcTxId: string, useBundler?: boolean): Promise<Result<any, InvalidInteractionError | NoWalletError>>;
 }
