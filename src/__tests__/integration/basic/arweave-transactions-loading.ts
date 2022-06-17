@@ -25,7 +25,7 @@ interface ExampleContractState {
   counter: number;
 }
 
-describe('Testing the SmartWeave client', () => {
+describe('Testing the Arweave interactions loader', () => {
   let contractSrc: string;
   let wallet: JWKInterface;
   let loader: ArweaveGatewayInteractionsLoader;
@@ -77,7 +77,7 @@ describe('Testing the SmartWeave client', () => {
     await arlocal.stop();
   });
 
-  it('should add interactions on one block', async () => {
+  it('should add interactions on multiple blocks', async () => {
     await contract.writeInteraction({ function: 'add' });
     await contract.writeInteraction({ function: 'add' });
     await contract.writeInteraction({ function: 'add' });
@@ -106,7 +106,7 @@ describe('Testing the SmartWeave client', () => {
   });
 
   it('should load all interactions', async () => {
-    interactions = await loader.load(contract.contractTxId(), null, null, evalOptions);
+    interactions = await loader.load(contract.txId(), null, null, evalOptions);
     expect(interactions.length).toBe(20);
   });
 
@@ -125,7 +125,7 @@ describe('Testing the SmartWeave client', () => {
   });
 
   it('should properly limit results (0,1,2)', async () => {
-    const interactions2 = await loader.load(contract.contractTxId(), null, interactions[2].sortKey, evalOptions);
+    const interactions2 = await loader.load(contract.txId(), null, interactions[2].sortKey, evalOptions);
     expect(interactions2.length).toBe(3);
 
     expect(interactions2[0].sortKey).toEqual(interactions[0].sortKey);
@@ -135,7 +135,7 @@ describe('Testing the SmartWeave client', () => {
 
   it('should properly limit results (1,2)', async () => {
     const interactions2 = await loader.load(
-      contract.contractTxId(),
+      contract.txId(),
       interactions[0].sortKey,
       interactions[2].sortKey,
       evalOptions
@@ -148,7 +148,7 @@ describe('Testing the SmartWeave client', () => {
 
   it('should properly limit results (3,4,5,6)', async () => {
     const interactions2 = await loader.load(
-      contract.contractTxId(),
+      contract.txId(),
       interactions[2].sortKey,
       interactions[6].sortKey,
       evalOptions
@@ -163,7 +163,7 @@ describe('Testing the SmartWeave client', () => {
 
   it('should properly limit results (6,7,8,9)', async () => {
     const interactions2 = await loader.load(
-      contract.contractTxId(),
+      contract.txId(),
       interactions[5].sortKey,
       interactions[9].sortKey,
       evalOptions
@@ -177,7 +177,7 @@ describe('Testing the SmartWeave client', () => {
   });
 
   it('should properly limit results (6-19) - no upper bound', async () => {
-    const interactions2 = await loader.load(contract.contractTxId(), interactions[5].sortKey, null, evalOptions);
+    const interactions2 = await loader.load(contract.txId(), interactions[5].sortKey, null, evalOptions);
     expect(interactions2.length).toBe(14);
 
     expect(interactions2[0].sortKey).toEqual(interactions[6].sortKey);
@@ -188,7 +188,7 @@ describe('Testing the SmartWeave client', () => {
 
   it('should properly limit results (2-11)', async () => {
     const interactions2 = await loader.load(
-      contract.contractTxId(),
+      contract.txId(),
       interactions[1].sortKey,
       interactions[11].sortKey,
       evalOptions
@@ -220,7 +220,7 @@ describe('Testing the SmartWeave client', () => {
 
   it('should properly limit results (13-17)', async () => {
     const interactions2 = await loader.load(
-      contract.contractTxId(),
+      contract.txId(),
       interactions[12].sortKey,
       interactions[17].sortKey,
       evalOptions
@@ -242,7 +242,7 @@ describe('Testing the SmartWeave client', () => {
 
   it('should properly limit results (13-17)', async () => {
     const interactions2 = await loader.load(
-      contract.contractTxId(),
+      contract.txId(),
       interactions[3].sortKey,
       interactions[17].sortKey,
       evalOptions

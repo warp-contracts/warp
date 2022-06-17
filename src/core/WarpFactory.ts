@@ -40,7 +40,7 @@ export const defaultCacheOptions: CacheOptions = {
  */
 export class WarpFactory {
   /**
-   * Returns a fully configured {@link SmartWeave} that is using arweave.net compatible gateway
+   * Returns a fully configured {@link Warp} that is using arweave.net compatible gateway
    * (with a GQL endpoint) for loading the interactions and in memory cache.
    * Suitable for testing.
    */
@@ -66,7 +66,7 @@ export class WarpFactory {
   }
 
   /**
-   * Returns a fully configured {@link SmartWeave} that is using Warp gateway for loading the interactions.
+   * Returns a fully configured {@link Warp} that is using Warp gateway for loading the interactions.
    */
   static warpGw(
     arweave: Arweave,

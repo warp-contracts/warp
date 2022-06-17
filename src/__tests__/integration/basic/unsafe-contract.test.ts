@@ -13,7 +13,7 @@ let warp: Warp;
 let contract: Contract<any>;
 let contractWithUnsafe: Contract<any>;
 
-describe('Testing the SmartWeave client', () => {
+describe('Testing the Warp client', () => {
   let contractSrc: string;
 
   let wallet: JWKInterface;

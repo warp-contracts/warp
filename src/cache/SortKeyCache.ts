@@ -1,3 +1,11 @@
+/**
+ * A cache that stores its values per contract tx id and sort key.
+ * A sort key is a value that the SmartWeave protocol is using
+ * to sort contract transactions ({@link LexicographicalInteractionsSorter}.
+ *
+ * All values should be stored in a lexicographical order (per contract) -
+ * sorted by the sort key.
+ */
 export interface SortKeyCache<V> {
   getLessOrEqual(key: string, sortKey: string): Promise<SortKeyCacheResult<V> | null>;
 

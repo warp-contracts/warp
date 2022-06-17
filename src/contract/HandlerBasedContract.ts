@@ -325,7 +325,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return interactionTx;
   }
 
-  contractTxId(): string {
+  txId(): string {
     return this._contractTxId;
   }
 
@@ -430,7 +430,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   private maybeResetRootContract() {
     if (this._parentContract == null) {
       this.logger.debug('Clearing call stack for the root contract');
-      this._callStack = new ContractCallStack(this.contractTxId(), 0);
+      this._callStack = new ContractCallStack(this.txId(), 0);
     }
   }
 
@@ -535,7 +535,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     const interaction: ContractInteraction<Input> = {
       input,
-      caller: this._parentContract.contractTxId()
+      caller: this._parentContract.txId()
     };
 
     const interactionData: InteractionData<Input> = {
