@@ -11,7 +11,7 @@ import {
   LoggerFactory,
   WarpLogger,
   SmartWeaveGlobal,
-  timeout
+  timeout, sleep
 } from '@warp';
 
 export class ContractHandlerApi<State> implements HandlerApi<State> {
@@ -51,7 +51,13 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
       this.assignWrite(executionContext, currentTx);
       this.assignRefreshState(executionContext);
 
-      const handlerResult = await Promise.race([timeoutPromise, this.contractFunction(stateCopy, interaction)]);
+      const handlerResult = await this.contractFunction(stateCopy, interaction);
+
+      try {
+        await sleep(0);
+      } catch (e) {
+        throw new Error('aaaaaaa');
+      }
 
       if (handlerResult && (handlerResult.state !== undefined || handlerResult.result !== undefined)) {
         return {
