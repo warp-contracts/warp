@@ -70,6 +70,7 @@
     "bignumber.js": "^9.0.1",
     "elliptic": "^6.5.4",
     "fast-copy": "^2.1.1",
+    "isolated-vm": "^4.4.1",
     "knex": "^0.95.14",
     "lodash": "^4.17.21",
     "redstone-isomorphic": "1.1.6",

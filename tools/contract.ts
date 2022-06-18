@@ -47,10 +47,35 @@ async function main() {
     useNullAsDefault: true
   });
   const warp = (await WarpNodeFactory.knexCachedBased(arweave, knexConfig, 1))
-    .useRedStoneGateway().build();
-  const contract = warp.contract("3vAx5cIFhwMihrNJgGx3CoAeZTOjG7LeIs9tnbBfL14");
-  await contract.readState();
-  await contract.readState();
+    .useWarpGateway().build();
+
+
+  // set exit code 1 on unhandled promise errors
+  // https://stackoverflow.com/a/63509086/1637178
+  process.exitCode = 1;
+
+  /**
+   * Node process exits with exitCode==0 when there are still
+   * promises awaiting. We prevent this from happening by adding
+   * event-loop timer and clearing it after code finishes.
+   */
+  const i = setInterval(() => {
+    /* do nothing but prevent node process from exiting */
+  }, 1000);
+
+  try {
+    const contract = warp.contract("F2V2zXs1ylUO4hskxfNOvPlceLlk1hp_q-xEMQCPbBQ").setEvaluationOptions({
+      allowUnsafeClient: true,
+      useVM2: true
+    });
+    await contract.readState();
+  } finally {
+    
+    clearInterval(i);
+  }
+
+  // revert back to correct status code, because we didn't encounter any errors
+  process.exitCode = 0;
 
   const heapUsedAfter = Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100;
   const rssUsedAfter = Math.round((process.memoryUsage().rss / 1024 / 1024) * 100) / 100;
