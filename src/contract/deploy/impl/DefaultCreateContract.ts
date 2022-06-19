@@ -13,7 +13,7 @@ export class DefaultCreateContract implements CreateContract {
   }
 
   async deploy(contractData: ContractData, useBundler = false): Promise<string> {
-    const { wallet, initState, tags, transfer } = contractData;
+    const { wallet, initState, tags, transfer, data } = contractData;
 
     const source = new SourceImpl(this.arweave);
 
@@ -26,7 +26,8 @@ export class DefaultCreateContract implements CreateContract {
         wallet,
         initState,
         tags,
-        transfer
+        transfer,
+        data
       },
       useBundler,
       srcTx
@@ -39,15 +40,15 @@ export class DefaultCreateContract implements CreateContract {
     srcTx: Transaction = null
   ): Promise<string> {
     this.logger.debug('Creating new contract from src tx');
-    const { wallet, srcTxId, initState, tags, transfer } = contractData;
+    const { wallet, srcTxId, initState, tags, transfer, data } = contractData;
 
-    let contractTX = await this.arweave.createTransaction({ data: initState }, wallet);
+    let contractTX = await this.arweave.createTransaction({ data: data?.body || initState }, wallet);
 
     if (+transfer?.winstonQty > 0 && transfer.target.length) {
       this.logger.debug('Creating additional transaction with AR transfer', transfer);
       contractTX = await this.arweave.createTransaction(
         {
-          data: initState,
+          data: data?.body || initState,
           target: transfer.target,
           quantity: transfer.winstonQty
         },
@@ -64,7 +65,12 @@ export class DefaultCreateContract implements CreateContract {
     contractTX.addTag(SmartWeaveTags.APP_VERSION, '0.3.0');
     contractTX.addTag(SmartWeaveTags.CONTRACT_SRC_TX_ID, srcTxId);
     contractTX.addTag(SmartWeaveTags.SDK, 'RedStone');
-    contractTX.addTag(SmartWeaveTags.CONTENT_TYPE, 'application/json');
+    if (data) {
+      contractTX.addTag(SmartWeaveTags.CONTENT_TYPE, data['Content-Type']);
+      contractTX.addTag(SmartWeaveTags.INIT_STATE, JSON.stringify(initState));
+    } else {
+      contractTX.addTag(SmartWeaveTags.CONTENT_TYPE, 'application/json');
+    }
 
     await this.arweave.transactions.sign(contractTX, wallet);
 
