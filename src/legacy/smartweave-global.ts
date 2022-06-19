@@ -67,26 +67,6 @@ export class SmartWeaveGlobal {
     };
 
     this.evaluationOptions = evaluationOptions;
-
-    this.arweave.wallets.getBalance = async (address: string): Promise<string> => {
-      if (!this._activeTx) {
-        throw new Error('Cannot read balance - active tx is not set.');
-      }
-      if (!this.block.height) {
-        throw new Error('Cannot read balance - block height not set.');
-      }
-
-      // http://nyc-1.dev.arweave.net:1984/block/height/914387/wallet/M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI/balance
-      return await fetch(
-        `${evaluationOptions.walletBalanceUrl}block/height/${this.block.height}/wallet/${address}/balance`
-      )
-        .then((res) => {
-          return res.ok ? res.text() : Promise.reject(res);
-        })
-        .catch((error) => {
-          throw new Error(`Unable to read wallet balance. ${error.status}. ${error.body?.message}`);
-        });
-    };
     this.contract = contract;
     this.transaction = new Transaction(this);
     this.block = new Block(this);
