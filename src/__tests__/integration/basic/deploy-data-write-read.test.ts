@@ -107,4 +107,5 @@ describe('Testing the Warp client', () => {
     expect(interactionResult.result).toEqual(559);
     expect(interactionResultVM.result).toEqual(559);
   });
+
 });

@@ -67,7 +67,7 @@ export class DefaultCreateContract implements CreateContract {
     contractTX.addTag(SmartWeaveTags.SDK, 'RedStone');
     if (data) {
       contractTX.addTag(SmartWeaveTags.CONTENT_TYPE, data['Content-Type']);
-      contractTX.addTag(SmartWeaveTags.INIT_STATE, JSON.stringify(initState));
+      contractTX.addTag(SmartWeaveTags.INIT_STATE, initState);
     } else {
       contractTX.addTag(SmartWeaveTags.CONTENT_TYPE, 'application/json');
     }
