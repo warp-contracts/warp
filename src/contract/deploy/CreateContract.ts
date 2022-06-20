@@ -21,6 +21,10 @@ export interface CommonContractData {
   initState: string;
   tags?: Tags;
   transfer?: ArTransfer;
+  data?: {
+    'Content-Type': string;
+    body: string | Uint8Array | ArrayBuffer;
+  };
 }
 
 export interface ContractData extends CommonContractData {

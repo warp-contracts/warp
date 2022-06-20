@@ -30,6 +30,7 @@ describe('Testing the Warp client', () => {
   let arlocal: ArLocal;
   let warp: Warp;
   let contract: Contract<ExampleContractState>;
+  let contractInitData: Contract<ExampleContractState>;
   let contractVM: Contract<ExampleContractState>;
 
   beforeAll(async () => {
@@ -61,12 +62,21 @@ describe('Testing the Warp client', () => {
       src: contractSrc
     });
 
+    const contractInitDataTxId = await warp.createContract.deploy({
+      wallet,
+      initState: initialState,
+      data: { 'Content-Type': 'text/html', body: '<h1>HELLO WORLD</h1>' },
+      src: contractSrc
+    });
+
     contract = warp.contract(contractTxId);
     contractVM = warp.contract<ExampleContractState>(contractTxId).setEvaluationOptions({
       useVM2: true
     });
+    contractInitData = warp.contract(contractInitDataTxId);
     contract.connect(wallet);
     contractVM.connect(wallet);
+    contractInitData.connect(wallet);
 
     await mineBlock(arweave);
   });
@@ -78,32 +88,41 @@ describe('Testing the Warp client', () => {
   it('should properly deploy contract with initial state', async () => {
     expect((await contract.readState()).state.counter).toEqual(555);
     expect((await contractVM.readState()).state.counter).toEqual(555);
+    expect((await contractInitData.readState()).state.counter).toEqual(555);
   });
 
   it('should properly add new interaction', async () => {
     await contract.writeInteraction({ function: 'add' });
+    await contractInitData.writeInteraction({ function: 'add' });
     await mineBlock(arweave);
 
     expect((await contract.readState()).state.counter).toEqual(556);
     expect((await contractVM.readState()).state.counter).toEqual(556);
+    expect((await contractInitData.readState()).state.counter).toEqual(556);
   });
 
   it('should properly add another interactions', async () => {
     await contract.writeInteraction({ function: 'add' });
+    await contractInitData.writeInteraction({ function: 'add' });
     await mineBlock(arweave);
     await contract.writeInteraction({ function: 'add' });
+    await contractInitData.writeInteraction({ function: 'add' });
     await mineBlock(arweave);
     await contract.writeInteraction({ function: 'add' });
+    await contractInitData.writeInteraction({ function: 'add' });
     await mineBlock(arweave);
 
     expect((await contract.readState()).state.counter).toEqual(559);
     expect((await contractVM.readState()).state.counter).toEqual(559);
+    expect((await contractInitData.readState()).state.counter).toEqual(559);
   });
 
   it('should properly view contract state', async () => {
     const interactionResult = await contract.viewState<unknown, number>({ function: 'value' });
     const interactionResultVM = await contractVM.viewState<unknown, number>({ function: 'value' });
+    const interactionResultInitDataVM = await contractInitData.viewState<unknown, number>({ function: 'value' });
     expect(interactionResult.result).toEqual(559);
     expect(interactionResultVM.result).toEqual(559);
+    expect(interactionResultInitDataVM.result).toEqual(559);
   });
 });
