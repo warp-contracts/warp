@@ -10,7 +10,7 @@ const isolate = new ivm.Isolate();
 const context = isolate.createContextSync();
 
 const arweaveModule = isolate.compileModuleSync(`require('arweave')`);
-arweaveModule.instantiateSync(context, function(){});
+arweaveModule.instantiateSync(context, function () {});
 const jail = context.global;
 
 class ContractError extends Error {
@@ -30,6 +30,9 @@ jail.setSync('ContractAssert', function (cond, message) {
 
 LoggerFactory.INST.logLevel('debug');
 const logger = LoggerFactory.INST.create('ContractLogger');
+/*
+arweave.transactions.get()
+arweave.transactions.getData()*/
 
 const arweave = Arweave.init({
   host: 'arweave.net',
@@ -131,7 +134,6 @@ jail.setSync('__host__smartweave__block_timestamp', function (...args) {
 jail.setSync(
   '__host__smartweave__contracts_readContractState',
   new ivm.Reference(async function (...args) {
-    console.log('Reading contract state', args[0]);
     await sleep(500);
     return new ivm.ExternalCopy({
       ticker: 'FAKE_TICKER_READ'
@@ -141,7 +143,6 @@ jail.setSync(
 jail.setSync(
   '__host__smartweave__contracts_write',
   new ivm.Reference(async function (...args) {
-    console.log('writing contract state', args[0]);
     await sleep(500);
     return new ivm.ExternalCopy({
       ticker: 'FAKE_TICKER_WRITE'
@@ -151,7 +152,6 @@ jail.setSync(
 jail.setSync(
   '__host__smartweave__contracts_viewContractState',
   new ivm.Reference(async function (...args) {
-    console.log('view contract state', args[0]);
     await sleep(500);
     return new ivm.ExternalCopy({
       ticker: 'FAKE_TICKER_VIEW'
@@ -161,7 +161,6 @@ jail.setSync(
 jail.setSync(
   '__host__smartweave__contracts_refreshState',
   new ivm.Reference(async function (...args) {
-    console.log('refresh contract state', args[0]);
     await sleep(500);
     return new ivm.ExternalCopy({
       ticker: 'FAKE_TICKER_REFRESH'
@@ -173,7 +172,6 @@ jail.setSync(
 jail.setSync(
   '__host__smartweave_getBalance',
   new ivm.Reference(async function (...args) {
-    console.log('getBalance', args[0]);
     await sleep(500);
     return new ivm.ExternalCopy({
       balance: '234234234'
@@ -181,11 +179,40 @@ jail.setSync(
   })
 );
 
-// SmartWeave - arweave
+// SmartWeave - vrf
+jail.setSync('__host__smartweave__vrf_data', function (...args) {
+  return new ivm.ExternalCopy(swGlobal.vrf.data);
+});
+jail.setSync('__host__smartweave__vrf_value', function (...args) {
+  return swGlobal.vrf.value;
+});
+jail.setSync('__host__smartweave__vrf_randomInt', function (...args) {
+  return swGlobal.vrf.randomInt(args);
+});
+
+// SmartWeave - arweave - wallets
+arweave.wallets.getBalance = arweave.wallets.getBalance.bind(arweave.wallets);
+arweave.wallets.getLastTransactionID = arweave.wallets.getLastTransactionID.bind(arweave.wallets);
+arweave.wallets.generate = arweave.wallets.generate.bind(arweave.wallets);
+arweave.wallets.jwkToAddress = arweave.wallets.jwkToAddress.bind(arweave.wallets);
+arweave.wallets.getAddress = arweave.wallets.getAddress.bind(arweave.wallets);
+arweave.wallets.ownerToAddress = arweave.wallets.ownerToAddress.bind(arweave.wallets);
+
+jail.setSync('__host__smartweave__arweave__wallets_getBalance', new ivm.Reference(arweave.wallets.getBalance));
 jail.setSync(
-  '__host__smartweave__arweave',
-  new ivm.Reference(arweave)
+  '__host__smartweave__arweave__wallets_getLastTransactionID',
+  new ivm.Reference(arweave.wallets.getLastTransactionID)
 );
+jail.setSync(
+  '__host__smartweave__arweave__wallets_generate',
+  new ivm.Reference(async function (...args) {
+    const result = await arweave.wallets.generate();
+    return new ivm.ExternalCopy(result);
+  })
+);
+jail.setSync('__host__smartweave__arweave__wallets_jwkToAddress', new ivm.Reference(arweave.wallets.jwkToAddress));
+jail.setSync('__host__smartweave__arweave__wallets_getAddress', new ivm.Reference(arweave.wallets.getAddress));
+jail.setSync('__host__smartweave__arweave__wallets_ownerToAddress', new ivm.Reference(arweave.wallets.ownerToAddress));
 
 const initState = {
   counter: 0
@@ -271,6 +298,29 @@ context.evalSync(`
       randomInt(maxValue) {
         return __host__smartweave__vrf_randomInt(maxValue)
       }
+    },
+    
+    arweave: {
+      wallets: {
+        getBalance: function(...args) {
+          return __host__smartweave__arweave__wallets_getBalance.applySyncPromise(undefined, args);
+        },
+        getLastTransactionID: function(...args) {
+          return __host__smartweave__arweave__wallets_getLastTransactionID.applySyncPromise(undefined, args);
+        },
+        generate: function(...args) {
+          return __host__smartweave__arweave__wallets_generate.applySyncPromise(undefined, args).copy();
+        },
+        jwkToAddress: function(...args) {
+          return __host__smartweave__arweave__wallets_jwkToAddress.applySyncPromise(undefined, args, {arguments: {copy: true}});
+        },
+        getAddress: function(...args) {
+          return __host__smartweave__arweave__wallets_getAddress.applySyncPromise(undefined, args, {arguments: {copy: true}});
+        },
+        ownerToAddress: function(...args) {
+          return __host__smartweave__arweave__wallets_ownerToAddress.applySyncPromise(undefined, args);
+        },
+      }
     }
   }
 `);
@@ -278,64 +328,69 @@ context.evalSync(`
 (async function () {
   const contract = isolate.compileScriptSync(
     `
-  
-	async function handle(state, action) {
-    logger.info(JSON.stringify(action));
     
-    logger.info('SmartWeave.contract', SmartWeave.contract);
+    async function handle(state, action) {
+      logger.info(JSON.stringify(action));
+      
+      logger.info('SmartWeave.contract', SmartWeave.contract);
+      
+      logger.info('SmartWeave.block.height', SmartWeave.block.height);
+      logger.info('SmartWeave.block.indep_hash', SmartWeave.block.indep_hash);
+      logger.info('SmartWeave.block.timestamp', SmartWeave.block.timestamp);
+      
+      logger.info('SmartWeave.transaction.id', SmartWeave.transaction.id);
+      logger.info('SmartWeave.transaction.owner', SmartWeave.transaction.owner);
+      logger.info('SmartWeave.transaction.target', SmartWeave.transaction.target);
+      logger.info('SmartWeave.transaction.tags', SmartWeave.transaction.tags);
+      logger.info('SmartWeave.transaction.quantity', SmartWeave.transaction.quantity);
+      logger.info('SmartWeave.transaction.reward', SmartWeave.transaction.reward);
     
-    logger.info('SmartWeave.block.height', SmartWeave.block.height);
-    logger.info('SmartWeave.block.indep_hash', SmartWeave.block.indep_hash);
-    logger.info('SmartWeave.block.timestamp', SmartWeave.block.timestamp);
+      /*logger.info('before async call');
+      const contractRead = await SmartWeave.contracts.readContractState('ctxid_2');
+      logger.info('after async call', contractRead);
+      
+      logger.info('view contract', await SmartWeave.contracts.viewContractState('ctxid_3', {function:'foo'}));
+      logger.info('write contract', await SmartWeave.contracts.write('ctxid_3', {function:'bar'}));
+      logger.info('refresh contract', await SmartWeave.contracts.refreshState());
+      
+      logger.info('getBalance', await SmartWeave.getBalance('abc'));*/
+      
+      logger.info('SmartWeave.arweave.wallets.getBalance', await SmartWeave.arweave.wallets.getBalance('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA'));
+      logger.info('SmartWeave.arweave.wallets.getLastTransactionID', await SmartWeave.arweave.wallets.getLastTransactionID('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA'));
+      const jwk = await SmartWeave.arweave.wallets.generate();
+      logger.info('SmartWeave.arweave.wallets.generate', jwk);
+      logger.info('SmartWeave.arweave.wallets.jwkToAddress', SmartWeave.arweave.wallets.jwkToAddress(jwk));
+      logger.info('SmartWeave.arweave.wallets.getAddress', SmartWeave.arweave.wallets.getAddress(jwk));
+      
+      
+      if (action.function === 'add') {
+        logger.info('add function called');
+        state.counter++;
+        return {state}
+      } 
+      
+      if (action.function === 'boom') {
+        logger.info('boom function called');
+        boom()
+        return {state}
+      } 
+      
+      if (action.function === 'assert') {
+        logger.info('assert function called');
+        ContractAssert(false, "ContractAssert fired");
+        return {state}
+      } 
+      
+      async function boom() {
+        Object.values(null);
+      }
     
-    logger.info('SmartWeave.transaction.id', SmartWeave.transaction.id);
-    logger.info('SmartWeave.transaction.owner', SmartWeave.transaction.owner);
-    logger.info('SmartWeave.transaction.target', SmartWeave.transaction.target);
-    logger.info('SmartWeave.transaction.tags', SmartWeave.transaction.tags);
-    logger.info('SmartWeave.transaction.quantity', SmartWeave.transaction.quantity);
-    logger.info('SmartWeave.transaction.reward', SmartWeave.transaction.reward);
-	
-	  /*logger.info('before async call');
-	  const contractRead = await SmartWeave.contracts.readContractState('ctxid_2');
-	  logger.info('after async call', contractRead);
-	  
-	  logger.info('view contract', await SmartWeave.contracts.viewContractState('ctxid_3', {function:'foo'}));
-	  logger.info('write contract', await SmartWeave.contracts.write('ctxid_3', {function:'bar'}));
-	  logger.info('refresh contract', await SmartWeave.contracts.refreshState());
-	  
-	  logger.info('getBalance', await SmartWeave.getBalance('abc'));*/
-	  logger.info('__host__smartweave__arweave', __host__smartweave__arweave.getSync('ar').derefInto()['BigNum']);
-	  //logger.info('__host__smartweave__arweave', __host__smartweave__arweave.getSync('wallets').apply('getBalance', [);
-	  
-	  
-	  if (action.function === 'add') {
-	    logger.info('add function called');
-	    state.counter++;
-	    return {state}
-	  } 
-	  
-	  if (action.function === 'boom') {
-	    logger.info('boom function called');
-	    boom()
-	    return {state}
-	  } 
-	  
-	  if (action.function === 'assert') {
-	    logger.info('assert function called');
-	    ContractAssert(false, "ContractAssert fired");
-	    return {state}
-	  } 
-	  
-	  async function boom() {
-      Object.values(null);
+      throw new Error('Unknown function');
     }
-	
-	  throw new Error('Unknown function');
-  }
-  
-  (async () => {
-    await handle(state, action);
-  })();
+    
+    (async () => {
+      await handle(state, action);
+    })();
 `
   );
 

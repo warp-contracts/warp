@@ -1,6 +1,6 @@
-const Arweave = require('arweave');
-const {WarpNodeFactory} = require("../../lib/cjs/core/node/WarpNodeFactory");
-const {expose} = require("threads/worker");
+import Arweave from 'arweave';
+import {WarpNodeFactory} from "../../src";
+import {expose} from "threads";
 
 const arweave = Arweave.init({
   host: 'arweave.net', // Hostname or IP address for a Arweave host
