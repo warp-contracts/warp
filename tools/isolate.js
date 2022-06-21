@@ -5,6 +5,9 @@ const { SmartWeaveGlobal } = require('../lib/cjs/legacy/smartweave-global');
 const { DefaultEvaluationOptions } = require('../lib/cjs/core/modules/StateEvaluator');
 const Arweave = require('arweave');
 const { sleep } = require('../lib/cjs/utils/utils');
+const {concatBuffers, b64UrlToString, bufferToString, stringToBuffer, stringToB64Url, b64UrlToBuffer, bufferTob64,
+  bufferTob64Url, b64UrlEncode, b64UrlDecode
+} = require("arweave/node/lib/utils");
 
 const isolate = new ivm.Isolate();
 const context = isolate.createContextSync();
@@ -208,6 +211,18 @@ jail.setSync('__host__smartweave__arweave__ar_isGreaterThan', new ivm.Reference(
 jail.setSync('__host__smartweave__arweave__ar_add', new ivm.Reference(arweave.ar.add));
 jail.setSync('__host__smartweave__arweave__ar_sub', new ivm.Reference(arweave.ar.sub));
 
+// SmartWeave - arweave - utils
+jail.setSync('__host__smartweave__arweave__utils_concatBuffers', new ivm.Reference(arweave.utils.concatBuffers));
+jail.setSync('__host__smartweave__arweave__utils_b64UrlToString', new ivm.Reference(arweave.utils.b64UrlToString));
+jail.setSync('__host__smartweave__arweave__utils_bufferToString', new ivm.Reference(arweave.utils.bufferToString));
+jail.setSync('__host__smartweave__arweave__utils_stringToBuffer', new ivm.Reference(arweave.utils.stringToBuffer));
+jail.setSync('__host__smartweave__arweave__utils_stringToB64Url', new ivm.Reference(arweave.utils.stringToB64Url));
+jail.setSync('__host__smartweave__arweave__utils_b64UrlToBuffer', new ivm.Reference(arweave.utils.b64UrlToBuffer));
+jail.setSync('__host__smartweave__arweave__utils_bufferTob64', new ivm.Reference(arweave.utils.bufferTob64));
+jail.setSync('__host__smartweave__arweave__utils_bufferTob64Url', new ivm.Reference(arweave.utils.bufferTob64Url));
+jail.setSync('__host__smartweave__arweave__utils_b64UrlEncode', new ivm.Reference(arweave.utils.b64UrlEncode));
+jail.setSync('__host__smartweave__arweave__utils_b64UrlDecode', new ivm.Reference(arweave.utils.b64UrlDecode));
+
 // SmartWeave - arweave - wallets
 arweave.wallets.getBalance = arweave.wallets.getBalance.bind(arweave.wallets);
 arweave.wallets.getLastTransactionID = arweave.wallets.getLastTransactionID.bind(arweave.wallets);
@@ -215,7 +230,6 @@ arweave.wallets.generate = arweave.wallets.generate.bind(arweave.wallets);
 arweave.wallets.jwkToAddress = arweave.wallets.jwkToAddress.bind(arweave.wallets);
 arweave.wallets.getAddress = arweave.wallets.getAddress.bind(arweave.wallets);
 arweave.wallets.ownerToAddress = arweave.wallets.ownerToAddress.bind(arweave.wallets);
-
 jail.setSync('__host__smartweave__arweave__wallets_getBalance', new ivm.Reference(arweave.wallets.getBalance));
 jail.setSync(
   '__host__smartweave__arweave__wallets_getLastTransactionID',
@@ -275,75 +289,108 @@ context.evalSync(`
   
     transaction: {
       get id() { 
-        return __host__smartweave__transaction_id()
+        return __host__smartweave__transaction_id();
       },
       get owner() { 
-        return __host__smartweave__transaction_owner()
+        return __host__smartweave__transaction_owner();
       },
       get target() { 
-        return __host__smartweave__transaction_target()
+        return __host__smartweave__transaction_target();
       },
       get tags() { 
-        return __host__smartweave__transaction_tags()
+        return __host__smartweave__transaction_tags();
       },
       get quantity() { 
-        return __host__smartweave__transaction_quantity()
+        return __host__smartweave__transaction_quantity();
       },
       get reward() { 
-        return __host__smartweave__transaction_reward()
+        return __host__smartweave__transaction_reward();
       },
     }, 
   
     block: {
       get height() { 
-        return __host__smartweave__block_height()
+        return __host__smartweave__block_height();
       },
       get indep_hash() { 
-        return __host__smartweave__block_indep_hash()
+        return __host__smartweave__block_indep_hash();
       },
       get timestamp() { 
-        return __host__smartweave__block_timestamp()
+        return __host__smartweave__block_timestamp();
       }
     },
     
     vrf: {
       get data() {
-        return __host__smartweave__vrf_data().copy()
+        return __host__smartweave__vrf_data().copy();
       },
       get value() {
-        return __host__smartweave__vrf_value()
+        return __host__smartweave__vrf_value();
       },
       randomInt(maxValue) {
-        return __host__smartweave__vrf_randomInt(maxValue)
+        return __host__smartweave__vrf_randomInt(maxValue);
       }
     },
     
     arweave: {
       ar: {
         winstonToAr: function(...args) {
-          return __host__smartweave__arweave__ar_winstonToAr.applySync(undefined, args, {arguments: {copy: true}})
+          return __host__smartweave__arweave__ar_winstonToAr.applySync(undefined, args, {arguments: {copy: true}});
         },
         arToWinston: function(...args) {
-          return __host__smartweave__arweave__ar_arToWinston.applySync(undefined, args, {arguments: {copy: true}})
+          return __host__smartweave__arweave__ar_arToWinston.applySync(undefined, args, {arguments: {copy: true}});
         },
         compare: function(...args) {
-          return __host__smartweave__arweave__ar_compare.applySync(undefined, args)
+          return __host__smartweave__arweave__ar_compare.applySync(undefined, args);
         },
         isEqual: function(...args) {
-          return __host__smartweave__arweave__ar_isEqual.applySync(undefined, args)
+          return __host__smartweave__arweave__ar_isEqual.applySync(undefined, args);
         },
         isLessThan: function(...args) {
-          return __host__smartweave__arweave__ar_isLessThan.applySync(undefined, args)
+          return __host__smartweave__arweave__ar_isLessThan.applySync(undefined, args);
         },
         isGreaterThan: function(...args) {
-          return __host__smartweave__arweave__ar_isGreaterThan.applySync(undefined, args)
+          return __host__smartweave__arweave__ar_isGreaterThan.applySync(undefined, args);
         },
         add: function(...args) {
-          return __host__smartweave__arweave__ar_add.applySync(undefined, args)
+          return __host__smartweave__arweave__ar_add.applySync(undefined, args);
         },
         sub: function(...args) {
-          return __host__smartweave__arweave__ar_sub.applySync(undefined, args)
+          return __host__smartweave__arweave__ar_sub.applySync(undefined, args);
         },
+      },
+      
+      utils: {
+        concatBuffers: function(...args) {
+          return __host__smartweave__arweave__utils_concatBuffers.applySync(undefined, args, {arguments: {copy: true}, result: {copy: true}});
+        },
+        b64UrlToString: function(...args) {
+          return __host__smartweave__arweave__utils_b64UrlToString.applySync(undefined, args);
+        },
+        bufferToString: function(...args) {
+          return __host__smartweave__arweave__utils_bufferToString.applySync(undefined, args, {arguments: {copy: true}});
+        },
+        stringToBuffer: function(...args) {
+          return __host__smartweave__arweave__utils_stringToBuffer.applySync(undefined, args, {result: {copy: true}});
+        },
+        stringToB64Url: function(...args) {
+          return __host__smartweave__arweave__utils_stringToB64Url.applySync(undefined, args);
+        },
+        b64UrlToBuffer: function(...args) {
+          return __host__smartweave__arweave__utils_b64UrlToBuffer.applySync(undefined, args, {result: {copy: true}});
+        },
+        bufferTob64: function(...args) {
+          return __host__smartweave__arweave__utils_bufferTob64.applySync(undefined, args, {arguments: {copy: true}});
+        },
+        bufferTob64Url: function(...args) {
+          return __host__smartweave__arweave__utils_bufferTob64Url.applySync(undefined, args, {arguments: {copy: true}});
+        },
+        b64UrlEncode: function(...args) {
+          return __host__smartweave__arweave__utils_b64UrlEncode.applySync(undefined, args);
+        },
+        b64UrlDecode: function(...args) {
+          return __host__smartweave__arweave__utils_b64UrlDecode.applySync(undefined, args);
+        }
       },
     
       wallets: {
@@ -409,6 +456,15 @@ context.evalSync(`
       logger.info('SmartWeave.arweave.ar.winstonToAr', SmartWeave.arweave.ar.winstonToAr('234234242', {formatted: true, decimals: 6}));
       logger.info('SmartWeave.arweave.ar.arToWinston', SmartWeave.arweave.ar.arToWinston('1.5', {formatted: true}));
       logger.info('SmartWeave.arweave.ar.add', SmartWeave.arweave.ar.add('242342', '23423424'));
+      logger.info('SmartWeave.arweave.utils.concatBuffers', SmartWeave.arweave.utils.concatBuffers([new Uint8Array([21,31]), new Uint8Array([21,31])]));
+      logger.info('SmartWeave.arweave.utils.bufferToString', SmartWeave.arweave.utils.bufferToString(new Uint8Array([21,31])));
+      logger.info('SmartWeave.arweave.utils.stringToBuffer', SmartWeave.arweave.utils.stringToBuffer('duh'));
+      logger.info('SmartWeave.arweave.utils.stringToB64Url', SmartWeave.arweave.utils.stringToB64Url('duh'));
+      logger.info('SmartWeave.arweave.utils.b64UrlToBuffer', SmartWeave.arweave.utils.b64UrlToBuffer('duh'));
+      logger.info('SmartWeave.arweave.utils.bufferTob64', SmartWeave.arweave.utils.bufferTob64(new Uint8Array([21,31])));
+      logger.info('SmartWeave.arweave.utils.bufferTob64Url', SmartWeave.arweave.utils.bufferTob64Url(new Uint8Array([21,31])));
+      logger.info('SmartWeave.arweave.utils.b64UrlEncode', SmartWeave.arweave.utils.b64UrlEncode('asdasd'));
+      logger.info('SmartWeave.arweave.utils.b64UrlDecode', SmartWeave.arweave.utils.b64UrlDecode('asdasd'));
       
       if (action.function === 'add') {
         logger.info('add function called');
