@@ -9,99 +9,35 @@ import {
   InteractionData,
   InteractionResult,
   LoggerFactory,
-  WarpLogger,
-  SmartWeaveGlobal,
-  timeout, sleep
+  SmartWeaveGlobal
 } from '@warp';
 
-export class ContractHandlerApi<State> implements HandlerApi<State> {
-  private readonly contractLogger: WarpLogger;
-  private readonly logger = LoggerFactory.INST.create('ContractHandlerApi');
+export abstract class AbstractContractHandler<State> implements HandlerApi<State> {
+  protected logger = LoggerFactory.INST.create('ContractHandler');
 
-  constructor(
-    private readonly swGlobal: SmartWeaveGlobal,
-    // eslint-disable-next-line
-    private readonly contractFunction: Function,
-    private readonly contractDefinition: ContractDefinition<State>
+  protected constructor(
+    protected readonly swGlobal: SmartWeaveGlobal,
+    protected readonly contractDefinition: ContractDefinition<State>
   ) {
-    this.contractLogger = LoggerFactory.INST.create(swGlobal.contract.id);
     this.assignReadContractState = this.assignReadContractState.bind(this);
     this.assignViewContractState = this.assignViewContractState.bind(this);
     this.assignWrite = this.assignWrite.bind(this);
     this.assignRefreshState = this.assignRefreshState.bind(this);
   }
 
-  async handle<Input, Result>(
+  abstract handle<Input, Result>(
     executionContext: ExecutionContext<State>,
     currentResult: EvalStateResult<State>,
     interactionData: InteractionData<Input>
-  ): Promise<InteractionResult<State, Result>> {
-    const { timeoutId, timeoutPromise } = timeout(
-      executionContext.evaluationOptions.maxInteractionEvaluationTimeSeconds
-    );
+  ): Promise<InteractionResult<State, Result>>;
 
-    try {
-      const { interaction, interactionTx, currentTx } = interactionData;
+  abstract initState(state: State): void;
 
-      const stateCopy = deepCopy(currentResult.state, executionContext.evaluationOptions.useFastCopy);
-      this.swGlobal._activeTx = interactionTx;
-      this.swGlobal.caller = interaction.caller; // either contract tx id (for internal writes) or transaction.owner
-      this.assignReadContractState<Input>(executionContext, currentTx, currentResult, interactionTx);
-      this.assignViewContractState<Input>(executionContext);
-      this.assignWrite(executionContext, currentTx);
-      this.assignRefreshState(executionContext);
-
-      const handlerResult = await this.contractFunction(stateCopy, interaction);
-
-      try {
-        await sleep(0);
-      } catch (e) {
-        throw new Error('aaaaaaa');
-      }
-
-      if (handlerResult && (handlerResult.state !== undefined || handlerResult.result !== undefined)) {
-        return {
-          type: 'ok',
-          result: handlerResult.result,
-          state: handlerResult.state || currentResult.state
-        };
-      }
-
-      // Will be caught below as unexpected exception.
-      throw new Error(`Unexpected result from contract: ${JSON.stringify(handlerResult)}`);
-    } catch (err) {
-      switch (err.name) {
-        case 'ContractError':
-          return {
-            type: 'error',
-            errorMessage: err.message,
-            state: currentResult.state,
-            // note: previous version was writing error message to a "result" field,
-            // which fucks-up the HandlerResult type definition -
-            // HandlerResult.result had to be declared as 'Result | string' - and that led to a poor dev exp.
-            // TODO: this might be breaking change!
-            result: null
-          };
-        default:
-          return {
-            type: 'exception',
-            errorMessage: `${(err && err.stack) || (err && err.message) || err}`,
-            state: currentResult.state,
-            result: null
-          };
-      }
-    } finally {
-      if (timeoutId !== null) {
-        // it is important to clear the timeout promise
-        // - promise.race won't "cancel" it automatically if the "handler" promise "wins"
-        // - and this would ofc. cause a waste in cpu cycles
-        // (+ Jest complains about async operations not being stopped properly).
-        clearTimeout(timeoutId);
-      }
-    }
+  async dispose(): Promise<void> {
+    // noop by default;
   }
 
-  private assignWrite(executionContext: ExecutionContext<State>, currentTx: CurrentTx[]) {
+  protected assignWrite(executionContext: ExecutionContext<State>, currentTx: CurrentTx[]) {
     this.swGlobal.contracts.write = async <Input = unknown>(
       contractTxId: string,
       input: Input
@@ -141,7 +77,7 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
     };
   }
 
-  private assignViewContractState<Input>(executionContext: ExecutionContext<State>) {
+  protected assignViewContractState<Input>(executionContext: ExecutionContext<State>) {
     this.swGlobal.contracts.viewContractState = async <View>(contractTxId: string, input: any) => {
       this.logger.debug('swGlobal.viewContractState call:', {
         from: this.contractDefinition.txId,
@@ -158,7 +94,7 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
     };
   }
 
-  private assignReadContractState<Input>(
+  protected assignReadContractState<Input>(
     executionContext: ExecutionContext<State>,
     currentTx: CurrentTx[],
     currentResult: EvalStateResult<State>,
@@ -198,15 +134,11 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
     };
   }
 
-  private assignRefreshState(executionContext: ExecutionContext<State>) {
+  protected assignRefreshState(executionContext: ExecutionContext<State>) {
     this.swGlobal.contracts.refreshState = async () => {
       const stateEvaluator = executionContext.warp.stateEvaluator;
       const result = await stateEvaluator.latestAvailableState(this.swGlobal.contract.id, this.swGlobal.block.height);
       return result?.cachedValue.state;
     };
-  }
-
-  initState(state: State): void {
-    // nth to do in this impl...
   }
 }

@@ -387,7 +387,7 @@ In order to use VM2, set `useVM2` evaluation option to `true` (defaults to `fals
 
 ```js
 contract = warp.contract(contractTxId).setEvaluationOptions({
-  useVM2: true
+  useIVM: true
 });
 ```
 
