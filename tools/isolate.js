@@ -5,9 +5,18 @@ const { SmartWeaveGlobal } = require('../lib/cjs/legacy/smartweave-global');
 const { DefaultEvaluationOptions } = require('../lib/cjs/core/modules/StateEvaluator');
 const Arweave = require('arweave');
 const { sleep } = require('../lib/cjs/utils/utils');
-const {concatBuffers, b64UrlToString, bufferToString, stringToBuffer, stringToB64Url, b64UrlToBuffer, bufferTob64,
-  bufferTob64Url, b64UrlEncode, b64UrlDecode
-} = require("arweave/node/lib/utils");
+const {
+  concatBuffers,
+  b64UrlToString,
+  bufferToString,
+  stringToBuffer,
+  stringToB64Url,
+  b64UrlToBuffer,
+  bufferTob64,
+  bufferTob64Url,
+  b64UrlEncode,
+  b64UrlDecode
+} = require('arweave/node/lib/utils');
 
 const isolate = new ivm.Isolate();
 const context = isolate.createContextSync();
@@ -103,33 +112,33 @@ jail.setSync('__host__logger_error', function (...args) {
 jail.setSync('__host__smartweave__contract', new ivm.ExternalCopy(swGlobal.contract));
 
 // SmartWeave - transaction
-jail.setSync('__host__smartweave__transaction_id', function (...args) {
+jail.setSync('__host__smartweave__transaction_id', function () {
   return swGlobal.transaction.id;
 });
-jail.setSync('__host__smartweave__transaction_owner', function (...args) {
+jail.setSync('__host__smartweave__transaction_owner', function () {
   return swGlobal.transaction.owner;
 });
-jail.setSync('__host__smartweave__transaction_target', function (...args) {
+jail.setSync('__host__smartweave__transaction_target', function () {
   return swGlobal.transaction.target;
 });
 jail.setSync('__host__smartweave__transaction_tags', function (...args) {
   return swGlobal.transaction.tags;
 });
-jail.setSync('__host__smartweave__transaction_quantity', function (...args) {
+jail.setSync('__host__smartweave__transaction_quantity', function () {
   return swGlobal.transaction.quantity;
 });
-jail.setSync('__host__smartweave__transaction_reward', function (...args) {
+jail.setSync('__host__smartweave__transaction_reward', function () {
   return swGlobal.transaction.reward;
 });
 
 // SmartWeave - block
-jail.setSync('__host__smartweave__block_height', function (...args) {
+jail.setSync('__host__smartweave__block_height', function () {
   return swGlobal.block.height;
 });
-jail.setSync('__host__smartweave__block_indep_hash', function (...args) {
+jail.setSync('__host__smartweave__block_indep_hash', function () {
   return swGlobal.block.indep_hash;
 });
-jail.setSync('__host__smartweave__block_timestamp', function (...args) {
+jail.setSync('__host__smartweave__block_timestamp', function () {
   return swGlobal.block.timestamp;
 });
 
@@ -186,7 +195,7 @@ jail.setSync(
 jail.setSync('__host__smartweave__vrf_data', function (...args) {
   return new ivm.ExternalCopy(swGlobal.vrf.data);
 });
-jail.setSync('__host__smartweave__vrf_value', function (...args) {
+jail.setSync('__host__smartweave__vrf_value', function () {
   return swGlobal.vrf.value;
 });
 jail.setSync('__host__smartweave__vrf_randomInt', function (...args) {
@@ -230,21 +239,58 @@ arweave.wallets.generate = arweave.wallets.generate.bind(arweave.wallets);
 arweave.wallets.jwkToAddress = arweave.wallets.jwkToAddress.bind(arweave.wallets);
 arweave.wallets.getAddress = arweave.wallets.getAddress.bind(arweave.wallets);
 arweave.wallets.ownerToAddress = arweave.wallets.ownerToAddress.bind(arweave.wallets);
-jail.setSync('__host__smartweave__arweave__wallets_getBalance', new ivm.Reference(arweave.wallets.getBalance));
+jail.setSync(
+  '__host__smartweave__arweave__wallets_getBalance',
+  new ivm.Reference(async function () {
+    throw new Error('this function is non-deterministic');
+  })
+);
 jail.setSync(
   '__host__smartweave__arweave__wallets_getLastTransactionID',
-  new ivm.Reference(arweave.wallets.getLastTransactionID)
+  new ivm.Reference(async function () {
+    throw new Error('this function is non-deterministic');
+  })
 );
 jail.setSync(
   '__host__smartweave__arweave__wallets_generate',
-  new ivm.Reference(async function (...args) {
-    const result = await arweave.wallets.generate();
-    return new ivm.ExternalCopy(result);
+  new ivm.Reference(async function () {
+    throw new Error('this function is non-deterministic');
   })
 );
 jail.setSync('__host__smartweave__arweave__wallets_jwkToAddress', new ivm.Reference(arweave.wallets.jwkToAddress));
 jail.setSync('__host__smartweave__arweave__wallets_getAddress', new ivm.Reference(arweave.wallets.getAddress));
 jail.setSync('__host__smartweave__arweave__wallets_ownerToAddress', new ivm.Reference(arweave.wallets.ownerToAddress));
+
+// SmartWeave - arweave - crypto
+arweave.crypto.generateJWK = arweave.crypto.generateJWK.bind(arweave.crypto);
+arweave.crypto.sign = arweave.crypto.sign.bind(arweave.crypto);
+arweave.crypto.verify = arweave.crypto.verify.bind(arweave.crypto);
+arweave.crypto.encrypt = arweave.crypto.encrypt.bind(arweave.crypto);
+arweave.crypto.decrypt = arweave.crypto.decrypt.bind(arweave.crypto);
+arweave.crypto.hash = arweave.crypto.hash.bind(arweave.crypto);
+jail.setSync(
+  '__host__smartweave__arweave__crypto_generateJWK',
+  new ivm.Reference(async function () {
+    throw new Error('this function is non-deterministic');
+  })
+);
+jail.setSync(
+  '__host__smartweave__arweave__crypto_sign',
+  new ivm.Reference(async function () {
+    throw new Error('this function is non-deterministic');
+  })
+);
+jail.setSync('__host__smartweave__arweave__crypto_verify', new ivm.Reference(arweave.crypto.verify));
+jail.setSync('__host__smartweave__arweave__crypto_encrypt', new ivm.Reference(arweave.crypto.encrypt));
+jail.setSync('__host__smartweave__arweave__crypto_decrypt', new ivm.Reference(arweave.crypto.decrypt));
+jail.setSync(
+  '__host__smartweave__arweave__crypto_hash',
+  new ivm.Reference(async function (...args) {
+    console.log(args);
+    const result = await arweave.crypto.hash.apply(arweave.crypto, args);
+    return new ivm.ExternalCopy(result);
+  })
+);
 
 const initState = {
   counter: 0
@@ -395,13 +441,13 @@ context.evalSync(`
     
       wallets: {
         getBalance: function(...args) {
-          throw new Error('this function is non-deterministic');
+          return __host__smartweave__arweave__wallets_getBalance.applySyncPromise(undefined, args);
         },
         getLastTransactionID: function(...args) {
-          throw new Error('this function is non-deterministic');
+          return __host__smartweave__arweave__wallets_getLastTransactionID.applySyncPromise(undefined, args);
         },
         generate: function(...args) {
-          throw new Error('this function is non-deterministic');
+          throw __host__smartweave__arweave__wallets_generate.applySyncPromise(undefined, args).copy();
         },
         jwkToAddress: function(...args) {
           return __host__smartweave__arweave__wallets_jwkToAddress.applySyncPromise(undefined, args, {arguments: {copy: true}});
@@ -412,6 +458,27 @@ context.evalSync(`
         ownerToAddress: function(...args) {
           return __host__smartweave__arweave__wallets_ownerToAddress.applySyncPromise(undefined, args);
         },
+      },
+      
+      crypto: {
+        generateJWK: function(...args) {
+          return __host__smartweave__arweave__crypto_generateJWK.applySyncPromise(undefined, args).copy();
+        },
+        sign: function(...args) {
+          return __host__smartweave__arweave__crypto_sign.applySyncPromise(undefined, args, {arguments: {copy: true}}).copy();
+        },
+        verify: function(...args) {
+          return __host__smartweave__arweave__crypto_verify.applySyncPromise(undefined, args, {arguments: {copy: true}});
+        },
+        encrypt: function(...args) {
+          return __host__smartweave__arweave__crypto_encrypt.applySyncPromise(undefined, args, {arguments: {copy: true}}).copy();
+        },
+        decrypt: function(...args) {
+          return __host__smartweave__arweave__crypto_decrypt.applySyncPromise(undefined, args, {arguments: {copy: true}}).copy();
+        },
+        hash: function(...args) {
+          return __host__smartweave__arweave__crypto_hash.applySyncPromise(undefined, args, {arguments: {copy: true}}).copy();
+        }
       }
     }
   }
@@ -453,9 +520,11 @@ context.evalSync(`
       // logger.info('SmartWeave.arweave.wallets.generate', jwk);
       // logger.info('SmartWeave.arweave.wallets.jwkToAddress', SmartWeave.arweave.wallets.jwkToAddress(jwk));
       // logger.info('SmartWeave.arweave.wallets.getAddress', SmartWeave.arweave.wallets.getAddress(jwk));
+      
       logger.info('SmartWeave.arweave.ar.winstonToAr', SmartWeave.arweave.ar.winstonToAr('234234242', {formatted: true, decimals: 6}));
       logger.info('SmartWeave.arweave.ar.arToWinston', SmartWeave.arweave.ar.arToWinston('1.5', {formatted: true}));
       logger.info('SmartWeave.arweave.ar.add', SmartWeave.arweave.ar.add('242342', '23423424'));
+      
       logger.info('SmartWeave.arweave.utils.concatBuffers', SmartWeave.arweave.utils.concatBuffers([new Uint8Array([21,31]), new Uint8Array([21,31])]));
       logger.info('SmartWeave.arweave.utils.bufferToString', SmartWeave.arweave.utils.bufferToString(new Uint8Array([21,31])));
       logger.info('SmartWeave.arweave.utils.stringToBuffer', SmartWeave.arweave.utils.stringToBuffer('duh'));
@@ -465,6 +534,14 @@ context.evalSync(`
       logger.info('SmartWeave.arweave.utils.bufferTob64Url', SmartWeave.arweave.utils.bufferTob64Url(new Uint8Array([21,31])));
       logger.info('SmartWeave.arweave.utils.b64UrlEncode', SmartWeave.arweave.utils.b64UrlEncode('asdasd'));
       logger.info('SmartWeave.arweave.utils.b64UrlDecode', SmartWeave.arweave.utils.b64UrlDecode('asdasd'));
+      
+      logger.info('SmartWeave.arweave.crypto.hash', await SmartWeave.arweave.crypto.hash(new Uint8Array([21,31])));
+      
+      try {
+        logger.info('SmartWeave.arweave.crypto.generateJWK', await SmartWeave.arweave.crypto.generateJWK());
+      } catch (e) {
+        logger.error(e);
+      }
       
       if (action.function === 'add') {
         logger.info('add function called');
