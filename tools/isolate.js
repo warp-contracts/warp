@@ -190,6 +190,24 @@ jail.setSync('__host__smartweave__vrf_randomInt', function (...args) {
   return swGlobal.vrf.randomInt(args);
 });
 
+// SmartWeave - arweave - ar
+arweave.ar.winstonToAr = arweave.ar.winstonToAr.bind(arweave.ar);
+arweave.ar.arToWinston = arweave.ar.arToWinston.bind(arweave.ar);
+arweave.ar.compare = arweave.ar.compare.bind(arweave.ar);
+arweave.ar.isEqual = arweave.ar.isEqual.bind(arweave.ar);
+arweave.ar.isLessThan = arweave.ar.isLessThan.bind(arweave.ar);
+arweave.ar.isGreaterThan = arweave.ar.isGreaterThan.bind(arweave.ar);
+arweave.ar.add = arweave.ar.add.bind(arweave.ar);
+arweave.ar.sub = arweave.ar.sub.bind(arweave.ar);
+jail.setSync('__host__smartweave__arweave__ar_winstonToAr', new ivm.Reference(arweave.ar.winstonToAr));
+jail.setSync('__host__smartweave__arweave__ar_arToWinston', new ivm.Reference(arweave.ar.arToWinston));
+jail.setSync('__host__smartweave__arweave__ar_compare', new ivm.Reference(arweave.ar.compare));
+jail.setSync('__host__smartweave__arweave__ar_isEqual', new ivm.Reference(arweave.ar.isEqual));
+jail.setSync('__host__smartweave__arweave__ar_isLessThan', new ivm.Reference(arweave.ar.isLessThan));
+jail.setSync('__host__smartweave__arweave__ar_isGreaterThan', new ivm.Reference(arweave.ar.isGreaterThan));
+jail.setSync('__host__smartweave__arweave__ar_add', new ivm.Reference(arweave.ar.add));
+jail.setSync('__host__smartweave__arweave__ar_sub', new ivm.Reference(arweave.ar.sub));
+
 // SmartWeave - arweave - wallets
 arweave.wallets.getBalance = arweave.wallets.getBalance.bind(arweave.wallets);
 arweave.wallets.getLastTransactionID = arweave.wallets.getLastTransactionID.bind(arweave.wallets);
@@ -301,15 +319,42 @@ context.evalSync(`
     },
     
     arweave: {
+      ar: {
+        winstonToAr: function(...args) {
+          return __host__smartweave__arweave__ar_winstonToAr.applySync(undefined, args, {arguments: {copy: true}})
+        },
+        arToWinston: function(...args) {
+          return __host__smartweave__arweave__ar_arToWinston.applySync(undefined, args, {arguments: {copy: true}})
+        },
+        compare: function(...args) {
+          return __host__smartweave__arweave__ar_compare.applySync(undefined, args)
+        },
+        isEqual: function(...args) {
+          return __host__smartweave__arweave__ar_isEqual.applySync(undefined, args)
+        },
+        isLessThan: function(...args) {
+          return __host__smartweave__arweave__ar_isLessThan.applySync(undefined, args)
+        },
+        isGreaterThan: function(...args) {
+          return __host__smartweave__arweave__ar_isGreaterThan.applySync(undefined, args)
+        },
+        add: function(...args) {
+          return __host__smartweave__arweave__ar_add.applySync(undefined, args)
+        },
+        sub: function(...args) {
+          return __host__smartweave__arweave__ar_sub.applySync(undefined, args)
+        },
+      },
+    
       wallets: {
         getBalance: function(...args) {
-          return __host__smartweave__arweave__wallets_getBalance.applySyncPromise(undefined, args);
+          throw new Error('this function is non-deterministic');
         },
         getLastTransactionID: function(...args) {
-          return __host__smartweave__arweave__wallets_getLastTransactionID.applySyncPromise(undefined, args);
+          throw new Error('this function is non-deterministic');
         },
         generate: function(...args) {
-          return __host__smartweave__arweave__wallets_generate.applySyncPromise(undefined, args).copy();
+          throw new Error('this function is non-deterministic');
         },
         jwkToAddress: function(...args) {
           return __host__smartweave__arweave__wallets_jwkToAddress.applySyncPromise(undefined, args, {arguments: {copy: true}});
@@ -355,13 +400,15 @@ context.evalSync(`
       
       logger.info('getBalance', await SmartWeave.getBalance('abc'));*/
       
-      logger.info('SmartWeave.arweave.wallets.getBalance', await SmartWeave.arweave.wallets.getBalance('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA'));
-      logger.info('SmartWeave.arweave.wallets.getLastTransactionID', await SmartWeave.arweave.wallets.getLastTransactionID('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA'));
-      const jwk = await SmartWeave.arweave.wallets.generate();
-      logger.info('SmartWeave.arweave.wallets.generate', jwk);
-      logger.info('SmartWeave.arweave.wallets.jwkToAddress', SmartWeave.arweave.wallets.jwkToAddress(jwk));
-      logger.info('SmartWeave.arweave.wallets.getAddress', SmartWeave.arweave.wallets.getAddress(jwk));
-      
+      // logger.info('SmartWeave.arweave.wallets.getBalance', await SmartWeave.arweave.wallets.getBalance('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA'));
+      // logger.info('SmartWeave.arweave.wallets.getLastTransactionID', await SmartWeave.arweave.wallets.getLastTransactionID('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA'));
+      // const jwk = await SmartWeave.arweave.wallets.generate();
+      // logger.info('SmartWeave.arweave.wallets.generate', jwk);
+      // logger.info('SmartWeave.arweave.wallets.jwkToAddress', SmartWeave.arweave.wallets.jwkToAddress(jwk));
+      // logger.info('SmartWeave.arweave.wallets.getAddress', SmartWeave.arweave.wallets.getAddress(jwk));
+      logger.info('SmartWeave.arweave.ar.winstonToAr', SmartWeave.arweave.ar.winstonToAr('234234242', {formatted: true, decimals: 6}));
+      logger.info('SmartWeave.arweave.ar.arToWinston', SmartWeave.arweave.ar.arToWinston('1.5', {formatted: true}));
+      logger.info('SmartWeave.arweave.ar.add', SmartWeave.arweave.ar.add('242342', '23423424'));
       
       if (action.function === 'add') {
         logger.info('add function called');
@@ -401,7 +448,11 @@ context.evalSync(`
     }).copyInto()
   );
 
-  await contract.run(context);
+  try {
+    await contract.run(context);
+  } catch (e) {
+    console.error(e);
+  }
   console.log('result 1', jail.getSync('state').copySync());
 
   swGlobal._activeTx = {
