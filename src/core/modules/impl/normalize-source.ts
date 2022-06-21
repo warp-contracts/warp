@@ -1,4 +1,4 @@
-export function normalizeContractSource(contractSrc: string, useVM2: boolean): string {
+export function normalizeContractSource(contractSrc: string, useIVM: boolean): string {
   // Convert from ES Module format to something we can run inside a Function.
   // Removes the `export` keyword and adds ;return handle to the end of the function.
   // Additionally it removes 'IIFE' declarations
@@ -24,12 +24,17 @@ export function normalizeContractSource(contractSrc: string, useVM2: boolean): s
 
   contractSrc = contractSrc
     .replace(/export\s+async\s+function\s+handle/gmu, 'async function handle')
-    .replace(/export\s+function\s+handle/gmu, 'function handle');
+    .replace(/export\s+function\s+handle/gmu, 'async function handle');
 
-  if (useVM2) {
+  if (useIVM) {
     return `
-    ${contractSrc}
-    module.exports = handle;`;
+    (
+      async function handleWrapper(state, action) {
+        ${contractSrc}
+        return await handle(state, action);
+      }  
+    )
+    `;
   } else {
     return `
     const [SmartWeave, BigNumber, logger] = arguments;

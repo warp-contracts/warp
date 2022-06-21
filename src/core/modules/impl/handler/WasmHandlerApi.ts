@@ -14,17 +14,16 @@ import {
   SmartWeaveGlobal
 } from '@warp';
 import stringify from 'safe-stable-stringify';
+import {AbstractContractHandler} from "./AbstractContractHandler";
 
-export class WasmContractHandlerApi<State> implements HandlerApi<State> {
-  private readonly contractLogger: WarpLogger;
-  private readonly logger = LoggerFactory.INST.create('WasmContractHandlerApi');
-
+export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
   constructor(
-    private readonly swGlobal: SmartWeaveGlobal,
-    private readonly contractDefinition: ContractDefinition<State>,
+    swGlobal: SmartWeaveGlobal,
+    // eslint-disable-next-line
+    contractDefinition: ContractDefinition<State>,
     private readonly wasmExports: any
   ) {
-    this.contractLogger = LoggerFactory.INST.create(swGlobal.contract.id);
+    super(swGlobal, contractDefinition);
   }
 
   async handle<Input, Result>(
@@ -37,8 +36,6 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
 
       this.swGlobal._activeTx = interactionTx;
       this.swGlobal.caller = interaction.caller; // either contract tx id (for internal writes) or transaction.owner
-      // TODO: this should be rather set on the HandlerFactory level..
-      //  but currently no access evaluationOptions there
       this.swGlobal.gasLimit = executionContext.evaluationOptions.gasLimit;
       this.swGlobal.gasUsed = 0;
 
@@ -167,85 +164,5 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
         throw new Error(`Support for ${this.contractDefinition.srcWasmLang} not implemented yet.`);
       }
     }
-  }
-
-  // TODO: c/p...
-  private assignReadContractState<Input>(
-    executionContext: ExecutionContext<State>,
-    currentTx: CurrentTx[],
-    currentResult: EvalStateResult<State>,
-    interactionTx: GQLNodeInterface
-  ) {
-    this.swGlobal.contracts.readContractState = async (
-      contractTxId: string,
-      height?: number,
-      returnValidity?: boolean
-    ) => {
-      const requestedHeight = height || this.swGlobal.block.height;
-      this.logger.debug('swGlobal.readContractState call:', {
-        from: this.contractDefinition.txId,
-        to: contractTxId,
-        height: requestedHeight,
-        transaction: this.swGlobal.transaction.id
-      });
-
-      const { stateEvaluator } = executionContext.warp;
-      const childContract = executionContext.warp.contract(contractTxId, executionContext.contract, interactionTx);
-
-      await stateEvaluator.onContractCall(interactionTx, executionContext, currentResult);
-
-      const stateWithValidity = await childContract.readState(requestedHeight, [
-        ...(currentTx || []),
-        {
-          contractTxId: this.contractDefinition.txId,
-          interactionTxId: this.swGlobal.transaction.id
-        }
-      ]);
-
-      // TODO: it should be up to the client's code to decide which part of the result to use
-      // (by simply using destructuring operator)...
-      // but this (i.e. returning always stateWithValidity from here) would break backwards compatibility
-      // in current contract's source code..:/
-      return returnValidity ? deepCopy(stateWithValidity) : deepCopy(stateWithValidity.state);
-    };
-  }
-
-  private assignWrite(executionContext: ExecutionContext<State>, currentTx: CurrentTx[]) {
-    this.swGlobal.contracts.write = async <Input = unknown>(
-      contractTxId: string,
-      input: Input
-    ): Promise<InteractionResult<unknown, unknown>> => {
-      if (!executionContext.evaluationOptions.internalWrites) {
-        throw new Error("Internal writes feature switched off. Change EvaluationOptions.internalWrites flag to 'true'");
-      }
-
-      this.logger.debug('swGlobal.write call:', {
-        from: this.contractDefinition.txId,
-        to: contractTxId,
-        input
-      });
-
-      const calleeContract = executionContext.warp.contract(
-        contractTxId,
-        executionContext.contract,
-        this.swGlobal._activeTx
-      );
-
-      const result = await calleeContract.dryWriteFromTx<Input>(input, this.swGlobal._activeTx, [
-        ...(currentTx || []),
-        {
-          contractTxId: this.contractDefinition.txId,
-          interactionTxId: this.swGlobal.transaction.id
-        }
-      ]);
-
-      this.logger.debug('Cache result?:', !this.swGlobal._activeTx.dry);
-      await executionContext.warp.stateEvaluator.onInternalWriteStateUpdate(this.swGlobal._activeTx, contractTxId, {
-        state: result.state as State,
-        validity: {}
-      });
-
-      return result;
-    };
   }
 }

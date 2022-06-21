@@ -4,12 +4,14 @@ import {LoggerFactory, WarpNodeFactory} from '../src';
 import * as fs from 'fs';
 import knex from 'knex';
 import os from 'os';
+import Transaction from "arweave/node/lib/transaction";
 
 const logger = LoggerFactory.INST.create('Contract');
 
 //LoggerFactory.use(new TsLogFactory());
-LoggerFactory.INST.logLevel('debug');
+LoggerFactory.INST.logLevel('fatal');
 LoggerFactory.INST.logLevel('info', 'Contract');
+LoggerFactory.INST.logLevel('debug', 'HandlerBasedContract');
 //LoggerFactory.INST.logLevel('debug', 'DefaultStateEvaluator');
 //LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
 
@@ -20,6 +22,7 @@ async function main() {
   const PIANITY_COMMUNITY_CONTRACT = 'n05LTiuWcAYjizXAu-ghegaWjL89anZ6VdvuHcU6dno';
   const LOOT_CONTRACT = 'Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY';
   const KOI_CONTRACT = '38TR3D8BxlPTc89NOW67IkQQUPR8jDLaJNdYv-4wWfM';
+  const IVM_ISSUE = 't9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE';
 
   const localC = "iwlOHr4oM37YGKyQOWxZ-CUiEUKNtiFEaRNwz8Pwx_k";
   const CACHE_PATH = 'cache.sqlite.db';
@@ -46,27 +49,37 @@ async function main() {
     },
     useNullAsDefault: true
   });
-  const warp = (await WarpNodeFactory.knexCachedBased(arweave, knexConfig, 1))
-    .useWarpGateway().build();
+  /*const warp = (await WarpNodeFactory.knexCachedBased(arweave, knexConfig, 1))
+    .useWarpGateway().build();*/
+
+  const warp = WarpNodeFactory.memCached(arweave);
+
+  const contract = warp.contract(IVM_ISSUE).setEvaluationOptions({
+    allowUnsafeClient: true,
+    useIVM: true
+  });
 
 
-  // set exit code 1 on unhandled promise errors
+  const result = await contract.readState();
+  console.log(contract.lastReadStateStats());
+
+  /*// set exit code 1 on unhandled promise errors
   // https://stackoverflow.com/a/63509086/1637178
   process.exitCode = 1;
 
-  /**
+  /!**
    * Node process exits with exitCode==0 when there are still
    * promises awaiting. We prevent this from happening by adding
    * event-loop timer and clearing it after code finishes.
-   */
+   *!/
   const i = setInterval(() => {
-    /* do nothing but prevent node process from exiting */
+    /!* do nothing but prevent node process from exiting *!/
   }, 1000);
 
   try {
     const contract = warp.contract("F2V2zXs1ylUO4hskxfNOvPlceLlk1hp_q-xEMQCPbBQ").setEvaluationOptions({
       allowUnsafeClient: true,
-      useVM2: true
+      useIVM: true
     });
     await contract.readState();
   } finally {
@@ -75,7 +88,7 @@ async function main() {
   }
 
   // revert back to correct status code, because we didn't encounter any errors
-  process.exitCode = 0;
+  process.exitCode = 0;*/
 
   const heapUsedAfter = Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100;
   const rssUsedAfter = Math.round((process.memoryUsage().rss / 1024 / 1024) * 100) / 100;

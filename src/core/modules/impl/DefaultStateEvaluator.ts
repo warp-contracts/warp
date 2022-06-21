@@ -251,6 +251,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       await this.onStateEvaluated(lastConfirmedTxState.tx, executionContext, lastConfirmedTxState.state);
     }
 
+    await executionContext.handler.dispose();
+
     return evalStateResult;
   }
 

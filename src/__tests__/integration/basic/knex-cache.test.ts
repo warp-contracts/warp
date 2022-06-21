@@ -92,12 +92,12 @@ describe('Testing the Warp client', () => {
     contract_1 = warp.contract<ExampleContractState>(contractTxId1).connect(wallet);
     contract_1VM = warp
       .contract<ExampleContractState>(contractTxId1)
-      .setEvaluationOptions({ useVM2: true })
+      .setEvaluationOptions({ useIVM: true })
       .connect(wallet);
     contract_2 = warp.contract<ExampleContractState>(contractTxId2).connect(wallet);
     contract_2VM = warp
       .contract<ExampleContractState>(contractTxId2)
-      .setEvaluationOptions({ useVM2: true })
+      .setEvaluationOptions({ useIVM: true })
       .connect(wallet);
 
     await mineBlock(arweave);
@@ -167,7 +167,7 @@ describe('Testing the Warp client', () => {
       .connect(wallet);
     const contract_1_2VM = (await getWarp(arweave, knexConfig))
       .contract<ExampleContractState>(contract_1.txId())
-      .setEvaluationOptions({ useVM2: true })
+      .setEvaluationOptions({ useIVM: true })
       .connect(wallet);
     expect((await contract_1_2.readState()).state.counter).toEqual(559);
     expect((await contract_1_2VM.readState()).state.counter).toEqual(559);
@@ -177,7 +177,7 @@ describe('Testing the Warp client', () => {
       .connect(wallet);
     const contract_2_2VM = (await getWarp(arweave, knexConfig))
       .contract<ExampleContractState>(contract_2.txId())
-      .setEvaluationOptions({ useVM2: true })
+      .setEvaluationOptions({ useIVM: true })
       .connect(wallet);
     expect((await contract_2_2.readState()).state.counter).toEqual(105);
     expect((await contract_2_2VM.readState()).state.counter).toEqual(105);
@@ -201,14 +201,14 @@ describe('Testing the Warp client', () => {
       .connect(wallet);
     const contract_1_3VM = (await getWarp(arweave, knexConfig))
       .contract<ExampleContractState>(contract_1.txId())
-      .setEvaluationOptions({ useVM2: true })
+      .setEvaluationOptions({ useIVM: true })
       .connect(wallet);
     const contract_2_3 = (await getWarp(arweave, knexConfig))
       .contract<ExampleContractState>(contract_2.txId())
       .connect(wallet);
     const contract_2_3VM = (await getWarp(arweave, knexConfig))
       .contract<ExampleContractState>(contract_2.txId())
-      .setEvaluationOptions({ useVM2: true })
+      .setEvaluationOptions({ useIVM: true })
       .connect(wallet);
     expect((await contract_1_3.readState()).state.counter).toEqual(561);
     expect((await contract_1_3VM.readState()).state.counter).toEqual(561);
@@ -242,14 +242,14 @@ describe('Testing the Warp client', () => {
       .connect(wallet);
     const contract_1_4VM = (await getWarp(arweave, knexConfig))
       .contract<ExampleContractState>(contract_1.txId())
-      .setEvaluationOptions({ useVM2: true })
+      .setEvaluationOptions({ useIVM: true })
       .connect(wallet);
     const contract_2_4 = (await getWarp(arweave, knexConfig))
       .contract<ExampleContractState>(contract_2.txId())
       .connect(wallet);
     const contract_2_4VM = (await getWarp(arweave, knexConfig))
       .contract<ExampleContractState>(contract_2.txId())
-      .setEvaluationOptions({ useVM2: true })
+      .setEvaluationOptions({ useIVM: true })
       .connect(wallet);
     expect((await contract_1.readState()).state.counter).toEqual(565);
     expect((await contract_1VM.readState()).state.counter).toEqual(565);
@@ -274,7 +274,7 @@ describe('Testing the Warp client', () => {
     const contractVM = warp
       .contract<ExampleContractState>(contract_1.txId())
       .setEvaluationOptions({
-        useVM2: true,
+        useIVM: true,
         manualCacheFlush: true
       })
       .connect(wallet);
