@@ -1,10 +1,8 @@
 import Arweave from 'arweave';
 import { CacheableContractInteractionsLoader, CacheableExecutorFactory, Evolve } from '@warp/plugins';
 import {
-  ArweaveGatewayInteractionsLoader,
   CacheableStateEvaluator,
   ConfirmationStatus,
-  ContractDefinitionLoader,
   HandlerExecutorFactory,
   LexicographicalInteractionsSorter,
   R_GW_URL,
