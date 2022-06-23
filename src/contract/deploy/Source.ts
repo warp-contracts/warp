@@ -1,6 +1,4 @@
-import { SigningFunction } from 'contract/Contract';
-import { ArWallet } from './CreateContract';
-import { SourceData } from './impl/SourceImpl';
+import { ArWallet, SigningFunction, SourceData } from "@warp";
 
 export interface Source {
   /**

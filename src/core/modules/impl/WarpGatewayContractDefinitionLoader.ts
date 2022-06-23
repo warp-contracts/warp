@@ -1,4 +1,13 @@
-import { ContractDefinition, getTag, LoggerFactory, SmartWeaveTags, stripTrailingSlash, WarpCache } from '@warp';
+import {
+  ArweaveWrapper,
+  ContractDefinition,
+  ContractSource,
+  getTag,
+  LoggerFactory,
+  SmartWeaveTags,
+  stripTrailingSlash,
+  WarpCache
+} from '@warp';
 import Arweave from 'arweave';
 import { ContractDefinitionLoader } from './ContractDefinitionLoader';
 import 'redstone-isomorphic';
@@ -13,16 +22,23 @@ import Transaction from 'arweave/node/lib/transaction';
  * If the contract data is not available on Warp Gateway - it fallbacks to default implementation
  * in {@link ContractDefinitionLoader} - i.e. loads the definition from Arweave gateway.
  */
-export class WarpGatewayContractDefinitionLoader extends ContractDefinitionLoader {
+export class WarpGatewayContractDefinitionLoader {
   private readonly rLogger = LoggerFactory.INST.create('WarpGatewayContractDefinitionLoader');
+  private contractDefinitionLoader: ContractDefinitionLoader;
+  private arweaveWrapper: ArweaveWrapper;
 
   constructor(
     private readonly baseUrl: string,
     arweave: Arweave,
     cache?: WarpCache<string, ContractDefinition<unknown>>
   ) {
-    super(arweave, cache);
     this.baseUrl = stripTrailingSlash(baseUrl);
+    this.contractDefinitionLoader = new ContractDefinitionLoader(arweave, cache);
+    this.arweaveWrapper = new ArweaveWrapper(arweave);
+  }
+
+  async load<State>(contractTxId: string, evolvedSrcTxId?: string): Promise<ContractDefinition<State>> {
+    return await this.contractDefinitionLoader.load(contractTxId, evolvedSrcTxId);
   }
 
   async doLoad<State>(contractTxId: string, forcedSrcTxId?: string): Promise<ContractDefinition<State>> {
@@ -60,7 +76,11 @@ export class WarpGatewayContractDefinitionLoader extends ContractDefinitionLoade
       return result;
     } catch (e) {
       this.rLogger.warn('Falling back to default contracts loader', e);
-      return await super.doLoad(contractTxId, forcedSrcTxId);
+      return await this.contractDefinitionLoader.doLoad(contractTxId, forcedSrcTxId);
     }
+  }
+
+  async loadContractSource(contractSrcTxId: string): Promise<ContractSource> {
+    return await this.contractDefinitionLoader.loadContractSource(contractSrcTxId);
   }
 }
