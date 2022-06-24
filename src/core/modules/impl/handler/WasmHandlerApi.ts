@@ -14,7 +14,7 @@ import {
   SmartWeaveGlobal
 } from '@warp';
 import stringify from 'safe-stable-stringify';
-import {AbstractContractHandler} from "./AbstractContractHandler";
+import { AbstractContractHandler } from './AbstractContractHandler';
 
 export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
   constructor(
