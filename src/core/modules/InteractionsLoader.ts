@@ -1,4 +1,10 @@
 import { EvaluationOptions, GQLEdgeInterface } from '@warp';
+import { Err, AppError } from '@warp/utils';
+import { Result } from 'neverthrow';
+
+export type BadGatewayResponse = Err<'BadGatewayResponse'> & {
+  status: number;
+};
 
 /**
  * Implementors of this interface add functionality of loading contract's interaction transactions.
@@ -13,5 +19,5 @@ export interface InteractionsLoader {
     toBlockHeight: number,
     evaluationOptions?: EvaluationOptions,
     upToTransactionId?: string
-  ): Promise<GQLEdgeInterface[]>;
+  ): Promise<Result<GQLEdgeInterface[], AppError<BadGatewayResponse>>>;
 }

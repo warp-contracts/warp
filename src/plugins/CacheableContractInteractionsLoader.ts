@@ -1,4 +1,5 @@
 import {
+  BadGatewayResponse,
   Benchmark,
   BlockHeightKey,
   BlockHeightWarpCache,
@@ -7,6 +8,8 @@ import {
   InteractionsLoader,
   LoggerFactory
 } from '@warp';
+import { AppError } from '@warp/utils';
+import { ok, Result } from 'neverthrow';
 
 /**
  * This implementation of the {@link InteractionsLoader} tries to limit the amount of interactions
@@ -26,7 +29,7 @@ export class CacheableContractInteractionsLoader implements InteractionsLoader {
     fromBlockHeight: number,
     toBlockHeight: number,
     evaluationOptions?: EvaluationOptions
-  ): Promise<GQLEdgeInterface[]> {
+  ): Promise<Result<GQLEdgeInterface[], AppError<BadGatewayResponse>>> {
     const benchmark = Benchmark.measure();
     this.logger.debug('Loading interactions', {
       contractId,
@@ -41,9 +44,11 @@ export class CacheableContractInteractionsLoader implements InteractionsLoader {
 
     if (cachedHeight >= toBlockHeight) {
       this.logger.debug('Reusing interactions cached at higher block height:', cachedHeight);
-      return cachedValue.filter(
-        (interaction: GQLEdgeInterface) =>
-          interaction.node.block.height >= fromBlockHeight && interaction.node.block.height <= toBlockHeight
+      return ok(
+        cachedValue.filter(
+          (interaction: GQLEdgeInterface) =>
+            interaction.node.block.height >= fromBlockHeight && interaction.node.block.height <= toBlockHeight
+        )
       );
     }
 
@@ -59,15 +64,19 @@ export class CacheableContractInteractionsLoader implements InteractionsLoader {
       evaluationOptions
     );
 
+    if (missingInteractions.isErr()) {
+      return missingInteractions;
+    }
+
     const result = cachedValue
       .filter((interaction: GQLEdgeInterface) => interaction.node.block.height >= fromBlockHeight)
-      .concat(missingInteractions);
+      .concat(missingInteractions.value);
 
-    const valueToCache = cachedValue.concat(missingInteractions);
+    const valueToCache = cachedValue.concat(missingInteractions.value);
 
     this.logger.debug('Interactions load result:', {
       cached: cachedValue.length,
-      missing: missingInteractions.length,
+      missing: missingInteractions.value.length,
       total: valueToCache.length,
       result: result.length
     });
@@ -77,6 +86,6 @@ export class CacheableContractInteractionsLoader implements InteractionsLoader {
 
     this.logger.debug(`Interactions loaded in ${benchmark.elapsed()}`);
 
-    return result;
+    return ok(result);
   }
 }

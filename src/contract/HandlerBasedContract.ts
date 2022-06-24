@@ -32,9 +32,11 @@ import {
   Tags,
   SourceImpl,
   SourceData,
-  NoWalletError,
-  InvalidInteractionError
+  NoWallet,
+  InvalidInteraction,
+  BadGatewayResponse
 } from '@warp';
+import { AppError } from '@warp/utils';
 import { TransactionStatusResponse } from 'arweave/node/transactions';
 import { NetworkInfoInterface } from 'arweave/node/network';
 import stringify from 'safe-stable-stringify';
@@ -112,7 +114,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
   }
 
-  async readState(blockHeight?: number, currentTx?: CurrentTx[]): Promise<EvalStateResult<State>> {
+  async readState(
+    blockHeight?: number,
+    currentTx?: CurrentTx[]
+  ): Promise<Result<EvalStateResult<State>, AppError<BadGatewayResponse>>> {
     return this.readStateSequencer(blockHeight, undefined, currentTx);
   }
 
@@ -120,7 +125,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     blockHeight: number,
     upToTransactionId: string,
     currentTx?: CurrentTx[]
-  ): Promise<EvalStateResult<State>> {
+  ): Promise<Result<EvalStateResult<State>, AppError<BadGatewayResponse>>> {
     this.logger.info('Read state for', {
       contractTxId: this._contractTxId,
       currentTx
@@ -135,17 +140,22 @@ export class HandlerBasedContract<State> implements Contract<State> {
       false,
       upToTransactionId
     );
+
+    if (executionContext.isErr()) {
+      return err(executionContext.error);
+    }
+
     this.logger.info('Execution Context', {
-      blockHeight: executionContext.blockHeight,
-      srcTxId: executionContext.contractDefinition?.srcTxId,
-      missingInteractions: executionContext.sortedInteractions.length,
-      cachedStateHeight: executionContext.cachedState?.cachedHeight,
+      blockHeight: executionContext.value.blockHeight,
+      srcTxId: executionContext.value.contractDefinition?.srcTxId,
+      missingInteractions: executionContext.value.sortedInteractions.length,
+      cachedStateHeight: executionContext.value.cachedState?.cachedHeight,
       upToTransactionId
     });
     initBenchmark.stop();
 
     const stateBenchmark = Benchmark.measure();
-    const result = await stateEvaluator.eval(executionContext, currentTx || []);
+    const result = await stateEvaluator.eval(executionContext.value, currentTx || []);
     stateBenchmark.stop();
 
     const total = (initBenchmark.elapsed(true) as number) + (stateBenchmark.elapsed(true) as number);
@@ -162,7 +172,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       'Total:                 ': `${total.toFixed(0)}ms`
     });
 
-    return result as EvalStateResult<State>;
+    return ok(result as EvalStateResult<State>);
   }
 
   async viewState<Input, View>(
@@ -170,7 +180,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     blockHeight?: number,
     tags: Tags = [],
     transfer: ArTransfer = emptyTransfer
-  ): Promise<InteractionResult<State, View>> {
+  ): Promise<Result<InteractionResult<State, View>, AppError<BadGatewayResponse>>> {
     this.logger.info('View state for', this._contractTxId);
     return await this.callContract<Input, View>(input, undefined, blockHeight, tags, transfer);
   }
@@ -178,7 +188,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   async viewStateForTx<Input, View>(
     input: Input,
     interactionTx: GQLNodeInterface
-  ): Promise<InteractionResult<State, View>> {
+  ): Promise<Result<InteractionResult<State, View>, AppError<BadGatewayResponse>>> {
     this.logger.info(`View state for ${this._contractTxId}`, interactionTx);
     return await this.callContractForTx<Input, View>(input, interactionTx);
   }
@@ -188,7 +198,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     caller?: string,
     tags?: Tags,
     transfer?: ArTransfer
-  ): Promise<InteractionResult<State, unknown>> {
+  ): Promise<Result<InteractionResult<State, unknown>, AppError<BadGatewayResponse>>> {
     this.logger.info('Dry-write for', this._contractTxId);
     return await this.callContract<Input>(input, caller, undefined, tags, transfer);
   }
@@ -197,7 +207,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     input: Input,
     transaction: GQLNodeInterface,
     currentTx?: CurrentTx[]
-  ): Promise<InteractionResult<State, unknown>> {
+  ): Promise<Result<InteractionResult<State, unknown>, AppError<BadGatewayResponse>>> {
     this.logger.info(`Dry-write from transaction ${transaction.id} for ${this._contractTxId}`);
     return await this.callContractForTx<Input>(input, transaction, currentTx || []);
   }
@@ -207,10 +217,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
     tags: Tags = [],
     transfer: ArTransfer = emptyTransfer,
     strict = false
-  ): Promise<Result<string, InvalidInteractionError | NoWalletError>> {
+  ): Promise<Result<string, AppError<InvalidInteraction | NoWallet | BadGatewayResponse>>> {
     this.logger.info('Write interaction input', input);
     if (!this.signer) {
-      return err({ type: 'noWalletConnected' });
+      return err(new AppError({ type: 'NoWalletConnected' }));
     }
     const { arweave } = this.warp;
 
@@ -245,10 +255,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
       strict: false,
       vrf: false
     }
-  ): Promise<Result<any, InvalidInteractionError | NoWalletError>> {
+  ): Promise<Result<any, AppError<InvalidInteraction | NoWallet | BadGatewayResponse>>> {
     this.logger.info('Bundle interaction input', input);
     if (!this.signer) {
-      return err({ type: 'noWalletConnected' });
+      return err(new AppError({ type: 'NoWalletConnected' }));
     }
 
     options = {
@@ -305,7 +315,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     strict: boolean,
     bundle = false,
     vrf = false
-  ): Promise<Result<Transaction, InvalidInteractionError>> {
+  ): Promise<Result<Transaction, AppError<InvalidInteraction | BadGatewayResponse>>> {
     if (this._evaluationOptions.internalWrites) {
       // Call contract and verify if there are any internal writes:
       // 1. Evaluate current contract state
@@ -314,8 +324,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
       // 4. For each found "internalWrite" transaction - generate additional tag:
       // {name: 'InternalWrite', value: callingContractTxId}
       const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer);
-      if (strict && handlerResult.type !== 'ok') {
-        throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
+
+      if (handlerResult.isErr()) {
+        return err(handlerResult.error);
+      }
+
+      if (strict && handlerResult.value.type !== 'ok') {
+        throw Error(`Cannot create interaction: ${handlerResult.value.errorMessage}`);
       }
       const callStack: ContractCallStack = this.getCallStack();
       const innerWrites = this._innerWritesEvaluator.eval(callStack);
@@ -333,8 +348,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
     } else {
       if (strict) {
         const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer);
-        if (handlerResult.type !== 'ok') {
-          return err({ type: 'invalidInteraction', message: handlerResult.errorMessage });
+
+        if (handlerResult.isErr()) {
+          return err(handlerResult.error);
+        }
+
+        if (handlerResult.value.type !== 'ok') {
+          return err(new AppError({ type: 'InvalidInteraction', message: handlerResult.value.errorMessage }));
         }
       }
     }
@@ -414,7 +434,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     blockHeight?: number,
     forceDefinitionLoad = false,
     upToTransactionId: string = undefined
-  ): Promise<ExecutionContext<State, HandlerApi<State>>> {
+  ): Promise<Result<ExecutionContext<State, HandlerApi<State>>, AppError<BadGatewayResponse>>> {
     const { definitionLoader, interactionsLoader, interactionsSorter, executorFactory, stateEvaluator, useWarpGwInfo } =
       this.warp;
 
@@ -462,7 +482,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const evolvedSrcTxId = Evolve.evolvedSrcTxId(cachedState?.cachedValue?.state);
 
     let contractDefinition,
-      interactions: GQLEdgeInterface[] = [],
+      interactions: Result<GQLEdgeInterface[], AppError<BadGatewayResponse>> = ok([]),
       sortedInteractions: GQLEdgeInterface[] = [],
       handler;
     if (cachedBlockHeight != blockHeight) {
@@ -485,7 +505,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
         )
       ]);
       this.logger.debug('contract and interactions load', benchmark.elapsed());
-      sortedInteractions = await interactionsSorter.sort(interactions);
+
+      if (interactions.isErr()) {
+        return err(interactions.error);
+      }
+
+      sortedInteractions = await interactionsSorter.sort(interactions.value);
       this.logger.trace('Sorted interactions', sortedInteractions);
       handler = (await executorFactory.create(contractDefinition, this._evaluationOptions)) as HandlerApi<State>;
     } else {
@@ -496,10 +521,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
       }
     }
 
-    const containsInteractionsFromSequencer = interactions.some((i) => i.node.source == SourceType.WARP_SEQUENCER);
+    const containsInteractionsFromSequencer = interactions.value.some(
+      (i) => i.node.source == SourceType.WARP_SEQUENCER
+    );
     this.logger.debug('containsInteractionsFromSequencer', containsInteractionsFromSequencer);
 
-    return {
+    return ok({
       contractDefinition,
       blockHeight,
       sortedInteractions,
@@ -511,13 +538,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
       cachedState,
       containsInteractionsFromSequencer,
       upToTransactionId
-    };
+    });
   }
 
   private async createExecutionContextFromTx(
     contractTxId: string,
     transaction: GQLNodeInterface
-  ): Promise<ExecutionContext<State, HandlerApi<State>>> {
+  ): Promise<Result<ExecutionContext<State, HandlerApi<State>>, AppError<BadGatewayResponse>>> {
     const benchmark = Benchmark.measure();
     const { definitionLoader, interactionsLoader, interactionsSorter, executorFactory, stateEvaluator } = this.warp;
     const blockHeight = transaction.block.height;
@@ -530,7 +557,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
 
     let contractDefinition,
-      interactions = [],
+      interactions: Result<GQLEdgeInterface[], AppError<BadGatewayResponse>> = ok([]),
       sortedInteractions = [];
 
     if (cachedBlockHeight != blockHeight) {
@@ -538,7 +565,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
         definitionLoader.load<State>(contractTxId),
         await interactionsLoader.load(contractTxId, 0, blockHeight, this._evaluationOptions)
       ]);
-      sortedInteractions = await interactionsSorter.sort(interactions);
+
+      if (interactions.isErr()) {
+        return err(interactions.error);
+      }
+
+      sortedInteractions = await interactionsSorter.sort(interactions.value);
     } else {
       this.logger.debug('State fully cached, not loading interactions.');
       contractDefinition = await definitionLoader.load<State>(contractTxId);
@@ -547,9 +579,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     this.logger.debug('Creating execution context from tx:', benchmark.elapsed());
 
-    const containsInteractionsFromSequencer = interactions.some((i) => i.node.source == SourceType.WARP_SEQUENCER);
+    const containsInteractionsFromSequencer = interactions.value.some(
+      (i) => i.node.source == SourceType.WARP_SEQUENCER
+    );
 
-    return {
+    return ok({
       contractDefinition,
       blockHeight,
       sortedInteractions,
@@ -560,7 +594,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       caller,
       cachedState,
       containsInteractionsFromSequencer
-    };
+    });
   }
 
   private maybeResetRootContract(blockHeight?: number) {
@@ -578,7 +612,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     blockHeight?: number,
     tags: Tags = [],
     transfer: ArTransfer = emptyTransfer
-  ): Promise<InteractionResult<State, View>> {
+  ): Promise<Result<InteractionResult<State, View>, AppError<BadGatewayResponse>>> {
     this.logger.info('Call contract input', input);
     this.maybeResetRootContract();
     if (!this.signer) {
@@ -588,17 +622,21 @@ export class HandlerBasedContract<State> implements Contract<State> {
     // create execution context
     let executionContext = await this.createExecutionContext(this._contractTxId, blockHeight, true);
 
+    if (executionContext.isErr()) {
+      return err(executionContext.error);
+    }
+
     // add block data to execution context
-    if (!executionContext.currentBlockData) {
-      const currentBlockData = executionContext.currentNetworkInfo?.current
+    if (!executionContext.value.currentBlockData) {
+      const currentBlockData = executionContext.value.currentNetworkInfo?.current
         ? // trying to optimise calls to arweave as much as possible...
-          await arweave.blocks.get(executionContext.currentNetworkInfo.current)
+          await arweave.blocks.get(executionContext.value.currentNetworkInfo.current)
         : await arweave.blocks.getCurrent();
 
-      executionContext = {
-        ...executionContext,
+      executionContext = ok({
+        ...executionContext.value,
         currentBlockData
-      };
+      });
     }
 
     // add caller info to execution context
@@ -614,18 +652,18 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
 
     this.logger.info('effectiveCaller', effectiveCaller);
-    executionContext = {
-      ...executionContext,
+    executionContext = ok({
+      ...executionContext.value,
       caller: effectiveCaller
-    };
+    });
 
     // eval current state
-    const evalStateResult = await stateEvaluator.eval<State>(executionContext, []);
+    const evalStateResult = await stateEvaluator.eval<State>(executionContext.value, []);
 
     // create interaction transaction
     const interaction: ContractInteraction<Input> = {
       input,
-      caller: executionContext.caller
+      caller: executionContext.value.caller
     };
 
     this.logger.debug('interaction', interaction);
@@ -638,7 +676,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       transfer.target,
       transfer.winstonQty
     );
-    const dummyTx = createDummyTx(tx, executionContext.caller, executionContext.currentBlockData);
+    const dummyTx = createDummyTx(tx, executionContext.value.caller, executionContext.value.currentBlockData);
 
     const handleResult = await this.evalInteraction<Input, View>(
       {
@@ -646,7 +684,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
         interactionTx: dummyTx,
         currentTx: []
       },
-      executionContext,
+      executionContext.value,
       evalStateResult
     );
 
@@ -657,18 +695,23 @@ export class HandlerBasedContract<State> implements Contract<State> {
       });
     }
 
-    return handleResult;
+    return ok(handleResult);
   }
 
   private async callContractForTx<Input, View = unknown>(
     input: Input,
     interactionTx: GQLNodeInterface,
     currentTx?: CurrentTx[]
-  ): Promise<InteractionResult<State, View>> {
+  ): Promise<Result<InteractionResult<State, View>, AppError<BadGatewayResponse>>> {
     this.maybeResetRootContract();
 
     const executionContext = await this.createExecutionContextFromTx(this._contractTxId, interactionTx);
-    const evalStateResult = await this.warp.stateEvaluator.eval<State>(executionContext, currentTx);
+
+    if (executionContext.isErr()) {
+      return err(executionContext.error);
+    }
+
+    const evalStateResult = await this.warp.stateEvaluator.eval<State>(executionContext.value, currentTx);
 
     this.logger.debug('callContractForTx - evalStateResult', {
       result: evalStateResult.state,
@@ -686,7 +729,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       currentTx
     };
 
-    return await this.evalInteraction(interactionData, executionContext, evalStateResult);
+    return ok(await this.evalInteraction(interactionData, executionContext.value, evalStateResult));
   }
 
   private async evalInteraction<Input, View = unknown>(
@@ -768,7 +811,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return this;
   }
 
-  async evolve(newSrcTxId: string, useBundler = false): Promise<Result<any, InvalidInteractionError | NoWalletError>> {
+  async evolve(
+    newSrcTxId: string,
+    useBundler = false
+  ): Promise<Result<any, AppError<InvalidInteraction | NoWallet | BadGatewayResponse>>> {
     if (useBundler) {
       return await this.bundleInteraction<any>({ function: 'evolve', value: newSrcTxId });
     } else {

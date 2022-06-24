@@ -1,5 +1,6 @@
 import {
   ArweaveWrapper,
+  BadGatewayResponse,
   Benchmark,
   EvaluationOptions,
   GQLEdgeInterface,
@@ -10,7 +11,9 @@ import {
   sleep,
   SmartWeaveTags
 } from '@warp';
+import { AppError } from '@warp/utils';
 import Arweave from 'arweave';
+import { ok, Result } from 'neverthrow';
 
 const MAX_REQUEST = 100;
 
@@ -80,7 +83,7 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
     fromBlockHeight: number,
     toBlockHeight: number,
     evaluationOptions: EvaluationOptions
-  ): Promise<GQLEdgeInterface[]> {
+  ): Promise<Result<GQLEdgeInterface[], AppError<BadGatewayResponse>>> {
     this.logger.debug('Loading interactions for', { contractId, fromBlockHeight, toBlockHeight });
     const mainTransactionsVariables: GqlReqVariables = {
       tags: [
@@ -130,7 +133,7 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
       time: loadingBenchmark.elapsed()
     });
 
-    return interactions;
+    return ok(interactions);
   }
 
   private async loadPages(variables: GqlReqVariables) {

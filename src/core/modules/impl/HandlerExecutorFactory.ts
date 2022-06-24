@@ -236,6 +236,9 @@ export type HandlerFunction<State, Input, Result> = (
   interaction: ContractInteraction<Input>
 ) => Promise<HandlerResult<State, Result>>;
 
+// TODO: Make use of neverthrow's Result in order to handle what HandlerResult and
+// InteractionResult try to achieve
+
 // TODO: change to XOR between result and state?
 export type HandlerResult<State, Result> = {
   result: Result;

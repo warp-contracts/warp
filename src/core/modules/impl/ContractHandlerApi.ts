@@ -125,13 +125,18 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
         }
       ]);
 
+      if (result.isErr()) {
+        // NOTE: The error is exceptionally thrown here as it's interacting with legacy code.
+        throw result.error;
+      }
+
       this.logger.debug('Cache result?:', !this.swGlobal._activeTx.dry);
       await executionContext.warp.stateEvaluator.onInternalWriteStateUpdate(this.swGlobal._activeTx, contractTxId, {
-        state: result.state as State,
+        state: result.value.state as State,
         validity: {}
       });
 
-      return result;
+      return result.value;
     };
   }
 
@@ -184,11 +189,16 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
         }
       ]);
 
+      if (stateWithValidity.isErr()) {
+        // NOTE: The error is exceptionally thrown here as it's interacting with legacy code.
+        throw stateWithValidity.error;
+      }
+
       // TODO: it should be up to the client's code to decide which part of the result to use
       // (by simply using destructuring operator)...
       // but this (i.e. returning always stateWithValidity from here) would break backwards compatibility
       // in current contract's source code..:/
-      return returnValidity ? deepCopy(stateWithValidity) : deepCopy(stateWithValidity.state);
+      return returnValidity ? deepCopy(stateWithValidity) : deepCopy(stateWithValidity.value.state);
     };
   }
 
