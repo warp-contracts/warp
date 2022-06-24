@@ -8,6 +8,7 @@ import {
   stripTrailingSlash,
   InteractionsLoaderError
 } from '@warp';
+import { Err } from '@warp/utils';
 import 'redstone-isomorphic';
 
 interface Paging {
@@ -125,15 +126,7 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
             this.logger.error(error.body.message);
           }
           const errorMessage = `Unable to retrieve transactions. Redstone gateway responded with status ${error.status}.`;
-          switch (error.status) {
-            case 504:
-              throw new InteractionsLoaderError('BadGatewayResponse504', errorMessage, error);
-            case 500:
-              throw new InteractionsLoaderError('BadGatewayResponse500', errorMessage, error);
-
-            default:
-              throw new InteractionsLoaderError('BadGatewayResponse', errorMessage, error);
-          }
+          throw new InteractionsLoaderError({ type: 'BadGatewayResponse', status: error.status }, errorMessage, error);
         });
       totalPages = response.paging.pages;
 

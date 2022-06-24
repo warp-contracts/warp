@@ -244,7 +244,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
   ): Promise<any | null> {
     this.logger.info('Bundle interaction input', input);
     if (!this.signer) {
-      throw new BundleInteractionError('NoWalletConnected', "Wallet not connected. Use 'connect' method first.");
+      throw new BundleInteractionError(
+        { type: 'NoWalletConnected' },
+        "Wallet not connected. Use 'connect' method first."
+      );
     }
 
     options = {
@@ -266,9 +269,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
       );
     } catch (e) {
       if (e instanceof InteractionsLoaderError) {
-        throw new BundleInteractionError('BadGatewayResponse', `${e}`, e);
+        throw new BundleInteractionError(e.detail, `${e}`, e);
       } else {
-        throw new BundleInteractionError('InvalidInteraction', `${e}`, e);
+        throw new BundleInteractionError({ type: 'InvalidInteraction' }, `${e}`, e);
       }
     }
 
@@ -290,7 +293,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
         if (error.body?.message) {
           this.logger.error(error.body.message);
         }
-        throw new BundleInteractionError('CannotBundle', `Unable to bundle interaction: ${JSON.stringify(error)}`);
+        throw new BundleInteractionError(
+          { type: 'CannotBundle' },
+          `Unable to bundle interaction: ${JSON.stringify(error)}`
+        );
       });
 
     return {

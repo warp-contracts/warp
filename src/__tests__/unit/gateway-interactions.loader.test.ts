@@ -136,8 +136,9 @@ describe('WarpGatewayInteractionsLoader -> load', () => {
     const loader = new WarpGatewayInteractionsLoader('http://baseUrl');
     try {
       await loader.load(contractId, fromBlockHeight, toBlockHeight);
-    } catch (e) {
-      expect((e as InteractionsLoaderError).kind === 'BadGatewayResponse504').toBeTruthy();
+    } catch (rawError) {
+      const error = rawError as InteractionsLoaderError;
+      expect(error.detail.type === 'BadGatewayResponse' && error.detail.status === 504).toBeTruthy();
     }
   });
   it('should throw an error when request fails', async () => {
@@ -147,8 +148,9 @@ describe('WarpGatewayInteractionsLoader -> load', () => {
     const loader = new WarpGatewayInteractionsLoader('http://baseUrl');
     try {
       await loader.load(contractId, fromBlockHeight, toBlockHeight);
-    } catch (e) {
-      expect((e as InteractionsLoaderError).kind === 'BadGatewayResponse500').toBeTruthy();
+    } catch (rawError) {
+      const error = rawError as InteractionsLoaderError;
+      expect(error.detail.type === 'BadGatewayResponse' && error.detail.status === 500).toBeTruthy();
     }
   });
 });

@@ -1,10 +1,13 @@
 import { EvaluationOptions, GQLEdgeInterface } from '@warp';
-import { CustomError } from '@warp/utils';
+import { CustomError, Err } from '@warp/utils';
 
-// TODO: Update tests at `src/__tests__/unit/gateway-interactions.loader.test.ts:140 & 151` to use
-// this instead of comparing with error's message.
-export type InteractionsLoaderErrorKind = 'BadGatewayResponse500' | 'BadGatewayResponse504' | 'BadGatewayResponse';
-export class InteractionsLoaderError extends CustomError<InteractionsLoaderErrorKind> {}
+// Make this error case individual as it is also used in `src/contract/Contract.ts`.
+export type BadGatewayResponse = Err<'BadGatewayResponse'> & { status: number };
+
+// InteractionsLoaderErrorDetail is effectively only an alias to BadGatewayResponse but it could
+// also include other kinds of errors in the future.
+export type InteractionsLoaderErrorDetail = BadGatewayResponse;
+export class InteractionsLoaderError extends CustomError<InteractionsLoaderErrorDetail> {}
 
 /**
  * Implementors of this interface add functionality of loading contract's interaction transactions.
