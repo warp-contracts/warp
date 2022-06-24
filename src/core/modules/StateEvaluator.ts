@@ -115,7 +115,7 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   useIVM = false;
 
   ivm = {
-    memoryLimit: 50,
+    memoryLimit: 100,
     timeout: 60000
   };
 
@@ -189,8 +189,8 @@ export interface EvaluationOptions {
   // memory limit - defaults to 50MB
   // timeout (script time evaluation limit) - defaults to 60s
   ivm: {
-    memoryLimit: number;
-    timeout: number;
+    memoryLimit?: number;
+    timeout?: number;
   };
 
   // Whether using unsafe client should be allowed

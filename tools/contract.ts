@@ -1,6 +1,6 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import {LoggerFactory, WarpNodeFactory} from '../src';
+import {LoggerFactory, SourceType, WarpNodeFactory} from '../src';
 import * as fs from 'fs';
 import knex from 'knex';
 import os from 'os';
@@ -9,7 +9,7 @@ import Transaction from "arweave/node/lib/transaction";
 const logger = LoggerFactory.INST.create('Contract');
 
 //LoggerFactory.use(new TsLogFactory());
-LoggerFactory.INST.logLevel('fatal');
+LoggerFactory.INST.logLevel('info');
 LoggerFactory.INST.logLevel('info', 'Contract');
 LoggerFactory.INST.logLevel('debug', 'HandlerBasedContract');
 //LoggerFactory.INST.logLevel('debug', 'DefaultStateEvaluator');
@@ -23,6 +23,7 @@ async function main() {
   const LOOT_CONTRACT = 'Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY';
   const KOI_CONTRACT = '38TR3D8BxlPTc89NOW67IkQQUPR8jDLaJNdYv-4wWfM';
   const IVM_ISSUE = 't9T7DIOGxx4VWXoCEeYYarFYeERTpWIC1V3y-BPZgKE';
+  const BROKEN_CONTRACT = 'F2V2zXs1ylUO4hskxfNOvPlceLlk1hp_q-xEMQCPbBQ';
 
   const localC = "iwlOHr4oM37YGKyQOWxZ-CUiEUKNtiFEaRNwz8Pwx_k";
   const CACHE_PATH = 'cache.sqlite.db';
@@ -52,16 +53,29 @@ async function main() {
   /*const warp = (await WarpNodeFactory.knexCachedBased(arweave, knexConfig, 1))
     .useWarpGateway().build();*/
 
-  const warp = WarpNodeFactory.memCached(arweave);
+  const result = await WarpNodeFactory.memCachedBased(arweave, 1)
+    .useWarpGateway(null, SourceType.ARWEAVE)
+    .build()
+    .contract(PIANITY_CONTRACT)
+    .setEvaluationOptions({
+      useIVM: true,
+      ivm: {
+        memoryLimit: 120
+      }
+    })
+    .readState(850127);
 
-  const contract = warp.contract(IVM_ISSUE).setEvaluationOptions({
+
+  /*const warp = WarpNodeFactory.memCached(arweave);
+
+  const contract = warp.contract(BROKEN_CONTRACT).setEvaluationOptions({
     allowUnsafeClient: true,
     useIVM: true
   });
 
 
   const result = await contract.readState();
-  console.log(contract.lastReadStateStats());
+  console.log(contract.lastReadStateStats());*/
 
   /*// set exit code 1 on unhandled promise errors
   // https://stackoverflow.com/a/63509086/1637178

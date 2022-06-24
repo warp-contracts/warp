@@ -86,7 +86,10 @@ describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
         .setEvaluationOptions({
           useFastCopy: true,
           useIVM: true,
-          allowUnsafeClient: true
+          allowUnsafeClient: true,
+          ivm: {
+            memoryLimit: 120
+          }
         })
         .readState(blockHeight);
       const result2String = stringify(result2.state).trim();
@@ -122,43 +125,51 @@ describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
 });
 
 describe('readState', () => {
-  it('should properly read state at requested block height', async () => {
-    const contractTxId = 'CbGCxBJn6jLeezqDl1w3o8oCSeRCb-MmtZNKPodla-0';
-    const blockHeight = 707892;
-    const result = await readContract(arweave, contractTxId, blockHeight);
-    const resultString = stringify(result).trim();
+  it(
+    'should properly read state at requested block height',
+    async () => {
+      const contractTxId = 'CbGCxBJn6jLeezqDl1w3o8oCSeRCb-MmtZNKPodla-0';
+      const blockHeight = 707892;
+      const result = await readContract(arweave, contractTxId, blockHeight);
+      const resultString = stringify(result).trim();
 
-    const result2 = await WarpNodeFactory.memCachedBased(arweave, 1)
-      .useWarpGateway(null, SourceType.ARWEAVE)
-      .build()
-      .contract(contractTxId)
-      .setEvaluationOptions({
-        allowUnsafeClient: true
-      })
-      .readState(blockHeight);
-    const result2String = stringify(result2.state).trim();
+      const result2 = await WarpNodeFactory.memCachedBased(arweave, 1)
+        .useWarpGateway(null, SourceType.ARWEAVE)
+        .build()
+        .contract(contractTxId)
+        .setEvaluationOptions({
+          allowUnsafeClient: true
+        })
+        .readState(blockHeight);
+      const result2String = stringify(result2.state).trim();
 
-    expect(result2String).toEqual(resultString);
-  }, 300 * 1000);
+      expect(result2String).toEqual(resultString);
+    },
+    300 * 1000
+  );
 
-  it('should properly check balance of a PST contract', async () => {
-    const jwk = await arweave.wallets.generate();
-    const contractTxId = '-8A6RexFkpfWwuyVO98wzSFZh0d6VJuI-buTJvlwOJQ';
-    const v1Result = await interactRead(arweave, jwk, contractTxId, {
-      function: 'balance',
-      target: '6Z-ifqgVi1jOwMvSNwKWs6ewUEQ0gU9eo4aHYC3rN1M'
-    });
-
-    const v2Result = await WarpNodeFactory.memCachedBased(arweave, 1)
-      .useWarpGateway(null, SourceType.ARWEAVE)
-      .build()
-      .contract(contractTxId)
-      .connect(jwk)
-      .viewState({
+  it(
+    'should properly check balance of a PST contract',
+    async () => {
+      const jwk = await arweave.wallets.generate();
+      const contractTxId = '-8A6RexFkpfWwuyVO98wzSFZh0d6VJuI-buTJvlwOJQ';
+      const v1Result = await interactRead(arweave, jwk, contractTxId, {
         function: 'balance',
         target: '6Z-ifqgVi1jOwMvSNwKWs6ewUEQ0gU9eo4aHYC3rN1M'
       });
 
-    expect(v1Result).toEqual(v2Result.result);
-  }, 300 * 1000);
+      const v2Result = await WarpNodeFactory.memCachedBased(arweave, 1)
+        .useWarpGateway(null, SourceType.ARWEAVE)
+        .build()
+        .contract(contractTxId)
+        .connect(jwk)
+        .viewState({
+          function: 'balance',
+          target: '6Z-ifqgVi1jOwMvSNwKWs6ewUEQ0gU9eo4aHYC3rN1M'
+        });
+
+      expect(v1Result).toEqual(v2Result.result);
+    },
+    300 * 1000
+  );
 });

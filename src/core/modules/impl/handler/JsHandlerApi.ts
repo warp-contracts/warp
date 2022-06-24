@@ -15,7 +15,7 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
     swGlobal: SmartWeaveGlobal,
     contractDefinition: ContractDefinition<State>,
     // eslint-disable-next-line
-    private readonly contractFunction: Function,
+    private readonly contractFunction: Function
   ) {
     super(swGlobal, contractDefinition);
   }
