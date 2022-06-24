@@ -71,7 +71,7 @@ describe('Testing the Warp client', () => {
 
     contract = warp.contract(contractTxId);
     contractVM = warp.contract<ExampleContractState>(contractTxId).setEvaluationOptions({
-      useVM2: true
+      useIVM: true
     });
     contractInitData = warp.contract(contractInitDataTxId);
     contract.connect(wallet);

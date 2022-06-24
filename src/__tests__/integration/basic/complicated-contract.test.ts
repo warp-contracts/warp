@@ -48,7 +48,7 @@ describe('Testing the Warp client', () => {
 
     contract = warp.contract(contractTxId);
     contractVM = warp.contract(contractTxId).setEvaluationOptions({
-      useVM2: true
+      useIVM: true
     });
     contract.connect(wallet);
     contractVM.connect(wallet);
@@ -62,11 +62,6 @@ describe('Testing the Warp client', () => {
 
   it('should properly deploy contract with initial state', async () => {
     expect(await contract.readState()).not.toBeUndefined();
-  });
-
-  it('sandboxed should not allow to calculate state with "eval" in source code', async () => {
-    await expect(contractVM.readState()).rejects.toThrowError(
-      'Code generation from strings disallowed for this context'
-    );
+    expect(await contractVM.readState()).not.toBeUndefined();
   });
 });

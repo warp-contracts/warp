@@ -61,7 +61,7 @@ describe('Testing the Warp client', () => {
 
     contract = warp.contract(contractTxId);
     contractVM = warp.contract<ExampleContractState>(contractTxId).setEvaluationOptions({
-      useVM2: true
+      useIVM: true
     });
     contract.connect(wallet);
     contractVM.connect(wallet);
@@ -141,7 +141,7 @@ describe('Testing the Warp client', () => {
       .build()
       .contract<ExampleContractState>(contract.txId())
       .setEvaluationOptions({
-        useVM2: true
+        useIVM: true
       })
       .connect(wallet);
     expect((await contract3.readState()).state.counter).toEqual(561);
@@ -171,7 +171,7 @@ describe('Testing the Warp client', () => {
       .build()
       .contract<ExampleContractState>(contract.txId())
       .setEvaluationOptions({
-        useVM2: true
+        useIVM: true
       })
       .connect(wallet);
     expect((await contract4.readState()).state.counter).toEqual(565);
