@@ -73,6 +73,7 @@
     "isolated-vm": "^4.4.1",
     "knex": "^0.95.14",
     "lodash": "^4.17.21",
+    "quickjs-emscripten": "^0.21.0",
     "redstone-isomorphic": "1.1.6",
     "redstone-wasm-metering": "1.0.0",
     "safe-stable-stringify": "2.3.1",
