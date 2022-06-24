@@ -1,5 +1,6 @@
 import {
   ArweaveWrapper,
+  Benchmark,
   ContractDefinition,
   ContractSource,
   getTag,
@@ -30,7 +31,7 @@ export class WarpGatewayContractDefinitionLoader {
   constructor(
     private readonly baseUrl: string,
     arweave: Arweave,
-    cache?: WarpCache<string, ContractDefinition<unknown>>
+    private readonly cache?: WarpCache<string, ContractDefinition<unknown>>
   ) {
     this.baseUrl = stripTrailingSlash(baseUrl);
     this.contractDefinitionLoader = new ContractDefinitionLoader(arweave, cache);
@@ -38,7 +39,16 @@ export class WarpGatewayContractDefinitionLoader {
   }
 
   async load<State>(contractTxId: string, evolvedSrcTxId?: string): Promise<ContractDefinition<State>> {
-    return await this.contractDefinitionLoader.load(contractTxId, evolvedSrcTxId);
+    if (!evolvedSrcTxId && this.cache?.contains(contractTxId)) {
+      this.rLogger.debug('WarpGatewayContractDefinitionLoader: Hit from cache!');
+      return Promise.resolve(this.cache?.get(contractTxId) as ContractDefinition<State>);
+    }
+    const benchmark = Benchmark.measure();
+    const contract = await this.doLoad<State>(contractTxId, evolvedSrcTxId);
+    this.rLogger.info(`Contract definition loaded in: ${benchmark.elapsed()}`);
+    this.cache?.put(contractTxId, contract);
+
+    return contract;
   }
 
   async doLoad<State>(contractTxId: string, forcedSrcTxId?: string): Promise<ContractDefinition<State>> {
