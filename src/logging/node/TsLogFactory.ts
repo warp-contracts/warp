@@ -1,7 +1,7 @@
 import path from 'path';
 import { ISettingsParam, Logger } from 'tslog';
-import { RedStoneLogger } from '../RedStoneLogger';
-import { ILoggerFactory, LogLevel } from '@smartweave';
+import { WarpLogger } from '../WarpLogger';
+import { ILoggerFactory, LogLevel } from '@warp';
 
 export const defaultLoggerOptions: ISettingsParam = {
   displayFunctionName: false,
@@ -80,7 +80,7 @@ export class TsLogFactory implements ILoggerFactory {
     this.setOptions({ minLevel: level }, moduleName);
   }
 
-  create(moduleName = 'SWC'): RedStoneLogger {
+  create(moduleName = 'SWC'): WarpLogger {
     // in case of passing '__dirname' as moduleName - leaves only the file name without extension.
     const normalizedModuleName = path.basename(moduleName, path.extname(moduleName));
     if (!this.registeredLoggers[normalizedModuleName]) {
@@ -90,6 +90,6 @@ export class TsLogFactory implements ILoggerFactory {
       });
       this.registeredLoggers[normalizedModuleName] = logger;
     }
-    return this.registeredLoggers[normalizedModuleName] as RedStoneLogger;
+    return this.registeredLoggers[normalizedModuleName] as WarpLogger;
   }
 }

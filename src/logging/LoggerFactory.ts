@@ -1,4 +1,4 @@
-import { LogLevel, RedStoneLogger } from '@smartweave/logging';
+import { LogLevel, WarpLogger } from '@warp/logging';
 import { ConsoleLoggerFactory } from './web/ConsoleLoggerFactory';
 
 export interface ILoggerFactory {
@@ -8,7 +8,7 @@ export interface ILoggerFactory {
 
   logLevel(level: LogLevel, moduleName?: string): void;
 
-  create(moduleName?: string): RedStoneLogger;
+  create(moduleName?: string): WarpLogger;
 }
 
 export class LoggerFactory implements ILoggerFactory {
@@ -30,7 +30,7 @@ export class LoggerFactory implements ILoggerFactory {
     LoggerFactory.INST.logLevel(level, moduleName);
   }
 
-  create(moduleName?: string): RedStoneLogger {
+  create(moduleName?: string): WarpLogger {
     return LoggerFactory.INST.create(moduleName);
   }
 

@@ -5,8 +5,8 @@ import {
   EvalStateResult,
   EvaluationOptions,
   GQLEdgeInterface,
-  SmartWeave
-} from '@smartweave';
+  Warp
+} from '@warp';
 import { NetworkInfoInterface } from 'arweave/node/network';
 import { BlockData } from 'arweave/node/blocks';
 
@@ -19,9 +19,9 @@ import { BlockData } from 'arweave/node/blocks';
  */
 export type ExecutionContext<State, Api = unknown> = {
   /**
-   * {@link SmartWeave} client currently being used
+   * {@link Warp} client currently being used
    */
-  smartweave: SmartWeave;
+  warp: Warp;
   /**
    * {@link Contract} related to this execution context
    */

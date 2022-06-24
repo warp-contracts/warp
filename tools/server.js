@@ -1,7 +1,7 @@
 /* eslint-disable */
 const express = require('express');
 const cors = require('cors');
-const { MemBlockHeightSwCache } = require('../lib/cjs/cache/impl/MemBlockHeightCache');
+const { MemBlockHeightWarpCache } = require('../lib/cjs/cache/impl/MemBlockHeightCache');
 const app = express();
 const port = 3000;
 
@@ -10,8 +10,8 @@ app.use(express.json({ limit: "50mb", extended: true }));
 
 
 const caches = {
-  STATE: new MemBlockHeightSwCache(1),
-  INTERACTIONS: new MemBlockHeightSwCache(1)
+  STATE: new MemBlockHeightWarpCache(1),
+  INTERACTIONS: new MemBlockHeightWarpCache(1)
 };
 
 // getLast
@@ -90,7 +90,7 @@ app.put('/:type/:key/:blockHeight', async function (req, res, next) {
 app.listen(port, async () => {
   console.log(`Cache listening at http://localhost:${port}`);
 
-  // note: with current cache configuration (new MemBlockHeightSwCache(1))
+  // note: with current cache configuration (new MemBlockHeightWarpCache(1))
   // there should be at most one block height cached for given cache key.
   await caches['STATE'].put({ cacheKey: 'txId', blockHeight: 555 }, { foo: "bar555" });
   await caches['STATE'].put({ cacheKey: 'txId', blockHeight: 556 }, { foo: "bar556" });

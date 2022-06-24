@@ -8,5 +8,5 @@ export * from './impl/KnexStateCache';
 export * from './impl/RemoteBlockHeightCache';
 export * from './impl/MemCache';
 
-export * from './BlockHeightSwCache';
-export * from './SwCache';
+export * from './BlockHeightWarpCache';
+export * from './WarpCache';

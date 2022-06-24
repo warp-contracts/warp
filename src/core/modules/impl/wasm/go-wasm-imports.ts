@@ -5,11 +5,11 @@
 // This file has been modified for use by the TinyGo compiler.
 
 // note: this file has been further modified to be used
-// with RedStone SmartWeave SDK.
+// with Warp SDK.
 /* tslint:disable */
 /* eslint-disable */
 /* YOLO */
-import { LoggerFactory, SmartWeaveGlobal } from '@smartweave';
+import { LoggerFactory, SmartWeaveGlobal } from '@warp';
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder('utf-8');

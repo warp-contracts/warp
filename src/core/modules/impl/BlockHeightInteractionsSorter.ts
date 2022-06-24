@@ -1,4 +1,4 @@
-import { GQLEdgeInterface, InteractionsSorter } from '@smartweave';
+import { GQLEdgeInterface, InteractionsSorter } from '@warp';
 
 /**
  * an implementation based on https://github.com/ArweaveTeam/SmartWeave/pull/82

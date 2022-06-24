@@ -1,6 +1,6 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import {LoggerFactory, SmartWeaveNodeFactory} from '../src';
+import {LoggerFactory, WarpNodeFactory} from '../src';
 import {TsLogFactory} from '../src/logging/node/TsLogFactory';
 import fs from 'fs';
 import path from 'path';
@@ -20,14 +20,14 @@ async function main() {
   });
 
   try {
-    const smartweave = SmartWeaveNodeFactory
+    const warp = WarpNodeFactory
       .memCachedBased(arweave)
       .useRedStoneGateway()
       .build();
 
     let customSignCalled = false;
 
-    const result = await smartweave.contract("Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY")
+    const result = await warp.contract("Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY")
       .connect(/*wallet*/async (tx) => {
         logger.info("Custom sign function");
         customSignCalled = true;

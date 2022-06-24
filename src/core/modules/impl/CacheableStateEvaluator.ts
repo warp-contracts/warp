@@ -1,4 +1,4 @@
-import { BlockHeightCacheResult, BlockHeightKey, BlockHeightSwCache } from '@smartweave/cache';
+import { BlockHeightCacheResult, BlockHeightKey, BlockHeightWarpCache } from '@warp/cache';
 import {
   DefaultStateEvaluator,
   EvalStateResult,
@@ -6,11 +6,11 @@ import {
   ExecutionContextModifier,
   HandlerApi,
   StateCache
-} from '@smartweave/core';
+} from '@warp/core';
 import Arweave from 'arweave';
-import { GQLNodeInterface } from '@smartweave/legacy';
-import { LoggerFactory } from '@smartweave/logging';
-import { CurrentTx } from '@smartweave/contract';
+import { GQLNodeInterface } from '@warp/legacy';
+import { LoggerFactory } from '@warp/logging';
+import { CurrentTx } from '@warp/contract';
 
 /**
  * An implementation of DefaultStateEvaluator that adds caching capabilities.
@@ -25,7 +25,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
 
   constructor(
     arweave: Arweave,
-    private readonly cache: BlockHeightSwCache<StateCache<unknown>>,
+    private readonly cache: BlockHeightWarpCache<StateCache<unknown>>,
     executionContextModifiers: ExecutionContextModifier[] = []
   ) {
     super(arweave, executionContextModifiers);

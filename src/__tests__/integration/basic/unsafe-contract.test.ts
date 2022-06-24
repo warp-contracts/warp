@@ -3,17 +3,17 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, LoggerFactory, SmartWeave, SmartWeaveNodeFactory } from '@smartweave';
+import { Contract, LoggerFactory, Warp, WarpNodeFactory } from '@warp';
 import path from 'path';
 import { addFunds, mineBlock } from '../_helpers';
 
 let arweave: Arweave;
 let arlocal: ArLocal;
-let smartweave: SmartWeave;
+let warp: Warp;
 let contract: Contract<any>;
 let contractWithUnsafe: Contract<any>;
 
-describe('Testing the SmartWeave client', () => {
+describe('Testing the Warp client', () => {
   let contractSrc: string;
 
   let wallet: JWKInterface;
@@ -32,7 +32,7 @@ describe('Testing the SmartWeave client', () => {
 
     LoggerFactory.INST.logLevel('error');
 
-    smartweave = SmartWeaveNodeFactory.forTesting(arweave);
+    warp = WarpNodeFactory.forTesting(arweave);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -40,14 +40,14 @@ describe('Testing the SmartWeave client', () => {
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/token-pst-unsafe.js'), 'utf8');
 
     // deploying contract using the new SDK.
-    const contractTxId = await smartweave.createContract.deploy({
+    const contractTxId = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify({}),
       src: contractSrc
     });
 
-    contract = smartweave.contract(contractTxId);
-    contractWithUnsafe = smartweave.contract(contractTxId).setEvaluationOptions({
+    contract = warp.contract(contractTxId);
+    contractWithUnsafe = warp.contract(contractTxId).setEvaluationOptions({
       allowUnsafeClient: true
     });
     contract.connect(wallet);

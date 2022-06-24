@@ -1,5 +1,5 @@
-import { EvaluationOptions, GQLEdgeInterface } from '@smartweave';
-import { CustomError } from '@smartweave/utils';
+import { EvaluationOptions, GQLEdgeInterface } from '@warp';
+import { CustomError } from '@warp/utils';
 
 // TODO: Update tests at `src/__tests__/unit/gateway-interactions.loader.test.ts:140 & 151` to use
 // this instead of comparing with error's message.

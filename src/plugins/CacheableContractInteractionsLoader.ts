@@ -1,12 +1,12 @@
 import {
   Benchmark,
   BlockHeightKey,
-  BlockHeightSwCache,
+  BlockHeightWarpCache,
   EvaluationOptions,
   GQLEdgeInterface,
   InteractionsLoader,
   LoggerFactory
-} from '@smartweave';
+} from '@warp';
 
 /**
  * This implementation of the {@link InteractionsLoader} tries to limit the amount of interactions
@@ -18,7 +18,7 @@ export class CacheableContractInteractionsLoader implements InteractionsLoader {
 
   constructor(
     private readonly baseImplementation: InteractionsLoader,
-    private readonly cache: BlockHeightSwCache<GQLEdgeInterface[]>
+    private readonly cache: BlockHeightWarpCache<GQLEdgeInterface[]>
   ) {}
 
   async load(

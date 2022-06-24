@@ -1,8 +1,7 @@
 /**
  * This type contains all data and meta-data of the given contact.
  */
-import { ContractType } from './modules/CreateContract';
-import Transaction from 'arweave/node/lib/transaction';
+import { ContractType } from '@warp/contract';
 
 export class ContractMetadata {
   dtor: number;

@@ -1,6 +1,6 @@
 {
-  "name": "redstone-smartweave",
-  "version": "0.5.11",
+  "name": "warp-contracts",
+  "version": "1.1.5",
   "description": "An implementation of the SmartWeave smart contract protocol.",
   "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",
@@ -59,9 +59,9 @@
     "arweave"
   ],
   "bugs": {
-    "url": "https://github.com/redstone-finance/redstone-smartweave/issues"
+    "url": "https://github.com/warp-contracts/warp/issues"
   },
-  "homepage": "https://github.com/redstone-finance/redstone-smartweave#readme",
+  "homepage": "https://github.com/warp-contracts/warp#readme",
   "dependencies": {
     "@assemblyscript/loader": "^0.19.23",
     "@idena/vrf-js": "^1.0.1",

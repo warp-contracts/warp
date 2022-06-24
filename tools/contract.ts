@@ -1,6 +1,6 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import {LoggerFactory, SmartWeaveNodeFactory} from '../src';
+import {LoggerFactory, WarpNodeFactory} from '../src';
 import * as fs from 'fs';
 import knex from 'knex';
 import os from 'os';
@@ -46,9 +46,9 @@ async function main() {
     },
     useNullAsDefault: true
   });
-  const smartweave = (await SmartWeaveNodeFactory.knexCachedBased(arweave, knexConfig, 1))
+  const warp = (await WarpNodeFactory.knexCachedBased(arweave, knexConfig, 1))
     .useRedStoneGateway().build();
-  const contract = smartweave.contract("3vAx5cIFhwMihrNJgGx3CoAeZTOjG7LeIs9tnbBfL14");
+  const contract = warp.contract("3vAx5cIFhwMihrNJgGx3CoAeZTOjG7LeIs9tnbBfL14");
   await contract.readState();
   await contract.readState();
 

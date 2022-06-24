@@ -1,4 +1,4 @@
-import { ILoggerFactory, LoggerSettings, RedStoneLogger } from '@smartweave';
+import { ILoggerFactory, LoggerSettings, WarpLogger } from '@warp';
 import { ConsoleLogger } from './ConsoleLogger';
 import { LogLevel } from '../LoggerSettings';
 
@@ -68,7 +68,7 @@ export class ConsoleLoggerFactory implements ILoggerFactory {
     this.setOptions({ minLevel: level }, moduleName);
   }
 
-  create(moduleName = 'SWC'): RedStoneLogger {
+  create(moduleName = 'SWC'): WarpLogger {
     if (!Object.prototype.hasOwnProperty.call(this.registeredLoggers, moduleName)) {
       this.registeredLoggers[moduleName] = new ConsoleLogger(moduleName, this.getOptions(moduleName));
     }

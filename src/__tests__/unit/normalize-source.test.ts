@@ -1,4 +1,4 @@
-import { normalizeContractSource } from '@smartweave';
+import { normalizeContractSource } from '@warp';
 
 describe('normalizeContractSource function', () => {
   const exampleSrcIIFEArrow = `(() => {

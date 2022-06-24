@@ -1,7 +1,7 @@
 import Arweave from 'arweave';
 import fs from 'fs';
 import * as path from 'path';
-import { GQLEdgeInterface, LexicographicalInteractionsSorter } from '@smartweave';
+import { GQLEdgeInterface, LexicographicalInteractionsSorter } from '@warp';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import { arrayToHex } from 'smartweave/lib/utils';
 

@@ -1,4 +1,4 @@
-import { bundledTxsFilter, GQLEdgeInterface } from '@smartweave';
+import { bundledTxsFilter, GQLEdgeInterface } from '@warp';
 
 describe('Bundled transactions filtering', () => {
   it('should properly filter bundled transaction if only "parent" field available', async () => {

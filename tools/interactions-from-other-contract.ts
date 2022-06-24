@@ -5,7 +5,7 @@ import {
   MemCache,
   RedstoneGatewayContractDefinitionLoader,
   RedstoneGatewayInteractionsLoader,
-  SmartWeaveNodeFactory
+  WarpNodeFactory
 } from '../src';
 import * as fs from 'fs';
 import knex from 'knex';
@@ -34,7 +34,7 @@ async function main() {
 
   const loader = new FromContractInteractionsLoader(jsContractTxId);
 
-  const smartweave = SmartWeaveNodeFactory.memCachedBased(arweave)
+  const smartweave = WarpNodeFactory.memCachedBased(arweave)
     .setInteractionsLoader(loader)
     .build();
 

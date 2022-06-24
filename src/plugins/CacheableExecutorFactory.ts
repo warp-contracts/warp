@@ -1,7 +1,7 @@
 import Arweave from 'arweave';
-import { ContractDefinition, EvaluationOptions, ExecutorFactory } from '@smartweave/core';
-import { SwCache } from '@smartweave/cache';
-import { LoggerFactory } from '@smartweave/logging';
+import { ContractDefinition, EvaluationOptions, ExecutorFactory } from '@warp/core';
+import { WarpCache } from '@warp/cache';
+import { LoggerFactory } from '@warp/logging';
 
 /**
  * An implementation of ExecutorFactory that adds caching capabilities
@@ -12,7 +12,7 @@ export class CacheableExecutorFactory<Api> implements ExecutorFactory<Api> {
   constructor(
     private readonly arweave: Arweave,
     private readonly baseImplementation: ExecutorFactory<Api>,
-    private readonly cache: SwCache<string, Api>
+    private readonly cache: WarpCache<string, Api>
   ) {}
 
   async create<State>(

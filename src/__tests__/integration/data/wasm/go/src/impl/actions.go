@@ -60,3 +60,16 @@ func ForeignCall(state types.PstState, action types.ForeignCallAction) (*types.P
 
 	return &state, nil
 }
+
+func Evolve(state types.PstState, action types.EvolveAction) (*types.PstState, error) {
+	if !state.CanEvolve {
+		return nil, errors.New("[CE:ENA] Evolve not allowed")
+	}
+	if state.Owner != transaction.Owner() {
+		return nil, errors.New("[CE:OOE] Only owner can evolve")
+	}
+
+	state.Evolve = action.Value
+
+	return &state, nil
+}

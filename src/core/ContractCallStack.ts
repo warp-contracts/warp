@@ -1,4 +1,4 @@
-import { InteractionData, mapReplacer } from '@smartweave';
+import { InteractionData, mapReplacer } from '@warp';
 
 export class ContractCallStack {
   readonly interactions: Map<string, InteractionCall> = new Map();
