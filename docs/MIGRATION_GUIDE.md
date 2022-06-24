@@ -18,10 +18,10 @@ Please feel free to contact us [on Discord](https://redstone.finance/discord) if
 
 ```bash
 # Yarn
-yarn add warp
+yarn add warp-contracts
 
 # or NPM
-npm install warp
+npm install warp-contracts
 ```
 
 #### 1.2 Remove smartweave v1
