@@ -1,11 +1,23 @@
-import { BlockHeightCacheResult, CurrentTx, ExecutionContext, GQLNodeInterface } from '@warp';
+import {
+  BlockHeightCacheResult,
+  CurrentTx,
+  ExecutionContext,
+  GQLNodeInterface,
+  InvalidInteraction,
+  UnexpectedInteractionError
+} from '@warp';
+import { AppError } from '@warp/utils';
+import { Result } from 'neverthrow';
 
 /**
  * Implementors of this class are responsible for evaluating contract's state
  * - based on the {@link ExecutionContext}.
  */
 export interface StateEvaluator {
-  eval<State>(executionContext: ExecutionContext<State>, currentTx: CurrentTx[]): Promise<EvalStateResult<State>>;
+  eval<State>(
+    executionContext: ExecutionContext<State>,
+    currentTx: CurrentTx[]
+  ): Promise<Result<EvalStateResult<State>, AppError<UnexpectedInteractionError>>>;
 
   /**
    * a hook that is called on each state update (i.e. after evaluating state for each interaction transaction)

@@ -1,7 +1,7 @@
-import { BadGatewayResponse, Contract } from '@warp';
+import { InvalidInteraction, BadGatewayResponse, Contract, UnexpectedInteractionError } from '@warp';
 import { AppError } from '@warp/utils';
 import { Result } from 'neverthrow';
-import { EvolveState, InvalidInteraction, NoWallet } from './Contract';
+import { EvolveState, NoWallet } from './Contract';
 
 /**
  * The result from the "balance" view method on the PST Contract.
@@ -40,12 +40,14 @@ export interface PstContract extends Contract<PstState> {
    * return the current balance for the given wallet
    * @param target - wallet address
    */
-  currentBalance(target: string): Promise<Result<BalanceResult, AppError<BadGatewayResponse>>>;
+  currentBalance(
+    target: string
+  ): Promise<Result<BalanceResult, AppError<UnexpectedInteractionError | BadGatewayResponse | InvalidInteraction>>>;
 
   /**
    * returns the current contract state
    */
-  currentState(): Promise<Result<PstState, AppError<BadGatewayResponse>>>;
+  currentState(): Promise<Result<PstState, AppError<UnexpectedInteractionError | BadGatewayResponse>>>;
 
   /**
    * allows to transfer PSTs between wallets
@@ -53,5 +55,5 @@ export interface PstContract extends Contract<PstState> {
    */
   transfer(
     transfer: TransferInput
-  ): Promise<Result<string, AppError<InvalidInteraction | NoWallet | BadGatewayResponse>>>;
+  ): Promise<Result<string, AppError<UnexpectedInteractionError | InvalidInteraction | NoWallet | BadGatewayResponse>>>;
 }

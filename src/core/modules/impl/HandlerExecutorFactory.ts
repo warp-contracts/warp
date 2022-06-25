@@ -13,6 +13,7 @@ import {
   SmartWeaveGlobal,
   WarpCache
 } from '@warp';
+import { AppError, Err } from '@warp/utils';
 import { ContractHandlerApi } from './ContractHandlerApi';
 import loader from '@assemblyscript/loader';
 import { WasmContractHandlerApi } from './WasmContractHandlerApi';
@@ -22,6 +23,7 @@ import { Go } from './wasm/go-wasm-imports';
 import BigNumber from 'bignumber.js';
 import { NodeVM, VMScript } from 'vm2';
 import * as Buffer from 'buffer';
+import { Result } from 'neverthrow';
 
 class ContractError extends Error {
   constructor(message) {
@@ -222,11 +224,11 @@ export interface InteractionData<Input> {
  * A handle that effectively runs contract's code.
  */
 export interface HandlerApi<State> {
-  handle<Input, Result>(
+  handle<Input, ContractResult>(
     executionContext: ExecutionContext<State>,
     currentResult: EvalStateResult<State>,
     interactionData: InteractionData<Input>
-  ): Promise<InteractionResult<State, Result>>;
+  ): Promise<Result<HandlerResult<State, ContractResult>, AppError<InvalidInteraction | UnexpectedInteractionError>>>;
 
   initState(state: State): void;
 }
@@ -236,17 +238,14 @@ export type HandlerFunction<State, Input, Result> = (
   interaction: ContractInteraction<Input>
 ) => Promise<HandlerResult<State, Result>>;
 
-// TODO: Make use of neverthrow's Result in order to handle what HandlerResult and
-// InteractionResult try to achieve
-
-// TODO: change to XOR between result and state?
 export type HandlerResult<State, Result> = {
   result: Result;
   state: State;
   gasUsed?: number;
 };
 
-export type InteractionResult<State, Result> = HandlerResult<State, Result> & {
+// Should only be used when filling SwGlobal functions
+export type LegacyInteractionResult<State, Result> = HandlerResult<State, Result> & {
   type: InteractionResultType;
   errorMessage?: string;
 };
@@ -257,3 +256,11 @@ export type ContractInteraction<Input> = {
 };
 
 export type InteractionResultType = 'ok' | 'error' | 'exception';
+
+export type InvalidInteraction = Err<'InvalidInteraction'> & {
+  error: Error;
+};
+
+export type UnexpectedInteractionError = Err<'UnexpectedInteractionError'> & {
+  error: Error;
+};

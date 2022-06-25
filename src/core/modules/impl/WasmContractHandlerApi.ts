@@ -8,12 +8,15 @@ import {
   GQLNodeInterface,
   HandlerApi,
   InteractionData,
-  InteractionResult,
+  HandlerResult,
   LoggerFactory,
   WarpLogger,
-  SmartWeaveGlobal
+  SmartWeaveGlobal,
+  InvalidInteraction,
+  LegacyInteractionResult
 } from '@warp';
-import { ok, Result } from 'neverthrow';
+import { AppError } from '@warp/utils';
+import { err, ok, Result } from 'neverthrow';
 import stringify from 'safe-stable-stringify';
 import { BadGatewayResponse } from '../InteractionsLoader';
 
@@ -29,11 +32,11 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
     this.contractLogger = LoggerFactory.INST.create(swGlobal.contract.id);
   }
 
-  async handle<Input, Result>(
+  async handle<Input, ContractResult>(
     executionContext: ExecutionContext<State>,
     currentResult: EvalStateResult<State>,
     interactionData: InteractionData<Input>
-  ): Promise<InteractionResult<State, Result>> {
+  ): Promise<Result<HandlerResult<State, ContractResult>, AppError<InvalidInteraction>>> {
     try {
       const { interaction, interactionTx, currentTx } = interactionData;
 
@@ -49,12 +52,11 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
 
       const handlerResult = await this.doHandle(interaction);
 
-      return {
-        type: 'ok',
+      return ok({
         result: handlerResult,
         state: this.doGetCurrentState(), // TODO: return only at the end of evaluation and when caching is required
         gasUsed: this.swGlobal.gasUsed
-      };
+      });
     } catch (e) {
       // note: as exceptions handling in WASM is currently somewhat non-existent
       // https://www.assemblyscript.org/status.html#exceptions
@@ -67,22 +69,23 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
       // exception with prefix [CE:] ("Contract Exceptions") should be logged, but should not break
       // the state evaluation - as they are considered as contracts' business exception (eg. validation errors)
       // - eg: [CE:ITT] - [ContractException: InvalidTokenTransfer]
-      const result = {
-        errorMessage: e.message,
-        state: currentResult.state,
-        result: null
-      };
       if (e.message.startsWith('[RE:')) {
         this.logger.fatal(e);
-        return {
-          ...result,
-          type: 'exception'
-        };
+        return err(
+          new AppError({
+            type: 'InvalidInteraction',
+            reason: 'unexpectedError',
+            error: e
+          })
+        );
       } else {
-        return {
-          ...result,
-          type: 'error'
-        };
+        return err(
+          new AppError({
+            type: 'InvalidInteraction',
+            reason: 'badInteraction',
+            error: e
+          })
+        );
       }
     }
   }
@@ -221,7 +224,7 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
     this.swGlobal.contracts.write = async <Input = unknown>(
       contractTxId: string,
       input: Input
-    ): Promise<InteractionResult<unknown, unknown>> => {
+    ): Promise<LegacyInteractionResult<unknown, unknown>> => {
       if (!executionContext.evaluationOptions.internalWrites) {
         throw new Error("Internal writes feature switched off. Change EvaluationOptions.internalWrites flag to 'true'");
       }
@@ -257,7 +260,10 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
         validity: {}
       });
 
-      return result.value;
+      return {
+        type: 'ok',
+        ...result.value
+      };
     };
   }
 }
