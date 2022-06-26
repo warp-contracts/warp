@@ -7,12 +7,17 @@ import {
   GQLNodeInterface,
   HandlerApi,
   InteractionData,
-  InteractionResult,
   LoggerFactory,
   WarpLogger,
   SmartWeaveGlobal,
-  timeout
+  timeout,
+  HandlerResult,
+  InvalidInteraction,
+  LegacyInteractionResult,
+  UnexpectedInteractionError
 } from '@warp';
+import { AppError } from '@warp/utils';
+import { ok, err, Result } from 'neverthrow';
 
 export class ContractHandlerApi<State> implements HandlerApi<State> {
   private readonly contractLogger: WarpLogger;
@@ -31,11 +36,11 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
     this.assignRefreshState = this.assignRefreshState.bind(this);
   }
 
-  async handle<Input, Result>(
+  async handle<Input, ContractResult>(
     executionContext: ExecutionContext<State>,
     currentResult: EvalStateResult<State>,
     interactionData: InteractionData<Input>
-  ): Promise<InteractionResult<State, Result>> {
+  ): Promise<Result<HandlerResult<State, ContractResult>, AppError<InvalidInteraction | UnexpectedInteractionError>>> {
     const { timeoutId, timeoutPromise } = timeout(
       executionContext.evaluationOptions.maxInteractionEvaluationTimeSeconds
     );
@@ -54,35 +59,30 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
       const handlerResult = await Promise.race([timeoutPromise, this.contractFunction(stateCopy, interaction)]);
 
       if (handlerResult && (handlerResult.state !== undefined || handlerResult.result !== undefined)) {
-        return {
-          type: 'ok',
+        return ok({
           result: handlerResult.result,
           state: handlerResult.state || currentResult.state
-        };
+        });
       }
 
       // Will be caught below as unexpected exception.
       throw new Error(`Unexpected result from contract: ${JSON.stringify(handlerResult)}`);
-    } catch (err) {
-      switch (err.name) {
+    } catch (error) {
+      switch (error.name) {
         case 'ContractError':
-          return {
-            type: 'error',
-            errorMessage: err.message,
-            state: currentResult.state,
-            // note: previous version was writing error message to a "result" field,
-            // which fucks-up the HandlerResult type definition -
-            // HandlerResult.result had to be declared as 'Result | string' - and that led to a poor dev exp.
-            // TODO: this might be breaking change!
-            result: null
-          };
+          return err(
+            new AppError({
+              type: 'InvalidInteraction',
+              error
+            })
+          );
         default:
-          return {
-            type: 'exception',
-            errorMessage: `${(err && err.stack) || (err && err.message) || err}`,
-            state: currentResult.state,
-            result: null
-          };
+          return err(
+            new AppError({
+              type: 'UnexpectedInteractionError',
+              error
+            })
+          );
       }
     } finally {
       if (timeoutId !== null) {
@@ -99,7 +99,7 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
     this.swGlobal.contracts.write = async <Input = unknown>(
       contractTxId: string,
       input: Input
-    ): Promise<InteractionResult<unknown, unknown>> => {
+    ): Promise<LegacyInteractionResult<unknown, unknown>> => {
       if (!executionContext.evaluationOptions.internalWrites) {
         throw new Error("Internal writes feature switched off. Change EvaluationOptions.internalWrites flag to 'true'");
       }
@@ -125,13 +125,21 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
         }
       ]);
 
+      if (result.isErr()) {
+        // NOTE: The error is exceptionally thrown here as it's interacting with legacy code.
+        throw result.error;
+      }
+
       this.logger.debug('Cache result?:', !this.swGlobal._activeTx.dry);
       await executionContext.warp.stateEvaluator.onInternalWriteStateUpdate(this.swGlobal._activeTx, contractTxId, {
-        state: result.state as State,
+        state: result.value.state as State,
         validity: {}
       });
 
-      return result;
+      return {
+        type: 'ok',
+        ...result.value
+      };
     };
   }
 
@@ -184,11 +192,16 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
         }
       ]);
 
+      if (stateWithValidity.isErr()) {
+        // NOTE: The error is exceptionally thrown here as it's interacting with legacy code.
+        throw stateWithValidity.error;
+      }
+
       // TODO: it should be up to the client's code to decide which part of the result to use
       // (by simply using destructuring operator)...
       // but this (i.e. returning always stateWithValidity from here) would break backwards compatibility
       // in current contract's source code..:/
-      return returnValidity ? deepCopy(stateWithValidity) : deepCopy(stateWithValidity.state);
+      return returnValidity ? deepCopy(stateWithValidity) : deepCopy(stateWithValidity.value.state);
     };
   }
 

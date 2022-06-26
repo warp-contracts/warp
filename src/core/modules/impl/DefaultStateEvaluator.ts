@@ -12,16 +12,20 @@ import {
   GQLTagInterface,
   HandlerApi,
   InteractionCall,
-  InteractionResult,
+  HandlerResult,
   LoggerFactory,
   StateEvaluator,
   TagsParser,
-  VrfData
+  VrfData,
+  InvalidInteraction,
+  UnexpectedInteractionError
 } from '@warp';
+import { AppError, exhaustive } from '@warp/utils';
 import Arweave from 'arweave';
 
 import { ProofHoHash } from '@idena/vrf-js';
 import elliptic from 'elliptic';
+import { err, ok, Result } from 'neverthrow';
 
 const EC = new elliptic.ec('secp256k1');
 
@@ -45,7 +49,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
   async eval<State>(
     executionContext: ExecutionContext<State, HandlerApi<State>>,
     currentTx: CurrentTx[]
-  ): Promise<EvalStateResult<State>> {
+  ): Promise<Result<EvalStateResult<State>, AppError<UnexpectedInteractionError>>> {
     return this.doReadState(
       executionContext.sortedInteractions,
       new EvalStateResult<State>(executionContext.contractDefinition.initState, {}),
@@ -59,7 +63,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     baseState: EvalStateResult<State>,
     executionContext: ExecutionContext<State, HandlerApi<State>>,
     currentTx: CurrentTx[]
-  ): Promise<EvalStateResult<State>> {
+  ): Promise<Result<EvalStateResult<State>, AppError<UnexpectedInteractionError>>> {
     const { ignoreExceptions, stackTrace, internalWrites } = executionContext.evaluationOptions;
     const { contract, contractDefinition, sortedInteractions } = executionContext;
 
@@ -203,7 +207,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           new EvalStateResult(currentState, validity),
           interactionData
         );
-        errorMessage = result.errorMessage;
+
+        errorMessage = result.isErr() ? result.error.detail.error.message : '';
 
         this.logResult<State>(result, interactionTx, executionContext);
 
@@ -216,15 +221,37 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           executionTime: singleInteractionBenchmark.elapsed(true) as number,
           valid: validity[interactionTx.id],
           errorMessage: errorMessage,
-          gasUsed: result.gasUsed
+          gasUsed: result.isOk() ? result.value.gasUsed : undefined
         });
 
-        if (result.type === 'exception' && ignoreExceptions !== true) {
-          throw new Error(`Exception while processing ${JSON.stringify(interaction)}:\n${result.errorMessage}`);
+        if (result.isErr()) {
+          const error = result.error.detail;
+          if (error.type === 'UnexpectedInteractionError' && ignoreExceptions !== true) {
+            // NOTE: Typescript doesn't appear to be able to infer the type in a way that it
+            // discriminate `AppError<InvalidInteraction | UnexpectedInteractionError>` into
+            // `AppError<UnexpectedInteractionError>`. This means that we have 2 options. We can:
+            //
+            // 1. Return a new error like so: `return err(new AppError(error))` as
+            // typescript can statically verify that `error` is an `UnexpectedInteractionError`.
+            // This solution however means we loose the stacktrace of the original AppError
+            // produced by `executionContext.handler.handle`.
+            //
+            // 2. Manually cast result.error into the correct type
+            // `AppError<UnexpectedInteractionError>`. as we made sure that the error couldn't be
+            // anything else than an `UnexpectedInteractionError`. However, doing this should be
+            // considered bad practice bc the casting is unsafe as Typescript would also allow us
+            // to cast it to `AppError<InvalidInteraction>` for example without showing any error
+            // at compile-time.
+            //
+            // I still choose option 2 as it allows to preserve the stacktrace of the error.
+            return err(result.error as AppError<UnexpectedInteractionError>);
+          }
         }
 
-        validity[interactionTx.id] = result.type === 'ok';
-        currentState = result.state;
+        validity[interactionTx.id] = result.isErr();
+        if (result.isOk()) {
+          currentState = result.value.state;
+        }
 
         const toCache = new EvalStateResult(currentState, validity);
         if (canBeCached(interactionTx)) {
@@ -251,7 +278,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       await this.onStateEvaluated(lastConfirmedTxState.tx, executionContext, lastConfirmedTxState.state);
     }
 
-    return evalStateResult;
+    return ok(evalStateResult);
   }
 
   private verifyVrf(vrf: VrfData, sortKey: string, arweave: Arweave): boolean {
@@ -273,21 +300,29 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
   }
 
   private logResult<State>(
-    result: InteractionResult<State, unknown>,
+    result: Result<HandlerResult<State, unknown>, AppError<InvalidInteraction | UnexpectedInteractionError>>,
     currentTx: GQLNodeInterface,
     executionContext: ExecutionContext<State, HandlerApi<State>>
   ) {
-    if (result.type === 'exception') {
-      this.logger.error(
-        `Executing of interaction: [${executionContext.contractDefinition.txId} -> ${currentTx.id}] threw exception:`,
-        `${result.errorMessage}`
-      );
-    }
-    if (result.type === 'error') {
-      this.logger.warn(
-        `Executing of interaction: [${executionContext.contractDefinition.txId} -> ${currentTx.id}] returned error:`,
-        result.errorMessage
-      );
+    if (result.isErr()) {
+      switch (result.error.detail.type) {
+        case 'UnexpectedInteractionError':
+          this.logger.error(
+            `Executing of interaction: [${executionContext.contractDefinition.txId} -> ${currentTx.id}] threw exception:`,
+            `${result.error.detail.error.message}`
+          );
+          break;
+
+        case 'InvalidInteraction':
+          this.logger.warn(
+            `Executing of interaction: [${executionContext.contractDefinition.txId} -> ${currentTx.id}] returned error:`,
+            result.error.detail.error.message
+          );
+          break;
+
+        default:
+          exhaustive(result.error.detail);
+      }
     }
   }
 

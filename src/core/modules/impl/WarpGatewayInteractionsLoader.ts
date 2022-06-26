@@ -1,4 +1,5 @@
 import {
+  BadGatewayResponse,
   Benchmark,
   EvaluationOptions,
   GQLEdgeInterface,
@@ -7,6 +8,8 @@ import {
   LoggerFactory,
   stripTrailingSlash
 } from '@warp';
+import { AppError } from '@warp';
+import { err, ok, Result } from 'neverthrow';
 import 'redstone-isomorphic';
 
 interface Paging {
@@ -85,7 +88,7 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
     toBlockHeight: number,
     evaluationOptions?: EvaluationOptions,
     upToTransactionId?: string
-  ): Promise<GQLEdgeInterface[]> {
+  ): Promise<Result<GQLEdgeInterface[], AppError<BadGatewayResponse>>> {
     this.logger.debug('Loading interactions: for ', { contractId, fromBlockHeight, toBlockHeight });
 
     const interactions: GQLEdgeInterface[] = [];
@@ -101,30 +104,41 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
         ? `${this.baseUrl}/gateway/interactions/transactionId`
         : `${this.baseUrl}/gateway/interactions`;
 
-      const response = await fetch(
-        `${url}?${new URLSearchParams({
-          contractId: contractId,
-          from: fromBlockHeight.toString(),
-          to: toBlockHeight.toString(),
-          page: (++page).toString(),
-          minimize: 'true',
-          ...(upToTransactionId ? { upToTransactionId } : ''),
-          ...(this.confirmationStatus && this.confirmationStatus.confirmed ? { confirmationStatus: 'confirmed' } : ''),
-          ...(this.confirmationStatus && this.confirmationStatus.notCorrupted
-            ? { confirmationStatus: 'not_corrupted' }
-            : ''),
-          ...(this.source ? { source: this.source } : '')
-        })}`
-      )
-        .then((res) => {
+      let response: any;
+
+      try {
+        response = await fetch(
+          `${url}?${new URLSearchParams({
+            contractId: contractId,
+            from: fromBlockHeight.toString(),
+            to: toBlockHeight.toString(),
+            page: (++page).toString(),
+            minimize: 'true',
+            ...(upToTransactionId ? { upToTransactionId } : ''),
+            ...(this.confirmationStatus && this.confirmationStatus.confirmed
+              ? { confirmationStatus: 'confirmed' }
+              : ''),
+            ...(this.confirmationStatus && this.confirmationStatus.notCorrupted
+              ? { confirmationStatus: 'not_corrupted' }
+              : ''),
+            ...(this.source ? { source: this.source } : '')
+          })}`
+        ).then((res) => {
           return res.ok ? res.json() : Promise.reject(res);
-        })
-        .catch((error) => {
-          if (error.body?.message) {
-            this.logger.error(error.body.message);
-          }
-          throw new Error(`Unable to retrieve transactions. Warp gateway responded with status ${error.status}.`);
         });
+      } catch (error) {
+        if (error.body?.message) {
+          this.logger.error(error.body.message);
+        }
+
+        return err(
+          new AppError(
+            { type: 'BadGatewayResponse', status: error.status },
+            `Unable to retrieve transactions. Warp gateway responded with status ${error.status}.`
+          )
+        );
+      }
+
       totalPages = response.paging.pages;
 
       this.logger.debug(
@@ -153,6 +167,6 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
       time: benchmarkTotalTime.elapsed()
     });
 
-    return interactions;
+    return ok(interactions);
   }
 }

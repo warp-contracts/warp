@@ -55,3 +55,7 @@ export function timeout(s: number): { timeoutId: number; timeoutPromise: Promise
 export function stripTrailingSlash(str: string) {
   return str.endsWith('/') ? str.slice(0, -1) : str;
 }
+
+export function exhaustive(_: never): never {
+  throw new Error("Check wasn't exhaustive");
+}

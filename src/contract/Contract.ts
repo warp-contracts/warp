@@ -1,21 +1,31 @@
 import {
   ArTransfer,
   ArWallet,
+  BadGatewayResponse,
   ContractCallStack,
   EvalStateResult,
   EvaluationOptions,
   GQLNodeInterface,
-  InteractionResult,
-  Tags
+  HandlerResult,
+  InvalidInteraction,
+  Tags,
+  UnexpectedInteractionError
 } from '@warp';
+import { AppError, Err } from '@warp/utils';
 import { NetworkInfoInterface } from 'arweave/node/network';
 import Transaction from 'arweave/node/lib/transaction';
 import { Source } from './deploy/Source';
+import { Result } from 'neverthrow';
 
 export type CurrentTx = { interactionTxId: string; contractTxId: string };
 export type BenchmarkStats = { gatewayCommunication: number; stateEvaluation: number; total: number };
 
 export type SigningFunction = (tx: Transaction) => Promise<void>;
+
+// export type InvalidInteraction = Err<'InvalidInteraction'> & {
+//   message: string;
+// };
+export type NoWallet = Err<'NoWalletConnected'>;
 
 /**
  * Interface describing state for all Evolve-compatible contracts.
@@ -71,13 +81,16 @@ export interface Contract<State = unknown> extends Source {
    * be skipped during contract inner calls - to prevent the infinite call loop issue
    * (mostly related to contracts that use the Foreign Call Protocol)
    */
-  readState(blockHeight?: number, currentTx?: CurrentTx[]): Promise<EvalStateResult<State>>;
+  readState(
+    blockHeight?: number,
+    currentTx?: CurrentTx[]
+  ): Promise<Result<EvalStateResult<State>, AppError<UnexpectedInteractionError | BadGatewayResponse>>>;
 
   readStateSequencer(
     blockHeight: number,
     upToTransactionId: string,
     currentTx?: CurrentTx[]
-  ): Promise<EvalStateResult<State>>;
+  ): Promise<Result<EvalStateResult<State>, AppError<UnexpectedInteractionError | BadGatewayResponse>>>;
 
   /**
    * Returns the "view" of the state, computed by the SWC -
@@ -101,7 +114,9 @@ export interface Contract<State = unknown> extends Source {
     blockHeight?: number,
     tags?: Tags,
     transfer?: ArTransfer
-  ): Promise<InteractionResult<State, View>>;
+  ): Promise<
+    Result<HandlerResult<State, View>, AppError<UnexpectedInteractionError | InvalidInteraction | BadGatewayResponse>>
+  >;
 
   /**
    * A version of the viewState method to be used from within the contract's source code.
@@ -118,7 +133,9 @@ export interface Contract<State = unknown> extends Source {
   viewStateForTx<Input = unknown, View = unknown>(
     input: Input,
     transaction: GQLNodeInterface
-  ): Promise<InteractionResult<State, View>>;
+  ): Promise<
+    Result<HandlerResult<State, View>, AppError<UnexpectedInteractionError | InvalidInteraction | BadGatewayResponse>>
+  >;
 
   /**
    * A dry-write operation on contract. It first loads the contract's state and then
@@ -135,13 +152,23 @@ export interface Contract<State = unknown> extends Source {
     caller?: string,
     tags?: Tags,
     transfer?: ArTransfer
-  ): Promise<InteractionResult<State, unknown>>;
+  ): Promise<
+    Result<
+      HandlerResult<State, unknown>,
+      AppError<UnexpectedInteractionError | InvalidInteraction | BadGatewayResponse>
+    >
+  >;
 
   dryWriteFromTx<Input>(
     input: Input,
     transaction: GQLNodeInterface,
     currentTx?: CurrentTx[]
-  ): Promise<InteractionResult<State, unknown>>;
+  ): Promise<
+    Result<
+      HandlerResult<State, unknown>,
+      AppError<UnexpectedInteractionError | InvalidInteraction | BadGatewayResponse>
+    >
+  >;
 
   /**
    * Writes a new "interaction" transaction - ie. such transaction that stores input for the contract.
@@ -156,7 +183,7 @@ export interface Contract<State = unknown> extends Source {
     tags?: Tags,
     transfer?: ArTransfer,
     strict?: boolean
-  ): Promise<string | null>;
+  ): Promise<Result<string, AppError<UnexpectedInteractionError | InvalidInteraction | NoWallet | BadGatewayResponse>>>;
 
   /**
    * Creates a new "interaction" transaction using Warp Sequencer - this, with combination with
@@ -171,7 +198,7 @@ export interface Contract<State = unknown> extends Source {
       strict?: boolean;
       vrf?: boolean;
     }
-  ): Promise<any | null>;
+  ): Promise<Result<any, AppError<UnexpectedInteractionError | InvalidInteraction | NoWallet | BadGatewayResponse>>>;
 
   /**
    * Returns the full call tree report the last
@@ -243,5 +270,8 @@ export interface Contract<State = unknown> extends Source {
    * and its transaction to be confirmed by the network.
    * @param newSrcTxId - result of the {@link save} method call.
    */
-  evolve(newSrcTxId: string, useBundler?: boolean): Promise<string | null>;
+  evolve(
+    newSrcTxId: string,
+    useBundler?: boolean
+  ): Promise<Result<any, AppError<UnexpectedInteractionError | InvalidInteraction | NoWallet | BadGatewayResponse>>>;
 }

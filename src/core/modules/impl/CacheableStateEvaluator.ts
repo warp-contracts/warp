@@ -5,12 +5,15 @@ import {
   ExecutionContext,
   ExecutionContextModifier,
   HandlerApi,
-  StateCache
+  StateCache,
+  UnexpectedInteractionError
 } from '@warp/core';
 import Arweave from 'arweave';
 import { GQLNodeInterface } from '@warp/legacy';
 import { LoggerFactory } from '@warp/logging';
 import { CurrentTx } from '@warp/contract';
+import { AppError } from '@warp/utils';
+import { ok, Result } from 'neverthrow';
 
 /**
  * An implementation of DefaultStateEvaluator that adds caching capabilities.
@@ -34,14 +37,14 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
   async eval<State>(
     executionContext: ExecutionContext<State, HandlerApi<State>>,
     currentTx: CurrentTx[]
-  ): Promise<EvalStateResult<State>> {
+  ): Promise<Result<EvalStateResult<State>, AppError<UnexpectedInteractionError>>> {
     const requestedBlockHeight = executionContext.blockHeight;
     this.cLogger.debug(`Requested state block height: ${requestedBlockHeight}`);
 
     const cachedState = executionContext.cachedState;
     if (cachedState?.cachedHeight === requestedBlockHeight) {
       executionContext.handler?.initState(cachedState.cachedValue.state);
-      return cachedState.cachedValue;
+      return ok(cachedState.cachedValue);
     }
 
     this.cLogger.debug('executionContext.sortedInteractions', executionContext.sortedInteractions.length);
@@ -95,7 +98,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       if (missingInteractions.length === 0 && cachedState) {
         this.cLogger.debug(`State up to requested height [${requestedBlockHeight}] fully cached!`);
         executionContext.handler?.initState(cachedState.cachedValue.state);
-        return cachedState.cachedValue;
+        return ok(cachedState.cachedValue);
       }
     }
 
