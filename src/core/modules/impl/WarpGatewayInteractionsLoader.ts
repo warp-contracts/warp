@@ -5,8 +5,10 @@ import {
   GQLNodeInterface,
   InteractionsLoader,
   LoggerFactory,
-  stripTrailingSlash
+  stripTrailingSlash,
+  InteractionsLoaderError
 } from '@warp';
+import { Err } from '@warp/utils';
 import 'redstone-isomorphic';
 
 interface Paging {
@@ -123,7 +125,8 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
           if (error.body?.message) {
             this.logger.error(error.body.message);
           }
-          throw new Error(`Unable to retrieve transactions. Warp gateway responded with status ${error.status}.`);
+          const errorMessage = `Unable to retrieve transactions. Redstone gateway responded with status ${error.status}.`;
+          throw new InteractionsLoaderError({ type: 'BadGatewayResponse', status: error.status }, errorMessage, error);
         });
       totalPages = response.paging.pages;
 

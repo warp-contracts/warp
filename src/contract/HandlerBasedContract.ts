@@ -4,6 +4,7 @@ import {
   ArweaveWrapper,
   Benchmark,
   BenchmarkStats,
+  BundleInteractionError,
   Contract,
   ContractCallStack,
   ContractInteraction,
@@ -22,6 +23,7 @@ import {
   InnerWritesEvaluator,
   InteractionCall,
   InteractionData,
+  InteractionsLoaderError,
   InteractionResult,
   LoggerFactory,
   SigningFunction,
@@ -242,7 +244,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
   ): Promise<any | null> {
     this.logger.info('Bundle interaction input', input);
     if (!this.signer) {
-      throw new Error("Wallet not connected. Use 'connect' method first.");
+      throw new BundleInteractionError(
+        { type: 'NoWalletConnected' },
+        "Wallet not connected. Use 'connect' method first."
+      );
     }
 
     options = {
@@ -252,14 +257,23 @@ export class HandlerBasedContract<State> implements Contract<State> {
       ...options
     };
 
-    const interactionTx = await this.createInteraction(
-      input,
-      options.tags,
-      emptyTransfer,
-      options.strict,
-      true,
-      options.vrf
-    );
+    let interactionTx: Transaction;
+    try {
+      interactionTx = await this.createInteraction(
+        input,
+        options.tags,
+        emptyTransfer,
+        options.strict,
+        true,
+        options.vrf
+      );
+    } catch (e) {
+      if (e instanceof InteractionsLoaderError) {
+        throw new BundleInteractionError(e.detail, `${e}`, e);
+      } else {
+        throw new BundleInteractionError({ type: 'InvalidInteraction' }, `${e}`, e);
+      }
+    }
 
     const response = await fetch(`${this._evaluationOptions.bundlerUrl}gateway/sequencer/register`, {
       method: 'POST',
@@ -279,7 +293,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
         if (error.body?.message) {
           this.logger.error(error.body.message);
         }
-        throw new Error(`Unable to bundle interaction: ${JSON.stringify(error)}`);
+        throw new BundleInteractionError(
+          { type: 'CannotBundle' },
+          `Unable to bundle interaction: ${JSON.stringify(error)}`
+        );
       });
 
     return {
@@ -305,7 +322,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       // {name: 'InternalWrite', value: callingContractTxId}
       const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer);
       if (strict && handlerResult.type !== 'ok') {
-        throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
+        throw new Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
       }
       const callStack: ContractCallStack = this.getCallStack();
       const innerWrites = this._innerWritesEvaluator.eval(callStack);
@@ -324,7 +341,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       if (strict) {
         const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer);
         if (handlerResult.type !== 'ok') {
-          throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
+          throw new Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
         }
       }
     }

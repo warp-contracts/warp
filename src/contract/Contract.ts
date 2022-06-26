@@ -1,6 +1,7 @@
 import {
   ArTransfer,
   ArWallet,
+  BadGatewayResponse,
   ContractCallStack,
   EvalStateResult,
   EvaluationOptions,
@@ -8,6 +9,7 @@ import {
   InteractionResult,
   Tags
 } from '@warp';
+import { CustomError, Err } from '@warp/utils';
 import { NetworkInfoInterface } from 'arweave/node/network';
 import Transaction from 'arweave/node/lib/transaction';
 import { Source } from './deploy/Source';
@@ -16,6 +18,17 @@ export type CurrentTx = { interactionTxId: string; contractTxId: string };
 export type BenchmarkStats = { gatewayCommunication: number; stateEvaluation: number; total: number };
 
 export type SigningFunction = (tx: Transaction) => Promise<void>;
+
+// Make these two error cases individual as they could be used in different places
+export type NoWalletConnected = Err<'NoWalletConnected'>;
+export type InvalidInteraction = Err<'InvalidInteraction'>;
+
+export type BundleInteractionErrorDetail =
+  | NoWalletConnected
+  | InvalidInteraction
+  | BadGatewayResponse
+  | Err<'CannotBundle'>;
+export class BundleInteractionError extends CustomError<BundleInteractionErrorDetail> {}
 
 /**
  * Interface describing state for all Evolve-compatible contracts.

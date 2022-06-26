@@ -1,4 +1,4 @@
-import { LoggerFactory, WarpGatewayInteractionsLoader } from '@warp';
+import { LoggerFactory, WarpGatewayInteractionsLoader, InteractionsLoaderError } from '@warp';
 import { GQLEdgeInterface } from '../../legacy/gqlResult';
 
 const responseData = {
@@ -136,8 +136,9 @@ describe('WarpGatewayInteractionsLoader -> load', () => {
     const loader = new WarpGatewayInteractionsLoader('http://baseUrl');
     try {
       await loader.load(contractId, fromBlockHeight, toBlockHeight);
-    } catch (e) {
-      expect(e).toEqual(new Error('Unable to retrieve transactions. Warp gateway responded with status 504.'));
+    } catch (rawError) {
+      const error = rawError as InteractionsLoaderError;
+      expect(error.detail.type === 'BadGatewayResponse' && error.detail.status === 504).toBeTruthy();
     }
   });
   it('should throw an error when request fails', async () => {
@@ -147,8 +148,9 @@ describe('WarpGatewayInteractionsLoader -> load', () => {
     const loader = new WarpGatewayInteractionsLoader('http://baseUrl');
     try {
       await loader.load(contractId, fromBlockHeight, toBlockHeight);
-    } catch (e) {
-      expect(e).toEqual(new Error('Unable to retrieve transactions. Warp gateway responded with status 500.'));
+    } catch (rawError) {
+      const error = rawError as InteractionsLoaderError;
+      expect(error.detail.type === 'BadGatewayResponse' && error.detail.status === 500).toBeTruthy();
     }
   });
 });
