@@ -1,72 +1,66 @@
-import { getQuickJS } from 'quickjs-emscripten';
+import {getQuickJS, newQuickJSAsyncWASMModule} from 'quickjs-emscripten';
 
-const code = `(
-async function handle(state, action) {
-      if (action.function === 'add') {
-        //logger.info('add function called', state);
-        state.counter++;
-        return {state}
-      } 
-      
-      if (action.function === 'boom') {
-        // logger.info('boom function called');
-        boom()
-        return {state}
-      } 
-      
-      if (action.function === 'assert') {
-        // logger.info('assert function called');
-        ContractAssert(false, "ContractAssert fired");
-        return {state}
-      } 
-      
-       if (action.function === 'unsafe') {
-        logger.info('unsafe function called');
-        const tx = await SmartWeave.unsafeClient.transactions.get('_0YqJWg12HsNw35uMjoa_UTMM6F_5dYXozBTwwb8Etg');
-        logger.info('tx', tx);
-        const tags = tx.get('tags');
-        logger.info('tags', tags);
-        logger.info('tags', tags[0].get('name', {decode: true, string: true }));
-        return {state}
-      } 
-      
-      async function boom() {
-        Object.values(null);
-      }
-    
-      throw new Error('Unknown function');
+// the example smart contract code
+const code = `
+(() => {
+    async function handle(state, action) {
+      console.log('handle');
+      return 1;
     }
-    )
+    return handle;
+})();
 `.trim();
 
 async function main() {
+
+  // 1. creating the QJS context
   const QuickJS = await getQuickJS();
   const vm = QuickJS.newContext();
 
-  const contract = vm.evalCode(code);
-  //console.log(contract);
+  const fnHandle = vm.newFunction("executePendingJobs", () => {
+    console.log('executePendingJobs');
+    vm.runtime.executePendingJobs();
+  });
+  vm.setProp(vm.global, "executePendingJobs", fnHandle)
+  fnHandle.dispose()
 
-  if (contract.error) {
-    console.log('Execution failed:', vm.dump(contract.error));
-    contract.error.dispose();
-  } else {
-    //console.log(contract.value);
-    vm.callFunction(contract.value, undefined, []);
-    //console.log('Success:', vm.dump(contract.value));
-  }
+  // 2. registering "console.log" API
+  const logHandle = vm.newFunction("log", (...args) => {
+    const nativeArgs = args.map(vm.dump)
+    console.log("QuickJS:", ...nativeArgs)
+  });
+  const consoleHandle = vm.newObject();
+  vm.setProp(consoleHandle, "log", logHandle);
+  vm.setProp(vm.global, "console", consoleHandle);
+  consoleHandle.dispose();
+  logHandle.dispose();
 
-  //vm.evalCode()
+  // 3. registering the "handle" function in a global scope
+  const handle = vm.evalCode(code);
+  vm.setProp(vm.global, 'handle', handle.value);
 
+  // 4. calling the "handle" function
+  const result = await vm.evalCode(`(async () => {
+       const result = await handle();
+       console.log('result', result);
+       //executePendingJobs();
+       return result;
+     })()`);
 
+  // execute pending jobs - is it necessary here?
+  //vm.runtime.executePendingJobs();
 
-  /*const result = vm.evalCode(`"Hello " + NAME + "!"`);
   if (result.error) {
     console.log('Execution failed:', vm.dump(result.error));
     result.error.dispose();
   } else {
-    console.log('Success:', vm.dump(result.value));
-    result.value.dispose();
-  }*/
+    const promiseHandle = vm.unwrapResult(result)
+    console.log("Result1");
+    const resolvedResult = await vm.resolvePromise(promiseHandle)
+    promiseHandle.dispose();
+    const resolvedHandle = vm.unwrapResult(resolvedResult);
+    console.log("Result2:", vm.getNumber(resolvedHandle));
+  }
 
   vm.dispose();
 }
