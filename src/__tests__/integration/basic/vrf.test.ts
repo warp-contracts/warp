@@ -57,7 +57,7 @@ describe('Testing the Profit Sharing Token', () => {
     loader = new VrfDecorator(arweave);
     LoggerFactory.INST.logLevel('error');
 
-    warp = WarpFactory.levelDbCached(arweave, {
+    warp = WarpFactory.custom(arweave, {
       ...defaultCacheOptions,
       inMemory: true
     })

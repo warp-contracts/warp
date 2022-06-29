@@ -62,7 +62,7 @@ export class WarpFactory {
       inMemory: false
     }
   ): Warp {
-    return this.levelDbCached(arweave, cacheOptions).useArweaveGateway().build();
+    return this.custom(arweave, cacheOptions).useArweaveGateway().build();
   }
 
   /**
@@ -76,12 +76,12 @@ export class WarpFactory {
       inMemory: false
     }
   ): Warp {
-    return this.levelDbCached(arweave, cacheOptions)
+    return this.custom(arweave, cacheOptions)
       .useWarpGateway(gatewayOptions.confirmationStatus, gatewayOptions.source, gatewayOptions.address)
       .build();
   }
 
-  static levelDbCached(arweave: Arweave, cacheOptions: CacheOptions): WarpBuilder {
+  static custom(arweave: Arweave, cacheOptions: CacheOptions): WarpBuilder {
     const executorFactory = new CacheableExecutorFactory(arweave, new HandlerExecutorFactory(arweave), new MemCache());
     const stateEvaluator = new CacheableStateEvaluator(
       arweave,
