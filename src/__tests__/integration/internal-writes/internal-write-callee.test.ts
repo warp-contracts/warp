@@ -54,6 +54,7 @@ describe('Testing internal writes', () => {
   let callingContract: Contract;
   let callingContractVM: Contract;
   let calleeTxId;
+  let callingTxId;
 
   beforeAll(async () => {
     // note: each tests suit (i.e. file with tests that Jest is running concurrently
@@ -85,17 +86,17 @@ describe('Testing internal writes', () => {
     calleeContractSrc = fs.readFileSync(path.join(__dirname, '../data/example-contract.js'), 'utf8');
     calleeInitialState = fs.readFileSync(path.join(__dirname, '../data/example-contract-state.json'), 'utf8');
 
-    calleeTxId = await warp.createContract.deploy({
+    ({ contractTxId: calleeTxId } = await warp.createContract.deploy({
       wallet,
       initState: calleeInitialState,
       src: calleeContractSrc
-    });
+    }));
 
-    const callingTxId = await warp.createContract.deploy({
+    ({ contractTxId: callingTxId } = await warp.createContract.deploy({
       wallet,
       initState: callingContractInitialState,
       src: callingContractSrc
-    });
+    }));
 
     calleeContract = warp
       .contract<ExampleContractState>(calleeTxId)

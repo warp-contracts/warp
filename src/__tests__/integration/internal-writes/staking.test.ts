@@ -72,23 +72,23 @@ describe('Testing internal writes', () => {
     );
 
     console.log('wallet address', walletAddress);
-    tokenContractTxId = await warp.createContract.deploy({
+    ({ contractTxId: tokenContractTxId } = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify({
         ...JSON.parse(tokenContractInitialState),
         owner: walletAddress
       }),
       src: tokenContractSrc
-    });
+    }));
 
-    stakingContractTxId = await warp.createContract.deploy({
+    ({ contractTxId: stakingContractTxId } = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify({
         ...JSON.parse(stakingContractInitialState),
         tokenTxId: tokenContractTxId
       }),
       src: stakingContractSrc
-    });
+    }));
 
     tokenContract = warp.contract(tokenContractTxId).setEvaluationOptions({ internalWrites: true }).connect(wallet);
     stakingContract = warp.contract(stakingContractTxId).setEvaluationOptions({ internalWrites: true }).connect(wallet);

@@ -48,12 +48,12 @@ describe('Testing the Warp client for AssemblyScript WASM contract', () => {
     initialState = fs.readFileSync(path.join(__dirname, '../data/wasm/counter-init-state.json'), 'utf8');
 
     // deploying contract using the new SDK.
-    contractTxId = await warp.createContract.deploy({
+    ({ contractTxId } = await warp.createContract.deploy({
       wallet,
       initState: initialState,
       src: contractSrc,
       wasmSrcCodeDir: path.join(__dirname, '../data/wasm/as/assembly')
-    });
+    }));
 
     contract = warp.contract<ExampleContractState>(contractTxId).setEvaluationOptions({
       gasLimit: 1000000000

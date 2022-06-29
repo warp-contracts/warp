@@ -43,7 +43,7 @@ describe('Testing the Warp client', () => {
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/inf-loop-contract.js'), 'utf8');
 
     // deploying contract using the new SDK.
-    const contractTxId = await warp.createContract.deploy({
+    const { contractTxId } = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify({
         counter: 10

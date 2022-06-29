@@ -72,15 +72,15 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     };
 
     // deploying contract using the new SDK.
-    contractTxId = await warp.createContract.deploy({
+    ({ contractTxId } = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify(initialState),
       src: contractSrc,
       wasmSrcCodeDir: path.join(__dirname, '../data/wasm/rust/src'),
       wasmGlueCode: path.join(__dirname, '../data/wasm/rust/rust-pst.js')
-    });
+    }));
 
-    properForeignContractTxId = await warp.createContract.deploy({
+    ({ contractTxId: properForeignContractTxId } = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify({
         ...initialState,
@@ -92,9 +92,9 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
       src: contractSrc,
       wasmSrcCodeDir: path.join(__dirname, '../data/wasm/rust/src'),
       wasmGlueCode: path.join(__dirname, '../data/wasm/rust/rust-pst.js')
-    });
+    }));
 
-    wrongForeignContractTxId = await warp.createContract.deploy({
+    ({ contractTxId: wrongForeignContractTxId } = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify({
         ...initialState,
@@ -106,7 +106,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
       src: contractSrc,
       wasmSrcCodeDir: path.join(__dirname, '../data/wasm/rust/src'),
       wasmGlueCode: path.join(__dirname, '../data/wasm/rust/rust-pst.js')
-    });
+    }));
 
     // connecting to the PST contract
     pst = warp.pst(contractTxId);
