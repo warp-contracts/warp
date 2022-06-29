@@ -6,7 +6,7 @@ const defaultArweaveMs = ''.padEnd(13, '9');
 const defaultArweaveMs_After_Block_973730 = ''.padEnd(13, '0');
 export const block_973730 = 973730;
 
-const sortingLast = ''.padEnd(64, 'z');
+export const sortingLast = ''.padEnd(64, 'z');
 
 /**
  * implementation that is based on current's SDK sorting alg.

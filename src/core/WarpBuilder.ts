@@ -5,15 +5,17 @@ import {
   ContractDefinitionLoader,
   DebuggableExecutorFactory,
   DefinitionLoader,
+  EvalStateResult,
   ExecutorFactory,
   HandlerApi,
   InteractionsLoader,
+  LevelDbCache,
   MemCache,
-  WarpGatewayContractDefinitionLoader,
-  WarpGatewayInteractionsLoader,
-  Warp,
   SourceType,
-  StateEvaluator
+  StateEvaluator,
+  Warp,
+  WarpGatewayContractDefinitionLoader,
+  WarpGatewayInteractionsLoader
 } from '@warp';
 
 export const WARP_GW_URL = 'https://d1o5nlqr4okus2.cloudfront.net';
@@ -24,7 +26,7 @@ export class WarpBuilder {
   private _executorFactory?: ExecutorFactory<HandlerApi<unknown>>;
   private _stateEvaluator?: StateEvaluator;
 
-  constructor(private readonly _arweave: Arweave) {}
+  constructor(private readonly _arweave: Arweave, private readonly _cache: LevelDbCache<EvalStateResult<unknown>>) {}
 
   public setDefinitionLoader(value: DefinitionLoader): WarpBuilder {
     this._definitionLoader = value;
@@ -73,6 +75,7 @@ export class WarpBuilder {
   build(): Warp {
     return new Warp(
       this._arweave,
+      this._cache,
       this._definitionLoader,
       this._interactionsLoader,
       this._executorFactory,
