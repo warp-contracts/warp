@@ -50,7 +50,7 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
       console.log('readState', contractTxId);
       try {
         console.log = function () {}; // to hide any logs from contracts...
-        const result2 = await WarpFactory.levelDbCached(arweave, {
+        const result2 = await WarpFactory.custom(arweave, {
           ...defaultCacheOptions,
           inMemory: true
         })
@@ -82,7 +82,7 @@ describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
         .readFileSync(path.join(__dirname, 'test-cases', 'contracts', `${contractTxId}.json`), 'utf-8')
         .trim();
       console.log('readState', contractTxId);
-      const result2 = await WarpFactory.levelDbCached(arweave, {
+      const result2 = await WarpFactory.custom(arweave, {
         ...defaultCacheOptions,
         inMemory: true
       })
@@ -110,7 +110,7 @@ describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
     async (contractTxId: string) => {
       const blockHeight = 855134;
       console.log('readState Warp Gateway', contractTxId);
-      const warpR = await WarpFactory.levelDbCached(arweave, {
+      const warpR = await WarpFactory.custom(arweave, {
         ...defaultCacheOptions,
         inMemory: true
       })
@@ -120,7 +120,7 @@ describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
       const resultString = stringify(result.state).trim();
 
       console.log('readState Arweave Gateway', contractTxId);
-      const result2 = await WarpFactory.levelDbCached(arweave, {
+      const result2 = await WarpFactory.custom(arweave, {
         ...defaultCacheOptions,
         inMemory: true
       })
@@ -142,7 +142,7 @@ describe('readState', () => {
     const result = await readContract(arweave, contractTxId, blockHeight);
     const resultString = stringify(result).trim();
 
-    const result2 = await WarpFactory.levelDbCached(arweave, {
+    const result2 = await WarpFactory.custom(arweave, {
       ...defaultCacheOptions,
       inMemory: true
     })
@@ -166,7 +166,7 @@ describe('readState', () => {
       target: '6Z-ifqgVi1jOwMvSNwKWs6ewUEQ0gU9eo4aHYC3rN1M'
     });
 
-    const v2Result = await WarpFactory.levelDbCached(arweave, {
+    const v2Result = await WarpFactory.custom(arweave, {
       ...defaultCacheOptions,
       inMemory: true
     })
