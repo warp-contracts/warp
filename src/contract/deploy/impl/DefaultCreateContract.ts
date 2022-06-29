@@ -74,20 +74,23 @@ export class DefaultCreateContract implements CreateContract {
 
     await this.arweave.transactions.sign(contractTX, wallet);
 
-    let responseOk;
+    let responseOk: boolean;
+    let response: { status: number; statusText: string; data: any };
     if (useBundler) {
       const result = await this.post(contractTX, srcTx);
       this.logger.debug(result);
       responseOk = true;
     } else {
-      const response = await this.arweave.transactions.post(contractTX);
+      response = await this.arweave.transactions.post(contractTX);
       responseOk = response.status === 200 || response.status === 208;
     }
 
     if (responseOk) {
       return { contractTxId: contractTX.id, srcTxId };
     } else {
-      throw new Error(`Unable to write Contract`);
+      throw new Error(
+        `Unable to write Contract. Arweave responded with status ${response.status}: ${response.statusText}`
+      );
     }
   }
 
@@ -115,7 +118,9 @@ export class DefaultCreateContract implements CreateContract {
     if (response.ok) {
       return response.json();
     } else {
-      throw new Error(`Error while posting contract ${response.statusText}`);
+      throw new Error(
+        `Error while posting contract. Sequencer responded with status ${response.status} ${response.statusText}`
+      );
     }
   }
 }
