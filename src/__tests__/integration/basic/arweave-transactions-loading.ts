@@ -55,7 +55,7 @@ describe('Testing the Arweave interactions loader', () => {
     await addFunds(arweave, wallet);
 
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/inf-loop-contract.js'), 'utf8');
-    const contractTxId = await warp.createContract.deploy({
+    const { contractTxId } = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify({
         counter: 10

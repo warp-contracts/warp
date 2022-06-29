@@ -4,7 +4,8 @@ import {
   HandlerApi,
   InteractionsLoader,
   WarpBuilder,
-  StateEvaluator
+  StateEvaluator,
+  EvalStateResult
 } from '@warp/core';
 import Arweave from 'arweave';
 import {
@@ -16,6 +17,8 @@ import {
   PstContractImpl
 } from '@warp/contract';
 import { GQLNodeInterface } from '@warp/legacy';
+import { MigrationTool } from '../contract/migration/MigrationTool';
+import { LevelDbCache } from '@warp/cache';
 
 /**
  * The Warp "motherboard" ;-).
@@ -27,19 +30,22 @@ import { GQLNodeInterface } from '@warp/legacy';
  */
 export class Warp {
   readonly createContract: CreateContract;
+  readonly migrationTool: MigrationTool;
 
   constructor(
     readonly arweave: Arweave,
+    readonly levelDb: LevelDbCache<EvalStateResult<unknown>>,
     readonly definitionLoader: DefinitionLoader,
     readonly interactionsLoader: InteractionsLoader,
     readonly executorFactory: ExecutorFactory<HandlerApi<unknown>>,
     readonly stateEvaluator: StateEvaluator
   ) {
     this.createContract = new DefaultCreateContract(arweave);
+    this.migrationTool = new MigrationTool(arweave, levelDb);
   }
 
-  static builder(arweave: Arweave): WarpBuilder {
-    return new WarpBuilder(arweave);
+  static builder(arweave: Arweave, cache: LevelDbCache<EvalStateResult<unknown>>): WarpBuilder {
+    return new WarpBuilder(arweave, cache);
   }
 
   /**

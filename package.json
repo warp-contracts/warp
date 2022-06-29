@@ -119,6 +119,7 @@
     "vm2": false,
     "archiver": false,
     "stream-buffers": false,
-    "constants": false
+    "constants": false,
+    "knex": false
   }
 }

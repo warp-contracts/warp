@@ -55,14 +55,8 @@ export class WarpFactory {
    * Returns a fully configured {@link Warp} that is using arweave.net compatible gateway
    * (with a GQL endpoint) for loading the interactions.
    */
-  static arweaveGw(
-    arweave: Arweave,
-    cacheOptions: CacheOptions = {
-      maxStoredTransactions: 20,
-      inMemory: false
-    }
-  ): Warp {
-    return this.levelDbCached(arweave, cacheOptions).useArweaveGateway().build();
+  static arweaveGw(arweave: Arweave, cacheOptions: CacheOptions = defaultCacheOptions): Warp {
+    return this.custom(arweave, cacheOptions).useArweaveGateway().build();
   }
 
   /**
@@ -71,24 +65,19 @@ export class WarpFactory {
   static warpGw(
     arweave: Arweave,
     gatewayOptions: GatewayOptions = defaultWarpGwOptions,
-    cacheOptions: CacheOptions = {
-      maxStoredTransactions: 20,
-      inMemory: false
-    }
+    cacheOptions: CacheOptions = defaultCacheOptions
   ): Warp {
-    return this.levelDbCached(arweave, cacheOptions)
+    return this.custom(arweave, cacheOptions)
       .useWarpGateway(gatewayOptions.confirmationStatus, gatewayOptions.source, gatewayOptions.address)
       .build();
   }
 
-  static levelDbCached(arweave: Arweave, cacheOptions: CacheOptions): WarpBuilder {
-    const executorFactory = new CacheableExecutorFactory(arweave, new HandlerExecutorFactory(arweave), new MemCache());
-    const stateEvaluator = new CacheableStateEvaluator(
-      arweave,
-      new LevelDbCache<EvalStateResult<unknown>>(cacheOptions),
-      [new Evolve()]
-    );
+  static custom(arweave: Arweave, cacheOptions: CacheOptions): WarpBuilder {
+    const cache = new LevelDbCache<EvalStateResult<unknown>>(cacheOptions);
 
-    return Warp.builder(arweave).setExecutorFactory(executorFactory).setStateEvaluator(stateEvaluator);
+    const executorFactory = new CacheableExecutorFactory(arweave, new HandlerExecutorFactory(arweave), new MemCache());
+    const stateEvaluator = new CacheableStateEvaluator(arweave, cache, [new Evolve()]);
+
+    return Warp.builder(arweave, cache).setExecutorFactory(executorFactory).setStateEvaluator(stateEvaluator);
   }
 }
