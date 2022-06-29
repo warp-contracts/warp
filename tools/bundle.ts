@@ -1,6 +1,6 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import { LoggerFactory, WarpNodeFactory } from '../src';
+import {BundleInteractionResponse, LoggerFactory, WarpNodeFactory} from '../src';
 import { TsLogFactory } from '../src/logging/node/TsLogFactory';
 import path from 'path';
 import knex from 'knex';
@@ -34,7 +34,7 @@ async function main() {
     useNullAsDefault: true
   });
 
-  const warp = await WarpNodeFactory.knexCached(arweave, knexConfig);
+  const warp = await WarpNodeFactory.memCached(arweave);
 
   const wallet: JWKInterface = readJSON('.secrets/33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA.json');
 
@@ -42,7 +42,7 @@ async function main() {
   const initialState = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.json'), 'utf8');
 
   // case 1 - full deploy, js contract
-  const contractTxId = await warp.createContract.deploy(
+  const {contractTxId, srcTxId} = await warp.createContract.deploy(
     {
       wallet,
       initState: initialState,
@@ -52,6 +52,7 @@ async function main() {
   );
 
   logger.info('tx id:', contractTxId);
+  logger.info('src tx id:', srcTxId);
 
   // connecting to a given contract
   const token = warp
@@ -60,16 +61,18 @@ async function main() {
     // calling "writeInteraction" without connecting to a wallet first will cause a runtime error.
     .connect(wallet);
 
-  const result = await token.bundleInteraction<any>(
+  const result: BundleInteractionResponse = await token.bundleInteraction<any>(
     {
       function: 'vrf'
     },
     { vrf: true }
   );
 
-  const { state } = await token.readState();
+  console.log(result.bundlrResponse);
 
-  logger.info('State', state.vrf);
+  /*const { state } = await token.readState();
+
+  logger.info('State', state.vrf);*/
 
   /*const result = await token.writeInteraction({
     function: "transfer",
