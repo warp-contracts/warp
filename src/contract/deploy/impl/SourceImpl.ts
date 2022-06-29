@@ -122,15 +122,18 @@ export class SourceImpl implements Source {
     // note: in case of useBundler = true, we're posting both
     // src tx and contract tx in one request.
     let responseOk = true;
+    let response: { status: number; statusText: string; data: any };
     if (!useBundler) {
-      const response = await this.arweave.transactions.post(srcTx);
+      response = await this.arweave.transactions.post(srcTx);
       responseOk = response.status === 200 || response.status === 208;
     }
 
     if (responseOk) {
       return srcTx;
     } else {
-      throw new Error(`Unable to write Contract Source`);
+      throw new Error(
+        `Unable to write Contract Source. Arweave responded with status ${response.status}: ${response.statusText}`
+      );
     }
   }
 
