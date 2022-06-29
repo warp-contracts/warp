@@ -58,14 +58,14 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
     };
 
     // deploying contract using the new SDK.
-    contractTxId = await warp.createContract.deploy({
+    ({ contractTxId } = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify(initialState),
       src: contractSrc,
       wasmSrcCodeDir: path.join(__dirname, '../data/wasm/go/src')
-    });
+    }));
 
-    properForeignContractTxId = await warp.createContract.deploy({
+    ({ contractTxId: properForeignContractTxId } = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify({
         ...initialState,
@@ -76,9 +76,9 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
       }),
       src: contractSrc,
       wasmSrcCodeDir: path.join(__dirname, '../data/wasm/go/src')
-    });
+    }));
 
-    wrongForeignContractTxId = await warp.createContract.deploy({
+    ({ contractTxId: wrongForeignContractTxId } = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify({
         ...initialState,
@@ -89,7 +89,7 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
       }),
       src: contractSrc,
       wasmSrcCodeDir: path.join(__dirname, '../data/wasm/go/src')
-    });
+    }));
 
     // connecting to the PST contract
     pst = warp.pst(contractTxId);

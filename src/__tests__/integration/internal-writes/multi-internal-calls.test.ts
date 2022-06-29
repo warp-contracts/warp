@@ -93,23 +93,23 @@ describe('Testing internal writes', () => {
     contractBSrc = fs.readFileSync(path.join(__dirname, '../data/example-contract.js'), 'utf8');
     contractBInitialState = fs.readFileSync(path.join(__dirname, '../data/example-contract-state.json'), 'utf8');
 
-    contractATxId = await warp.createContract.deploy({
+    ({ contractTxId: contractATxId } = await warp.createContract.deploy({
       wallet,
       initState: contractAInitialState,
       src: contractASrc
-    });
+    }));
 
-    contractBTxId = await warp.createContract.deploy({
+    ({ contractTxId: contractBTxId } = await warp.createContract.deploy({
       wallet,
       initState: contractBInitialState,
       src: contractBSrc
-    });
+    }));
 
-    contractCTxId = await warp.createContract.deploy({
+    ({ contractTxId: contractCTxId } = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify({ counter: 200 }),
       src: contractBSrc
-    });
+    }));
 
     contractA = warp.contract(contractATxId).setEvaluationOptions({ internalWrites: true }).connect(wallet);
     contractB = warp.contract(contractBTxId).setEvaluationOptions({ internalWrites: true }).connect(wallet);

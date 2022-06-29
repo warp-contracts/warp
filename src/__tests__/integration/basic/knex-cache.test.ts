@@ -77,21 +77,21 @@ describe('Testing the Warp client', () => {
     initialState = fs.readFileSync(path.join(__dirname, '../data/example-contract-state.json'), 'utf8');
 
     // deploying contract using the new SDK.
-    const contractTxId1 = await warp.createContract.deploy({
+    const { contractTxId } = await warp.createContract.deploy({
       wallet,
       initState: initialState,
       src: contractSrc
     });
 
-    const contractTxId2 = await warp.createContract.deploy({
+    const { contractTxId: contractTxId2 } = await warp.createContract.deploy({
       wallet,
       initState: '{"counter": 100}',
       src: contractSrc
     });
 
-    contract_1 = warp.contract<ExampleContractState>(contractTxId1).connect(wallet);
+    contract_1 = warp.contract<ExampleContractState>(contractTxId).connect(wallet);
     contract_1VM = warp
-      .contract<ExampleContractState>(contractTxId1)
+      .contract<ExampleContractState>(contractTxId)
       .setEvaluationOptions({ useVM2: true })
       .connect(wallet);
     contract_2 = warp.contract<ExampleContractState>(contractTxId2).connect(wallet);

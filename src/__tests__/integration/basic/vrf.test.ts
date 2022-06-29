@@ -76,7 +76,7 @@ describe('Testing the Profit Sharing Token', () => {
       }
     };
 
-    const contractTxId = await warp.createContract.deploy({
+    const { contractTxId } = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify(initialState),
       src: contractSrc
@@ -142,12 +142,12 @@ class VrfDecorator extends ArweaveGatewayInteractionsLoader {
   }
 
   async load(
-    contractId: string,
+    contractTxId: string,
     fromBlockHeight: number,
     toBlockHeight: number,
     evaluationOptions: EvaluationOptions
   ): Promise<GQLEdgeInterface[]> {
-    const result = await super.load(contractId, fromBlockHeight, toBlockHeight, evaluationOptions);
+    const result = await super.load(contractTxId, fromBlockHeight, toBlockHeight, evaluationOptions);
     const arUtils = this.arweave.utils;
 
     const sorter = new LexicographicalInteractionsSorter(this.arweave);

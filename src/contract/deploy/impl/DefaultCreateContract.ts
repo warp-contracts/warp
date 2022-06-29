@@ -3,7 +3,7 @@ import { SmartWeaveTags } from '@warp/core';
 import Arweave from 'arweave';
 import { LoggerFactory } from '@warp/logging';
 import Transaction from 'arweave/node/lib/transaction';
-import { ContractData, CreateContract, FromSrcTxContractData, SourceImpl } from '@warp/contract';
+import { ContractData, CreateContract, ContractDeploy, FromSrcTxContractData, SourceImpl } from '@warp/contract';
 
 export class DefaultCreateContract implements CreateContract {
   private readonly logger = LoggerFactory.INST.create('DefaultCreateContract');
@@ -12,7 +12,7 @@ export class DefaultCreateContract implements CreateContract {
     this.deployFromSourceTx = this.deployFromSourceTx.bind(this);
   }
 
-  async deploy(contractData: ContractData, useBundler = false): Promise<string> {
+  async deploy(contractData: ContractData, useBundler = false): Promise<ContractDeploy> {
     const { wallet, initState, tags, transfer, data } = contractData;
 
     const source = new SourceImpl(this.arweave);
@@ -38,7 +38,7 @@ export class DefaultCreateContract implements CreateContract {
     contractData: FromSrcTxContractData,
     useBundler = false,
     srcTx: Transaction = null
-  ): Promise<string> {
+  ): Promise<ContractDeploy> {
     this.logger.debug('Creating new contract from src tx');
     const { wallet, srcTxId, initState, tags, transfer, data } = contractData;
 
@@ -85,7 +85,7 @@ export class DefaultCreateContract implements CreateContract {
     }
 
     if (responseOk) {
-      return contractTX.id;
+      return { contractTxId: contractTX.id, srcTxId };
     } else {
       throw new Error(`Unable to write Contract`);
     }
