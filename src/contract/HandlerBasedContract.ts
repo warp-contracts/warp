@@ -31,7 +31,8 @@ import {
   SourceType,
   Tags,
   SourceImpl,
-  SourceData
+  SourceData,
+  BundleInteractionResponse
 } from '@warp';
 import { TransactionStatusResponse } from 'arweave/node/transactions';
 import { NetworkInfoInterface } from 'arweave/node/network';
@@ -239,7 +240,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       strict: false,
       vrf: false
     }
-  ): Promise<any | null> {
+  ): Promise<BundleInteractionResponse | null> {
     this.logger.info('Bundle interaction input', input);
     if (!this.signer) {
       throw new Error("Wallet not connected. Use 'connect' method first.");
@@ -758,7 +759,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return this;
   }
 
-  async evolve(newSrcTxId: string, useBundler = false): Promise<string | null> {
+  async evolve(newSrcTxId: string, useBundler = false): Promise<string | BundleInteractionResponse | null> {
     if (useBundler) {
       return await this.bundleInteraction<any>({ function: 'evolve', value: newSrcTxId });
     } else {

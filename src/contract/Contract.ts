@@ -17,6 +17,16 @@ export type BenchmarkStats = { gatewayCommunication: number; stateEvaluation: nu
 
 export type SigningFunction = (tx: Transaction) => Promise<void>;
 
+interface BundlrResponse {
+  id: string;
+  public: string;
+  signature: string;
+  block: number;
+}
+export interface BundleInteractionResponse {
+  bundlrResponse: BundlrResponse;
+  originalTxId: string;
+}
 /**
  * Interface describing state for all Evolve-compatible contracts.
  */
@@ -171,7 +181,7 @@ export interface Contract<State = unknown> extends Source {
       strict?: boolean;
       vrf?: boolean;
     }
-  ): Promise<any | null>;
+  ): Promise<BundleInteractionResponse | null>;
 
   /**
    * Returns the full call tree report the last
@@ -243,5 +253,5 @@ export interface Contract<State = unknown> extends Source {
    * and its transaction to be confirmed by the network.
    * @param newSrcTxId - result of the {@link save} method call.
    */
-  evolve(newSrcTxId: string, useBundler?: boolean): Promise<string | null>;
+  evolve(newSrcTxId: string, useBundler?: boolean): Promise<BundleInteractionResponse | string | null>;
 }
