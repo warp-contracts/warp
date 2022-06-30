@@ -7,3 +7,4 @@ export * from './deploy/Source';
 export * from './deploy/impl/SourceImpl';
 export * from './deploy/impl/DefaultCreateContract';
 export * from './deploy/CreateContract';
+export * from './migration/MigrationTool';
