@@ -116,7 +116,7 @@ async function viewStateForTx<Input, View>(input: Input, transaction: Interactio
 
 A version of the viewState method to be used from within the contract's source code. The transaction passed as an argument is the currently processed interaction transaction. The "caller" will be set to the owner of the interaction transaction, that requires to call this method.
 
-💡 Note! calling "interactRead" from withing contract's source code was not previously possible - this is a new feature.
+💡 Note! calling "interactRead" from within contract's source code was not previously possible - this is a new feature.
 
 - `input`                the interaction input
 - `transaction`          interaction transaction
