@@ -114,7 +114,7 @@ Returns the "view" of the state, computed by the SWC - ie. object that is a deri
 async function viewStateForTx<Input, View>(input: Input, transaction: InteractionTx): Promise<InteractionResult<State, View>>
 ```
 
-A version of the viewState method to be used from within the contract's source code. The transaction passed as an argument is the currently processed interaction transaction. The "caller" will be se to the owner of the interaction transaction, that requires to call this method.
+A version of the viewState method to be used from within the contract's source code. The transaction passed as an argument is the currently processed interaction transaction. The "caller" will be set to the owner of the interaction transaction, that requires to call this method.
 
 💡 Note! calling "interactRead" from withing contract's source code was not previously possible - this is a new feature.
 
