@@ -34,35 +34,82 @@ export const defaultCacheOptions: CacheOptions = {
   maxStoredTransactions: 10,
   inMemory: false
 };
+
 /**
  * A factory that simplifies the process of creating different versions of {@link Warp}.
  * All versions use the {@link Evolve} plugin.
  */
 export class WarpFactory {
   /**
-   * Returns a fully configured {@link Warp} that is using arweave.net compatible gateway
-   * (with a GQL endpoint) for loading the interactions and in memory cache.
-   * Suitable for testing.
+   * creates a Warp instance suitable for testing in a local environment
+   * (e.g. usually using ArLocal)
+   * @param arweave - an instance of Arweave
+   * @param cacheOptions - optional cache options. By default, the in-memory cache is used.
    */
-  static forTesting(arweave: Arweave): Warp {
-    return this.arweaveGw(arweave, {
-      maxStoredTransactions: 20,
+  static forLocal(
+    arweave: Arweave,
+    cacheOptions = {
+      ...defaultCacheOptions,
       inMemory: true
+    }
+  ) {
+    return this.customArweaveGw(arweave, cacheOptions);
+  }
+
+  /**
+   * creates a Warp instance suitable for testing
+   * with Warp testnet (https://testnet.redstone.tools/)
+   */
+  static forTestnet(cacheOptions = defaultCacheOptions) {
+    const arweave = Arweave.init({
+      host: 'testnet.redstone.tools',
+      port: 443,
+      protocol: 'https'
     });
+
+    return this.customArweaveGw(arweave, defaultCacheOptions);
+  }
+
+  /**
+   * creates a Warp instance suitable for use with mainnet.
+   * By default, the Warp gateway (https://github.com/warp-contracts/gateway#warp-gateway)
+   * is being used for:
+   * 1. deploying contracts
+   * 2. writing new transactions through Warp Sequencer
+   * 3. loading contract interactions
+   *
+   * @param cacheOptions - cache options, defaults {@link defaultCacheOptions}
+   * @param useArweaveGw - use arweave.net gateway for deploying contracts,
+   * writing and loading interactions
+   * @param arweave - custom Arweave instance
+   */
+  static forMainnet(
+    cacheOptions = defaultCacheOptions,
+    useArweaveGw = false,
+    arweave = Arweave.init({
+      host: 'arweave.net',
+      port: 443,
+      protocol: 'https'
+    })
+  ) {
+    if (useArweaveGw) {
+      return this.customArweaveGw(arweave, cacheOptions);
+    } else {
+      return this.customWarpGw(arweave, defaultWarpGwOptions, cacheOptions);
+    }
   }
 
   /**
    * Returns a fully configured {@link Warp} that is using arweave.net compatible gateway
-   * (with a GQL endpoint) for loading the interactions.
    */
-  static arweaveGw(arweave: Arweave, cacheOptions: CacheOptions = defaultCacheOptions): Warp {
+  static customArweaveGw(arweave: Arweave, cacheOptions: CacheOptions = defaultCacheOptions): Warp {
     return this.custom(arweave, cacheOptions).useArweaveGateway().build();
   }
 
   /**
-   * Returns a fully configured {@link Warp} that is using Warp gateway for loading the interactions.
+   * Returns a fully configured {@link Warp} that is using Warp gateway
    */
-  static warpGw(
+  static customWarpGw(
     arweave: Arweave,
     gatewayOptions: GatewayOptions = defaultWarpGwOptions,
     cacheOptions: CacheOptions = defaultCacheOptions
@@ -72,6 +119,11 @@ export class WarpFactory {
       .build();
   }
 
+  /**
+   * returns an instance of {@link WarpBuilder} that allows to fully customize the Warp instance.
+   * @param arweave
+   * @param cacheOptions
+   */
   static custom(arweave: Arweave, cacheOptions: CacheOptions): WarpBuilder {
     const cache = new LevelDbCache<EvalStateResult<unknown>>(cacheOptions);
 

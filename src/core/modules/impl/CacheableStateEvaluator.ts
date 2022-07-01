@@ -113,11 +113,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     state: EvalStateResult<State>,
     nthInteraction?: number
   ): Promise<void> {
-    if (
-      executionContext.evaluationOptions.updateCacheForEachInteraction /*||
-      executionContext.evaluationOptions.internalWrites*/ /*||
-      (nthInteraction || 1) % 100 == 0*/
-    ) {
+    if (executionContext.evaluationOptions.updateCacheForEachInteraction) {
       this.cLogger.debug(
         `onStateUpdate: cache update for contract ${executionContext.contractDefinition.txId} [${transaction.sortKey}]`,
         {
