@@ -49,13 +49,13 @@ describe('Testing the Arweave interactions loader', () => {
 
     loader = new ArweaveGatewayInteractionsLoader(arweave);
     sorter = new LexicographicalInteractionsSorter(arweave);
-    warp = WarpFactory.forTesting(arweave);
+    warp = WarpFactory.forLocal(arweave);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
 
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/inf-loop-contract.js'), 'utf8');
-    const contractTxId = await warp.createContract.deploy({
+    const { contractTxId } = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify({
         counter: 10

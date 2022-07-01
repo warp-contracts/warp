@@ -1,9 +1,7 @@
 /* eslint-disable */
-import {defaultArweaveMs, EvalStateResult, SmartWeaveTags, sortingLast} from '@warp/core';
+import {defaultArweaveMs, EvalStateResult, sortingLast} from '@warp/core';
 import Arweave from 'arweave';
 import { LoggerFactory } from '@warp/logging';
-import Transaction from 'arweave/node/lib/transaction';
-import { ContractData, CreateContract, FromSrcTxContractData, SourceImpl } from '@warp/contract';
 import {LevelDbCache} from "@warp";
 import knex from "knex";
 

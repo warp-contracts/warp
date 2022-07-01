@@ -35,7 +35,7 @@ describe('Testing the Profit Sharing Token', () => {
 
     LoggerFactory.INST.logLevel('error');
 
-    warp = WarpFactory.forTesting(arweave);
+    warp = WarpFactory.forLocal(arweave);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);

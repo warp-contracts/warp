@@ -26,8 +26,7 @@ export class WarpBuilder {
   private _executorFactory?: ExecutorFactory<HandlerApi<unknown>>;
   private _stateEvaluator?: StateEvaluator;
 
-  constructor(private readonly _arweave: Arweave, private readonly _cache: LevelDbCache<EvalStateResult<unknown>>) {
-  }
+  constructor(private readonly _arweave: Arweave, private readonly _cache: LevelDbCache<EvalStateResult<unknown>>) {}
 
   public setDefinitionLoader(value: DefinitionLoader): WarpBuilder {
     this._definitionLoader = value;

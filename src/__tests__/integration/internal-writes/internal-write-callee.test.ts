@@ -76,7 +76,7 @@ describe('Testing internal writes', () => {
   });
 
   async function deployContracts() {
-    warp = WarpFactory.forTesting(arweave);
+    warp = WarpFactory.forLocal(arweave);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -264,12 +264,12 @@ describe('Testing internal writes', () => {
     });
 
     it('should properly evaluate state again with a new client', async () => {
-      const calleeContract2 = WarpFactory.forTesting(arweave)
+      const calleeContract2 = WarpFactory.forLocal(arweave)
         .contract<ExampleContractState>(calleeTxId)
         .setEvaluationOptions({
           internalWrites: true
         });
-      const calleeContract2VM = WarpFactory.forTesting(arweave)
+      const calleeContract2VM = WarpFactory.forLocal(arweave)
         .contract<ExampleContractState>(calleeTxId)
         .setEvaluationOptions({
           internalWrites: true,

@@ -7,7 +7,7 @@ import {
   ArweaveGatewayInteractionsLoader,
   defaultCacheOptions,
   EvaluationOptions,
-  GQLEdgeInterface,
+  GQLEdgeInterface, GQLNodeInterface,
   InteractionsLoader,
   LexicographicalInteractionsSorter,
   LoggerFactory,
@@ -125,7 +125,7 @@ describe('Testing the Profit Sharing Token', () => {
   });
 
   it('should throw if random cannot be verified', async () => {
-    const txId = await pst.writeInteraction({
+    const { originalTxId: txId } = await pst.writeInteraction({
       function: 'vrf'
     });
     await mineBlock(arweave);
@@ -133,7 +133,7 @@ describe('Testing the Profit Sharing Token', () => {
     await expect(pst.readState()).rejects.toThrow('Vrf verification failed.');
     useWrongIndex.pop();
 
-    const txId2 = await pst.writeInteraction({
+    const { originalTxId: txId2 } = await pst.writeInteraction({
       function: 'vrf'
     });
     await mineBlock(arweave);
@@ -150,24 +150,24 @@ class VrfDecorator extends ArweaveGatewayInteractionsLoader {
 
   async load(
     contractTxId: string,
-    fromBlockHeight: number,
-    toBlockHeight: number,
-    evaluationOptions: EvaluationOptions
-  ): Promise<GQLEdgeInterface[]> {
-    const result = await super.load(contractTxId, fromBlockHeight, toBlockHeight, evaluationOptions);
+    fromSortKey?: string,
+    toSortKey?: string,
+    evaluationOptions?: EvaluationOptions
+  ): Promise<GQLNodeInterface[]> {
+    const result = await super.load(contractTxId, fromSortKey, toSortKey, evaluationOptions);
     const arUtils = this.arweave.utils;
 
     const sorter = new LexicographicalInteractionsSorter(this.arweave);
 
     for (const r of result) {
-      r.node.sortKey = await sorter.createSortKey(r.node.block.id, r.node.id, r.node.block.height);
-      const data = arUtils.stringToBuffer(r.node.sortKey);
+      r.sortKey = await sorter.createSortKey(r.block.id, r.id, r.block.height);
+      const data = arUtils.stringToBuffer(r.sortKey);
       const [index, proof] = Evaluate(key.getPrivate().toArray(), data);
-      r.node.vrf = {
-        index: useWrongIndex.includes(r.node.id)
+      r.vrf = {
+        index: useWrongIndex.includes(r.id)
           ? arUtils.bufferTob64Url(Uint8Array.of(1, 2, 3))
           : arUtils.bufferTob64Url(index),
-        proof: useWrongProof.includes(r.node.id)
+        proof: useWrongProof.includes(r.id)
           ? 'pK5HGnXo_rJkZPJorIX7TBCAEikcemL2DgJaPB3Pfm2D6tZUdK9mDuBSRUkcHUDNnrO02O0-ogq1e32JVEuVvgR4i5YFa-UV9MEoHgHg4yv0e318WNfzNWPc9rlte7P7RoO57idHu5SSkm7Qj0f4pBjUR7lWODVKBYp9fEJ-PObZ'
           : arUtils.bufferTob64Url(proof),
         bigint: bufToBn(index).toString(),

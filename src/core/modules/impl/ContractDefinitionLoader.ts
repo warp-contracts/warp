@@ -12,6 +12,7 @@ import {
 } from '@warp';
 import Arweave from 'arweave';
 import Transaction from 'arweave/web/lib/transaction';
+import { GW_TYPE } from '../InteractionsLoader';
 import { WasmSrc } from './wasm/WasmSrc';
 
 const supportedSrcContentTypes = ['application/javascript', 'application/wasm'];
@@ -128,5 +129,9 @@ export class ContractDefinitionLoader implements DefinitionLoader {
     } else {
       return this.arweaveWrapper.txDataString(contractTx.id);
     }
+  }
+
+  type(): GW_TYPE {
+    throw 'arweave';
   }
 }
