@@ -46,7 +46,7 @@ export class WarpFactory {
    */
   static forTesting(arweave: Arweave): Warp {
     return this.arweaveGw(arweave, {
-      maxStoredTransactions: 20,
+      ...defaultCacheOptions,
       inMemory: true
     });
   }
