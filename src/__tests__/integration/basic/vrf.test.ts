@@ -125,7 +125,7 @@ describe('Testing the Profit Sharing Token', () => {
   });
 
   it('should throw if random cannot be verified', async () => {
-    const txId = await pst.writeInteraction({
+    const { originalTxId: txId } = await pst.writeInteraction({
       function: 'vrf'
     });
     await mineBlock(arweave);
@@ -133,7 +133,7 @@ describe('Testing the Profit Sharing Token', () => {
     await expect(pst.readState()).rejects.toThrow('Vrf verification failed.');
     useWrongIndex.pop();
 
-    const txId2 = await pst.writeInteraction({
+    const { originalTxId: txId2 } = await pst.writeInteraction({
       function: 'vrf'
     });
     await mineBlock(arweave);

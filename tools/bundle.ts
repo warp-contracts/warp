@@ -1,6 +1,6 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import {BundleInteractionResponse, LoggerFactory, WarpNodeFactory} from '../src';
+import {WriteInteractionResponse, LoggerFactory, WarpNodeFactory} from '../src';
 import { TsLogFactory } from '../src/logging/node/TsLogFactory';
 import path from 'path';
 import knex from 'knex';
@@ -61,7 +61,7 @@ async function main() {
     // calling "writeInteraction" without connecting to a wallet first will cause a runtime error.
     .connect(wallet);
 
-  const result: BundleInteractionResponse = await token.bundleInteraction<any>(
+  const result: WriteInteractionResponse = await token.bundleInteraction<any>(
     {
       function: 'vrf'
     },

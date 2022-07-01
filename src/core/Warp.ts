@@ -40,7 +40,7 @@ export class Warp {
     readonly executorFactory: ExecutorFactory<HandlerApi<unknown>>,
     readonly stateEvaluator: StateEvaluator
   ) {
-    this.createContract = new DefaultCreateContract(arweave);
+    this.createContract = new DefaultCreateContract(arweave, this);
     this.migrationTool = new MigrationTool(arweave, levelDb);
   }
 
