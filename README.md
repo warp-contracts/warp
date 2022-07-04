@@ -124,16 +124,16 @@ Bundle files are possible to use in web environment only. Use minified version f
 
 ```html
 <!-- Latest -->
-<script src="https://unpkg.com/warp/bundles/web.bundle.js"></script>
+<script src="https://unpkg.com/warp-contracts/bundles/web.bundle.js"></script>
 
 <!-- Latest, minified-->
-<script src="https://unpkg.com/warp/bundles/web.bundle.min.js"></script>
+<script src="https://unpkg.com/warp-contracts/bundles/web.bundle.min.js"></script>
 
 <!-- Specific version -->
-<script src="https://unpkg.com/warp@1.0.0/bundles/web.bundle.js"></script>
+<script src="https://unpkg.com/warp-contracts@1.0.0/bundles/web.bundle.js"></script>
 
 <!-- Specific version, minified -->
-<script src="https://unpkg.com/warp@1.0.0/bundles/web.bundle.min.js"></script>
+<script src="https://unpkg.com/warp-contracts@1.0.0/bundles/web.bundle.min.js"></script>
 ```
 
 All exports are stored under `warp` global variable.
