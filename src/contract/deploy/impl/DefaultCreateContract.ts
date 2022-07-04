@@ -1,5 +1,5 @@
 /* eslint-disable */
-import {SmartWeaveTags, Warp} from '@warp/core';
+import { SmartWeaveTags, Warp } from '@warp/core';
 import Arweave from 'arweave';
 import { LoggerFactory } from '@warp/logging';
 import Transaction from 'arweave/node/lib/transaction';

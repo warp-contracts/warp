@@ -3,10 +3,10 @@ import fs from 'fs';
 
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
-import {JWKInterface} from 'arweave/node/lib/wallet';
-import {Contract, LoggerFactory, Warp, WarpFactory} from '@warp';
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import { Contract, LoggerFactory, Warp, WarpFactory } from '@warp';
 import path from 'path';
-import {mineBlock} from '../_helpers';
+import { mineBlock } from '../_helpers';
 
 /**
  * This test verifies "write-backs" between contracts:
@@ -69,7 +69,7 @@ describe('Testing internal writes', () => {
 
   async function deployContracts() {
     warp = WarpFactory.forLocal(port);
-    ({arweave} = warp);
+    ({ arweave } = warp);
 
     wallet = await warp.testing.generateWallet();
 
