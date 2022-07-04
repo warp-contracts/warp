@@ -3,10 +3,10 @@ import fs from 'fs';
 
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
-import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, LoggerFactory, Warp, WarpFactory } from '@warp';
+import {JWKInterface} from 'arweave/node/lib/wallet';
+import {Contract, LoggerFactory, Warp, WarpFactory} from '@warp';
 import path from 'path';
-import { addFunds, mineBlock } from '../_helpers';
+import {mineBlock} from '../_helpers';
 
 /**
  * This test verifies "write-backs" between contracts:
@@ -53,18 +53,13 @@ describe('Testing internal writes', () => {
   let contractATxId;
   let contractBTxId;
 
+  const port = 1900;
+
   beforeAll(async () => {
     // note: each tests suit (i.e. file with tests that Jest is running concurrently
     // with another files has to have ArLocal set to a different port!)
-    arlocal = new ArLocal(1900, false);
+    arlocal = new ArLocal(port, false);
     await arlocal.start();
-
-    arweave = Arweave.init({
-      host: 'localhost',
-      port: 1900,
-      protocol: 'http'
-    });
-
     LoggerFactory.INST.logLevel('error');
   });
 
@@ -73,10 +68,10 @@ describe('Testing internal writes', () => {
   });
 
   async function deployContracts() {
-    warp = WarpFactory.forLocal(arweave);
+    warp = WarpFactory.forLocal(port);
+    ({arweave} = warp);
 
-    wallet = await arweave.wallets.generate();
-    await addFunds(arweave, wallet);
+    wallet = await warp.testing.generateWallet();
 
     contractASrc = fs.readFileSync(path.join(__dirname, '../data/writing-contract.js'), 'utf8');
     contractAInitialState = fs.readFileSync(path.join(__dirname, '../data/writing-contract-state.json'), 'utf8');
@@ -108,7 +103,7 @@ describe('Testing internal writes', () => {
       })
       .connect(wallet);
 
-    await mineBlock(arweave);
+    await mineBlock(warp);
   }
 
   describe('with read states in between', () => {
@@ -137,7 +132,7 @@ describe('Testing internal writes', () => {
         contractId: contractBTxId,
         amount: 100
       });
-      await mineBlock(arweave);
+      await mineBlock(warp);
       expect((await contractA.readState()).state.counter).toEqual(855);
       expect((await contractB.readState()).state.counter).toEqual(755);
     });
@@ -152,13 +147,13 @@ describe('Testing internal writes', () => {
         contractId: contractBTxId,
         amount: 50
       });
-      await mineBlock(arweave);
+      await mineBlock(warp);
       await contractB.writeInteraction({
         function: 'addAmount',
         contractId: contractBTxId,
         amount: 20
       });
-      await mineBlock(arweave);
+      await mineBlock(warp);
 
       await contractA.writeInteraction({
         function: 'addAmount',
@@ -170,18 +165,18 @@ describe('Testing internal writes', () => {
         contractId: contractBTxId,
         amount: 30
       });
-      await mineBlock(arweave);
+      await mineBlock(warp);
 
       expect((await contractA.readState()).state.counter).toEqual(1055);
       expect((await contractB.readState()).state.counter).toEqual(805);
     });
 
     it('should properly evaluate state with a new client', async () => {
-      const contractA2 = WarpFactory.forLocal(arweave)
+      const contractA2 = WarpFactory.forLocal(port)
         .contract<any>(contractATxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
-      const contractB2 = WarpFactory.forLocal(arweave)
+      const contractB2 = WarpFactory.forLocal(port)
         .contract<any>(contractBTxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
@@ -206,7 +201,7 @@ describe('Testing internal writes', () => {
         contractId: contractBTxId,
         amount: 200
       });
-      await mineBlock(arweave);
+      await mineBlock(warp);
       expect((await contractA.readState()).state.counter).toEqual(-805);
       expect((await contractB.readState()).state.counter).toEqual(2060);
     });
@@ -217,11 +212,11 @@ describe('Testing internal writes', () => {
     });
 
     xit('should properly evaluate state with a new client', async () => {
-      const contractA2 = WarpFactory.forLocal(arweave)
+      const contractA2 = WarpFactory.forLocal(port)
         .contract<any>(contractATxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
-      const contractB2 = WarpFactory.forLocal(arweave)
+      const contractB2 = WarpFactory.forLocal(port)
         .contract<any>(contractBTxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
@@ -241,20 +236,20 @@ describe('Testing internal writes', () => {
         contractId: contractBTxId,
         amount: 100
       });
-      await mineBlock(arweave);
+      await mineBlock(warp);
 
       await contractA.writeInteraction({
         function: 'addAmount',
         contractId: contractBTxId,
         amount: 50
       });
-      await mineBlock(arweave);
+      await mineBlock(warp);
       await contractB.writeInteraction({
         function: 'addAmount',
         contractId: contractBTxId,
         amount: 20
       });
-      await mineBlock(arweave);
+      await mineBlock(warp);
 
       await contractA.writeInteraction({
         function: 'addAmount',
@@ -266,25 +261,25 @@ describe('Testing internal writes', () => {
         contractId: contractBTxId,
         amount: 30
       });
-      await mineBlock(arweave);
+      await mineBlock(warp);
 
       await contractA.writeInteraction({
         function: 'writeBackCheck',
         contractId: contractBTxId,
         amount: 200
       });
-      await mineBlock(arweave);
+      await mineBlock(warp);
 
       expect((await contractA.readState()).state.counter).toEqual(-805);
       expect((await contractB.readState()).state.counter).toEqual(2060);
     });
 
     xit('should properly evaluate state with a new client', async () => {
-      const contractA2 = WarpFactory.forLocal(arweave)
+      const contractA2 = WarpFactory.forLocal(port)
         .contract<any>(contractATxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
-      const contractB2 = WarpFactory.forLocal(arweave)
+      const contractB2 = WarpFactory.forLocal(port)
         .contract<any>(contractBTxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
@@ -314,7 +309,7 @@ describe('Testing internal writes', () => {
         contractId: contractBTxId,
         amount: 100
       });
-      await mineBlock(arweave);
+      await mineBlock(warp);
       expect((await contractA.readState()).state.counter).toEqual(855);
     });
   });
@@ -334,16 +329,16 @@ describe('Testing internal writes', () => {
         contractId: contractBTxId,
         amount: 100
       });
-      await mineBlock(arweave);
+      await mineBlock(warp);
       expect((await contractB.readState()).state.counter).toEqual(755);
     });
 
     it('should properly evaluate state with a new client', async () => {
-      const contractA2 = WarpFactory.forLocal(arweave)
+      const contractA2 = WarpFactory.forLocal(port)
         .contract<any>(contractATxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
-      const contractB2 = WarpFactory.forLocal(arweave)
+      const contractB2 = WarpFactory.forLocal(port)
         .contract<any>(contractBTxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);

@@ -3,9 +3,9 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, getTag, LoggerFactory, Warp, WarpFactory, SmartWeaveTags } from '@warp';
+import { Contract, getTag, LoggerFactory, SmartWeaveTags, Warp, WarpFactory } from '@warp';
 import path from 'path';
-import { addFunds, mineBlock } from '../_helpers';
+import { mineBlock } from '../_helpers';
 
 interface ExampleContractState {
   counter: number;
@@ -31,19 +31,12 @@ describe('Testing the Warp client for AssemblyScript WASM contract', () => {
     arlocal = new ArLocal(1300, false);
     await arlocal.start();
 
-    arweave = Arweave.init({
-      host: 'localhost',
-      port: 1300,
-      protocol: 'http'
-    });
-
     LoggerFactory.INST.logLevel('error');
 
-    warp = WarpFactory.forLocal(arweave);
+    warp = WarpFactory.forLocal(1300);
+    ({ arweave } = warp);
 
-    wallet = await arweave.wallets.generate();
-    await addFunds(arweave, wallet);
-
+    wallet = await warp.testing.generateWallet();
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/wasm/as/assemblyscript-counter.wasm'));
     initialState = fs.readFileSync(path.join(__dirname, '../data/wasm/counter-init-state.json'), 'utf8');
 
@@ -60,7 +53,7 @@ describe('Testing the Warp client for AssemblyScript WASM contract', () => {
     });
     contract.connect(wallet);
 
-    await mineBlock(arweave);
+    await mineBlock(warp);
   }, 50000);
 
   afterAll(async () => {
@@ -91,7 +84,7 @@ describe('Testing the Warp client for AssemblyScript WASM contract', () => {
   }, 10000);
 
   it('should properly read state after adding interactions', async () => {
-    await mineBlock(arweave);
+    await mineBlock(warp);
 
     expect((await contract.readState()).state.counter).toEqual(100);
   });
@@ -139,7 +132,7 @@ describe('Testing the Warp client for AssemblyScript WASM contract', () => {
 
   /*it('should skip interaction during contract state read if gas limit exceeded', async () => {
     const txId = await contract.writeInteraction({ function: 'infLoop' });
-    await mineBlock(arweave);
+    await mineBlock(warp);
 
     const result = await contract.readState();
 
@@ -160,15 +153,15 @@ describe('Testing the Warp client for AssemblyScript WASM contract', () => {
       src: newContractSrc,
       wasmSrcCodeDir: path.join(__dirname, '../data/wasm/as/assembly-evolve')
     });
-    await mineBlock(arweave);
+    await mineBlock(warp);
 
     await contract.evolve(newSrcTxId);
-    await mineBlock(arweave);
+    await mineBlock(warp);
 
     await contract.writeInteraction({
       function: 'increment'
     });
-    await mineBlock(arweave);
+    await mineBlock(warp);
 
     // note: evolve should increment by 2 instead of 1
     expect((await contract.readState()).state.counter).toEqual(102);

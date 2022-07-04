@@ -5,9 +5,8 @@ import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import { Contract, LoggerFactory, Warp, WarpFactory } from '@warp';
 import path from 'path';
-import { addFunds, mineBlock } from '../_helpers';
+import { mineBlock } from '../_helpers';
 
-let arweave: Arweave;
 let arlocal: ArLocal;
 let warp: Warp;
 let contract: Contract<any>;
@@ -24,18 +23,11 @@ describe('Testing the Warp client', () => {
     arlocal = new ArLocal(1800, false);
     await arlocal.start();
 
-    arweave = Arweave.init({
-      host: 'localhost',
-      port: 1800,
-      protocol: 'http'
-    });
-
     LoggerFactory.INST.logLevel('error');
 
-    warp = WarpFactory.forLocal(arweave);
+    warp = WarpFactory.forLocal(1800);
 
-    wallet = await arweave.wallets.generate();
-    await addFunds(arweave, wallet);
+    wallet = await warp.testing.generateWallet();
 
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/very-complicated-contract.js'), 'utf8');
 
@@ -53,7 +45,7 @@ describe('Testing the Warp client', () => {
     contract.connect(wallet);
     contractVM.connect(wallet);
 
-    await mineBlock(arweave);
+    await mineBlock(warp);
   });
 
   afterAll(async () => {

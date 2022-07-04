@@ -3,11 +3,10 @@ import fs from 'fs';
 
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
-import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, LoggerFactory, Warp, WarpFactory } from '@warp';
+import {JWKInterface} from 'arweave/node/lib/wallet';
+import {Contract, LoggerFactory, Warp, WarpFactory} from '@warp';
 import path from 'path';
-import { TsLogFactory } from '../../../logging/node/TsLogFactory';
-import { addFunds, mineBlock } from '../_helpers';
+import {mineBlock} from '../_helpers';
 
 /**
  * This tests verifies a standard approve/transferFrom workflow for a ERC-20ish token contract
@@ -36,19 +35,13 @@ describe('Testing internal writes', () => {
   let arlocal: ArLocal;
   let warp: Warp;
 
+  const port = 1950;
+
   beforeAll(async () => {
     // note: each tests suit (i.e. file with tests that Jest is running concurrently
     // with another files has to have ArLocal set to a different port!)
-    arlocal = new ArLocal(1950, false);
+    arlocal = new ArLocal(port, false);
     await arlocal.start();
-
-    arweave = Arweave.init({
-      host: 'localhost',
-      port: 1950,
-      protocol: 'http'
-    });
-
-    LoggerFactory.use(new TsLogFactory());
     LoggerFactory.INST.logLevel('error');
   });
 
@@ -57,10 +50,9 @@ describe('Testing internal writes', () => {
   });
 
   async function deployContracts() {
-    warp = WarpFactory.forLocal(arweave);
-
-    wallet = await arweave.wallets.generate();
-    await addFunds(arweave, wallet);
+    warp = WarpFactory.forLocal(port);
+    ({arweave} = warp);
+    wallet = await warp.testing.generateWallet();
     walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
     tokenContractSrc = fs.readFileSync(path.join(__dirname, '../data/staking/erc-20.js'), 'utf8');
@@ -92,7 +84,7 @@ describe('Testing internal writes', () => {
     tokenContract = warp.contract(tokenContractTxId).setEvaluationOptions({ internalWrites: true }).connect(wallet);
     stakingContract = warp.contract(stakingContractTxId).setEvaluationOptions({ internalWrites: true }).connect(wallet);
 
-    await mineBlock(arweave);
+    await mineBlock(warp);
   }
 
   describe('with read states in between', () => {
@@ -122,7 +114,7 @@ describe('Testing internal writes', () => {
         account: walletAddress,
         amount: 10000
       });
-      await mineBlock(arweave);
+      await mineBlock(warp);
 
       const tokenState = (await tokenContract.readState()).state;
 
@@ -137,7 +129,7 @@ describe('Testing internal writes', () => {
         function: 'stake',
         amount: 1000
       });
-      await mineBlock(arweave);
+      await mineBlock(warp);
 
       expect((await stakingContract.readState()).state.stakes).toEqual({});
 
@@ -153,7 +145,7 @@ describe('Testing internal writes', () => {
         spender: stakingContractTxId,
         amount: 9999
       });
-      await mineBlock(arweave);
+      await mineBlock(warp);
 
       expect((await tokenContract.readState()).state.allowances).toEqual({
         [walletAddress]: {
@@ -167,7 +159,7 @@ describe('Testing internal writes', () => {
         function: 'stake',
         amount: 1000
       });
-      await mineBlock(arweave);
+      await mineBlock(warp);
 
       expect((await stakingContract.readState()).state.stakes).toEqual({
         [walletAddress]: {
@@ -214,26 +206,26 @@ describe('Testing internal writes', () => {
         account: walletAddress,
         amount: 10000
       });
-      await mineBlock(arweave);
+      await mineBlock(warp);
 
       await stakingContract.writeInteraction({
         function: 'stake',
         amount: 1000
       });
-      await mineBlock(arweave);
+      await mineBlock(warp);
 
       await tokenContract.writeInteraction({
         function: 'approve',
         spender: stakingContractTxId,
         amount: 9999
       });
-      await mineBlock(arweave);
+      await mineBlock(warp);
 
       await stakingContract.writeInteraction({
         function: 'stake',
         amount: 1000
       });
-      await mineBlock(arweave);
+      await mineBlock(warp);
 
       const tokenState = (await tokenContract.readState()).state;
       expect(tokenState.balances).toEqual({

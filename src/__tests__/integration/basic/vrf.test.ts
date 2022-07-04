@@ -7,7 +7,7 @@ import {
   ArweaveGatewayInteractionsLoader,
   defaultCacheOptions,
   EvaluationOptions,
-  GQLEdgeInterface, GQLNodeInterface,
+  GQLNodeInterface,
   InteractionsLoader,
   LexicographicalInteractionsSorter,
   LoggerFactory,
@@ -17,7 +17,7 @@ import {
   WarpFactory
 } from '@warp';
 import path from 'path';
-import { addFunds, mineBlock } from '../_helpers';
+import { mineBlock } from '../_helpers';
 import { Evaluate } from '@idena/vrf-js';
 import elliptic from 'elliptic';
 
@@ -65,8 +65,7 @@ describe('Testing the Profit Sharing Token', () => {
       .setInteractionsLoader(loader)
       .build();
 
-    wallet = await arweave.wallets.generate();
-    await addFunds(arweave, wallet);
+    wallet = await warp.testing.generateWallet();
     walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/token-pst.js'), 'utf8');
@@ -95,7 +94,7 @@ describe('Testing the Profit Sharing Token', () => {
     // connecting wallet to the PST contract
     pst.connect(wallet);
 
-    await mineBlock(arweave);
+    await mineBlock(warp);
   });
 
   afterAll(async () => {
@@ -106,12 +105,10 @@ describe('Testing the Profit Sharing Token', () => {
     await pst.writeInteraction({
       function: 'vrf'
     });
-    await mineBlock(arweave);
+    await mineBlock(warp);
     const result = await pst.readState();
     const lastTxId = Object.keys(result.validity).pop();
     const vrf = (result.state as any).vrf[lastTxId];
-
-    console.log(vrf);
 
     expect(vrf).not.toBeUndefined();
     expect(vrf['random_6_1'] == vrf['random_6_2']).toBe(true);
@@ -128,7 +125,7 @@ describe('Testing the Profit Sharing Token', () => {
     const { originalTxId: txId } = await pst.writeInteraction({
       function: 'vrf'
     });
-    await mineBlock(arweave);
+    await mineBlock(warp);
     useWrongIndex.push(txId);
     await expect(pst.readState()).rejects.toThrow('Vrf verification failed.');
     useWrongIndex.pop();
@@ -136,7 +133,7 @@ describe('Testing the Profit Sharing Token', () => {
     const { originalTxId: txId2 } = await pst.writeInteraction({
       function: 'vrf'
     });
-    await mineBlock(arweave);
+    await mineBlock(warp);
     useWrongProof.push(txId2);
     await expect(pst.readState()).rejects.toThrow('Vrf verification failed.');
     useWrongProof.pop();

@@ -5,8 +5,6 @@ import { MemoryLevel } from 'memory-level';
 
 export const DEFAULT_LEVEL_DB_LOCATION = './cache/warp';
 
-export const DEFAULT_MAX_ENTRIES_PER_CONTRACT = 5;
-
 /**
  * The LevelDB is a lexicographically sorted key-value database - so it's ideal for this use case
  * - as it simplifies cache look-ups (e.g. lastly stored value or value "lower-or-equal" than given sortKey).
@@ -26,15 +24,6 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
    * (the AbstractLevel is not exported from the package...)
    */
   private db: MemoryLevel;
-  private readonly maxStoredTransactions: number;
-
-  /**
-   * The LevelDB does not have an API that returns the current amount of stored elements
-   * - in order to get this value, each time all values have to be iterated and "manually" counted.
-   * That's not very good from the performance perspective, that's why the suggested
-   * approach is to store this (i.e. amount of cached entries) information externally.
-   */
-  private entriesLength: { [contractTxId: string]: number } = {};
 
   constructor(cacheOptions: CacheOptions) {
     if (cacheOptions.inMemory) {
@@ -44,8 +33,6 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
       this.logger.info(`Using location ${dbLocation}`);
       this.db = new Level<string, any>(dbLocation, { valueEncoding: 'json' });
     }
-    // note: setting to 0 is obv. wrong, so in that case we also fall back to a default value.
-    this.maxStoredTransactions = cacheOptions.maxStoredTransactions || DEFAULT_MAX_ENTRIES_PER_CONTRACT;
   }
 
   async get(contractTxId: string, sortKey: string, returnDeepCopy?: boolean): Promise<SortKeyCacheResult<V> | null> {
@@ -95,18 +82,7 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
 
   async put(stateCacheKey: StateCacheKey, value: V): Promise<void> {
     const contractCache = this.db.sublevel<string, any>(stateCacheKey.contractTxId, { valueEncoding: 'json' });
-    let entries = this.entriesLength[stateCacheKey.contractTxId];
-    if (entries == undefined) {
-      const allEntries = await contractCache.iterator().all();
-      entries = this.entriesLength[stateCacheKey.contractTxId] = allEntries.length;
-    }
-    if (entries >= this.maxStoredTransactions * 2) {
-      await contractCache.clear({ limit: this.maxStoredTransactions });
-      entries = this.entriesLength[stateCacheKey.contractTxId] = entries - this.maxStoredTransactions;
-    }
-
     await contractCache.put(stateCacheKey.sortKey, value);
-    this.entriesLength[stateCacheKey.contractTxId] = entries + 1;
   }
 
   close(): Promise<void> {

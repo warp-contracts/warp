@@ -191,9 +191,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const effectiveTransfer = options?.transfer || emptyTransfer;
     const effectiveStrict = options?.strict === true;
     const effectiveVrf = options?.vrf === true;
-    const effectiveDirectWrite = options?.directWrite === true;
+    const effectiveDisableBundling = options?.disableBundling === true;
+    const effectiveReward = options?.reward;
 
-    const bundleInteraction = interactionsLoader.type() == 'warp' && !effectiveDirectWrite;
+    const bundleInteraction = interactionsLoader.type() == 'warp' && !effectiveDisableBundling;
 
     if (
       bundleInteraction &&
@@ -214,7 +215,15 @@ export class HandlerBasedContract<State> implements Contract<State> {
         vrf: effectiveVrf
       });
     } else {
-      const interactionTx = await this.createInteraction(input, effectiveTags, effectiveTransfer, effectiveStrict);
+      const interactionTx = await this.createInteraction(
+        input,
+        effectiveTags,
+        effectiveTransfer,
+        effectiveStrict,
+        false,
+        false,
+        effectiveReward
+      );
       const response = await arweave.transactions.post(interactionTx);
 
       if (response.status !== 200) {
@@ -284,7 +293,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     transfer: ArTransfer,
     strict: boolean,
     bundle = false,
-    vrf = false
+    vrf = false,
+    reward?: string
   ) {
     if (this._evaluationOptions.internalWrites) {
       // Call contract and verify if there are any internal writes:
@@ -334,7 +344,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
       tags,
       transfer.target,
       transfer.winstonQty,
-      bundle
+      bundle,
+      reward
     );
     return interactionTx;
   }

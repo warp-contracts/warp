@@ -1,6 +1,6 @@
-import { ContractResultSchema } from '../contract';
-import { ActionSchema, StateSchema } from '../schemas';
-import { console } from '../imports';
+import {ContractResultSchema} from '../contract';
+import {ActionSchema, StateSchema} from '../schemas';
+import {console} from '../imports';
 
 export function fullName(state: StateSchema, action: ActionSchema): ContractResultSchema {
   console.log(`fullName called: "${action.function}"`);

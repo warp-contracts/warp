@@ -19,7 +19,6 @@ export type GatewayOptions = {
 };
 
 export type CacheOptions = {
-  maxStoredTransactions: number;
   inMemory: boolean;
   dbLocation?: string;
 };
@@ -31,7 +30,6 @@ export const defaultWarpGwOptions: GatewayOptions = {
 };
 
 export const defaultCacheOptions: CacheOptions = {
-  maxStoredTransactions: 10,
   inMemory: false
 };
 
@@ -47,12 +45,17 @@ export class WarpFactory {
    * @param cacheOptions - optional cache options. By default, the in-memory cache is used.
    */
   static forLocal(
-    arweave: Arweave,
+    port = 1984,
     cacheOptions = {
       ...defaultCacheOptions,
       inMemory: true
     }
   ) {
+    const arweave = Arweave.init({
+      host: 'localhost',
+      port: port,
+      protocol: 'http'
+    });
     return this.customArweaveGw(arweave, cacheOptions);
   }
 
@@ -98,27 +101,6 @@ export class WarpFactory {
       return this.customWarpGw(arweave, defaultWarpGwOptions, cacheOptions);
     }
   }
-
-  /**
-   * Returns a fully configured {@link Warp} that is using arweave.net compatible gateway
-   */
-  static customArweaveGw(arweave: Arweave, cacheOptions: CacheOptions = defaultCacheOptions): Warp {
-    return this.custom(arweave, cacheOptions).useArweaveGateway().build();
-  }
-
-  /**
-   * Returns a fully configured {@link Warp} that is using Warp gateway
-   */
-  static customWarpGw(
-    arweave: Arweave,
-    gatewayOptions: GatewayOptions = defaultWarpGwOptions,
-    cacheOptions: CacheOptions = defaultCacheOptions
-  ): Warp {
-    return this.custom(arweave, cacheOptions)
-      .useWarpGateway(gatewayOptions.confirmationStatus, gatewayOptions.source, gatewayOptions.address)
-      .build();
-  }
-
   /**
    * returns an instance of {@link WarpBuilder} that allows to fully customize the Warp instance.
    * @param arweave
@@ -131,5 +113,19 @@ export class WarpFactory {
     const stateEvaluator = new CacheableStateEvaluator(arweave, cache, [new Evolve()]);
 
     return Warp.builder(arweave, cache).setExecutorFactory(executorFactory).setStateEvaluator(stateEvaluator);
+  }
+
+  private static customArweaveGw(arweave: Arweave, cacheOptions: CacheOptions = defaultCacheOptions): Warp {
+    return this.custom(arweave, cacheOptions).useArweaveGateway().build();
+  }
+
+  private static customWarpGw(
+    arweave: Arweave,
+    gatewayOptions: GatewayOptions = defaultWarpGwOptions,
+    cacheOptions: CacheOptions = defaultCacheOptions
+  ): Warp {
+    return this.custom(arweave, cacheOptions)
+      .useWarpGateway(gatewayOptions.confirmationStatus, gatewayOptions.source, gatewayOptions.address)
+      .build();
   }
 }

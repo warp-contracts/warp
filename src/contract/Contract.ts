@@ -28,20 +28,29 @@ export interface WriteInteractionResponse {
   originalTxId: string;
 }
 
-export type WriteInteractionOptions = {
-  tags?: Tags;
-  transfer?: ArTransfer;
-  strict?: boolean;
+export type WarpOptions = {
   vrf?: boolean;
-  directWrite?: boolean;
+  disableBundling?: boolean;
 };
+
+export type ArweaveOptions = {
+  transfer?: ArTransfer;
+  reward?: string;
+};
+
+export type CommonOptions = {
+  tags?: Tags;
+  strict?: boolean;
+};
+
+export type WriteInteractionOptions = WarpOptions & ArweaveOptions & CommonOptions;
 /**
  * Interface describing state for all Evolve-compatible contracts.
  */
 export interface EvolveState {
   settings: any[] | unknown | null;
   /**
-   * whether contract is allowed to evolve. seems to default to true..
+   * whether contract is allowed to evolve.
    */
   canEvolve: boolean;
 
