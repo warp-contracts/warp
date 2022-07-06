@@ -6,7 +6,7 @@ import { kMaxLength } from 'buffer';
 
 /**
  *
- * This class is be exposed as a global for contracts
+ * This class is exposed as a global for contracts
  * as 'SmartWeave' and provides an API for getting further
  * information or using utility and crypto functions from
  * inside the contracts execution.
@@ -129,87 +129,87 @@ export class SmartWeaveGlobal {
 
 // tslint:disable-next-line: max-classes-per-file
 class Transaction {
-  constructor(private readonly global: SmartWeaveGlobal) {}
+  constructor(private readonly smartWeaveGlobal: SmartWeaveGlobal) {}
 
   get id() {
-    if (!this.global._activeTx) {
+    if (!this.smartWeaveGlobal._activeTx) {
       throw new Error('No current Tx');
     }
-    return this.global._activeTx.id;
+    return this.smartWeaveGlobal._activeTx.id;
   }
 
   get owner() {
-    if (!this.global._activeTx) {
+    if (!this.smartWeaveGlobal._activeTx) {
       throw new Error('No current Tx');
     }
-    return this.global._activeTx.owner.address;
+    return this.smartWeaveGlobal._activeTx.owner.address;
   }
 
   get target() {
-    if (!this.global._activeTx) {
+    if (!this.smartWeaveGlobal._activeTx) {
       throw new Error('No current Tx');
     }
-    return this.global._activeTx.recipient;
+    return this.smartWeaveGlobal._activeTx.recipient;
   }
 
   get tags(): GQLTagInterface[] {
-    if (!this.global._activeTx) {
+    if (!this.smartWeaveGlobal._activeTx) {
       throw new Error('No current Tx');
     }
-    return this.global._activeTx.tags;
+    return this.smartWeaveGlobal._activeTx.tags;
   }
 
   get quantity() {
-    if (!this.global._activeTx) {
+    if (!this.smartWeaveGlobal._activeTx) {
       throw new Error('No current Tx');
     }
-    return this.global._activeTx.quantity.winston;
+    return this.smartWeaveGlobal._activeTx.quantity.winston;
   }
 
   get reward() {
-    if (!this.global._activeTx) {
+    if (!this.smartWeaveGlobal._activeTx) {
       throw new Error('No current Tx');
     }
-    return this.global._activeTx.fee.winston;
+    return this.smartWeaveGlobal._activeTx.fee.winston;
   }
 }
 
 // tslint:disable-next-line: max-classes-per-file
 class Block {
-  constructor(private readonly global: SmartWeaveGlobal) {}
+  constructor(private readonly smartWeaveGlobal: SmartWeaveGlobal) {}
 
   get height() {
-    if (!this.global._activeTx) {
+    if (!this.smartWeaveGlobal._activeTx) {
       throw new Error('No current Tx');
     }
-    return this.global._activeTx.block.height;
+    return this.smartWeaveGlobal._activeTx.block.height;
   }
 
   get indep_hash() {
-    if (!this.global._activeTx) {
+    if (!this.smartWeaveGlobal._activeTx) {
       throw new Error('No current Tx');
     }
-    return this.global._activeTx.block.id;
+    return this.smartWeaveGlobal._activeTx.block.id;
   }
 
   get timestamp() {
-    if (!this.global._activeTx) {
+    if (!this.smartWeaveGlobal._activeTx) {
       throw new Error('No current tx');
     }
-    return this.global._activeTx.block.timestamp;
+    return this.smartWeaveGlobal._activeTx.block.timestamp;
   }
 }
 
 class Vrf {
-  constructor(private readonly global: SmartWeaveGlobal) {}
+  constructor(private readonly smartWeaveGlobal: SmartWeaveGlobal) {}
 
   get data(): VrfData {
-    return this.global._activeTx.vrf;
+    return this.smartWeaveGlobal._activeTx.vrf;
   }
 
   // returns the original generated random number as a BigInt string;
   get value(): string {
-    return this.global._activeTx.vrf.bigint;
+    return this.smartWeaveGlobal._activeTx.vrf.bigint;
   }
 
   // returns a random value in a range from 1 to maxValue
@@ -217,7 +217,7 @@ class Vrf {
     if (!Number.isInteger(maxValue)) {
       throw new Error('Integer max value required for random integer generation');
     }
-    const result = (BigInt(this.global._activeTx.vrf.bigint) % BigInt(maxValue)) + BigInt(1);
+    const result = (BigInt(this.smartWeaveGlobal._activeTx.vrf.bigint) % BigInt(maxValue)) + BigInt(1);
 
     if (result > Number.MAX_SAFE_INTEGER || result < Number.MIN_SAFE_INTEGER) {
       throw new Error('Random int cannot be cast to number');
