@@ -144,6 +144,24 @@ All exports are stored under `warp` global variable.
 </script>
 ```
 
+#### Using esm bundles
+
+Bundle files are possible to use in esm web environment only. Use minified version for production. It is possible to use latest or specified version.
+
+```html
+<!-- Latest -->
+<script src="https://unpkg.com/warp-contracts/bundles/esm.bundle.js"></script>
+
+<!-- Latest, minified-->
+<script src="https://unpkg.com/warp-contracts/bundles/esm.bundle.min.js"></script>
+
+<!-- Specific version -->
+<script src="https://unpkg.com/warp-contracts@1.0.0/bundles/esm.bundle.js"></script>
+
+<!-- Specific version, minified -->
+<script src="https://unpkg.com/warp-contracts@1.0.0/bundles/esm.bundle.min.js"></script>
+```
+
 ### Using the Warp Gateway
 
 #### SDK version >= `0.5.0`
