@@ -1,5 +1,5 @@
 /* eslint-disable */
-import {SmartWeaveTags, Warp, WARP_GW_URL} from '@warp/core';
+import { SmartWeaveTags, Warp, WARP_GW_URL } from '@warp/core';
 import Arweave from 'arweave';
 import { LoggerFactory } from '@warp/logging';
 import Transaction from 'arweave/node/lib/transaction';
@@ -15,7 +15,8 @@ export class DefaultCreateContract implements CreateContract {
   async deploy(contractData: ContractData, disableBundling?: boolean): Promise<ContractDeploy> {
     const { wallet, initState, tags, transfer, data } = contractData;
 
-    const effectiveUseBundler = disableBundling == undefined ? this.warp.definitionLoader.type() == 'warp' : !disableBundling;
+    const effectiveUseBundler =
+      disableBundling == undefined ? this.warp.definitionLoader.type() == 'warp' : !disableBundling;
 
     const source = new SourceImpl(this.arweave);
 
@@ -44,7 +45,8 @@ export class DefaultCreateContract implements CreateContract {
     this.logger.debug('Creating new contract from src tx');
     const { wallet, srcTxId, initState, tags, transfer, data } = contractData;
 
-    const effectiveUseBundler = disableBundling == undefined ? this.warp.definitionLoader.type() == 'warp' : !disableBundling;
+    const effectiveUseBundler =
+      disableBundling == undefined ? this.warp.definitionLoader.type() == 'warp' : !disableBundling;
 
     let contractTX = await this.arweave.createTransaction({ data: data?.body || initState }, wallet);
 

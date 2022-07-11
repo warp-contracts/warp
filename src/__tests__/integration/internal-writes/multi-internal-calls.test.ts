@@ -102,9 +102,18 @@ describe('Testing internal writes', () => {
       src: contractBSrc
     }));
 
-    contractA = warp.contract(contractATxId).setEvaluationOptions({ internalWrites: true, mineArLocalBlocks: false }).connect(wallet);
-    contractB = warp.contract(contractBTxId).setEvaluationOptions({ internalWrites: true, mineArLocalBlocks: false }).connect(wallet);
-    contractC = warp.contract(contractCTxId).setEvaluationOptions({ internalWrites: true, mineArLocalBlocks: false }).connect(wallet);
+    contractA = warp
+      .contract(contractATxId)
+      .setEvaluationOptions({ internalWrites: true, mineArLocalBlocks: false })
+      .connect(wallet);
+    contractB = warp
+      .contract(contractBTxId)
+      .setEvaluationOptions({ internalWrites: true, mineArLocalBlocks: false })
+      .connect(wallet);
+    contractC = warp
+      .contract(contractCTxId)
+      .setEvaluationOptions({ internalWrites: true, mineArLocalBlocks: false })
+      .connect(wallet);
 
     await mineBlock(warp);
   }

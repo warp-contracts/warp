@@ -111,7 +111,7 @@ describe('Testing internal writes', () => {
       .contract(callingTxId)
       .setEvaluationOptions({
         internalWrites: true,
-        mineArLocalBlocks: false,
+        mineArLocalBlocks: false
       })
       .connect(wallet);
     callingContractVM = warp
