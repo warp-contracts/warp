@@ -1,7 +1,6 @@
 import fs from 'fs';
 
 import ArLocal from 'arlocal';
-import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import {
   ArweaveGatewayInteractionsLoader,
@@ -61,7 +60,8 @@ describe('Testing the Arweave interactions loader', () => {
     contract = warp
       .contract<ExampleContractState>(contractTxId)
       .setEvaluationOptions({
-        maxInteractionEvaluationTimeSeconds: 1
+        maxInteractionEvaluationTimeSeconds: 1,
+        mineArLocalBlocks: false
       })
       .connect(wallet);
 

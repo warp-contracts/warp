@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { SmartWeaveTags, Warp } from '@warp/core';
+import {SmartWeaveTags, Warp, WARP_GW_URL} from '@warp/core';
 import Arweave from 'arweave';
 import { LoggerFactory } from '@warp/logging';
 import Transaction from 'arweave/node/lib/transaction';
@@ -12,14 +12,14 @@ export class DefaultCreateContract implements CreateContract {
     this.deployFromSourceTx = this.deployFromSourceTx.bind(this);
   }
 
-  async deploy(contractData: ContractData, useBundler = false): Promise<ContractDeploy> {
+  async deploy(contractData: ContractData, disableBundling?: boolean): Promise<ContractDeploy> {
     const { wallet, initState, tags, transfer, data } = contractData;
 
-    const effectiveUseBundlr = useBundler == undefined ? this.warp.definitionLoader.type() == 'warp' : useBundler;
+    const effectiveUseBundler = disableBundling == undefined ? this.warp.definitionLoader.type() == 'warp' : !disableBundling;
 
     const source = new SourceImpl(this.arweave);
 
-    const srcTx = await source.save(contractData, wallet, effectiveUseBundlr);
+    const srcTx = await source.save(contractData, wallet, effectiveUseBundler);
     this.logger.debug('Creating new contract');
 
     return await this.deployFromSourceTx(
@@ -31,20 +31,20 @@ export class DefaultCreateContract implements CreateContract {
         transfer,
         data
       },
-      effectiveUseBundlr,
+      !effectiveUseBundler,
       srcTx
     );
   }
 
   async deployFromSourceTx(
     contractData: FromSrcTxContractData,
-    useBundler = false,
+    disableBundling?: boolean,
     srcTx: Transaction = null
   ): Promise<ContractDeploy> {
     this.logger.debug('Creating new contract from src tx');
     const { wallet, srcTxId, initState, tags, transfer, data } = contractData;
 
-    const effectiveUseBundlr = useBundler == undefined ? this.warp.definitionLoader.type() == 'warp' : useBundler;
+    const effectiveUseBundler = disableBundling == undefined ? this.warp.definitionLoader.type() == 'warp' : !disableBundling;
 
     let contractTX = await this.arweave.createTransaction({ data: data?.body || initState }, wallet);
 
@@ -80,7 +80,7 @@ export class DefaultCreateContract implements CreateContract {
 
     let responseOk: boolean;
     let response: { status: number; statusText: string; data: any };
-    if (effectiveUseBundlr) {
+    if (effectiveUseBundler) {
       const result = await this.post(contractTX, srcTx);
       this.logger.debug(result);
       responseOk = true;
@@ -109,7 +109,7 @@ export class DefaultCreateContract implements CreateContract {
       };
     }
 
-    const response = await fetch(`https://d1o5nlqr4okus2.cloudfront.net/gateway/contracts/deploy`, {
+    const response = await fetch(`${WARP_GW_URL}/gateway/contracts/deploy`, {
       method: 'POST',
       body: JSON.stringify(body),
       headers: {

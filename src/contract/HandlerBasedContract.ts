@@ -237,6 +237,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
         await this.waitForConfirmation(interactionTx.id);
         this.logger.info('Transaction confirmed after', benchmark.elapsed());
       }
+
+      if (this.warp.environment == 'local' && this._evaluationOptions.mineArLocalBlocks) {
+        await this.warp.testing.mineBlock();
+      }
+
       return { originalTxId: interactionTx.id };
     }
   }

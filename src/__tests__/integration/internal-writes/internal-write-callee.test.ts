@@ -94,28 +94,32 @@ describe('Testing internal writes', () => {
     calleeContract = warp
       .contract<ExampleContractState>(calleeTxId)
       .setEvaluationOptions({
-        internalWrites: true
+        internalWrites: true,
+        mineArLocalBlocks: false
       })
       .connect(wallet);
     calleeContractVM = warp
       .contract<ExampleContractState>(calleeTxId)
       .setEvaluationOptions({
         internalWrites: true,
-        useVM2: true
+        useVM2: true,
+        mineArLocalBlocks: false
       })
       .connect(wallet);
 
     callingContract = warp
       .contract(callingTxId)
       .setEvaluationOptions({
-        internalWrites: true
+        internalWrites: true,
+        mineArLocalBlocks: false,
       })
       .connect(wallet);
     callingContractVM = warp
       .contract(callingTxId)
       .setEvaluationOptions({
         internalWrites: true,
-        useVM2: true
+        useVM2: true,
+        mineArLocalBlocks: false
       })
       .connect(wallet);
 

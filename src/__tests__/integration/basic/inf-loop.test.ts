@@ -45,7 +45,8 @@ describe('Testing the Warp client', () => {
     contract = warp
       .contract<ExampleContractState>(contractTxId)
       .setEvaluationOptions({
-        maxInteractionEvaluationTimeSeconds: 1
+        maxInteractionEvaluationTimeSeconds: 1,
+        mineArLocalBlocks: false
       })
       .connect(wallet);
 

@@ -53,7 +53,7 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
         const result2 = await WarpFactory.custom(arweave, {
           ...defaultCacheOptions,
           inMemory: true
-        })
+        }, envrionment)
           .useWarpGateway(null, SourceType.ARWEAVE)
           .build()
           .contract(contractTxId)
@@ -85,7 +85,7 @@ describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
       const result2 = await WarpFactory.custom(arweave, {
         ...defaultCacheOptions,
         inMemory: true
-      })
+      }, envrionment)
         .useWarpGateway(null, SourceType.ARWEAVE)
         .build()
         .contract(contractTxId)
@@ -113,7 +113,7 @@ describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
       const warpR = await WarpFactory.custom(arweave, {
         ...defaultCacheOptions,
         inMemory: true
-      })
+      }, envrionment)
         .useWarpGateway(null, SourceType.ARWEAVE)
         .build();
       const result = await warpR.contract(contractTxId).readState(blockHeight);
@@ -123,7 +123,7 @@ describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
       const result2 = await WarpFactory.custom(arweave, {
         ...defaultCacheOptions,
         inMemory: true
-      })
+      }, envrionment)
         .useArweaveGateway()
         .build()
         .contract(contractTxId)
@@ -145,7 +145,7 @@ describe('readState', () => {
     const result2 = await WarpFactory.custom(arweave, {
       ...defaultCacheOptions,
       inMemory: true
-    })
+    }, envrionment)
       .useWarpGateway(null, SourceType.ARWEAVE)
       .build()
       .contract(contractTxId)
@@ -169,7 +169,7 @@ describe('readState', () => {
     const v2Result = await WarpFactory.custom(arweave, {
       ...defaultCacheOptions,
       inMemory: true
-    })
+    }, envrionment)
       .useWarpGateway(null, SourceType.ARWEAVE)
       .build()
       .contract(contractTxId)

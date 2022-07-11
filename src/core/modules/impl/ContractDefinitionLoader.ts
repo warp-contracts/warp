@@ -132,6 +132,6 @@ export class ContractDefinitionLoader implements DefinitionLoader {
   }
 
   type(): GW_TYPE {
-    throw 'arweave';
+    return 'arweave';
   }
 }

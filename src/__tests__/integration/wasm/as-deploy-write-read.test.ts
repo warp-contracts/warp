@@ -49,7 +49,8 @@ describe('Testing the Warp client for AssemblyScript WASM contract', () => {
     }));
 
     contract = warp.contract<ExampleContractState>(contractTxId).setEvaluationOptions({
-      gasLimit: 1000000000
+      gasLimit: 1000000000,
+      mineArLocalBlocks: false
     });
     contract.connect(wallet);
 

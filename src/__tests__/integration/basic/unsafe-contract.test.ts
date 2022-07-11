@@ -36,9 +36,12 @@ describe('Testing the Warp client', () => {
       src: contractSrc
     });
 
-    contract = warp.contract(contractTxId);
+    contract = warp.contract(contractTxId).setEvaluationOptions({
+      mineArLocalBlocks: false
+    });
     contractWithUnsafe = warp.contract(contractTxId).setEvaluationOptions({
-      allowUnsafeClient: true
+      allowUnsafeClient: true,
+      mineArLocalBlocks: false
     });
     contract.connect(wallet);
     contractWithUnsafe.connect(wallet);

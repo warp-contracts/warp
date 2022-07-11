@@ -21,6 +21,8 @@ import { MigrationTool } from '../contract/migration/MigrationTool';
 import { LevelDbCache } from '@warp/cache';
 import { Testing } from '../contract/testing/Testing';
 
+export type WarpEnvironment = 'local' | 'testnet' | 'mainnet' | 'custom';
+
 /**
  * The Warp "motherboard" ;-).
  * This is the base class that supplies the implementation of the SmartWeave protocol
@@ -40,15 +42,20 @@ export class Warp {
     readonly definitionLoader: DefinitionLoader,
     readonly interactionsLoader: InteractionsLoader,
     readonly executorFactory: ExecutorFactory<HandlerApi<unknown>>,
-    readonly stateEvaluator: StateEvaluator
+    readonly stateEvaluator: StateEvaluator,
+    readonly environment: WarpEnvironment = 'custom'
   ) {
     this.createContract = new DefaultCreateContract(arweave, this);
     this.migrationTool = new MigrationTool(arweave, levelDb);
     this.testing = new Testing(arweave);
   }
 
-  static builder(arweave: Arweave, cache: LevelDbCache<EvalStateResult<unknown>>): WarpBuilder {
-    return new WarpBuilder(arweave, cache);
+  static builder(
+    arweave: Arweave,
+    cache: LevelDbCache<EvalStateResult<unknown>>,
+    environment: WarpEnvironment
+  ): WarpBuilder {
+    return new WarpBuilder(arweave, cache, environment);
   }
 
   /**

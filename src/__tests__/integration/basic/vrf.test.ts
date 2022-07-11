@@ -57,10 +57,14 @@ describe('Testing the Profit Sharing Token', () => {
     loader = new VrfDecorator(arweave);
     LoggerFactory.INST.logLevel('error');
 
-    warp = WarpFactory.custom(arweave, {
-      ...defaultCacheOptions,
-      inMemory: true
-    })
+    warp = WarpFactory.custom(
+      arweave,
+      {
+        ...defaultCacheOptions,
+        inMemory: true
+      },
+      'testnet'
+    )
       .useArweaveGateway()
       .setInteractionsLoader(loader)
       .build();

@@ -58,11 +58,16 @@ describe('Testing the Warp client', () => {
       src: contractSrc
     });
 
-    contract = warp.contract(contractTxId);
-    contractVM = warp.contract<ExampleContractState>(contractTxId).setEvaluationOptions({
-      useVM2: true
+    contract = warp.contract<ExampleContractState>(contractTxId).setEvaluationOptions({
+      mineArLocalBlocks: false
     });
-    contractInitData = warp.contract(contractInitDataTxId);
+    contractVM = warp.contract<ExampleContractState>(contractTxId).setEvaluationOptions({
+      useVM2: true,
+      mineArLocalBlocks: false
+    });
+    contractInitData = warp.contract<ExampleContractState>(contractInitDataTxId).setEvaluationOptions({
+      mineArLocalBlocks: false
+    });
     contract.connect(wallet);
     contractVM.connect(wallet);
     contractInitData.connect(wallet);

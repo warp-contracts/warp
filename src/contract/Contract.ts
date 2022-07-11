@@ -161,7 +161,7 @@ export interface Contract<State = unknown> extends Source {
   ): Promise<InteractionResult<State, unknown>>;
 
   /**
-   * Writes a new "interaction" transaction - ie. such transaction that stores input for the contract.
+   * Writes a new "interaction" transaction - i.e. such transaction that stores input for the contract.
    */
   writeInteraction<Input = unknown>(
     input: Input,
