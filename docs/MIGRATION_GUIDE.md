@@ -130,7 +130,7 @@ const result = await contract.writeInteraction({
 });
 ```
 
-💡 You can read detailed explanation of each contract method [here.](CONTRACT_METHODS.md)
+💡 You can read detailed explanation of each contract method [here.](https://github.com/warp-contracts/warp#contract-methods)
 
 ### [Optional] 2.4 Confgure logging
 
