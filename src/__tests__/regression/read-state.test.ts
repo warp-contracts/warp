@@ -56,7 +56,7 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
             ...defaultCacheOptions,
             inMemory: true
           },
-          envrionment
+          'mainnet'
         )
           .useWarpGateway(null, SourceType.ARWEAVE)
           .build()
@@ -92,7 +92,7 @@ describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
           ...defaultCacheOptions,
           inMemory: true
         },
-        envrionment
+        'mainnet'
       )
         .useWarpGateway(null, SourceType.ARWEAVE)
         .build()
@@ -124,7 +124,7 @@ describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
           ...defaultCacheOptions,
           inMemory: true
         },
-        envrionment
+        'mainnet'
       )
         .useWarpGateway(null, SourceType.ARWEAVE)
         .build();
@@ -138,7 +138,7 @@ describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
           ...defaultCacheOptions,
           inMemory: true
         },
-        envrionment
+        'mainnet'
       )
         .useArweaveGateway()
         .build()
@@ -164,7 +164,7 @@ describe('readState', () => {
         ...defaultCacheOptions,
         inMemory: true
       },
-      envrionment
+      'mainnet'
     )
       .useWarpGateway(null, SourceType.ARWEAVE)
       .build()
@@ -192,7 +192,7 @@ describe('readState', () => {
         ...defaultCacheOptions,
         inMemory: true
       },
-      envrionment
+      'mainnet'
     )
       .useWarpGateway(null, SourceType.ARWEAVE)
       .build()
