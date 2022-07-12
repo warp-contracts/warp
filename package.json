@@ -120,6 +120,7 @@
     "archiver": false,
     "stream-buffers": false,
     "constants": false,
-    "knex": false
+    "knex": false,
+    "os": false
   }
 }

@@ -4,3 +4,4 @@ export * from './WarpLogger';
 export * from './LoggerFactory';
 export * from './LoggerSettings';
 export * from './Benchmark';
+export * from './node/TsLogFactory';

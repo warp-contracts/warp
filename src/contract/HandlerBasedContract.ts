@@ -83,7 +83,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
           )}`
         );
       }
-      this.logger.debug('Calling interaction id', _callingInteraction.id);
+      this.logger.debug('Calling interaction', { id: _callingInteraction.id, sortKey: _callingInteraction.sortKey });
       const callStack = new ContractCallStack(_contractTxId, this._callDepth);
       interaction.interactionInput.foreignContractCalls.set(_contractTxId, callStack);
       this._callStack = callStack;
@@ -480,7 +480,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     // create execution context
     let executionContext = await this.createExecutionContext(this._contractTxId, sortKey, true);
 
-    const currentBlockData = await arweave.blocks.getCurrent();
+    const currentBlockData =
+      this.warp.environment == 'mainnet' ? await this._arweaveWrapper.warpGwBlock() : await arweave.blocks.getCurrent();
 
     // add caller info to execution context
     let effectiveCaller;
@@ -526,6 +527,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
       true
     );
     const dummyTx = createDummyTx(tx, executionContext.caller, currentBlockData);
+
+    this.logger.debug('Creating sortKey for', {
+      blockId: dummyTx.block.id,
+      id: dummyTx.id,
+      height: dummyTx.block.height
+    });
+
     dummyTx.sortKey = await this._sorter.createSortKey(dummyTx.block.id, dummyTx.id, dummyTx.block.height);
 
     const handleResult = await this.evalInteraction<Input, View>(
