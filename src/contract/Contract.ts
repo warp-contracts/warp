@@ -22,17 +22,35 @@ interface BundlrResponse {
   signature: string;
   block: number;
 }
-export interface BundleInteractionResponse {
-  bundlrResponse: BundlrResponse;
+
+export interface WriteInteractionResponse {
+  bundlrResponse?: BundlrResponse;
   originalTxId: string;
 }
+
+export type WarpOptions = {
+  vrf?: boolean;
+  disableBundling?: boolean;
+};
+
+export type ArweaveOptions = {
+  transfer?: ArTransfer;
+  reward?: string;
+};
+
+export type CommonOptions = {
+  tags?: Tags;
+  strict?: boolean;
+};
+
+export type WriteInteractionOptions = WarpOptions & ArweaveOptions & CommonOptions;
 /**
  * Interface describing state for all Evolve-compatible contracts.
  */
 export interface EvolveState {
   settings: any[] | unknown | null;
   /**
-   * whether contract is allowed to evolve. seems to default to true..
+   * whether contract is allowed to evolve.
    */
   canEvolve: boolean;
 
@@ -143,34 +161,12 @@ export interface Contract<State = unknown> extends Source {
   ): Promise<InteractionResult<State, unknown>>;
 
   /**
-   * Writes a new "interaction" transaction - ie. such transaction that stores input for the contract.
-   *
-   * @param input -  new input to the contract that will be assigned with this interactions transaction
-   * @param tags - additional tags that can be attached to the newly created interaction transaction
-   * @param transfer - additional {@link ArTransfer} than can be attached to the interaction transaction
-   * @param strict - transaction will be posted on Arweave only if the dry-run of the input result is "ok"
+   * Writes a new "interaction" transaction - i.e. such transaction that stores input for the contract.
    */
   writeInteraction<Input = unknown>(
     input: Input,
-    tags?: Tags,
-    transfer?: ArTransfer,
-    strict?: boolean
-  ): Promise<string | null>;
-
-  /**
-   * Creates a new "interaction" transaction using Warp Sequencer - this, with combination with
-   * Warp Gateway, gives instant transaction availability and finality guaranteed by Bundlr.
-   * @param input -  new input to the contract that will be assigned with this interactions transaction
-   * @param options
-   */
-  bundleInteraction<Input = unknown>(
-    input: Input,
-    options?: {
-      tags?: Tags;
-      strict?: boolean;
-      vrf?: boolean;
-    }
-  ): Promise<BundleInteractionResponse | null>;
+    options?: WriteInteractionOptions
+  ): Promise<WriteInteractionResponse | null>;
 
   /**
    * Returns the full call tree report the last
@@ -186,7 +182,7 @@ export interface Contract<State = unknown> extends Source {
 
   /**
    * Return the depth of the call to this contract.
-   * Eg.
+   * E.g.
    * 1. User calls ContractA.readState() - depth = 0
    * 2. ContractA.readState() calls ContractB.readState() - depth = 1
    * 3. ContractB.readState calls ContractC.readState() - depth = 2
@@ -226,7 +222,7 @@ export interface Contract<State = unknown> extends Source {
    * and its transaction to be confirmed by the network.
    * @param newSrcTxId - result of the {@link save} method call.
    */
-  evolve(newSrcTxId: string, useBundler?: boolean): Promise<BundleInteractionResponse | string | null>;
+  evolve(newSrcTxId: string, options?: WriteInteractionOptions): Promise<WriteInteractionResponse | null>;
 
   dumpCache(): Promise<any>;
 }

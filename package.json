@@ -1,6 +1,6 @@
 {
   "name": "warp-contracts",
-  "version": "1.2.0-beta.1",
+  "version": "1.2.0-beta.10",
   "description": "An implementation of the SmartWeave smart contract protocol.",
   "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",
@@ -75,7 +75,7 @@
     "lodash": "^4.17.21",
     "memory-level": "^1.0.0",
     "redstone-isomorphic": "1.1.8",
-    "redstone-wasm-metering": "1.0.0",
+    "redstone-wasm-metering": "1.0.3",
     "safe-stable-stringify": "2.3.1",
     "stream-buffers": "^3.0.2",
     "tslog": "^3.2.2",
@@ -120,6 +120,7 @@
     "archiver": false,
     "stream-buffers": false,
     "constants": false,
-    "knex": false
+    "knex": false,
+    "os": false
   }
 }

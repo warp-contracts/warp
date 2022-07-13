@@ -6,7 +6,6 @@ import {
   ContractFn,
   HandlerResultSchema,
   SmartWeaveSchema,
-  parse,
   stringify,
   Transaction
 } from "./imports";

@@ -7,7 +7,6 @@ import {
   ArweaveGatewayInteractionsLoader,
   defaultCacheOptions,
   EvaluationOptions,
-  GQLEdgeInterface,
   GQLNodeInterface,
   InteractionsLoader,
   LexicographicalInteractionsSorter,
@@ -18,7 +17,7 @@ import {
   WarpFactory
 } from '@warp';
 import path from 'path';
-import { addFunds, mineBlock } from '../_helpers';
+import { mineBlock } from '../_helpers';
 import { Evaluate } from '@idena/vrf-js';
 import elliptic from 'elliptic';
 
@@ -58,16 +57,19 @@ describe('Testing the Profit Sharing Token', () => {
     loader = new VrfDecorator(arweave);
     LoggerFactory.INST.logLevel('error');
 
-    warp = WarpFactory.custom(arweave, {
-      ...defaultCacheOptions,
-      inMemory: true
-    })
+    warp = WarpFactory.custom(
+      arweave,
+      {
+        ...defaultCacheOptions,
+        inMemory: true
+      },
+      'testnet'
+    )
       .useArweaveGateway()
       .setInteractionsLoader(loader)
       .build();
 
-    wallet = await arweave.wallets.generate();
-    await addFunds(arweave, wallet);
+    wallet = await warp.testing.generateWallet();
     walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/token-pst.js'), 'utf8');
@@ -96,7 +98,7 @@ describe('Testing the Profit Sharing Token', () => {
     // connecting wallet to the PST contract
     pst.connect(wallet);
 
-    await mineBlock(arweave);
+    await mineBlock(warp);
   });
 
   afterAll(async () => {
@@ -107,12 +109,10 @@ describe('Testing the Profit Sharing Token', () => {
     await pst.writeInteraction({
       function: 'vrf'
     });
-    await mineBlock(arweave);
+    await mineBlock(warp);
     const result = await pst.readState();
     const lastTxId = Object.keys(result.validity).pop();
     const vrf = (result.state as any).vrf[lastTxId];
-
-    console.log(vrf);
 
     expect(vrf).not.toBeUndefined();
     expect(vrf['random_6_1'] == vrf['random_6_2']).toBe(true);
@@ -126,18 +126,18 @@ describe('Testing the Profit Sharing Token', () => {
   });
 
   it('should throw if random cannot be verified', async () => {
-    const txId = await pst.writeInteraction({
+    const { originalTxId: txId } = await pst.writeInteraction({
       function: 'vrf'
     });
-    await mineBlock(arweave);
+    await mineBlock(warp);
     useWrongIndex.push(txId);
     await expect(pst.readState()).rejects.toThrow('Vrf verification failed.');
     useWrongIndex.pop();
 
-    const txId2 = await pst.writeInteraction({
+    const { originalTxId: txId2 } = await pst.writeInteraction({
       function: 'vrf'
     });
-    await mineBlock(arweave);
+    await mineBlock(warp);
     useWrongProof.push(txId2);
     await expect(pst.readState()).rejects.toThrow('Vrf verification failed.');
     useWrongProof.pop();

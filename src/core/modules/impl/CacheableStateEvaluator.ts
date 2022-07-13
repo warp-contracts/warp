@@ -10,6 +10,7 @@ import Arweave from 'arweave';
 import { GQLNodeInterface } from '@warp/legacy';
 import { LoggerFactory } from '@warp/logging';
 import { CurrentTx } from '@warp/contract';
+import { indent } from '@warp/utils';
 
 /**
  * An implementation of DefaultStateEvaluator that adds caching capabilities.
@@ -85,6 +86,8 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     const baseValidity = cachedState == null ? {} : cachedState.cachedValue.validity;
     const baseErrorMessages = cachedState == null ? {} : cachedState.cachedValue.errorMessages;
 
+    this.cLogger.debug('Base state', baseState);
+
     // eval state for the missing transactions - starting from the latest value from cache.
     return await this.doReadState(
       missingInteractions,
@@ -100,7 +103,11 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     state: EvalStateResult<State>
   ): Promise<void> {
     const contractTxId = executionContext.contractDefinition.txId;
-    this.cLogger.debug(`onStateEvaluated: cache update for contract ${contractTxId} [${transaction.sortKey}]`);
+    this.cLogger.debug(
+      `${indent(executionContext.contract.callDepth())}onStateEvaluated: cache update for contract ${contractTxId} [${
+        transaction.sortKey
+      }]`
+    );
 
     // this will be problematic if we decide to cache only "onStateEvaluated" and containsInteractionsFromSequencer = true
     // as a workaround, we're now caching every 100 interactions
@@ -111,13 +118,9 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     transaction: GQLNodeInterface,
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>,
-    nthInteraction?: number
+    force = false
   ): Promise<void> {
-    if (
-      executionContext.evaluationOptions.updateCacheForEachInteraction /*||
-      executionContext.evaluationOptions.internalWrites*/ /*||
-      (nthInteraction || 1) % 100 == 0*/
-    ) {
+    if (executionContext.evaluationOptions.updateCacheForEachInteraction || force) {
       this.cLogger.debug(
         `onStateUpdate: cache update for contract ${executionContext.contractDefinition.txId} [${transaction.sortKey}]`,
         {
@@ -171,10 +174,12 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       return;
     }
     const txIndex = executionContext.sortedInteractions.indexOf(transaction);
-    const prevIndex = Math.max(0, txIndex - 1);
+    if (txIndex < 1) {
+      return;
+    }
     await this.putInCache(
       executionContext.contractDefinition.txId,
-      executionContext.sortedInteractions[prevIndex],
+      executionContext.sortedInteractions[txIndex - 1],
       state
     );
   }
@@ -197,7 +202,8 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       transaction: transaction.id,
       sortKey: transaction.sortKey,
       dry: transaction.dry,
-      state: stateToCache.state
+      state: stateToCache.state,
+      validity: stateToCache.validity
     });
 
     await this.cache.put(new StateCacheKey(contractTxId, transaction.sortKey), stateToCache);

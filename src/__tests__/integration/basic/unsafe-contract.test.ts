@@ -5,9 +5,8 @@ import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import { Contract, LoggerFactory, Warp, WarpFactory } from '@warp';
 import path from 'path';
-import { addFunds, mineBlock } from '../_helpers';
+import { mineBlock } from '../_helpers';
 
-let arweave: Arweave;
 let arlocal: ArLocal;
 let warp: Warp;
 let contract: Contract<any>;
@@ -24,19 +23,10 @@ describe('Testing the Warp client', () => {
     arlocal = new ArLocal(1801, false);
     await arlocal.start();
 
-    arweave = Arweave.init({
-      host: 'localhost',
-      port: 1801,
-      protocol: 'http'
-    });
-
     LoggerFactory.INST.logLevel('error');
+    warp = WarpFactory.forLocal(1801);
 
-    warp = WarpFactory.forTesting(arweave);
-
-    wallet = await arweave.wallets.generate();
-    await addFunds(arweave, wallet);
-
+    wallet = await warp.testing.generateWallet();
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/token-pst-unsafe.js'), 'utf8');
 
     // deploying contract using the new SDK.
@@ -46,14 +36,17 @@ describe('Testing the Warp client', () => {
       src: contractSrc
     });
 
-    contract = warp.contract(contractTxId);
+    contract = warp.contract(contractTxId).setEvaluationOptions({
+      mineArLocalBlocks: false
+    });
     contractWithUnsafe = warp.contract(contractTxId).setEvaluationOptions({
-      allowUnsafeClient: true
+      allowUnsafeClient: true,
+      mineArLocalBlocks: false
     });
     contract.connect(wallet);
     contractWithUnsafe.connect(wallet);
 
-    await mineBlock(arweave);
+    await mineBlock(warp);
   });
 
   afterAll(async () => {

@@ -5,7 +5,7 @@ import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import { Contract, LoggerFactory, timeout, Warp, WarpFactory } from '@warp';
 import path from 'path';
-import { addFunds, mineBlock } from '../_helpers';
+import { mineBlock } from '../_helpers';
 
 let arweave: Arweave;
 let arlocal: ArLocal;
@@ -27,18 +27,9 @@ describe('Testing the Warp client', () => {
     arlocal = new ArLocal(1830, false);
     await arlocal.start();
 
-    arweave = Arweave.init({
-      host: 'localhost',
-      port: 1830,
-      protocol: 'http'
-    });
-
     LoggerFactory.INST.logLevel('error');
-
-    warp = WarpFactory.forTesting(arweave);
-
-    wallet = await arweave.wallets.generate();
-    await addFunds(arweave, wallet);
+    warp = WarpFactory.forLocal(1830);
+    wallet = await warp.testing.generateWallet();
 
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/inf-loop-contract.js'), 'utf8');
 
@@ -54,11 +45,12 @@ describe('Testing the Warp client', () => {
     contract = warp
       .contract<ExampleContractState>(contractTxId)
       .setEvaluationOptions({
-        maxInteractionEvaluationTimeSeconds: 1
+        maxInteractionEvaluationTimeSeconds: 1,
+        mineArLocalBlocks: false
       })
       .connect(wallet);
 
-    await mineBlock(arweave);
+    await mineBlock(warp);
   });
 
   afterAll(async () => {
@@ -73,7 +65,7 @@ describe('Testing the Warp client', () => {
     await contract.writeInteraction({
       function: 'add'
     });
-    await mineBlock(arweave);
+    await mineBlock(warp);
 
     expect((await contract.readState()).state.counter).toEqual(20);
   });
@@ -82,12 +74,12 @@ describe('Testing the Warp client', () => {
     await contract.writeInteraction({
       function: 'loop'
     });
-    await mineBlock(arweave);
+    await mineBlock(warp);
 
     await contract.writeInteraction({
       function: 'add'
     });
-    await mineBlock(arweave);
+    await mineBlock(warp);
 
     // wait for a while for the "inf-loop" to finish
     // otherwise Jest will complain that there are unresolved promises
