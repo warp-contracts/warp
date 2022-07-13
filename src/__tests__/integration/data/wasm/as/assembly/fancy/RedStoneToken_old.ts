@@ -1,10 +1,10 @@
-import { ContractError, ERC20 } from './ERC20';
-import { console } from '../imports/console';
-import { Block } from '../imports/smartweave/block';
-import { Transaction } from '../imports/smartweave/transaction';
-import { Contract } from '../imports/smartweave/contract';
-import { msg } from '../imports/smartweave/msg';
-import { setTimeout } from '../imports/api';
+import {ContractError, ERC20} from './ERC20';
+import {console} from '../imports/console';
+import {Block} from '../imports/smartweave/block';
+import {Transaction} from '../imports/smartweave/transaction';
+import {Contract} from '../imports/smartweave/contract';
+import {msg} from '../imports/smartweave/msg';
+import {setTimeout} from '../imports/api';
 
 export class RedStoneToken_old implements ERC20 {
   private readonly _name: string;

@@ -85,6 +85,8 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     const baseValidity = cachedState == null ? {} : cachedState.cachedValue.validity;
     const baseErrorMessages = cachedState == null ? {} : cachedState.cachedValue.errorMessages;
 
+    this.cLogger.debug('Base state', baseState);
+
     // eval state for the missing transactions - starting from the latest value from cache.
     return await this.doReadState(
       missingInteractions,
@@ -113,11 +115,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     state: EvalStateResult<State>,
     nthInteraction?: number
   ): Promise<void> {
-    if (
-      executionContext.evaluationOptions.updateCacheForEachInteraction /*||
-      executionContext.evaluationOptions.internalWrites*/ /*||
-      (nthInteraction || 1) % 100 == 0*/
-    ) {
+    if (executionContext.evaluationOptions.updateCacheForEachInteraction) {
       this.cLogger.debug(
         `onStateUpdate: cache update for contract ${executionContext.contractDefinition.txId} [${transaction.sortKey}]`,
         {
