@@ -34,7 +34,7 @@ async function main() {
     const sorted = await lexSorting.sort([...interactions]);
     logger.info("\n\nLexicographical");
     sorted.forEach(v => {
-      logger.info(`${v.node.block.height}:${v.node.id}: [${v.sortKey}]`);
+      logger.info(`${v.node.block.height}:${v.node.id}: [${v.node.sortKey}]`);
     });
 }
 

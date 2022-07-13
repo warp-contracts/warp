@@ -4,7 +4,6 @@ export * from './modules/InteractionsLoader';
 export * from './modules/InteractionsSorter';
 export * from './modules/StateEvaluator';
 
-export * from './modules/impl/BlockHeightInteractionsSorter';
 export * from './modules/impl/ContractDefinitionLoader';
 export * from './modules/impl/WarpGatewayContractDefinitionLoader';
 export * from './modules/impl/ArweaveGatewayInteractionsLoader';
@@ -24,7 +23,6 @@ export * from './ExecutionContext';
 export * from './ContractDefinition';
 export * from './ContractCallStack';
 
-export * from './web/WarpWebFactory';
-export * from './node/WarpNodeFactory';
+export * from './WarpFactory';
 export * from './Warp';
 export * from './WarpBuilder';

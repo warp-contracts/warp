@@ -4,7 +4,7 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, LoggerFactory, Warp, WarpNodeFactory } from '@warp';
+import { Contract, LoggerFactory, Warp, WarpFactory } from '@warp';
 import path from 'path';
 import { TsLogFactory } from '../../../logging/node/TsLogFactory';
 import { addFunds, mineBlock } from '../_helpers';
@@ -83,7 +83,7 @@ describe('Testing internal writes', () => {
   });
 
   async function deployContracts() {
-    warp = WarpNodeFactory.forTesting(arweave);
+    warp = WarpFactory.forTesting(arweave);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);
@@ -340,11 +340,11 @@ describe('Testing internal writes', () => {
     });
 
     it('should properly evaluate state with a new client', async () => {
-      const contractB2 = WarpNodeFactory.forTesting(arweave)
+      const contractB2 = WarpFactory.forTesting(arweave)
         .contract<any>(contractBTxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
-      const contractC2 = WarpNodeFactory.forTesting(arweave)
+      const contractC2 = WarpFactory.forTesting(arweave)
         .contract<any>(contractCTxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);

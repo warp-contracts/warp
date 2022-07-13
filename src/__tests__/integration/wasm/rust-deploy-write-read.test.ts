@@ -3,16 +3,7 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import {
-  ArweaveWrapper,
-  getTag,
-  LoggerFactory,
-  PstContract,
-  PstState,
-  Warp,
-  WarpNodeFactory,
-  SmartWeaveTags
-} from '@warp';
+import { ArweaveWrapper, getTag, LoggerFactory, PstContract, PstState, SmartWeaveTags, Warp, WarpFactory } from '@warp';
 import path from 'path';
 import { addFunds, mineBlock } from '../_helpers';
 import { WasmSrc } from '../../../core/modules/impl/wasm/WasmSrc';
@@ -51,7 +42,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
 
     LoggerFactory.INST.logLevel('error');
 
-    warp = WarpNodeFactory.forTesting(arweave);
+    warp = WarpFactory.forTesting(arweave);
 
     wallet = await arweave.wallets.generate();
     await addFunds(arweave, wallet);

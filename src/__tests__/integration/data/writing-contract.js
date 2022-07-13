@@ -75,6 +75,8 @@ export async function handle(state, action) {
     // we need to refresh the state here manually.
     state = await SmartWeave.contracts.refreshState();
 
+    console.log('State after refresh', state);
+
     if (result.state.counter > 2059) {
       state.counter -= result.state.counter;
     } else {

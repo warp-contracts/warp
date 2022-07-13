@@ -7,6 +7,7 @@ const fs = require('fs');
 const path =require('path');
 const {readContract} = require("smartweave");
 const {WarpNodeFactory} = require("../lib/cjs/core/node/WarpNodeFactory");
+const {ContractDefinitionLoader} = require("../src");
 
 const logger = LoggerFactory.INST.create('Contract');
 
@@ -20,6 +21,10 @@ async function main() {
     protocol: 'https',
     port: 443,
   });
+  const loader = new ContractDefinitionLoader(arweave);
+  const definition = await loader.load("contract_tx_id");
+  console.log(definition.srcTxId);
+
   /*const result = await WarpNodeFactory
       .memCached(arweave)
       .contract("dKR4CTZUei9Q7L0n37WXs8pOOMP-WOyg0_2DSprdag4")

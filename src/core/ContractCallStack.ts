@@ -15,6 +15,7 @@ export class ContractCallStack {
     const interactionCall = InteractionCall.create(
       new InteractionInput(
         interactionTx.id,
+        interactionTx.sortKey,
         interactionTx.block.height,
         interactionTx.block.timestamp,
         interaction?.caller,
@@ -55,6 +56,7 @@ export class InteractionCall {
 export class InteractionInput {
   constructor(
     public readonly txId: string,
+    public readonly sortKey: string,
     public readonly blockHeight: number,
     public readonly blockTimestamp: number,
     public readonly caller: string,
@@ -68,7 +70,6 @@ export class InteractionInput {
 export class InteractionOutput {
   constructor(
     public readonly cacheHit: boolean,
-    public readonly intermediaryCacheHit: boolean,
     public readonly outputState: any,
     public readonly executionTime: number,
     public readonly valid: boolean,

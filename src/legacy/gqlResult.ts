@@ -62,9 +62,6 @@ export interface VrfData {
 }
 
 export interface GQLEdgeInterface {
-  // added dynamically by the LexicographicalInteractionsSorter
-  // or rewritten from GQLNodeInterface.sortKey (if added there by Warp Sequencer)
-  sortKey?: string;
   cursor: string;
   node: GQLNodeInterface;
 }

@@ -1,19 +1,18 @@
 import {
   Benchmark,
-  BlockHeightCacheResult,
   canBeCached,
   ContractInteraction,
   CurrentTx,
   EvalStateResult,
   ExecutionContext,
   ExecutionContextModifier,
-  GQLEdgeInterface,
   GQLNodeInterface,
   GQLTagInterface,
   HandlerApi,
   InteractionCall,
   InteractionResult,
   LoggerFactory,
+  SortKeyCacheResult,
   StateEvaluator,
   TagsParser,
   VrfData
@@ -48,14 +47,14 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
   ): Promise<EvalStateResult<State>> {
     return this.doReadState(
       executionContext.sortedInteractions,
-      new EvalStateResult<State>(executionContext.contractDefinition.initState, {}),
+      new EvalStateResult<State>(executionContext.contractDefinition.initState, {}, {}),
       executionContext,
       currentTx
     );
   }
 
   protected async doReadState<State>(
-    missingInteractions: GQLEdgeInterface[],
+    missingInteractions: GQLNodeInterface[],
     baseState: EvalStateResult<State>,
     executionContext: ExecutionContext<State, HandlerApi<State>>,
     currentTx: CurrentTx[]
@@ -65,6 +64,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
     let currentState = baseState.state;
     const validity = baseState.validity;
+    const errorMessages = baseState.errorMessages;
 
     executionContext?.handler.initState(currentState);
 
@@ -82,16 +82,14 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       const missingInteraction = missingInteractions[i];
       const singleInteractionBenchmark = Benchmark.measure();
 
-      const interactionTx: GQLNodeInterface = missingInteraction.node;
-
-      if (interactionTx.vrf) {
-        if (!this.verifyVrf(interactionTx.vrf, interactionTx.sortKey, this.arweave)) {
+      if (missingInteraction.vrf) {
+        if (!this.verifyVrf(missingInteraction.vrf, missingInteraction.sortKey, this.arweave)) {
           throw new Error('Vrf verification failed.');
         }
       }
 
       this.logger.debug(
-        `[${contractDefinition.txId}][${missingInteraction.node.id}][${missingInteraction.node.block.height}]: ${
+        `[${contractDefinition.txId}][${missingInteraction.id}][${missingInteraction.block.height}]: ${
           missingInteractions.indexOf(missingInteraction) + 1
         }/${missingInteractions.length} [of all:${sortedInteractions.length}]`
       );
@@ -106,34 +104,34 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         const interactionCall: InteractionCall = contract
           .getCallStack()
-          .addInteractionData({ interaction: null, interactionTx, currentTx });
+          .addInteractionData({ interaction: null, interactionTx: missingInteraction, currentTx });
 
         // creating a Contract instance for the "writing" contract
         const writingContract = executionContext.warp.contract(
           writingContractTxId,
           executionContext.contract,
-          interactionTx
+          missingInteraction
         );
 
-        this.logger.debug('Reading state of the calling contract', interactionTx.block.height);
+        this.logger.debug('Reading state of the calling contract', missingInteraction.block.height);
 
         /**
          Reading the state of the writing contract.
          This in turn will cause the state of THIS contract to be
          updated in cache - see {@link ContractHandlerApi.assignWrite}
          */
-        await writingContract.readState(interactionTx.block.height, [
+        await writingContract.readState(missingInteraction.sortKey, [
           ...(currentTx || []),
           {
             contractTxId: contractDefinition.txId, //not: writingContractTxId!
-            interactionTxId: missingInteraction.node.id
+            interactionTxId: missingInteraction.id
           }
         ]);
 
         // loading latest state of THIS contract from cache
-        const newState = await this.latestAvailableState<State>(contractDefinition.txId, interactionTx.block.height);
+        const newState = await this.internalWriteState<State>(contractDefinition.txId, missingInteraction.sortKey);
         this.logger.debug('New state:', {
-          height: interactionTx.block.height,
+          sortKey: missingInteraction.sortKey,
           newState,
           txId: contractDefinition.txId
         });
@@ -142,29 +140,30 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           currentState = newState.cachedValue.state;
           // we need to update the state in the wasm module
           executionContext?.handler.initState(currentState);
-          validity[interactionTx.id] = newState.cachedValue.validity[interactionTx.id];
 
-          const toCache = new EvalStateResult(currentState, validity);
+          validity[missingInteraction.id] = newState.cachedValue.validity[missingInteraction.id];
+          if (newState.cachedValue.errorMessages?.[missingInteraction.id]) {
+            errorMessages[missingInteraction.id] = newState.cachedValue.errorMessages[missingInteraction.id];
+          }
 
-          // TODO: probably a separate hook should be created here
-          // to fix https://github.com/redstone-finance/warp/issues/109
-          await this.onStateUpdate<State>(interactionTx, executionContext, toCache);
-          if (canBeCached(interactionTx)) {
+          const toCache = new EvalStateResult(currentState, validity, errorMessages);
+
+          await this.onStateUpdate<State>(missingInteraction, executionContext, toCache);
+          if (canBeCached(missingInteraction)) {
             lastConfirmedTxState = {
-              tx: interactionTx,
+              tx: missingInteraction,
               state: toCache
             };
           }
         } else {
-          validity[interactionTx.id] = false;
+          validity[missingInteraction.id] = false;
         }
 
         interactionCall.update({
           cacheHit: false,
-          intermediaryCacheHit: false,
           outputState: stackTrace.saveState ? currentState : undefined,
           executionTime: singleInteractionBenchmark.elapsed(true) as number,
-          valid: validity[interactionTx.id],
+          valid: validity[missingInteraction.id],
           errorMessage: errorMessage,
           gasUsed: 0 // TODO...
         });
@@ -174,23 +173,23 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         // "direct" interaction with this contract - "standard" processing
         const inputTag = this.tagsParser.getInputTag(missingInteraction, executionContext.contractDefinition.txId);
         if (!inputTag) {
-          this.logger.error(`Skipping tx - Input tag not found for ${interactionTx.id}`);
+          this.logger.error(`Skipping tx - Input tag not found for ${missingInteraction.id}`);
           continue;
         }
         const input = this.parseInput(inputTag);
         if (!input) {
-          this.logger.error(`Skipping tx - invalid Input tag - ${interactionTx.id}`);
+          this.logger.error(`Skipping tx - invalid Input tag - ${missingInteraction.id}`);
           continue;
         }
 
         const interaction: ContractInteraction<unknown> = {
           input,
-          caller: interactionTx.owner.address
+          caller: missingInteraction.owner.address
         };
 
         const interactionData = {
           interaction,
-          interactionTx,
+          interactionTx: missingInteraction,
           currentTx
         };
 
@@ -200,21 +199,23 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         const result = await executionContext.handler.handle(
           executionContext,
-          new EvalStateResult(currentState, validity),
+          new EvalStateResult(currentState, validity, errorMessages),
           interactionData
         );
         errorMessage = result.errorMessage;
+        if (result.type !== 'ok') {
+          errorMessages[missingInteraction.id] = errorMessage;
+        }
 
-        this.logResult<State>(result, interactionTx, executionContext);
+        this.logResult<State>(result, missingInteraction, executionContext);
 
         this.logger.debug('Interaction evaluation', singleInteractionBenchmark.elapsed());
 
         interactionCall.update({
           cacheHit: false,
-          intermediaryCacheHit: false,
           outputState: stackTrace.saveState ? currentState : undefined,
           executionTime: singleInteractionBenchmark.elapsed(true) as number,
-          valid: validity[interactionTx.id],
+          valid: validity[missingInteraction.id],
           errorMessage: errorMessage,
           gasUsed: result.gasUsed
         });
@@ -223,17 +224,17 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           throw new Error(`Exception while processing ${JSON.stringify(interaction)}:\n${result.errorMessage}`);
         }
 
-        validity[interactionTx.id] = result.type === 'ok';
+        validity[missingInteraction.id] = result.type === 'ok';
         currentState = result.state;
 
-        const toCache = new EvalStateResult(currentState, validity);
-        if (canBeCached(interactionTx)) {
+        const toCache = new EvalStateResult(currentState, validity, errorMessages);
+        if (canBeCached(missingInteraction)) {
           lastConfirmedTxState = {
-            tx: interactionTx,
+            tx: missingInteraction,
             state: toCache
           };
         }
-        await this.onStateUpdate<State>(interactionTx, executionContext, toCache, i);
+        await this.onStateUpdate<State>(missingInteraction, executionContext, toCache, i);
       }
 
       // I'm really NOT a fan of this "modify" feature, but I don't have idea how to better
@@ -243,7 +244,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       }
     }
     //this.logger.info('State evaluation total:', stateEvaluationBenchmark.elapsed());
-    const evalStateResult = new EvalStateResult<State>(currentState, validity);
+    const evalStateResult = new EvalStateResult<State>(currentState, validity, errorMessages);
 
     // state could have been fully retrieved from cache
     // or there were no interactions below requested block height
@@ -302,8 +303,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
   abstract latestAvailableState<State>(
     contractTxId: string,
-    blockHeight: number
-  ): Promise<BlockHeightCacheResult<EvalStateResult<State>> | null>;
+    sortKey?: string
+  ): Promise<SortKeyCacheResult<EvalStateResult<State>> | null>;
 
   abstract onContractCall<State>(
     transaction: GQLNodeInterface,
@@ -330,13 +331,18 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     nthInteraction?: number
   ): Promise<void>;
 
-  abstract flushCache(): Promise<void>;
-
-  abstract syncState(
+  abstract putInCache<State>(
     contractTxId: string,
-    blockHeight: number,
-    transactionId: string,
-    state: any,
-    validity: any
+    transaction: GQLNodeInterface,
+    state: EvalStateResult<State>
   ): Promise<void>;
+
+  abstract syncState(contractTxId: string, sortKey: string, state: any, validity: any): Promise<void>;
+
+  abstract dumpCache(): Promise<any>;
+
+  abstract internalWriteState<State>(
+    contractTxId: string,
+    sortKey: string
+  ): Promise<SortKeyCacheResult<EvalStateResult<State>> | null>;
 }

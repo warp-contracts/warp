@@ -1,35 +1,32 @@
 import Arweave from 'arweave';
 import {
   ArweaveGatewayInteractionsLoader,
-  CacheableContractInteractionsLoader,
   ConfirmationStatus,
   ContractDefinitionLoader,
   DebuggableExecutorFactory,
   DefinitionLoader,
+  EvalStateResult,
   ExecutorFactory,
   HandlerApi,
   InteractionsLoader,
-  InteractionsSorter,
-  MemBlockHeightWarpCache,
+  LevelDbCache,
   MemCache,
-  WarpGatewayContractDefinitionLoader,
-  WarpGatewayInteractionsLoader,
-  Warp,
   SourceType,
-  StateEvaluator
+  StateEvaluator,
+  Warp,
+  WarpGatewayContractDefinitionLoader,
+  WarpGatewayInteractionsLoader
 } from '@warp';
 
-export const R_GW_URL = 'https://d1o5nlqr4okus2.cloudfront.net';
+export const WARP_GW_URL = 'https://d1o5nlqr4okus2.cloudfront.net';
 
 export class WarpBuilder {
   private _definitionLoader?: DefinitionLoader;
   private _interactionsLoader?: InteractionsLoader;
-  private _interactionsSorter?: InteractionsSorter;
   private _executorFactory?: ExecutorFactory<HandlerApi<unknown>>;
   private _stateEvaluator?: StateEvaluator;
-  private _useWarpGwInfo = false;
 
-  constructor(private readonly _arweave: Arweave) {}
+  constructor(private readonly _arweave: Arweave, private readonly _cache: LevelDbCache<EvalStateResult<unknown>>) {}
 
   public setDefinitionLoader(value: DefinitionLoader): WarpBuilder {
     this._definitionLoader = value;
@@ -38,19 +35,6 @@ export class WarpBuilder {
 
   public setInteractionsLoader(value: InteractionsLoader): WarpBuilder {
     this._interactionsLoader = value;
-    return this;
-  }
-
-  public setCacheableInteractionsLoader(value: InteractionsLoader, maxStoredInMemoryBlockHeights = 1): WarpBuilder {
-    this._interactionsLoader = new CacheableContractInteractionsLoader(
-      value,
-      new MemBlockHeightWarpCache(maxStoredInMemoryBlockHeights)
-    );
-    return this;
-  }
-
-  public setInteractionsSorter(value: InteractionsSorter): WarpBuilder {
-    this._interactionsSorter = value;
     return this;
   }
 
@@ -75,38 +59,27 @@ export class WarpBuilder {
   public useWarpGateway(
     confirmationStatus: ConfirmationStatus = null,
     source: SourceType = null,
-    address = R_GW_URL
+    address = WARP_GW_URL
   ): WarpBuilder {
     this._interactionsLoader = new WarpGatewayInteractionsLoader(address, confirmationStatus, source);
     this._definitionLoader = new WarpGatewayContractDefinitionLoader(address, this._arweave, new MemCache());
-    this._useWarpGwInfo = true;
     return this;
   }
 
   public useArweaveGateway(): WarpBuilder {
     this._definitionLoader = new ContractDefinitionLoader(this._arweave, new MemCache());
-    this._interactionsLoader = new CacheableContractInteractionsLoader(
-      new ArweaveGatewayInteractionsLoader(this._arweave),
-      new MemBlockHeightWarpCache(1)
-    );
-    this._useWarpGwInfo = false;
-    return this;
-  }
-
-  public useWarpGwInfo(): WarpBuilder {
-    this._useWarpGwInfo = true;
+    this._interactionsLoader = new ArweaveGatewayInteractionsLoader(this._arweave);
     return this;
   }
 
   build(): Warp {
     return new Warp(
       this._arweave,
+      this._cache,
       this._definitionLoader,
       this._interactionsLoader,
-      this._interactionsSorter,
       this._executorFactory,
-      this._stateEvaluator,
-      this._useWarpGwInfo
+      this._stateEvaluator
     );
   }
 }

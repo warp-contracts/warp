@@ -3,9 +3,9 @@ import {
   ExecutorFactory,
   HandlerApi,
   InteractionsLoader,
-  InteractionsSorter,
   WarpBuilder,
-  StateEvaluator
+  StateEvaluator,
+  EvalStateResult
 } from '@warp/core';
 import Arweave from 'arweave';
 import {
@@ -17,6 +17,8 @@ import {
   PstContractImpl
 } from '@warp/contract';
 import { GQLNodeInterface } from '@warp/legacy';
+import { MigrationTool } from '../contract/migration/MigrationTool';
+import { LevelDbCache } from '@warp/cache';
 
 /**
  * The Warp "motherboard" ;-).
@@ -28,21 +30,22 @@ import { GQLNodeInterface } from '@warp/legacy';
  */
 export class Warp {
   readonly createContract: CreateContract;
+  readonly migrationTool: MigrationTool;
 
   constructor(
     readonly arweave: Arweave,
+    readonly levelDb: LevelDbCache<EvalStateResult<unknown>>,
     readonly definitionLoader: DefinitionLoader,
     readonly interactionsLoader: InteractionsLoader,
-    readonly interactionsSorter: InteractionsSorter,
     readonly executorFactory: ExecutorFactory<HandlerApi<unknown>>,
-    readonly stateEvaluator: StateEvaluator,
-    readonly useWarpGwInfo: boolean = false
+    readonly stateEvaluator: StateEvaluator
   ) {
     this.createContract = new DefaultCreateContract(arweave);
+    this.migrationTool = new MigrationTool(arweave, levelDb);
   }
 
-  static builder(arweave: Arweave): WarpBuilder {
-    return new WarpBuilder(arweave);
+  static builder(arweave: Arweave, cache: LevelDbCache<EvalStateResult<unknown>>): WarpBuilder {
+    return new WarpBuilder(arweave, cache);
   }
 
   /**
@@ -64,9 +67,5 @@ export class Warp {
    */
   pst(contractTxId: string): PstContract {
     return new PstContractImpl(contractTxId, this);
-  }
-
-  async flushCache(): Promise<void> {
-    await this.stateEvaluator.flushCache();
   }
 }
