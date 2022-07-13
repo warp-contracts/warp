@@ -1,4 +1,4 @@
-import { defaultArweaveMs, EvalStateResult, sortingLast } from '@warp/core';
+import { EvalStateResult, LexicographicalInteractionsSorter } from '@warp/core';
 import Arweave from 'arweave';
 import { LoggerFactory } from '@warp/logging';
 import { LevelDbCache } from '@warp';
@@ -8,8 +8,11 @@ export type MigrationResult = Array<{ contractTxId: string; height: number; sort
 
 export class MigrationTool {
   private readonly logger = LoggerFactory.INST.create('MigrationTool');
+  private readonly sorter: LexicographicalInteractionsSorter;
 
-  constructor(private readonly arweave: Arweave, private readonly levelDb: LevelDbCache<EvalStateResult<unknown>>) {}
+  constructor(private readonly arweave: Arweave, private readonly levelDb: LevelDbCache<EvalStateResult<unknown>>) {
+    this.sorter = new LexicographicalInteractionsSorter(arweave);
+  }
 
   async migrateSqlite(sqlitePath: string): Promise<MigrationResult> {
     this.logger.info(`Migrating from sqlite ${sqlitePath} to leveldb.`);
@@ -37,15 +40,14 @@ export class MigrationTool {
       const height = entry['height'];
       const state = JSON.parse(entry['state']);
 
-      const blockHeightString = `${height}`.padStart(12, '0');
-      const sortKey = `${blockHeightString},${defaultArweaveMs},${sortingLast}`;
+      const sortKey = this.sorter.generateLastSortKey(parseInt(height));
 
       this.logger.debug(`Migrating ${contractTxId} at height ${height}: ${sortKey}`);
 
       await this.levelDb.put(
         {
           contractTxId,
-          sortKey: `${blockHeightString},${defaultArweaveMs},${sortingLast}`
+          sortKey
         },
         new EvalStateResult(state.state, state.validity, {})
       );
