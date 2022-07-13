@@ -99,6 +99,8 @@ export class ArweaveWrapper {
   }
 
   private async doFetchInfo(url: string): Promise<NetworkInfoInterface> {
+    console.log('hitting', url);
+
     try {
       const response = await fetch(url)
         .then((res) => {
