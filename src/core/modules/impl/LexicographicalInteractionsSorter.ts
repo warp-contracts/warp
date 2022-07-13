@@ -3,6 +3,8 @@ import Arweave from 'arweave';
 
 // note: this (i.e. padding to 13 digits) should be safe between years ~1966 and ~2286
 const defaultArweaveMs = ''.padEnd(13, '9');
+const defaultArweaveMs_After_Block_973730 = ''.padEnd(13, '0');
+export const block_973730 = 973730;
 
 /**
  * implementation that is based on current's SDK sorting alg.
@@ -37,8 +39,11 @@ export class LexicographicalInteractionsSorter implements InteractionsSorter {
     const txIdBytes = this.arweave.utils.b64UrlToBuffer(transactionId);
     const concatenated = this.arweave.utils.concatBuffers([blockHashBytes, txIdBytes]);
     const hashed = arrayToHex(await this.arweave.crypto.hash(concatenated));
+
     const blockHeightString = `${blockHeight}`.padStart(12, '0');
 
-    return `${blockHeightString},${defaultArweaveMs},${hashed}`;
+    const arweaveMs = blockHeight <= block_973730 ? defaultArweaveMs : defaultArweaveMs_After_Block_973730;
+
+    return `${blockHeightString},${arweaveMs},${hashed}`;
   }
 }
