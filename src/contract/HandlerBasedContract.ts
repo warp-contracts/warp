@@ -27,12 +27,13 @@ import {
   LoggerFactory,
   SigningFunction,
   sleep,
-  Warp,
   SmartWeaveTags,
-  Tags,
-  SourceImpl,
   SourceData,
-  BundleInteractionResponse
+  SourceImpl,
+  Tags,
+  Warp,
+  WriteInteractionOptions,
+  WriteInteractionResponse
 } from '@warp';
 import { TransactionStatusResponse } from 'arweave/node/transactions';
 import stringify from 'safe-stable-stringify';
@@ -82,7 +83,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
           )}`
         );
       }
-      this.logger.debug('Calling interaction id', _callingInteraction.id);
+      this.logger.debug('Calling interaction', { id: _callingInteraction.id, sortKey: _callingInteraction.sortKey });
       const callStack = new ContractCallStack(_contractTxId, this._callDepth);
       interaction.interactionInput.foreignContractCalls.set(_contractTxId, callStack);
       this._callStack = callStack;
@@ -178,56 +179,82 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   async writeInteraction<Input>(
     input: Input,
-    tags: Tags = [],
-    transfer: ArTransfer = emptyTransfer,
-    strict = false
-  ): Promise<string | null> {
-    this.logger.info('Write interaction input', input);
+    options?: WriteInteractionOptions
+  ): Promise<WriteInteractionResponse | null> {
+    this.logger.info('Write interaction', { input, options });
     if (!this.signer) {
       throw new Error("Wallet not connected. Use 'connect' method first.");
     }
-    const { arweave } = this.warp;
+    const { arweave, interactionsLoader } = this.warp;
 
-    const interactionTx = await this.createInteraction(input, tags, transfer, strict);
-    const response = await arweave.transactions.post(interactionTx);
+    const effectiveTags = options?.tags || [];
+    const effectiveTransfer = options?.transfer || emptyTransfer;
+    const effectiveStrict = options?.strict === true;
+    const effectiveVrf = options?.vrf === true;
+    const effectiveDisableBundling = options?.disableBundling === true;
+    const effectiveReward = options?.reward;
 
-    if (response.status !== 200) {
-      this.logger.error('Error while posting transaction', response);
-      return null;
+    const bundleInteraction = interactionsLoader.type() == 'warp' && !effectiveDisableBundling;
+
+    if (
+      bundleInteraction &&
+      effectiveTransfer.target != emptyTransfer.target &&
+      effectiveTransfer.winstonQty != emptyTransfer.winstonQty
+    ) {
+      throw new Error('Ar Transfers are not allowed for bundled interactions');
     }
 
-    if (this._evaluationOptions.waitForConfirmation) {
-      this.logger.info('Waiting for confirmation of', interactionTx.id);
-      const benchmark = Benchmark.measure();
-      await this.waitForConfirmation(interactionTx.id);
-      this.logger.info('Transaction confirmed after', benchmark.elapsed());
+    if (effectiveVrf && !bundleInteraction) {
+      throw new Error('Vrf generation is only available for bundle interaction');
     }
-    return interactionTx.id;
+
+    if (bundleInteraction) {
+      return await this.bundleInteraction(input, {
+        tags: effectiveTags,
+        strict: effectiveStrict,
+        vrf: effectiveVrf
+      });
+    } else {
+      const interactionTx = await this.createInteraction(
+        input,
+        effectiveTags,
+        effectiveTransfer,
+        effectiveStrict,
+        false,
+        false,
+        effectiveReward
+      );
+      const response = await arweave.transactions.post(interactionTx);
+
+      if (response.status !== 200) {
+        this.logger.error('Error while posting transaction', response);
+        return null;
+      }
+
+      if (this._evaluationOptions.waitForConfirmation) {
+        this.logger.info('Waiting for confirmation of', interactionTx.id);
+        const benchmark = Benchmark.measure();
+        await this.waitForConfirmation(interactionTx.id);
+        this.logger.info('Transaction confirmed after', benchmark.elapsed());
+      }
+
+      if (this.warp.environment == 'local' && this._evaluationOptions.mineArLocalBlocks) {
+        await this.warp.testing.mineBlock();
+      }
+
+      return { originalTxId: interactionTx.id };
+    }
   }
 
-  async bundleInteraction<Input>(
+  private async bundleInteraction<Input>(
     input: Input,
     options: {
       tags: Tags;
       strict: boolean;
       vrf: boolean;
-    } = {
-      tags: [],
-      strict: false,
-      vrf: false
     }
-  ): Promise<BundleInteractionResponse | null> {
+  ): Promise<WriteInteractionResponse | null> {
     this.logger.info('Bundle interaction input', input);
-    if (!this.signer) {
-      throw new Error("Wallet not connected. Use 'connect' method first.");
-    }
-
-    options = {
-      tags: [],
-      strict: false,
-      vrf: false,
-      ...options
-    };
 
     const interactionTx = await this.createInteraction(
       input,
@@ -271,7 +298,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     transfer: ArTransfer,
     strict: boolean,
     bundle = false,
-    vrf = false
+    vrf = false,
+    reward?: string
   ) {
     if (this._evaluationOptions.internalWrites) {
       // Call contract and verify if there are any internal writes:
@@ -321,7 +349,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
       tags,
       transfer.target,
       transfer.winstonQty,
-      bundle
+      bundle,
+      reward
     );
     return interactionTx;
   }
@@ -451,7 +480,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     // create execution context
     let executionContext = await this.createExecutionContext(this._contractTxId, sortKey, true);
 
-    const currentBlockData = await arweave.blocks.getCurrent();
+    const currentBlockData =
+      this.warp.environment == 'mainnet' ? await this._arweaveWrapper.warpGwBlock() : await arweave.blocks.getCurrent();
 
     // add caller info to execution context
     let effectiveCaller;
@@ -497,7 +527,14 @@ export class HandlerBasedContract<State> implements Contract<State> {
       true
     );
     const dummyTx = createDummyTx(tx, executionContext.caller, currentBlockData);
-    dummyTx.sortKey = await this._sorter.createSortKey(dummyTx.block.id, dummyTx.id, dummyTx.block.height);
+
+    this.logger.debug('Creating sortKey for', {
+      blockId: dummyTx.block.id,
+      id: dummyTx.id,
+      height: dummyTx.block.height
+    });
+
+    dummyTx.sortKey = await this._sorter.createSortKey(dummyTx.block.id, dummyTx.id, dummyTx.block.height, true);
 
     const handleResult = await this.evalInteraction<Input, View>(
       {
@@ -547,6 +584,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     const result = await this.evalInteraction<Input, View>(interactionData, executionContext, evalStateResult);
     result.originalValidity = evalStateResult.validity;
+    result.originalErrorMessages = evalStateResult.errorMessages;
 
     return result;
   }
@@ -628,12 +666,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return this;
   }
 
-  async evolve(newSrcTxId: string, useBundler = false): Promise<string | BundleInteractionResponse | null> {
-    if (useBundler) {
-      return await this.bundleInteraction<any>({ function: 'evolve', value: newSrcTxId });
-    } else {
-      return await this.writeInteraction<any>({ function: 'evolve', value: newSrcTxId });
-    }
+  async evolve(newSrcTxId: string, options?: WriteInteractionOptions): Promise<WriteInteractionResponse | null> {
+    return await this.writeInteraction<any>({ function: 'evolve', value: newSrcTxId }, options);
   }
 
   async save(sourceData: SourceData): Promise<any> {

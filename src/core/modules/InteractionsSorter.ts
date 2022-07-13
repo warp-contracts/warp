@@ -9,7 +9,7 @@ export interface InteractionsSorter {
   /**
    * generates a sort key according to protocol specs
    */
-  createSortKey(blockId: string, transactionId: string, blockHeight: number): Promise<string>;
+  createSortKey(blockId: string, transactionId: string, blockHeight: number, dummy?: boolean): Promise<string>;
 
   /**
    * retreives the block height from the sort key

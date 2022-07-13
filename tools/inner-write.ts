@@ -45,7 +45,7 @@ async function main() {
 
   const cacheDir = './cache/tools/'
   try {
-    smartweave = WarpFactory.forTesting(arweave);
+    smartweave = WarpFactory.forLocal(arweave);
 
     wallet = await arweave.wallets.generate();
     walletAddress = await arweave.wallets.jwkToAddress(wallet);
@@ -61,13 +61,13 @@ async function main() {
     );
 
     // deploying contract using the new SDK.
-    calleeTxId = await smartweave.createContract.deploy({
+    ({contractTxId: calleeTxId} = await smartweave.createContract.deploy({
       wallet,
       initState: JSON.stringify({ counter: 0 }),
       src: calleeContractSrc
-    });
+    }));
 
-    const callingTxId = await smartweave.createContract.deploy({
+    const {contractTxId: callingTxId} = await smartweave.createContract.deploy({
       wallet,
       initState: JSON.stringify({ ticker: 'WRITING_CONTRACT' }),
       src: callingContractSrc

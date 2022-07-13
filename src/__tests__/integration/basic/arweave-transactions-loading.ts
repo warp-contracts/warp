@@ -1,7 +1,6 @@
 import fs from 'fs';
 
 import ArLocal from 'arlocal';
-import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import {
   ArweaveGatewayInteractionsLoader,
@@ -14,9 +13,8 @@ import {
   WarpFactory
 } from '@warp';
 import path from 'path';
-import { addFunds, mineBlock } from '../_helpers';
+import { mineBlock } from '../_helpers';
 
-let arweave: Arweave;
 let arlocal: ArLocal;
 let warp: Warp;
 let contract: Contract<ExampleContractState>;
@@ -41,18 +39,14 @@ describe('Testing the Arweave interactions loader', () => {
     arlocal = new ArLocal(1831, false);
     await arlocal.start();
 
-    arweave = Arweave.init({
-      host: 'localhost',
-      port: 1831,
-      protocol: 'http'
-    });
+    warp = WarpFactory.forLocal(1831);
+
+    const { arweave } = warp;
 
     loader = new ArweaveGatewayInteractionsLoader(arweave);
     sorter = new LexicographicalInteractionsSorter(arweave);
-    warp = WarpFactory.forTesting(arweave);
 
-    wallet = await arweave.wallets.generate();
-    await addFunds(arweave, wallet);
+    wallet = await warp.testing.generateWallet();
 
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/inf-loop-contract.js'), 'utf8');
     const { contractTxId } = await warp.createContract.deploy({
@@ -66,11 +60,12 @@ describe('Testing the Arweave interactions loader', () => {
     contract = warp
       .contract<ExampleContractState>(contractTxId)
       .setEvaluationOptions({
-        maxInteractionEvaluationTimeSeconds: 1
+        maxInteractionEvaluationTimeSeconds: 1,
+        mineArLocalBlocks: false
       })
       .connect(wallet);
 
-    await mineBlock(arweave);
+    await mineBlock(warp);
   });
 
   afterAll(async () => {
@@ -83,7 +78,7 @@ describe('Testing the Arweave interactions loader', () => {
     await contract.writeInteraction({ function: 'add' });
     await contract.writeInteraction({ function: 'add' });
     await contract.writeInteraction({ function: 'add' });
-    await mineBlock(arweave);
+    await mineBlock(warp);
 
     await contract.writeInteraction({ function: 'add' });
     await contract.writeInteraction({ function: 'add' });
@@ -95,14 +90,14 @@ describe('Testing the Arweave interactions loader', () => {
     await contract.writeInteraction({ function: 'add' });
     await contract.writeInteraction({ function: 'add' });
     await contract.writeInteraction({ function: 'add' });
-    await mineBlock(arweave);
+    await mineBlock(warp);
 
     await contract.writeInteraction({ function: 'add' });
     await contract.writeInteraction({ function: 'add' });
     await contract.writeInteraction({ function: 'add' });
     await contract.writeInteraction({ function: 'add' });
     await contract.writeInteraction({ function: 'add' });
-    await mineBlock(arweave);
+    await mineBlock(warp);
   });
 
   it('should load all interactions', async () => {
