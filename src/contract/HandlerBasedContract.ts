@@ -534,7 +534,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       height: dummyTx.block.height
     });
 
-    dummyTx.sortKey = await this._sorter.createSortKey(dummyTx.block.id, dummyTx.id, dummyTx.block.height);
+    dummyTx.sortKey = await this._sorter.createSortKey(dummyTx.block.id, dummyTx.id, dummyTx.block.height, true);
 
     const handleResult = await this.evalInteraction<Input, View>(
       {
