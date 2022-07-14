@@ -192,7 +192,9 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>
   ): Promise<void> {
-    await this.putInCache(executionContext.contractDefinition.txId, transaction, state);
+    // TODO: this has been properly fixed in the "leveldb" branch (1.2.0 version)
+    // switching off for now here, as in some very rare situations it can cause issues
+    // await this.putInCache(executionContext.contractDefinition.txId, transaction, state);
   }
 
   protected async putInCache<State>(
