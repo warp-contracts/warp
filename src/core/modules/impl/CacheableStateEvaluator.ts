@@ -169,10 +169,12 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       return;
     }
     const txIndex = executionContext.sortedInteractions.indexOf(transaction);
-    const prevIndex = Math.max(0, txIndex - 1);
+    if (txIndex < 1) {
+      return;
+    }
     await this.putInCache(
       executionContext.contractDefinition.txId,
-      executionContext.sortedInteractions[prevIndex],
+      executionContext.sortedInteractions[txIndex - 1],
       state
     );
   }

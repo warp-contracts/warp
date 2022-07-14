@@ -100,7 +100,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       if (isInteractWrite && internalWrites) {
         // evaluating txId of the contract that is writing on THIS contract
         const writingContractTxId = this.tagsParser.getContractTag(missingInteraction);
-        this.logger.debug('Loading writing contract', writingContractTxId);
+        this.logger.debug('Internal Write - Loading writing contract', writingContractTxId);
 
         const interactionCall: InteractionCall = contract
           .getCallStack()
@@ -113,8 +113,13 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           missingInteraction
         );
 
-        this.logger.debug('Reading state of the calling contract', missingInteraction.sortKey);
+        await this.onContractCall(
+          missingInteraction,
+          executionContext,
+          new EvalStateResult<State>(currentState, validity, errorMessages)
+        );
 
+        this.logger.debug('Reading state of the calling contract', missingInteraction.sortKey);
         /**
          Reading the state of the writing contract.
          This in turn will cause the state of THIS contract to be
@@ -236,13 +241,10 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         await this.onStateUpdate<State>(missingInteraction, executionContext, toCache);
       }
 
-      // I'm really NOT a fan of this "modify" feature, but I don't have idea how to better
-      // implement the "evolve" feature
       for (const { modify } of this.executionContextModifiers) {
         executionContext = await modify<State>(currentState, executionContext);
       }
     }
-    //this.logger.info('State evaluation total:', stateEvaluationBenchmark.elapsed());
     const evalStateResult = new EvalStateResult<State>(currentState, validity, errorMessages);
 
     // state could have been fully retrieved from cache
