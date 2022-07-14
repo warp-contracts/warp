@@ -13,7 +13,7 @@ async function main() {
     logging: false // Enable network request logging
   });
 
-  const warp = WarpFactory.customWarpGw(arweave, defaultWarpGwOptions, {
+  const warp = WarpFactory.forMainnet({
     ...defaultCacheOptions,
     dbLocation: './tools/.leveldb'
   });
