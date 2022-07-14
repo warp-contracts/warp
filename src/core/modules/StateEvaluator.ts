@@ -67,12 +67,16 @@ export interface StateEvaluator {
    */
   syncState(contractTxId: string, sortKey: string, state: any, validity: any): Promise<void>;
 
-  dumpCache(): Promise<any>;
-
   internalWriteState<State>(
     contractTxId: string,
     sortKey: string
   ): Promise<SortKeyCacheResult<EvalStateResult<State>> | null>;
+
+  dumpCache(): Promise<any>;
+
+  hasContractCached(contractTxId: string): Promise<boolean>;
+
+  lastCachedSortKey(): Promise<string | null>;
 }
 
 export class EvalStateResult<State> {

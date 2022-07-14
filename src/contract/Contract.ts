@@ -97,11 +97,15 @@ export interface Contract<State = unknown> extends Source {
    * be skipped during contract inner calls - to prevent the infinite call loop issue
    * (mostly related to contract that use the Foreign Call Protocol)
    */
-  readState(sortKeyOrBlockHeight?: string | number, currentTx?: CurrentTx[]): Promise<EvalStateResult<State>>;
+  readState(
+    sortKeyOrBlockHeight?: string | number,
+    currentTx?: CurrentTx[],
+    interactions?: GQLNodeInterface[]
+  ): Promise<EvalStateResult<State>>;
 
   /**
    * Returns the "view" of the state, computed by the SWC -
-   * ie. object that is a derivative of a current state and some specific
+   * i.e. object that is a derivative of a current state and some specific
    * smart contract business logic.
    * Similar to the "interactRead" from the current SDK version.
    *
@@ -222,6 +226,4 @@ export interface Contract<State = unknown> extends Source {
    * @param newSrcTxId - result of the {@link save} method call.
    */
   evolve(newSrcTxId: string, options?: WriteInteractionOptions): Promise<WriteInteractionResponse | null>;
-
-  dumpCache(): Promise<any>;
 }

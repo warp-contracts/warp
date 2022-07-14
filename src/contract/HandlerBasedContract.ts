@@ -93,7 +93,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
   }
 
-  async readState(sortKeyOrBlockHeight?: string | number, currentTx?: CurrentTx[]): Promise<EvalStateResult<State>> {
+  async readState(
+    sortKeyOrBlockHeight?: string | number,
+    currentTx?: CurrentTx[],
+    interactions?: GQLNodeInterface[]
+  ): Promise<EvalStateResult<State>> {
     this.logger.info('Read state for', {
       contractTxId: this._contractTxId,
       currentTx,
@@ -112,7 +116,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
         ? this._sorter.generateLastSortKey(sortKeyOrBlockHeight)
         : sortKeyOrBlockHeight;
 
-    const executionContext = await this.createExecutionContext(this._contractTxId, sortKey, false);
+    const executionContext = await this.createExecutionContext(this._contractTxId, sortKey, false, interactions);
     this.logger.info('Execution Context', {
       srcTxId: executionContext.contractDefinition?.srcTxId,
       missingInteractions: executionContext.sortedInteractions?.length,
@@ -400,7 +404,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
   private async createExecutionContext(
     contractTxId: string,
     upToSortKey?: string,
-    forceDefinitionLoad = false
+    forceDefinitionLoad = false,
+    interactions?: GQLNodeInterface[]
   ): Promise<ExecutionContext<State, HandlerApi<State>>> {
     const { definitionLoader, interactionsLoader, executorFactory, stateEvaluator } = this.warp;
 
@@ -424,7 +429,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
     } else {
       [contractDefinition, sortedInteractions] = await Promise.all([
         definitionLoader.load<State>(contractTxId, evolvedSrcTxId),
-        interactionsLoader.load(contractTxId, cachedState?.sortKey, upToSortKey, this._evaluationOptions)
+        interactions
+          ? Promise.resolve(interactions)
+          : interactionsLoader.load(contractTxId, cachedState?.sortKey, upToSortKey, this._evaluationOptions)
       ]);
       this.logger.debug('contract and interactions load', benchmark.elapsed());
       handler = (await executorFactory.create(contractDefinition, this._evaluationOptions)) as HandlerApi<State>;
@@ -675,11 +682,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const srcTx = await source.save(sourceData, this.signer);
 
     return srcTx.id;
-  }
-
-  async dumpCache(): Promise<any> {
-    const { stateEvaluator } = this.warp;
-    return await stateEvaluator.dumpCache();
   }
 
   get callingInteraction(): GQLNodeInterface | null {

@@ -224,4 +224,12 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
   ): Promise<SortKeyCacheResult<EvalStateResult<State>> | null> {
     return (await this.cache.get(contractTxId, sortKey)) as SortKeyCacheResult<EvalStateResult<State>>;
   }
+
+  async hasContractCached(contractTxId: string): Promise<boolean> {
+    return (await this.cache.getLast(contractTxId)) != null;
+  }
+
+  async lastCachedSortKey(): Promise<string | null> {
+    return await this.cache.getLastSortKey();
+  }
 }

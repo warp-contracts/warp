@@ -39,9 +39,6 @@ async function main() {
     throw new Error("Gotcha!");
   }
 
-
-
-
   const heapUsedAfter = Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100;
   const rssUsedAfter = Math.round((process.memoryUsage().rss / 1024 / 1024) * 100) / 100;
   logger.warn('Heap used in MB', {

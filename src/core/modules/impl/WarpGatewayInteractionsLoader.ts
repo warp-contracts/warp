@@ -64,7 +64,8 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
 
     const interactions: GQLNodeInterface[] = [];
     let page = 0;
-    let totalPages = 0;
+    let limit = 0;
+    let items = 0;
 
     const benchmarkTotalTime = Benchmark.measure();
     do {
@@ -78,7 +79,7 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
           ...(fromSortKey ? { from: fromSortKey } : ''),
           ...(toSortKey ? { to: toSortKey } : ''),
           page: (++page).toString(),
-          minimize: 'true',
+          fromSdk: 'true',
           ...(this.confirmationStatus && this.confirmationStatus.confirmed ? { confirmationStatus: 'confirmed' } : ''),
           ...(this.confirmationStatus && this.confirmationStatus.notCorrupted
             ? { confirmationStatus: 'not_corrupted' }
@@ -95,21 +96,15 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
           }
           throw new Error(`Unable to retrieve transactions. Warp gateway responded with status ${error.status}.`);
         });
-      totalPages = response.paging.pages;
+      this.logger.debug(`Loading interactions: page ${page} loaded in ${benchmarkRequestTime.elapsed()}`);
+      this.logger.debug(`Interactions`, response.interactions);
 
-      this.logger.debug(
-        `Loading interactions: page ${page} of ${totalPages} loaded in ${benchmarkRequestTime.elapsed()}`
-      );
-
-      response.interactions.forEach((interaction) => {
-        interactions.push({
-          ...interaction.interaction,
-          confirmationStatus: interaction.status
-        });
-      });
+      interactions.push(...response.interactions);
+      limit = response.paging.limit;
+      items = response.paging.items;
 
       this.logger.debug(`Loaded interactions length: ${interactions.length}, from: ${fromSortKey}, to: ${toSortKey}`);
-    } while (page < totalPages);
+    } while (items == limit); // note: items < limit means that we're on the last page
 
     this.logger.debug('All loaded interactions:', {
       from: fromSortKey,

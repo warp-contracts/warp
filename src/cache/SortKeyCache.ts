@@ -10,9 +10,14 @@ export interface SortKeyCache<V> {
   getLessOrEqual(key: string, sortKey: string): Promise<SortKeyCacheResult<V> | null>;
 
   /**
-   * returns latest value stored for given key
+   * returns latest value stored for given contractTxId
    */
-  getLast(key: string): Promise<SortKeyCacheResult<V> | null>;
+  getLast(contractTxId: string): Promise<SortKeyCacheResult<V> | null>;
+
+  /**
+   * returns last cached sort key - takes all contracts into account
+   */
+  getLastSortKey(): Promise<string | null>;
 
   /**
    * returns value for the key and exact blockHeight

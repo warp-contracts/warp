@@ -93,4 +93,20 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
     const result = await this.db.iterator().all();
     return result;
   }
+
+  // TODO: this implementation is sub-optimal
+  async getLastSortKey(): Promise<string | null> {
+    let lastSortKey = '';
+    const keys = await this.db.keys().all();
+
+    for (const key of keys) {
+      // !<contract_tx_id (43 chars)>!<sort_key>
+      const sortKey = key.substring(45);
+      if (sortKey.localeCompare(lastSortKey) > 0) {
+        lastSortKey = sortKey;
+      }
+    }
+
+    return lastSortKey == '' ? null : lastSortKey;
+  }
 }
