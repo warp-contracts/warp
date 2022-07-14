@@ -47,16 +47,16 @@ export class WarpFactory {
    */
   static forLocal(
     port = 1984,
+    arweave = Arweave.init({
+      host: 'localhost',
+      port: port,
+      protocol: 'http'
+    }),
     cacheOptions = {
       ...defaultCacheOptions,
       inMemory: true
     }
   ) {
-    const arweave = Arweave.init({
-      host: 'localhost',
-      port: port,
-      protocol: 'http'
-    });
     return this.customArweaveGw(arweave, cacheOptions, 'local');
   }
 
@@ -64,14 +64,15 @@ export class WarpFactory {
    * creates a Warp instance suitable for testing
    * with Warp testnet (https://testnet.redstone.tools/)
    */
-  static forTestnet(cacheOptions = defaultCacheOptions) {
-    const arweave = Arweave.init({
+  static forTestnet(
+    arweave = Arweave.init({
       host: 'testnet.redstone.tools',
       port: 443,
       protocol: 'https'
-    });
-
-    return this.customArweaveGw(arweave, defaultCacheOptions, 'testnet');
+    }),
+    cacheOptions = defaultCacheOptions
+  ) {
+    return this.customArweaveGw(arweave, cacheOptions, 'testnet');
   }
 
   /**
