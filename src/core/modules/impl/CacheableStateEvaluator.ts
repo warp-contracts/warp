@@ -113,9 +113,9 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     transaction: GQLNodeInterface,
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>,
-    nthInteraction?: number
+    force = false
   ): Promise<void> {
-    if (executionContext.evaluationOptions.updateCacheForEachInteraction) {
+    if (executionContext.evaluationOptions.updateCacheForEachInteraction || force) {
       this.cLogger.debug(
         `onStateUpdate: cache update for contract ${executionContext.contractDefinition.txId} [${transaction.sortKey}]`,
         {
@@ -195,7 +195,8 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       transaction: transaction.id,
       sortKey: transaction.sortKey,
       dry: transaction.dry,
-      state: stateToCache.state
+      state: stateToCache.state,
+      validity: stateToCache.validity
     });
 
     await this.cache.put(new StateCacheKey(contractTxId, transaction.sortKey), stateToCache);

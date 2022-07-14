@@ -113,7 +113,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           missingInteraction
         );
 
-        this.logger.debug('Reading state of the calling contract', missingInteraction.block.height);
+        this.logger.debug('Reading state of the calling contract', missingInteraction.sortKey);
 
         /**
          Reading the state of the writing contract.
@@ -147,7 +147,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           }
 
           const toCache = new EvalStateResult(currentState, validity, errorMessages);
-
           await this.onStateUpdate<State>(missingInteraction, executionContext, toCache);
           if (canBeCached(missingInteraction)) {
             lastConfirmedTxState = {
@@ -234,7 +233,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
             state: toCache
           };
         }
-        await this.onStateUpdate<State>(missingInteraction, executionContext, toCache, i);
+        await this.onStateUpdate<State>(missingInteraction, executionContext, toCache);
       }
 
       // I'm really NOT a fan of this "modify" feature, but I don't have idea how to better
@@ -328,7 +327,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     transaction: GQLNodeInterface,
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>,
-    nthInteraction?: number
+    force?: boolean
   ): Promise<void>;
 
   abstract putInCache<State>(

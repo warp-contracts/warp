@@ -14,7 +14,7 @@ export interface StateEvaluator {
     transaction: GQLNodeInterface,
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>,
-    nthInteraction?: number
+    force?: boolean
   ): Promise<void>;
 
   /**

@@ -129,9 +129,11 @@ export class ContractHandlerApi<State> implements HandlerApi<State> {
       await executionContext.warp.stateEvaluator.onInternalWriteStateUpdate(this.swGlobal._activeTx, contractTxId, {
         state: result.state as State,
         validity: {
+          ...result.originalValidity,
           [this.swGlobal._activeTx.id]: result.type == 'ok'
         },
         errorMessages: {
+          ...result.originalErrorMessages,
           [this.swGlobal._activeTx.id]: result.errorMessage
         }
       });

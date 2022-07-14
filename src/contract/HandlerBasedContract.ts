@@ -582,7 +582,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
       currentTx
     };
 
-    return await this.evalInteraction(interactionData, executionContext, evalStateResult);
+    const result = await this.evalInteraction<Input, View>(interactionData, executionContext, evalStateResult);
+    result.originalValidity = evalStateResult.validity;
+    result.originalErrorMessages = evalStateResult.errorMessages;
+
+    return result;
   }
 
   private async evalInteraction<Input, View = unknown>(
