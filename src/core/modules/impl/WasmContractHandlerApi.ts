@@ -192,7 +192,7 @@ export class WasmContractHandlerApi<State> implements HandlerApi<State> {
       const { stateEvaluator } = executionContext.warp;
       const childContract = executionContext.warp.contract(contractTxId, executionContext.contract, interactionTx);
 
-      // await stateEvaluator.onContractCall(interactionTx, executionContext, currentResult);
+      await stateEvaluator.onContractCall(interactionTx, executionContext, currentResult);
 
       const stateWithValidity = await childContract.readState(interactionTx.sortKey, [
         ...(currentTx || []),
