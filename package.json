@@ -1,6 +1,6 @@
 {
   "name": "warp-contracts",
-  "version": "1.2.0-beta.7",
+  "version": "1.2.0-beta.8",
   "description": "An implementation of the SmartWeave smart contract protocol.",
   "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",
