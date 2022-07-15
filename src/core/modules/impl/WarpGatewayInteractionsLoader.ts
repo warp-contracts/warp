@@ -71,7 +71,7 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
     do {
       const benchmarkRequestTime = Benchmark.measure();
 
-      const url = `${this.baseUrl}/gateway/interactions-sort-key`;
+      const url = `${this.baseUrl}/gateway/v2/interactions-sort-key`;
 
       const response = await fetch(
         `${url}?${new URLSearchParams({
