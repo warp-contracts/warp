@@ -59,7 +59,7 @@ async function test() {
   let lastSortKey = '';
 
 
-  for (const key of await db.keys().all()) {
+  /*for (const key of await db.keys().all()) {
     console.log(key);
     const sortKey = key.substring(45);
     console.log(key.substring(45));
@@ -68,7 +68,17 @@ async function test() {
     }
   }
 
-  console.log({lastSortKey});
+  console.log({lastSortKey});*/
+
+  const keys = await db.keys().all();
+
+  const result = new Set<string>();
+  keys.forEach((k) => result.add(k.substring(1, 44)));
+
+  console.log(Array.from(result));
+
+  // returns sub-levels - i.e. contracts
+  // console.log(keys.map((k) => k.substring(1, 44)));
 
 }
 

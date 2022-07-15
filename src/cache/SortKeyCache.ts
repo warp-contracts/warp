@@ -33,8 +33,15 @@ export interface SortKeyCache<V> {
 
   /**
    * used mostly for debugging, allows to dump the current content cache
+   * It's slow.
    */
   dump(): Promise<any>;
+
+  /**
+   * Return all cached contracts.
+   * Slow, as LevelDB in general kinda sucks in case of iterating all keys/values.
+   */
+  allContracts(): Promise<string[]>;
 }
 
 export class StateCacheKey {

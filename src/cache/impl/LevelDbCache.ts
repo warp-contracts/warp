@@ -95,11 +95,13 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
   }
 
   // TODO: this implementation is sub-optimal
+  // the lastSortKey should be probably memoized during "put"
   async getLastSortKey(): Promise<string | null> {
     let lastSortKey = '';
     const keys = await this.db.keys().all();
 
     for (const key of keys) {
+      // default key format used by sub-levels:
       // !<contract_tx_id (43 chars)>!<sort_key>
       const sortKey = key.substring(45);
       if (sortKey.localeCompare(lastSortKey) > 0) {
@@ -108,5 +110,14 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
     }
 
     return lastSortKey == '' ? null : lastSortKey;
+  }
+
+  async allContracts(): Promise<string[]> {
+    const keys = await this.db.keys().all();
+
+    const result = new Set<string>();
+    keys.forEach((k) => result.add(k.substring(1, 44)));
+
+    return Array.from(result);
   }
 }

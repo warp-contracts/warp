@@ -77,6 +77,8 @@ export interface StateEvaluator {
   hasContractCached(contractTxId: string): Promise<boolean>;
 
   lastCachedSortKey(): Promise<string | null>;
+
+  allCachedContracts(): Promise<string[]>;
 }
 
 export class EvalStateResult<State> {
