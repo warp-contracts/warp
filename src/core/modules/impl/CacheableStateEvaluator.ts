@@ -10,6 +10,7 @@ import Arweave from 'arweave';
 import { GQLNodeInterface } from '@warp/legacy';
 import { LoggerFactory } from '@warp/logging';
 import { CurrentTx } from '@warp/contract';
+import { indent } from '@warp/utils';
 
 /**
  * An implementation of DefaultStateEvaluator that adds caching capabilities.
@@ -102,7 +103,11 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     state: EvalStateResult<State>
   ): Promise<void> {
     const contractTxId = executionContext.contractDefinition.txId;
-    this.cLogger.debug(`onStateEvaluated: cache update for contract ${contractTxId} [${transaction.sortKey}]`);
+    this.cLogger.debug(
+      `${indent(executionContext.contract.callDepth())}onStateEvaluated: cache update for contract ${contractTxId} [${
+        transaction.sortKey
+      }]`
+    );
 
     // this will be problematic if we decide to cache only "onStateEvaluated" and containsInteractionsFromSequencer = true
     // as a workaround, we're now caching every 100 interactions

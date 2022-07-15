@@ -9,6 +9,7 @@ import {
   GQLNodeInterface,
   GQLTagInterface,
   HandlerApi,
+  indent,
   InteractionCall,
   InteractionResult,
   LoggerFactory,
@@ -68,8 +69,12 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
     executionContext?.handler.initState(currentState);
 
-    this.logger.debug(
-      `Evaluating state for ${contractDefinition.txId} [${missingInteractions.length} non-cached of ${sortedInteractions.length} all]`
+    const depth = executionContext.contract.callDepth();
+
+    this.logger.info(
+      `${indent(depth)}Evaluating state for ${contractDefinition.txId} [${missingInteractions.length} non-cached of ${
+        sortedInteractions.length
+      } all]`
     );
 
     let errorMessage = null;
@@ -89,7 +94,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       }
 
       this.logger.debug(
-        `[${contractDefinition.txId}][${missingInteraction.id}][${missingInteraction.block.height}]: ${
+        `${indent(depth)}[${contractDefinition.txId}][${missingInteraction.id}][${missingInteraction.block.height}]: ${
           missingInteractions.indexOf(missingInteraction) + 1
         }/${missingInteractions.length} [of all:${sortedInteractions.length}]`
       );
@@ -100,7 +105,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       if (isInteractWrite && internalWrites) {
         // evaluating txId of the contract that is writing on THIS contract
         const writingContractTxId = this.tagsParser.getContractTag(missingInteraction);
-        this.logger.debug('Internal Write - Loading writing contract', writingContractTxId);
+        this.logger.debug(`${indent(depth)}Internal Write - Loading writing contract`, writingContractTxId);
 
         const interactionCall: InteractionCall = contract
           .getCallStack()
@@ -119,7 +124,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           new EvalStateResult<State>(currentState, validity, errorMessages)
         );
 
-        this.logger.debug('Reading state of the calling contract', missingInteraction.sortKey);
+        this.logger.debug(`${indent(depth)}Reading state of the calling contract at`, missingInteraction.sortKey);
         /**
          Reading the state of the writing contract.
          This in turn will cause the state of THIS contract to be
@@ -135,12 +140,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         // loading latest state of THIS contract from cache
         const newState = await this.internalWriteState<State>(contractDefinition.txId, missingInteraction.sortKey);
-        this.logger.debug('New state:', {
-          sortKey: missingInteraction.sortKey,
-          newState,
-          txId: contractDefinition.txId
-        });
-
         if (newState !== null) {
           currentState = newState.cachedValue.state;
           // we need to update the state in the wasm module
@@ -171,18 +170,16 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           errorMessage: errorMessage,
           gasUsed: 0 // TODO...
         });
-
-        this.logger.debug('New state after internal write', { contractTxId: contractDefinition.txId, newState });
       } else {
         // "direct" interaction with this contract - "standard" processing
         const inputTag = this.tagsParser.getInputTag(missingInteraction, executionContext.contractDefinition.txId);
         if (!inputTag) {
-          this.logger.error(`Skipping tx - Input tag not found for ${missingInteraction.id}`);
+          this.logger.error(`${indent(depth)}Skipping tx - Input tag not found for ${missingInteraction.id}`);
           continue;
         }
         const input = this.parseInput(inputTag);
         if (!input) {
-          this.logger.error(`Skipping tx - invalid Input tag - ${missingInteraction.id}`);
+          this.logger.error(`${indent(depth)}Skipping tx - invalid Input tag - ${missingInteraction.id}`);
           continue;
         }
 
@@ -197,7 +194,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           currentTx
         };
 
-        this.logger.debug('Interaction:', interaction);
+        this.logger.debug(`${indent(depth)}Interaction:`, interaction);
 
         const interactionCall: InteractionCall = contract.getCallStack().addInteractionData(interactionData);
 
@@ -213,7 +210,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         this.logResult<State>(result, missingInteraction, executionContext);
 
-        this.logger.debug('Interaction evaluation', singleInteractionBenchmark.elapsed());
+        this.logger.debug(`${indent(depth)}Interaction evaluation`, singleInteractionBenchmark.elapsed());
 
         interactionCall.update({
           cacheHit: false,
