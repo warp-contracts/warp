@@ -735,7 +735,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return hash.digest('hex');
   }
 
-  async syncState(externalUrl: string, params?: object): Promise<Contract> {
+  async syncState(externalUrl: string, params?: any): Promise<Contract> {
     const { stateEvaluator } = this.warp;
     const response = await fetch(
       `${externalUrl}?${new URLSearchParams({

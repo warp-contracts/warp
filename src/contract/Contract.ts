@@ -244,7 +244,7 @@ export interface Contract<State = unknown> extends Source {
    * @param params - by default only query param with `contractId` is set by SDK, any additional ones can be passed
    * in the `params` object
    */
-  syncState(externalUrl: string, params?: object): Promise<Contract>;
+  syncState(externalUrl: string, params?: any): Promise<Contract>;
 
   /**
    * Evolve is a feature that allows to change contract's source
