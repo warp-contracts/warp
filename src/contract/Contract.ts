@@ -239,11 +239,12 @@ export interface Contract<State = unknown> extends Source {
   stateHash(state: State): string;
 
   /**
-   * this method allows to sync the state of the local SDK state with the Execution Network -
-   * to make features like "viewStates" possible when using EN;
-   * @param nodeAddress - distributed execution network node address
+   * this method allows to sync the state of the local SDK state with the state provided by an external endpoint;
+   * @param externalUrl - external endpoint url
+   * @param params - by default only query param with `contractId` is set by SDK, any additional ones can be passed
+   * in the `params` object
    */
-  syncState(nodeAddress: string): Promise<Contract>;
+  syncState(externalUrl: string, params?: object): Promise<Contract>;
 
   /**
    * Evolve is a feature that allows to change contract's source
