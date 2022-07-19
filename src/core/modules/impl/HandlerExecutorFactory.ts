@@ -20,7 +20,7 @@ import { asWasmImports } from './wasm/as-wasm-imports';
 import { rustWasmImports } from './wasm/rust-wasm-imports';
 import { Go } from './wasm/go-wasm-imports';
 import BigNumber from 'bignumber.js';
-import { NodeVM, VMScript } from 'vm2';
+import * as vm2 from 'vm2';
 import * as Buffer from 'buffer';
 
 class ContractError extends Error {
@@ -168,10 +168,9 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
           );
         }
       }
-
       if (evaluationOptions.useVM2) {
-        const vmScript = new VMScript(normalizedSource);
-        const vm = new NodeVM({
+        const vmScript = new vm2.VMScript(normalizedSource);
+        const vm = new vm2.NodeVM({
           console: 'off',
           sandbox: {
             SmartWeave: swGlobal,
