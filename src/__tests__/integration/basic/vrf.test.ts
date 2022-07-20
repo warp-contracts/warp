@@ -65,7 +65,7 @@ describe('Testing the Profit Sharing Token', () => {
       },
       'testnet'
     )
-      .useArweaveGateway()
+      .useArweaveGateway(cacheOptions)
       .setInteractionsLoader(loader)
       .build();
 

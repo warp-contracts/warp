@@ -1,4 +1,4 @@
-import { SortKeyCacheResult, SortKeyCache, StateCacheKey } from '@warp/cache';
+import { SortKeyCacheResult, SortKeyCache, CacheKey } from '@warp/cache';
 import {
   DefaultStateEvaluator,
   EvalStateResult,
@@ -206,12 +206,12 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       validity: stateToCache.validity
     });
 
-    await this.cache.put(new StateCacheKey(contractTxId, transaction.sortKey), stateToCache);
+    await this.cache.put(new CacheKey(contractTxId, transaction.sortKey), stateToCache);
   }
 
   async syncState(contractTxId: string, sortKey: string, state: any, validity: any): Promise<void> {
     const stateToCache = new EvalStateResult(state, validity, {});
-    await this.cache.put(new StateCacheKey(contractTxId, sortKey), stateToCache);
+    await this.cache.put(new CacheKey(contractTxId, sortKey), stateToCache);
   }
 
   async dumpCache(): Promise<any> {

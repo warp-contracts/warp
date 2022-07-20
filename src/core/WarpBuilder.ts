@@ -1,6 +1,7 @@
 import Arweave from 'arweave';
 import {
   ArweaveGatewayInteractionsLoader,
+  CacheOptions,
   ConfirmationStatus,
   ContractDefinitionLoader,
   DebuggableExecutorFactory,
@@ -18,6 +19,7 @@ import {
   WarpGatewayContractDefinitionLoader,
   WarpGatewayInteractionsLoader
 } from '@warp';
+import { CacheableInteractionsLoader } from './modules/impl/CacheableInteractionsLoader';
 
 export const WARP_GW_URL = 'https://d1o5nlqr4okus2.cloudfront.net';
 
@@ -62,18 +64,28 @@ export class WarpBuilder {
   }
 
   public useWarpGateway(
+    cacheOptions: CacheOptions,
     confirmationStatus: ConfirmationStatus = null,
     source: SourceType = null,
     address = WARP_GW_URL
   ): WarpBuilder {
-    this._interactionsLoader = new WarpGatewayInteractionsLoader(address, confirmationStatus, source);
+    this._interactionsLoader = new CacheableInteractionsLoader(
+      new WarpGatewayInteractionsLoader(address, confirmationStatus, source),
+      {
+        ...cacheOptions,
+        dbLocation: `${cacheOptions.dbLocation}/interactions`
+      }
+    );
     this._definitionLoader = new WarpGatewayContractDefinitionLoader(address, this._arweave, new MemCache());
     return this;
   }
 
-  public useArweaveGateway(): WarpBuilder {
+  public useArweaveGateway(cacheOptions: CacheOptions): WarpBuilder {
     this._definitionLoader = new ContractDefinitionLoader(this._arweave, new MemCache());
-    this._interactionsLoader = new ArweaveGatewayInteractionsLoader(this._arweave);
+    this._interactionsLoader = new CacheableInteractionsLoader(new ArweaveGatewayInteractionsLoader(this._arweave), {
+      ...cacheOptions,
+      dbLocation: `${cacheOptions.dbLocation}/interactions`
+    });
     return this;
   }
 

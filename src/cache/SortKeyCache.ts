@@ -25,9 +25,9 @@ export interface SortKeyCache<V> {
   get(contractTxId: string, sortKey: string, returnDeepCopy?: boolean): Promise<SortKeyCacheResult<V> | null>;
 
   /**
-   * puts new value in cache under given {@link StateCacheKey.key} and {@link StateCacheKey.blockHeight}.
+   * puts new value in cache under given {@link CacheKey.key} and {@link CacheKey.blockHeight}.
    */
-  put(stateCacheKey: StateCacheKey, value: V): Promise<void>;
+  put(cacheKey: CacheKey, value: V): Promise<void>;
 
   close(): Promise<void>;
 
@@ -44,7 +44,7 @@ export interface SortKeyCache<V> {
   allContracts(): Promise<string[]>;
 }
 
-export class StateCacheKey {
+export class CacheKey {
   constructor(readonly contractTxId: string, readonly sortKey: string) {}
 }
 

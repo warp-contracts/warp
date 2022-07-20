@@ -1,9 +1,7 @@
-import { SortKeyCache, StateCacheKey, SortKeyCacheResult } from '../SortKeyCache';
+import { SortKeyCache, CacheKey, SortKeyCacheResult } from '../SortKeyCache';
 import { CacheOptions, LoggerFactory } from '@warp';
 import { Level } from 'level';
 import { MemoryLevel } from 'memory-level';
-
-export const DEFAULT_LEVEL_DB_LOCATION = './cache/warp';
 
 /**
  * The LevelDB is a lexicographically sorted key-value database - so it's ideal for this use case
@@ -29,7 +27,10 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
     if (cacheOptions.inMemory) {
       this.db = new MemoryLevel({ valueEncoding: 'json' });
     } else {
-      const dbLocation = cacheOptions.dbLocation || DEFAULT_LEVEL_DB_LOCATION;
+      if (!cacheOptions.dbLocation) {
+        throw new Error('LevelDb cache configuration error - no db location specified');
+      }
+      const dbLocation = cacheOptions.dbLocation;
       this.logger.info(`Using location ${dbLocation}`);
       this.db = new Level<string, any>(dbLocation, { valueEncoding: 'json' });
     }
@@ -80,7 +81,7 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
     }
   }
 
-  async put(stateCacheKey: StateCacheKey, value: V): Promise<void> {
+  async put(stateCacheKey: CacheKey, value: V): Promise<void> {
     const contractCache = this.db.sublevel<string, any>(stateCacheKey.contractTxId, { valueEncoding: 'json' });
     await contractCache.put(stateCacheKey.sortKey, value);
   }
