@@ -1,7 +1,7 @@
-import { ActionSchema, StateSchema } from '../schemas';
-import { Transaction } from '../imports/smartweave/transaction';
-import { Contract } from '../imports';
-import { ContractResultSchema } from '../contract';
+import {ActionSchema, StateSchema} from '../schemas';
+import {Transaction} from '../imports/smartweave/transaction';
+import {Contract} from '../imports';
+import {ContractResultSchema} from '../contract';
 
 export function evolve(
   state: StateSchema,

@@ -14,7 +14,7 @@ export interface StateEvaluator {
     transaction: GQLNodeInterface,
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>,
-    nthInteraction?: number
+    force?: boolean
   ): Promise<void>;
 
   /**
@@ -118,6 +118,8 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   allowUnsafeClient = false;
 
   walletBalanceUrl = 'http://nyc-1.dev.arweave.net:1984/';
+
+  mineArLocalBlocks = true;
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some features.
@@ -187,4 +189,7 @@ export interface EvaluationOptions {
 
   // an endpoint for retrieving wallet balance info
   walletBalanceUrl: string;
+
+  // whether the local Warp instance should manually mine blocks in ArLocal. Defaults to true.
+  mineArLocalBlocks: boolean;
 }

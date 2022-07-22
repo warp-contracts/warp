@@ -246,6 +246,8 @@ export type HandlerResult<State, Result> = {
 export type InteractionResult<State, Result> = HandlerResult<State, Result> & {
   type: InteractionResultType;
   errorMessage?: string;
+  originalValidity?: Record<string, boolean>;
+  originalErrorMessages?: Record<string, string>;
 };
 
 export type ContractInteraction<Input> = {

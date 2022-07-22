@@ -14,6 +14,7 @@ import {
   SmartWeaveTags
 } from '@warp';
 import Arweave from 'arweave';
+import { GW_TYPE } from '../InteractionsLoader';
 
 const MAX_REQUEST = 100;
 
@@ -237,5 +238,9 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
     const txs = data.data.transactions;
 
     return txs;
+  }
+
+  type(): GW_TYPE {
+    return 'arweave';
   }
 }

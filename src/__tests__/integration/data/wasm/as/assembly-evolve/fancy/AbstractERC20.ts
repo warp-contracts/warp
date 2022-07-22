@@ -1,6 +1,6 @@
-import { ContractError, ERC20 } from './ERC20';
-import { console } from '../imports/console';
-import { msg } from '../imports/smartweave/msg';
+import {ContractError, ERC20} from './ERC20';
+import {console} from '../imports/console';
+import {msg} from '../imports/smartweave/msg';
 
 export abstract class AbstractERC20 implements ERC20 {
   private _name: string;

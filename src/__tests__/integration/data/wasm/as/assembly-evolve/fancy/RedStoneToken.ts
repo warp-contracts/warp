@@ -1,8 +1,8 @@
-import { AbstractERC20 } from './AbstractERC20';
-import { console } from '../imports/console';
-import { ContractError } from './ERC20';
-import { setTimeout } from '../imports/api';
-import { msg } from '../imports/smartweave/msg';
+import {AbstractERC20} from './AbstractERC20';
+import {console} from '../imports/console';
+import {ContractError} from './ERC20';
+import {setTimeout} from '../imports/api';
+import {msg} from '../imports/smartweave/msg';
 
 export class RedStoneToken extends AbstractERC20 {
   constructor(name_: string, symbol_: string) {

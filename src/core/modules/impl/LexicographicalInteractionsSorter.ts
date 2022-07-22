@@ -25,7 +25,7 @@ export class LexicographicalInteractionsSorter implements InteractionsSorter {
     return copy.sort((a, b) => a.node.sortKey.localeCompare(b.node.sortKey));
   }
 
-  public async createSortKey(blockId: string, transactionId: string, blockHeight: number) {
+  public async createSortKey(blockId: string, transactionId: string, blockHeight: number, dummy = false) {
     const blockHashBytes = this.arweave.utils.b64UrlToBuffer(blockId);
     const txIdBytes = this.arweave.utils.b64UrlToBuffer(transactionId);
     const concatenated = this.arweave.utils.concatBuffers([blockHashBytes, txIdBytes]);
@@ -33,7 +33,7 @@ export class LexicographicalInteractionsSorter implements InteractionsSorter {
 
     const blockHeightString = `${blockHeight}`.padStart(12, '0');
 
-    const arweaveMs = this.generateArweaveMs(blockHeight);
+    const arweaveMs = dummy ? lastSortKeyMs : this.generateArweaveMs(blockHeight);
 
     return `${blockHeightString},${arweaveMs},${hashed}`;
   }

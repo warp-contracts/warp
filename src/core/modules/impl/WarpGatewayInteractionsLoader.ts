@@ -7,27 +7,7 @@ import {
   stripTrailingSlash
 } from '@warp';
 import 'redstone-isomorphic';
-
-interface Paging {
-  total: string;
-  limit: number;
-  items: number;
-  page: number;
-  pages: number;
-}
-
-interface Interaction {
-  status: string;
-  confirming_peers: string;
-  confirmations: string;
-  interaction: GQLNodeInterface;
-}
-
-export interface WarpGatewayInteractions {
-  paging: Paging;
-  interactions: Interaction[];
-  message?: string;
-}
+import { GW_TYPE } from '../InteractionsLoader';
 
 export type ConfirmationStatus =
   | {
@@ -139,5 +119,9 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
     });
 
     return interactions;
+  }
+
+  type(): GW_TYPE {
+    return 'warp';
   }
 }

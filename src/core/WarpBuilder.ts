@@ -14,6 +14,7 @@ import {
   SourceType,
   StateEvaluator,
   Warp,
+  WarpEnvironment,
   WarpGatewayContractDefinitionLoader,
   WarpGatewayInteractionsLoader
 } from '@warp';
@@ -26,7 +27,11 @@ export class WarpBuilder {
   private _executorFactory?: ExecutorFactory<HandlerApi<unknown>>;
   private _stateEvaluator?: StateEvaluator;
 
-  constructor(private readonly _arweave: Arweave, private readonly _cache: LevelDbCache<EvalStateResult<unknown>>) {}
+  constructor(
+    private readonly _arweave: Arweave,
+    private readonly _cache: LevelDbCache<EvalStateResult<unknown>>,
+    private readonly _environment: WarpEnvironment = 'custom'
+  ) {}
 
   public setDefinitionLoader(value: DefinitionLoader): WarpBuilder {
     this._definitionLoader = value;
@@ -79,7 +84,8 @@ export class WarpBuilder {
       this._definitionLoader,
       this._interactionsLoader,
       this._executorFactory,
-      this._stateEvaluator
+      this._stateEvaluator,
+      this._environment
     );
   }
 }

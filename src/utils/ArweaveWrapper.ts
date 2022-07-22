@@ -4,6 +4,7 @@ import { GqlReqVariables, LoggerFactory, WARP_GW_URL } from '@warp';
 import { AxiosResponse } from 'axios';
 import Transaction from 'arweave/node/lib/transaction';
 import { Buffer as isomorphicBuffer } from 'redstone-isomorphic';
+import { BlockData } from 'arweave/node/blocks';
 
 export class ArweaveWrapper {
   private readonly logger = LoggerFactory.INST.create('ArweaveWrapper');
@@ -15,12 +16,17 @@ export class ArweaveWrapper {
     this.logger.debug('baseurl', this.baseUrl);
   }
 
-  async rGwInfo(): Promise<NetworkInfoInterface> {
-    return await this.doFetchInfo(`${WARP_GW_URL}/gateway/arweave/info`);
+  async warpGwInfo(): Promise<NetworkInfoInterface> {
+    return await this.doFetchInfo<NetworkInfoInterface>(`${WARP_GW_URL}/gateway/arweave/info`);
+  }
+
+  async warpGwBlock(): Promise<BlockData> {
+    this.logger.debug('Calling warp gw block info');
+    return await this.doFetchInfo<BlockData>(`${WARP_GW_URL}/gateway/arweave/block`);
   }
 
   async info(): Promise<NetworkInfoInterface> {
-    return await this.doFetchInfo(`${this.baseUrl}/info`);
+    return await this.doFetchInfo<NetworkInfoInterface>(`${this.baseUrl}/info`);
   }
 
   async gql(query: string, variables: GqlReqVariables): Promise<Partial<AxiosResponse<any>>> {
@@ -98,7 +104,7 @@ export class ArweaveWrapper {
     return Arweave.utils.bufferToString(buffer);
   }
 
-  private async doFetchInfo(url: string): Promise<NetworkInfoInterface> {
+  private async doFetchInfo<R>(url: string): Promise<R> {
     try {
       const response = await fetch(url)
         .then((res) => {
@@ -113,7 +119,7 @@ export class ArweaveWrapper {
 
       return response;
     } catch (e) {
-      this.logger.error('Error while loading network info', e);
+      this.logger.error('Error while loading info', e);
       throw e;
     }
   }

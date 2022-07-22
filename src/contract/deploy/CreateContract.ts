@@ -42,7 +42,7 @@ export interface ContractDeploy {
   srcTxId: string;
 }
 export interface CreateContract {
-  deploy(contractData: ContractData, useBundler?: boolean): Promise<ContractDeploy>;
+  deploy(contractData: ContractData, disableBundling?: boolean): Promise<ContractDeploy>;
 
-  deployFromSourceTx(contractData: FromSrcTxContractData, useBundler?: boolean): Promise<ContractDeploy>;
+  deployFromSourceTx(contractData: FromSrcTxContractData, disableBundling?: boolean): Promise<ContractDeploy>;
 }
