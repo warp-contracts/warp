@@ -32,10 +32,10 @@ export class CacheableInteractionsLoader implements InteractionsLoader {
 
     let originalCachedInteractions: GQLNodeInterface[];
     let effectiveCachedInteractions: GQLNodeInterface[];
-    if (!toSortKey) {
-      originalCachedInteractions = (await this.interactionsCache.getLast(contractTxId)).cachedValue;
-    } else {
+    if (toSortKey) {
       originalCachedInteractions = (await this.interactionsCache.getLessOrEqual(contractTxId, toSortKey)).cachedValue;
+    } else {
+      originalCachedInteractions = (await this.interactionsCache.getLast(contractTxId)).cachedValue;
     }
     // if anything was cached
     if (originalCachedInteractions?.length) {
@@ -50,7 +50,7 @@ export class CacheableInteractionsLoader implements InteractionsLoader {
       }
       const lastCachedKey = effectiveCachedInteractions[effectiveCachedInteractions.length - 1].sortKey;
 
-      if (toSortKey && toSortKey.localeCompare(lastCachedKey)) {
+      if (toSortKey && toSortKey.localeCompare(lastCachedKey) == 0) {
         // if 'toSortKey' was specified and exactly the same as lastCachedKey - return immediately
         this.logger.debug(`Interaction fully cached`, {
           contractTxId,
@@ -71,7 +71,7 @@ export class CacheableInteractionsLoader implements InteractionsLoader {
     } else {
       // no values found in cache - load data from gateway
 
-      // sanity check - if no value was cached, then this means we're making the initial state evaluation
+      // sanity check - if no value was cached, then this means we're making an initial state evaluation
       // - so the fromSortKey should not be set
       if (fromSortKey) {
         throw new Error('fromSortKey should not be specified when no interactions found in cache');

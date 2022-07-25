@@ -56,6 +56,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   private _benchmarkStats: BenchmarkStats = null;
   private readonly _arweaveWrapper: ArweaveWrapper;
   private _sorter: InteractionsSorter;
+  private _rootSortKey: string;
 
   /**
    * wallet connected to this contract
@@ -87,9 +88,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
       const callStack = new ContractCallStack(_contractTxId, this._callDepth);
       interaction.interactionInput.foreignContractCalls.set(_contractTxId, callStack);
       this._callStack = callStack;
+      this._rootSortKey = _parentContract.rootSortKey;
     } else {
       this._callDepth = 0;
       this._callStack = new ContractCallStack(_contractTxId, 0);
+      this._rootSortKey = null;
     }
   }
 
@@ -420,6 +423,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     this.logger.debug('Cached state', cachedState, upToSortKey);
 
+    const isChildContract = this._parentContract != null;
+
     if (cachedState && cachedState.sortKey == upToSortKey) {
       this.logger.debug('State fully cached, not loading interactions.');
       if (forceDefinitionLoad || evolvedSrcTxId) {
@@ -431,9 +436,17 @@ export class HandlerBasedContract<State> implements Contract<State> {
         definitionLoader.load<State>(contractTxId, evolvedSrcTxId),
         interactions
           ? Promise.resolve(interactions)
-          : interactionsLoader.load(contractTxId, cachedState?.sortKey, upToSortKey, this._evaluationOptions)
+          : interactionsLoader.load(
+              contractTxId,
+              cachedState?.sortKey,
+              this._parentContract?.rootSortKey || upToSortKey,
+              this._evaluationOptions
+            )
       ]);
       this.logger.debug('contract and interactions load', benchmark.elapsed());
+      if (this._parentContract == null && sortedInteractions.length) {
+        this._rootSortKey = sortedInteractions[sortedInteractions.length - 1].sortKey;
+      }
       handler = (await executorFactory.create(contractDefinition, this._evaluationOptions)) as HandlerApi<State>;
     }
 
@@ -468,6 +481,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     if (this._parentContract == null) {
       this.logger.debug('Clearing call stack for the root contract');
       this._callStack = new ContractCallStack(this.txId(), 0);
+      this._rootSortKey = null;
     }
   }
 
@@ -686,5 +700,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   get callingInteraction(): GQLNodeInterface | null {
     return this._callingInteraction;
+  }
+
+  get rootSortKey(): string {
+    return this._rootSortKey;
   }
 }

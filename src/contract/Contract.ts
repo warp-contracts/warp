@@ -226,4 +226,6 @@ export interface Contract<State = unknown> extends Source {
    * @param newSrcTxId - result of the {@link save} method call.
    */
   evolve(newSrcTxId: string, options?: WriteInteractionOptions): Promise<WriteInteractionResponse | null>;
+
+  rootSortKey: string;
 }
