@@ -58,7 +58,7 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
           },
           'mainnet'
         )
-          .useWarpGateway(null, SourceType.ARWEAVE)
+          .useWarpGateway(cacheOptions, null, SourceType.ARWEAVE)
           .build()
           .contract(contractTxId)
           .setEvaluationOptions({
@@ -94,7 +94,7 @@ describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
         },
         'mainnet'
       )
-        .useWarpGateway(null, SourceType.ARWEAVE)
+        .useWarpGateway(cacheOptions, null, SourceType.ARWEAVE)
         .build()
         .contract(contractTxId)
         .setEvaluationOptions({
@@ -126,7 +126,7 @@ describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
         },
         'mainnet'
       )
-        .useWarpGateway(null, SourceType.ARWEAVE)
+        .useWarpGateway(cacheOptions, null, SourceType.ARWEAVE)
         .build();
       const result = await warpR.contract(contractTxId).readState(blockHeight);
       const resultString = stringify(result.state).trim();
@@ -140,7 +140,7 @@ describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
         },
         'mainnet'
       )
-        .useArweaveGateway()
+        .useArweaveGateway(cacheOptions)
         .build()
         .contract(contractTxId)
         .readState(blockHeight);
@@ -166,7 +166,7 @@ describe('readState', () => {
       },
       'mainnet'
     )
-      .useWarpGateway(null, SourceType.ARWEAVE)
+      .useWarpGateway(cacheOptions, null, SourceType.ARWEAVE)
       .build()
       .contract(contractTxId)
       .setEvaluationOptions({
@@ -194,7 +194,7 @@ describe('readState', () => {
       },
       'mainnet'
     )
-      .useWarpGateway(null, SourceType.ARWEAVE)
+      .useWarpGateway(cacheOptions, null, SourceType.ARWEAVE)
       .build()
       .contract(contractTxId)
       .connect(jwk)

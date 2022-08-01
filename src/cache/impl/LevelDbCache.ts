@@ -1,9 +1,7 @@
-import { SortKeyCache, StateCacheKey, SortKeyCacheResult } from '../SortKeyCache';
+import { SortKeyCache, CacheKey, SortKeyCacheResult } from '../SortKeyCache';
 import { CacheOptions, LoggerFactory } from '@warp';
 import { Level } from 'level';
 import { MemoryLevel } from 'memory-level';
-
-export const DEFAULT_LEVEL_DB_LOCATION = './cache/warp';
 
 /**
  * The LevelDB is a lexicographically sorted key-value database - so it's ideal for this use case
@@ -29,7 +27,10 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
     if (cacheOptions.inMemory) {
       this.db = new MemoryLevel({ valueEncoding: 'json' });
     } else {
-      const dbLocation = cacheOptions.dbLocation || DEFAULT_LEVEL_DB_LOCATION;
+      if (!cacheOptions.dbLocation) {
+        throw new Error('LevelDb cache configuration error - no db location specified');
+      }
+      const dbLocation = cacheOptions.dbLocation;
       this.logger.info(`Using location ${dbLocation}`);
       this.db = new Level<string, any>(dbLocation, { valueEncoding: 'json' });
     }
@@ -80,7 +81,7 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
     }
   }
 
-  async put(stateCacheKey: StateCacheKey, value: V): Promise<void> {
+  async put(stateCacheKey: CacheKey, value: V): Promise<void> {
     const contractCache = this.db.sublevel<string, any>(stateCacheKey.contractTxId, { valueEncoding: 'json' });
     await contractCache.put(stateCacheKey.sortKey, value);
   }
@@ -92,5 +93,32 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
   async dump(): Promise<any> {
     const result = await this.db.iterator().all();
     return result;
+  }
+
+  // TODO: this implementation is sub-optimal
+  // the lastSortKey should be probably memoized during "put"
+  async getLastSortKey(): Promise<string | null> {
+    let lastSortKey = '';
+    const keys = await this.db.keys().all();
+
+    for (const key of keys) {
+      // default key format used by sub-levels:
+      // !<contract_tx_id (43 chars)>!<sort_key>
+      const sortKey = key.substring(45);
+      if (sortKey.localeCompare(lastSortKey) > 0) {
+        lastSortKey = sortKey;
+      }
+    }
+
+    return lastSortKey == '' ? null : lastSortKey;
+  }
+
+  async allContracts(): Promise<string[]> {
+    const keys = await this.db.keys().all();
+
+    const result = new Set<string>();
+    keys.forEach((k) => result.add(k.substring(1, 44)));
+
+    return Array.from(result);
   }
 }

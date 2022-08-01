@@ -39,6 +39,7 @@ import { TransactionStatusResponse } from 'arweave/node/transactions';
 import stringify from 'safe-stable-stringify';
 import * as crypto from 'crypto';
 import Transaction from 'arweave/node/lib/transaction';
+import { up } from 'arlocal/bin/db/initialize';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -56,6 +57,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   private _benchmarkStats: BenchmarkStats = null;
   private readonly _arweaveWrapper: ArweaveWrapper;
   private _sorter: InteractionsSorter;
+  private _rootSortKey: string;
 
   /**
    * wallet connected to this contract
@@ -87,13 +89,19 @@ export class HandlerBasedContract<State> implements Contract<State> {
       const callStack = new ContractCallStack(_contractTxId, this._callDepth);
       interaction.interactionInput.foreignContractCalls.set(_contractTxId, callStack);
       this._callStack = callStack;
+      this._rootSortKey = _parentContract.rootSortKey;
     } else {
       this._callDepth = 0;
       this._callStack = new ContractCallStack(_contractTxId, 0);
+      this._rootSortKey = null;
     }
   }
 
-  async readState(sortKeyOrBlockHeight?: string | number, currentTx?: CurrentTx[]): Promise<EvalStateResult<State>> {
+  async readState(
+    sortKeyOrBlockHeight?: string | number,
+    currentTx?: CurrentTx[],
+    interactions?: GQLNodeInterface[]
+  ): Promise<EvalStateResult<State>> {
     this.logger.info('Read state for', {
       contractTxId: this._contractTxId,
       currentTx,
@@ -112,7 +120,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
         ? this._sorter.generateLastSortKey(sortKeyOrBlockHeight)
         : sortKeyOrBlockHeight;
 
-    const executionContext = await this.createExecutionContext(this._contractTxId, sortKey, false);
+    const executionContext = await this.createExecutionContext(this._contractTxId, sortKey, false, interactions);
     this.logger.info('Execution Context', {
       srcTxId: executionContext.contractDefinition?.srcTxId,
       missingInteractions: executionContext.sortedInteractions?.length,
@@ -400,7 +408,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
   private async createExecutionContext(
     contractTxId: string,
     upToSortKey?: string,
-    forceDefinitionLoad = false
+    forceDefinitionLoad = false,
+    interactions?: GQLNodeInterface[]
   ): Promise<ExecutionContext<State, HandlerApi<State>>> {
     const { definitionLoader, interactionsLoader, executorFactory, stateEvaluator } = this.warp;
 
@@ -422,11 +431,46 @@ export class HandlerBasedContract<State> implements Contract<State> {
         handler = (await executorFactory.create(contractDefinition, this._evaluationOptions)) as HandlerApi<State>;
       }
     } else {
+      console.log('rootSortKey', this._parentContract?.rootSortKey);
+      console.log('upToSortKey', upToSortKey);
+      console.log('effectiveToSortKey', this.getToSortKey(upToSortKey));
+
       [contractDefinition, sortedInteractions] = await Promise.all([
         definitionLoader.load<State>(contractTxId, evolvedSrcTxId),
-        interactionsLoader.load(contractTxId, cachedState?.sortKey, upToSortKey, this._evaluationOptions)
+        interactions
+          ? Promise.resolve(interactions)
+          : await interactionsLoader.load(
+              contractTxId,
+              cachedState?.sortKey,
+              // (1) we want to eagerly load dependant contract interactions and put them
+              // in the interactions' loader cache
+              // see: https://github.com/warp-contracts/warp/issues/198
+              this.getToSortKey(upToSortKey),
+              this._evaluationOptions
+            )
       ]);
+      console.log('sortedInteracts', sortedInteractions);
+      console.log('params', {
+        from: cachedState?.sortKey,
+        to: upToSortKey,
+        rootSortKey: this._parentContract?.rootSortKey
+      });
+      console.log('sortedInteractions.length before', sortedInteractions.length);
+
+      // (2) ...but we still need to return only interactions up to original "upToSortKey"
+      if (cachedState?.sortKey) {
+        sortedInteractions = sortedInteractions.filter((i) => i.sortKey.localeCompare(cachedState?.sortKey) > 0);
+      }
+      if (upToSortKey) {
+        sortedInteractions = sortedInteractions.filter((i) => i.sortKey.localeCompare(upToSortKey) <= 0);
+      }
+      console.log('sortedInteractions.length after', sortedInteractions.length);
       this.logger.debug('contract and interactions load', benchmark.elapsed());
+      if (this._parentContract == null && sortedInteractions.length) {
+        // note: if the root contract has zero interactions, it still should be safe
+        // - as no other contracts will be called.
+        this._rootSortKey = sortedInteractions[sortedInteractions.length - 1].sortKey;
+      }
       handler = (await executorFactory.create(contractDefinition, this._evaluationOptions)) as HandlerApi<State>;
     }
 
@@ -440,6 +484,19 @@ export class HandlerBasedContract<State> implements Contract<State> {
       cachedState,
       requestedSortKey: upToSortKey
     };
+  }
+
+  private getToSortKey(upToSortKey?: string) {
+    if (this._parentContract?.rootSortKey) {
+      if (!upToSortKey) {
+        return this._parentContract.rootSortKey;
+      }
+      return this._parentContract.rootSortKey.localeCompare(upToSortKey) > 0
+        ? this._parentContract.rootSortKey
+        : upToSortKey;
+    } else {
+      return upToSortKey;
+    }
   }
 
   private async createExecutionContextFromTx(
@@ -461,6 +518,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     if (this._parentContract == null) {
       this.logger.debug('Clearing call stack for the root contract');
       this._callStack = new ContractCallStack(this.txId(), 0);
+      this._rootSortKey = null;
+      this.warp.interactionsLoader.clearCache();
     }
   }
 
@@ -535,6 +594,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     });
 
     dummyTx.sortKey = await this._sorter.createSortKey(dummyTx.block.id, dummyTx.id, dummyTx.block.height, true);
+
+    console.log('dummyTx sortKey', dummyTx.sortKey);
 
     const handleResult = await this.evalInteraction<Input, View>(
       {
@@ -682,12 +743,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return srcTx.id;
   }
 
-  async dumpCache(): Promise<any> {
-    const { stateEvaluator } = this.warp;
-    return await stateEvaluator.dumpCache();
-  }
-
   get callingInteraction(): GQLNodeInterface | null {
     return this._callingInteraction;
+  }
+
+  get rootSortKey(): string {
+    return this._rootSortKey;
   }
 }

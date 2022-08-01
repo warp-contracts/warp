@@ -42,7 +42,7 @@ describe('Testing internal writes', () => {
     // with another files has to have ArLocal set to a different port!)
     arlocal = new ArLocal(port, false);
     await arlocal.start();
-    LoggerFactory.INST.logLevel('error');
+    LoggerFactory.INST.logLevel('fatal');
   });
 
   afterAll(async () => {
@@ -52,6 +52,7 @@ describe('Testing internal writes', () => {
   async function deployContracts() {
     warp = WarpFactory.forLocal(port);
     ({ arweave } = warp);
+
     wallet = await warp.testing.generateWallet();
     walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
@@ -207,6 +208,7 @@ describe('Testing internal writes', () => {
         unstakePeriod: 10
       });
 
+      console.log('=========== MINT', (await arweave.network.getInfo()).height);
       await tokenContract.writeInteraction({
         function: 'mint',
         account: walletAddress,
@@ -214,12 +216,14 @@ describe('Testing internal writes', () => {
       });
       await mineBlock(warp);
 
+      console.log('=========== STAKE 1', (await arweave.network.getInfo()).height);
       await stakingContract.writeInteraction({
         function: 'stake',
         amount: 1000
       });
       await mineBlock(warp);
 
+      console.log('=========== APPROVE', (await arweave.network.getInfo()).height);
       await tokenContract.writeInteraction({
         function: 'approve',
         spender: stakingContractTxId,
@@ -227,12 +231,25 @@ describe('Testing internal writes', () => {
       });
       await mineBlock(warp);
 
+      // at this point it may happen that "approve" interaction (made on block 4) will have higher sortKey generated,
+      // then the "stake 2" interaction sortKey generated during the dry-run (both at block 4 for this case)
+      // ...if that will be the case, the code in the "stake" contract itself
+      // will throw a ContractError - before calling the SmartWeave.contracts.write on the token contract.
+      // and if that will be the case, no "internal write" interaction will be generated and the token balances
+      // won't match the expected values...
+      // additional mineBlock fixes this issue (as it causes that the dry-write for the "stake" function will
+      // run at 5 block height).
+      await mineBlock(warp);
+
+      console.log('=========== STAKE 2', (await arweave.network.getInfo()).height);
       await stakingContract.writeInteraction({
         function: 'stake',
         amount: 1000
       });
+
       await mineBlock(warp);
 
+      console.log('=========== TOKEN READ', (await arweave.network.getInfo()).height);
       const tokenState = (await tokenContract.readState()).state;
       expect(tokenState.balances).toEqual({
         [walletAddress]: 9000,
@@ -243,6 +260,7 @@ describe('Testing internal writes', () => {
           [stakingContractTxId]: 8999
         }
       });
+      console.log('reading staking state')
       expect((await stakingContract.readState()).state.stakes).toEqual({
         [walletAddress]: {
           amount: 1000,

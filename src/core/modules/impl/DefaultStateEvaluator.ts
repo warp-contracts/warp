@@ -343,4 +343,10 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     contractTxId: string,
     sortKey: string
   ): Promise<SortKeyCacheResult<EvalStateResult<State>> | null>;
+
+  abstract hasContractCached(contractTxId: string): Promise<boolean>;
+
+  abstract lastCachedSortKey(): Promise<string | null>;
+
+  abstract allCachedContracts(): Promise<string[]>;
 }
