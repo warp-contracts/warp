@@ -1,6 +1,6 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import {LoggerFactory, WarpFactory} from '../src';
+import {defaultCacheOptions, LoggerFactory, WarpFactory} from '../src';
 import * as fs from 'fs';
 import knex from 'knex';
 import os from 'os';
@@ -11,7 +11,9 @@ const logger = LoggerFactory.INST.create('Contract');
 
 //LoggerFactory.use(new TsLogFactory());
 LoggerFactory.INST.logLevel('debug');
-//LoggerFactory.INST.logLevel('debug', 'DefaultStateEvaluator');
+LoggerFactory.INST.logLevel('debug', 'ArweaveGatewayInteractionsLoader');
+LoggerFactory.INST.logLevel('info', 'CacheableStateEvaluator');
+LoggerFactory.INST.logLevel('info', 'WASM:Rust');
 //LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
 
 async function main() {
@@ -21,7 +23,7 @@ async function main() {
   const rssUsedBefore = Math.round((process.memoryUsage().rss / 1024 / 1024) * 100) / 100;
 
   const arweave = Arweave.init({
-    host: 'arweave.net', // Hostname or IP address for a Arweave host
+    host: 'arweave.testnet1.bundlr.network', // Hostname or IP address for a Arweave host
     port: 443, // Port
     protocol: 'https', // Network protocol http or https
     timeout: 60000, // Network request timeouts in milliseconds
@@ -29,18 +31,18 @@ async function main() {
   });
 
 
-  const warp = WarpFactory.forTesting(arweave);
+  const warp = WarpFactory.forTestnet(arweave, {...defaultCacheOptions, inMemory: true});
   try {
-    const contract = warp.contract("c8SFfRvGQ43BDeMBYTTaSuBFGu5hiqaAqWr1dh34ESs");
+    const contract = warp.contract("R7wHkzV2bRktpSnOfBj9I7GHn5JaeO6XrQKDFlcu2XA")
+      .setEvaluationOptions({
+        internalWrites: true
+      });
     const {state, validity, errorMessages} = await contract.readState();
-    const resultString = stringify(state);
-    fs.writeFileSync(path.join(__dirname, 'DAJ.json'), resultString);
+
+    console.log(state);
   } catch (e) {
     throw new Error("Gotcha!");
   }
-
-
-
 
   const heapUsedAfter = Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100;
   const rssUsedAfter = Math.round((process.memoryUsage().rss / 1024 / 1024) * 100) / 100;

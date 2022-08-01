@@ -10,9 +10,14 @@ export interface SortKeyCache<V> {
   getLessOrEqual(key: string, sortKey: string): Promise<SortKeyCacheResult<V> | null>;
 
   /**
-   * returns latest value stored for given key
+   * returns latest value stored for given contractTxId
    */
-  getLast(key: string): Promise<SortKeyCacheResult<V> | null>;
+  getLast(contractTxId: string): Promise<SortKeyCacheResult<V> | null>;
+
+  /**
+   * returns last cached sort key - takes all contracts into account
+   */
+  getLastSortKey(): Promise<string | null>;
 
   /**
    * returns value for the key and exact blockHeight
@@ -20,19 +25,26 @@ export interface SortKeyCache<V> {
   get(contractTxId: string, sortKey: string, returnDeepCopy?: boolean): Promise<SortKeyCacheResult<V> | null>;
 
   /**
-   * puts new value in cache under given {@link StateCacheKey.key} and {@link StateCacheKey.blockHeight}.
+   * puts new value in cache under given {@link CacheKey.key} and {@link CacheKey.blockHeight}.
    */
-  put(stateCacheKey: StateCacheKey, value: V): Promise<void>;
+  put(cacheKey: CacheKey, value: V): Promise<void>;
 
   close(): Promise<void>;
 
   /**
    * used mostly for debugging, allows to dump the current content cache
+   * It's slow.
    */
   dump(): Promise<any>;
+
+  /**
+   * Return all cached contracts.
+   * Slow, as LevelDB in general kinda sucks in case of iterating all keys/values.
+   */
+  allContracts(): Promise<string[]>;
 }
 
-export class StateCacheKey {
+export class CacheKey {
   constructor(readonly contractTxId: string, readonly sortKey: string) {}
 }
 

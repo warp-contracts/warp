@@ -8,6 +8,7 @@ export * from './modules/impl/ContractDefinitionLoader';
 export * from './modules/impl/WarpGatewayContractDefinitionLoader';
 export * from './modules/impl/ArweaveGatewayInteractionsLoader';
 export * from './modules/impl/WarpGatewayInteractionsLoader';
+export * from './modules/impl/CacheableInteractionsLoader';
 export * from './modules/impl/DefaultStateEvaluator';
 export * from './modules/impl/CacheableStateEvaluator';
 export * from './modules/impl/HandlerExecutorFactory';

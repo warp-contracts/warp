@@ -1,12 +1,15 @@
 import Arweave from 'arweave';
 import {
   ArweaveGatewayInteractionsLoader,
+  CacheableInteractionsLoader,
+  CacheOptions,
   ConfirmationStatus,
   ContractDefinitionLoader,
   DebuggableExecutorFactory,
   DefinitionLoader,
   EvalStateResult,
   ExecutorFactory,
+  GatewayOptions,
   HandlerApi,
   InteractionsLoader,
   LevelDbCache,
@@ -61,19 +64,25 @@ export class WarpBuilder {
     return this.build();
   }
 
-  public useWarpGateway(
-    confirmationStatus: ConfirmationStatus = null,
-    source: SourceType = null,
-    address = WARP_GW_URL
-  ): WarpBuilder {
-    this._interactionsLoader = new WarpGatewayInteractionsLoader(address, confirmationStatus, source);
-    this._definitionLoader = new WarpGatewayContractDefinitionLoader(address, this._arweave, new MemCache());
+  public useWarpGateway(cacheOptions: CacheOptions, gatewayOptions: GatewayOptions): WarpBuilder {
+    this._interactionsLoader = new CacheableInteractionsLoader(
+      new WarpGatewayInteractionsLoader(
+        gatewayOptions.address,
+        gatewayOptions.confirmationStatus,
+        gatewayOptions.source
+      )
+    );
+    this._definitionLoader = new WarpGatewayContractDefinitionLoader(
+      gatewayOptions.address,
+      this._arweave,
+      new MemCache()
+    );
     return this;
   }
 
   public useArweaveGateway(): WarpBuilder {
     this._definitionLoader = new ContractDefinitionLoader(this._arweave, new MemCache());
-    this._interactionsLoader = new ArweaveGatewayInteractionsLoader(this._arweave);
+    this._interactionsLoader = new CacheableInteractionsLoader(new ArweaveGatewayInteractionsLoader(this._arweave));
     return this;
   }
 

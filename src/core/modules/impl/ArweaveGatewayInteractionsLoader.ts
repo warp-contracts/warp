@@ -143,42 +143,23 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
     // note: this operation adds the "sortKey" to the interactions
     let sortedInteractions = await this.sorter.sort(interactions);
 
-    if (fromSortKey || toSortKey) {
-      let fromIndex = null;
-      const maxIndex = sortedInteractions.length - 1;
-      let toIndex = null;
-      let breakFrom = false;
-      let breakTo = false;
+    console.log('original interactions', sortedInteractions);
 
-      for (let i = 0; i < sortedInteractions.length; i++) {
-        const sortedInteraction = sortedInteractions[i];
-        if (sortedInteraction.node.sortKey == fromSortKey) {
-          fromIndex = i + 1; // +1, because fromSortKey is exclusive
-        }
-        if (sortedInteraction.node.sortKey == toSortKey) {
-          toIndex = i + 1; // + 1, because "end" parameter in slice does not include the last element
-        }
-        if ((fromSortKey && fromIndex != null) || !fromSortKey) {
-          breakFrom = true;
-        }
-        if ((toSortKey && toIndex != null) || !toSortKey) {
-          breakTo = true;
-        }
-        if (breakFrom && breakTo) {
-          break;
-        }
-      }
-
-      this.logger.debug('Slicing:', {
-        fromIndex,
-        toIndex
+    if (fromSortKey && toSortKey) {
+      sortedInteractions = sortedInteractions.filter((i) => {
+        return i.node.sortKey.localeCompare(fromSortKey) > 0 && i.node.sortKey.localeCompare(toSortKey) <= 0;
       });
-
-      // maxIndex + 1, because "end" parameter in slice does not include the last element
-      sortedInteractions = sortedInteractions.slice(fromIndex || 0, toIndex || maxIndex + 1);
+    } else if (fromSortKey && !toSortKey) {
+      sortedInteractions = sortedInteractions.filter((i) => {
+        return i.node.sortKey.localeCompare(fromSortKey) > 0;
+      });
+    } else if (!fromSortKey && toSortKey) {
+      sortedInteractions = sortedInteractions.filter((i) => {
+        return i.node.sortKey.localeCompare(toSortKey) <= 0;
+      });
     }
 
-    this.logger.info('All loaded interactions:', {
+    console.log('All loaded interactions:', {
       from: fromSortKey,
       to: toSortKey,
       loaded: sortedInteractions.length,
@@ -242,5 +223,9 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
 
   type(): GW_TYPE {
     return 'arweave';
+  }
+
+  clearCache(): void {
+    // noop
   }
 }

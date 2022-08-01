@@ -18,7 +18,7 @@ export interface InteractionsLoader extends GwTypeAware {
    *
    * @param contractTxId - contract tx id to load the interactions
    * @param fromSortKey - exclusive, optional - sortKey, from which the interactions should be loaded
-   * @param toSortKey - inclusive, optional - sortKey, to which then interactions should be loaded
+   * @param toSortKey - inclusive, optional - sortKey, to which the interactions should be loaded
    * @param evaluationOptions, optional - {@link EvaluationOptions}
    */
   load(
@@ -27,4 +27,6 @@ export interface InteractionsLoader extends GwTypeAware {
     toSortKey?: string,
     evaluationOptions?: EvaluationOptions
   ): Promise<GQLNodeInterface[]>;
+
+  clearCache(): void;
 }

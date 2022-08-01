@@ -21,7 +21,7 @@ export type GatewayOptions = {
 
 export type CacheOptions = {
   inMemory: boolean;
-  dbLocation?: string;
+  dbLocation: string;
 };
 
 export const defaultWarpGwOptions: GatewayOptions = {
@@ -30,8 +30,11 @@ export const defaultWarpGwOptions: GatewayOptions = {
   address: WARP_GW_URL
 };
 
+export const DEFAULT_LEVEL_DB_LOCATION = './cache/warp';
+
 export const defaultCacheOptions: CacheOptions = {
-  inMemory: false
+  inMemory: false,
+  dbLocation: DEFAULT_LEVEL_DB_LOCATION
 };
 
 /**
@@ -109,7 +112,10 @@ export class WarpFactory {
    * @param cacheOptions
    */
   static custom(arweave: Arweave, cacheOptions: CacheOptions, environment: WarpEnvironment): WarpBuilder {
-    const cache = new LevelDbCache<EvalStateResult<unknown>>(cacheOptions);
+    const cache = new LevelDbCache<EvalStateResult<unknown>>({
+      ...cacheOptions,
+      dbLocation: `${cacheOptions.dbLocation}/state`
+    });
 
     const executorFactory = new CacheableExecutorFactory(arweave, new HandlerExecutorFactory(arweave), new MemCache());
     const stateEvaluator = new CacheableStateEvaluator(arweave, cache, [new Evolve()]);
@@ -133,8 +139,6 @@ export class WarpFactory {
     cacheOptions: CacheOptions = defaultCacheOptions,
     environment: WarpEnvironment
   ): Warp {
-    return this.custom(arweave, cacheOptions, environment)
-      .useWarpGateway(gatewayOptions.confirmationStatus, gatewayOptions.source, gatewayOptions.address)
-      .build();
+    return this.custom(arweave, cacheOptions, environment).useWarpGateway(cacheOptions, gatewayOptions).build();
   }
 }
