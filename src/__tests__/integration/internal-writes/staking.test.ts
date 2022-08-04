@@ -260,7 +260,7 @@ describe('Testing internal writes', () => {
           [stakingContractTxId]: 8999
         }
       });
-      console.log('reading staking state')
+      console.log('reading staking state');
       expect((await stakingContract.readState()).state.stakes).toEqual({
         [walletAddress]: {
           amount: 1000,
