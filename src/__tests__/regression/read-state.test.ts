@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { interactRead, readContract } from 'smartweave';
 import Arweave from 'arweave';
-import {defaultCacheOptions, defaultWarpGwOptions, LoggerFactory, SourceType, WarpFactory} from '@warp';
+import { defaultCacheOptions, defaultWarpGwOptions, LoggerFactory, SourceType, WarpFactory } from '@warp';
 
 const stringify = require('safe-stable-stringify');
 
@@ -58,7 +58,7 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
           },
           'mainnet'
         )
-          .useWarpGateway({...defaultWarpGwOptions, source: SourceType.ARWEAVE})
+          .useWarpGateway({ ...defaultWarpGwOptions, source: SourceType.ARWEAVE })
           .build()
           .contract(contractTxId)
           .setEvaluationOptions({
@@ -94,7 +94,7 @@ describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
         },
         'mainnet'
       )
-        .useWarpGateway({...defaultWarpGwOptions, source: SourceType.ARWEAVE})
+        .useWarpGateway({ ...defaultWarpGwOptions, source: SourceType.ARWEAVE })
         .build()
         .contract(contractTxId)
         .setEvaluationOptions({
@@ -126,7 +126,7 @@ describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
         },
         'mainnet'
       )
-        .useWarpGateway({...defaultWarpGwOptions, source: SourceType.ARWEAVE})
+        .useWarpGateway({ ...defaultWarpGwOptions, source: SourceType.ARWEAVE })
         .build();
       const result = await warpR.contract(contractTxId).readState(blockHeight);
       const resultString = stringify(result.state).trim();
@@ -166,7 +166,7 @@ describe('readState', () => {
       },
       'mainnet'
     )
-      .useWarpGateway({...defaultWarpGwOptions, source: SourceType.ARWEAVE})
+      .useWarpGateway({ ...defaultWarpGwOptions, source: SourceType.ARWEAVE })
       .build()
       .contract(contractTxId)
       .setEvaluationOptions({
@@ -194,7 +194,7 @@ describe('readState', () => {
       },
       'mainnet'
     )
-      .useWarpGateway({...defaultWarpGwOptions, source: SourceType.ARWEAVE})
+      .useWarpGateway({ ...defaultWarpGwOptions, source: SourceType.ARWEAVE })
       .build()
       .contract(contractTxId)
       .connect(jwk)
