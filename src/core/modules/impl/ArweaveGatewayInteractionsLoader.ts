@@ -143,8 +143,6 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
     // note: this operation adds the "sortKey" to the interactions
     let sortedInteractions = await this.sorter.sort(interactions);
 
-    console.log('original interactions', sortedInteractions);
-
     if (fromSortKey && toSortKey) {
       sortedInteractions = sortedInteractions.filter((i) => {
         return i.node.sortKey.localeCompare(fromSortKey) > 0 && i.node.sortKey.localeCompare(toSortKey) <= 0;
@@ -159,7 +157,7 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
       });
     }
 
-    console.log('All loaded interactions:', {
+    this.logger.debug('All loaded interactions:', {
       from: fromSortKey,
       to: toSortKey,
       loaded: sortedInteractions.length,

@@ -2,8 +2,6 @@ import Arweave from 'arweave';
 import {
   ArweaveGatewayInteractionsLoader,
   CacheableInteractionsLoader,
-  CacheOptions,
-  ConfirmationStatus,
   ContractDefinitionLoader,
   DebuggableExecutorFactory,
   DefinitionLoader,
@@ -14,7 +12,6 @@ import {
   InteractionsLoader,
   LevelDbCache,
   MemCache,
-  SourceType,
   StateEvaluator,
   Warp,
   WarpEnvironment,
@@ -64,7 +61,7 @@ export class WarpBuilder {
     return this.build();
   }
 
-  public useWarpGateway(cacheOptions: CacheOptions, gatewayOptions: GatewayOptions): WarpBuilder {
+  public useWarpGateway(gatewayOptions: GatewayOptions): WarpBuilder {
     this._interactionsLoader = new CacheableInteractionsLoader(
       new WarpGatewayInteractionsLoader(
         gatewayOptions.address,

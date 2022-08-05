@@ -5,9 +5,9 @@ import {
   ConfirmationStatus,
   EvalStateResult,
   HandlerExecutorFactory,
-  WARP_GW_URL,
   SourceType,
   Warp,
+  WARP_GW_URL,
   WarpBuilder,
   WarpEnvironment
 } from '@warp/core';
@@ -139,6 +139,6 @@ export class WarpFactory {
     cacheOptions: CacheOptions = defaultCacheOptions,
     environment: WarpEnvironment
   ): Warp {
-    return this.custom(arweave, cacheOptions, environment).useWarpGateway(cacheOptions, gatewayOptions).build();
+    return this.custom(arweave, cacheOptions, environment).useWarpGateway(gatewayOptions).build();
   }
 }
