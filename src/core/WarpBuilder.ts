@@ -19,8 +19,6 @@ import {
   WarpGatewayInteractionsLoader
 } from '@warp';
 
-export const WARP_GW_URL = 'https://d1o5nlqr4okus2.cloudfront.net';
-
 export class WarpBuilder {
   private _definitionLoader?: DefinitionLoader;
   private _interactionsLoader?: InteractionsLoader;

@@ -23,7 +23,8 @@ async function main() {
   const rssUsedBefore = Math.round((process.memoryUsage().rss / 1024 / 1024) * 100) / 100;
 
   const arweave = Arweave.init({
-    host: 'arweave.testnet1.bundlr.network', // Hostname or IP address for a Arweave host
+/*    host: 'arweave.testnet1.bundlr.network',*/ // Hostname or IP address for a Arweave host
+    host: 'arweave.net',
     port: 443, // Port
     protocol: 'https', // Network protocol http or https
     timeout: 60000, // Network request timeouts in milliseconds
@@ -31,12 +32,9 @@ async function main() {
   });
 
 
-  const warp = WarpFactory.forTestnet(arweave, {...defaultCacheOptions, inMemory: true});
+  const warp = WarpFactory.forMainnet({...defaultCacheOptions, inMemory: true});
   try {
-    const contract = warp.contract("R7wHkzV2bRktpSnOfBj9I7GHn5JaeO6XrQKDFlcu2XA")
-      .setEvaluationOptions({
-        internalWrites: true
-      });
+    const contract = warp.contract("Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY");
     const {state, validity, errorMessages} = await contract.readState();
 
     console.log(state);
