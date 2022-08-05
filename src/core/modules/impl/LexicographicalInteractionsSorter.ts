@@ -2,10 +2,8 @@ import { arrayToHex, GQLEdgeInterface, InteractionsSorter, LoggerFactory, Source
 import Arweave from 'arweave';
 
 // note: this (i.e. padding to 13 digits) should be safe between years ~1966 and ~2286
-const defaultArweaveMs = ''.padEnd(13, '9');
 const lastSortKeyMs = ''.padEnd(13, '9');
-const defaultArweaveMs_After_Block_973730 = ''.padEnd(13, '0');
-export const block_973730 = 973730;
+const defaultArweaveMs = ''.padEnd(13, '0');
 
 export const sortingLast = ''.padEnd(64, 'z');
 
@@ -33,13 +31,9 @@ export class LexicographicalInteractionsSorter implements InteractionsSorter {
 
     const blockHeightString = `${blockHeight}`.padStart(12, '0');
 
-    const arweaveMs = dummy ? lastSortKeyMs : this.generateArweaveMs(blockHeight);
+    const arweaveMs = dummy ? lastSortKeyMs : defaultArweaveMs;
 
     return `${blockHeightString},${arweaveMs},${hashed}`;
-  }
-
-  public generateArweaveMs(blockHeight: number): string {
-    return blockHeight <= block_973730 ? defaultArweaveMs : defaultArweaveMs_After_Block_973730;
   }
 
   public extractBlockHeight(sortKey?: string): number | null {
