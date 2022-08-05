@@ -1,12 +1,4 @@
-import {
-  defaultCacheOptions,
-  EvaluationOptions,
-  GQLNodeInterface,
-  GW_TYPE,
-  InteractionsLoader,
-  LevelDbCache,
-  LoggerFactory
-} from '@warp';
+import { EvaluationOptions, GQLNodeInterface, GW_TYPE, InteractionsLoader, LoggerFactory } from '@warp';
 
 export class CacheableInteractionsLoader implements InteractionsLoader {
   private readonly logger = LoggerFactory.INST.create('CacheableInteractionsLoader');
@@ -20,13 +12,11 @@ export class CacheableInteractionsLoader implements InteractionsLoader {
     toSortKey?: string,
     evaluationOptions?: EvaluationOptions
   ): Promise<GQLNodeInterface[]> {
-    console.log(`CACHE: Loading interactions for`, {
+    this.logger.debug(`Loading interactions for`, {
       contractTxId,
       fromSortKey,
       toSortKey
     });
-
-    // return await this.delegate.load(contractTxId, fromSortKey, toSortKey, evaluationOptions);
 
     if (!this.interactionsCache.has(contractTxId)) {
       const interactions = await this.delegate.load(contractTxId, fromSortKey, toSortKey, evaluationOptions);
@@ -47,7 +37,6 @@ export class CacheableInteractionsLoader implements InteractionsLoader {
           );
           const allInteractions = cachedInteractions.concat(missingInteractions);
           this.interactionsCache.set(contractTxId, allInteractions);
-          console.log('CACHE', allInteractions);
           return allInteractions;
         }
       }

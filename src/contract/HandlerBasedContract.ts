@@ -431,10 +431,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
         handler = (await executorFactory.create(contractDefinition, this._evaluationOptions)) as HandlerApi<State>;
       }
     } else {
-      console.log('rootSortKey', this._parentContract?.rootSortKey);
-      console.log('upToSortKey', upToSortKey);
-      console.log('effectiveToSortKey', this.getToSortKey(upToSortKey));
-
       [contractDefinition, sortedInteractions] = await Promise.all([
         definitionLoader.load<State>(contractTxId, evolvedSrcTxId),
         interactions
@@ -449,14 +445,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
               this._evaluationOptions
             )
       ]);
-      console.log('sortedInteracts', sortedInteractions);
-      console.log('params', {
-        from: cachedState?.sortKey,
-        to: upToSortKey,
-        rootSortKey: this._parentContract?.rootSortKey
-      });
-      console.log('sortedInteractions.length before', sortedInteractions.length);
-
       // (2) ...but we still need to return only interactions up to original "upToSortKey"
       if (cachedState?.sortKey) {
         sortedInteractions = sortedInteractions.filter((i) => i.sortKey.localeCompare(cachedState?.sortKey) > 0);
@@ -464,7 +452,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
       if (upToSortKey) {
         sortedInteractions = sortedInteractions.filter((i) => i.sortKey.localeCompare(upToSortKey) <= 0);
       }
-      console.log('sortedInteractions.length after', sortedInteractions.length);
       this.logger.debug('contract and interactions load', benchmark.elapsed());
       if (this._parentContract == null && sortedInteractions.length) {
         // note: if the root contract has zero interactions, it still should be safe
@@ -594,8 +581,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
     });
 
     dummyTx.sortKey = await this._sorter.createSortKey(dummyTx.block.id, dummyTx.id, dummyTx.block.height, true);
-
-    console.log('dummyTx sortKey', dummyTx.sortKey);
 
     const handleResult = await this.evalInteraction<Input, View>(
       {
