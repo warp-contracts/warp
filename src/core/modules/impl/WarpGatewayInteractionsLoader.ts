@@ -97,7 +97,6 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
           throw new Error(`Unable to retrieve transactions. Warp gateway responded with status ${error.status}.`);
         });
       this.logger.debug(`Loading interactions: page ${page} loaded in ${benchmarkRequestTime.elapsed()}`);
-      this.logger.debug(`Interactions`, response.interactions);
 
       interactions.push(...response.interactions);
       limit = response.paging.limit;

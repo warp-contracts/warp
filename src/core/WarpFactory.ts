@@ -7,7 +7,6 @@ import {
   HandlerExecutorFactory,
   SourceType,
   Warp,
-  WARP_GW_URL,
   WarpBuilder,
   WarpEnvironment
 } from '@warp/core';
@@ -23,6 +22,8 @@ export type CacheOptions = {
   inMemory: boolean;
   dbLocation: string;
 };
+
+export const WARP_GW_URL = 'https://d1o5nlqr4okus2.cloudfront.net';
 
 export const defaultWarpGwOptions: GatewayOptions = {
   confirmationStatus: { notCorrupted: true },
@@ -103,6 +104,7 @@ export class WarpFactory {
     if (useArweaveGw) {
       return this.customArweaveGw(arweave, cacheOptions, 'mainnet');
     } else {
+      console.log(defaultWarpGwOptions);
       return this.customWarpGw(arweave, defaultWarpGwOptions, cacheOptions, 'mainnet');
     }
   }
