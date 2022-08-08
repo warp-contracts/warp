@@ -6,9 +6,6 @@ Warp SDK is the implementation of the SmartWeave [Protocol](./docs/SMARTWEAVE_PR
 
 It works in both web and Node.js environment (requires Node.js 16.5+).
 
-We're already using the new SDK on production, both in our webapp and nodes.
-However, if you'd like to use it in production as well, please contact us on [discord](https://discord.com/invite/PVxBZKFr46) to ensure a smooth transition and get help with testing.
-
 If you are interested in the main assumptions for Warp ecosystem as well as its key features go visit [our website](https://warp.cc).
 
 - [Development](#development)
@@ -119,7 +116,7 @@ To properly initialize Warp you can use one of three methods available in WarpFa
 
 #### forLocal
 
-Creates a Warp instance suitable for testing in a local environment.
+Creates a Warp instance suitable for testing in a local environment (e.g. with a use of a ArLocal instance).
 
 ```typescript
 warp = WarpFactory.forLocal();
@@ -181,10 +178,10 @@ warp = WarpFactory.custom(
   .build();
 ```
 
-No default paramters are provided, these are the parameters that you can adjust to your needs:
+No default parameters are provided, these are the parameters that you can adjust to your needs:
 
 1. `arweave` - initializes Arweave
-2. `cacheOptions` - optional cache options parameter, by default `inMemory` cache is set to `true`
+2. `cacheOptions` - optional cache options parameter
 3. `environment` - environment in which Warp will be initialized
 
 `custom` method returns preconfigured instance of `Warp` - `WarpBuilder` which can be customized, the configuration is finished with `build` method.
@@ -209,7 +206,7 @@ Possible options:
 
 #### deploy
 
-Deploys contract to Arweave. By default deployment transaction is bundled and posted on Arweave using Warp Sequencer. If you want to deploy your contract directly to Arweave - disable bundling by setting `disableBundling` to `true`.
+Deploys contract to Arweave. By default, deployment transaction is bundled and posted on Arweave using Warp Sequencer. If you want to deploy your contract directly to Arweave - disable bundling by setting `disableBundling` to `true`.
 
 ```typescript
 async function deploy(contractData: ContractData, disableBundling?: boolean): Promise<ContractDeploy>;
@@ -350,36 +347,6 @@ const { result } = await contract.viewState<any, any>({
   function: "NAME_OF_YOUR_FUNCTION",
   data: { ... }
 });
-```
-
-</details>
-
----
-
-#### `viewStateForTx`
-
-```typescript
-async function viewStateForTx<Input, View>(
-  input: Input,
-  transaction: InteractionTx
-): Promise<InteractionResult<State, View>>;
-```
-
-A version of the viewState method to be used from within the contract's source code. The transaction passed as an argument is the currently processed interaction transaction. The "caller" will be se to the owner of the interaction transaction, that requires to call this method.
-
-💡 Note! calling "interactRead" from withing contract's source code was not previously possible - this is a new feature.
-
-- `input` the interaction input
-- `transaction` interaction transaction
-
-<details>
-  <summary>Example</summary>
-
-```typescript
-const { result } = await contract.viewStateForTx<any, any>({
-  function: "NAME_OF_YOUR_FUNCTION",
-  data: { ... }
-}, transaction);
 ```
 
 </details>
@@ -567,7 +534,10 @@ However, we do not recommend using it as it can lead to non-deterministic result
 
 ### Cache
 
-Warp uses [LevelDB](https://github.com/google/leveldb) to cache the state. During the state evaluation, state is then evaluated only for which the state hasn't been evaluated yet. State is being cached per transaction and not per block height. The reason behind that caching per block height is not enough if multiple interactions are at the same height and two contracts interact with each other. The LevelDB is a lexicographically sorted key-value database - so it's ideal for this use case - as it simplifies cache look-ups (e.g. lastly stored value or value "lower-or-equal" than given sortKey). The cache for contracts are implemented as [sub-levels](https://www.npmjs.com/package/level#sublevel--dbsublevelname-options). The default location for the node.js cache is ./cache/warp.
+Warp uses [LevelDB](https://github.com/google/leveldb) to cache the state. During the state evaluation, state is then evaluated only for the interactions that the state hasn't been evaluated yet. State is being cached per transaction and not per block height.
+The reason behind that caching per block height is not enough if multiple interactions are at the same height and two contracts interact with each other.
+The LevelDB is a lexicographically sorted key-value database - so it's ideal for this use case - as it simplifies cache look-ups (e.g. lastly stored value or value "lower-or-equal" than given sortKey). The cache for contracts are implemented as [sub-levels](https://www.npmjs.com/package/level#sublevel--dbsublevelname-options).
+The default location for the node.js cache is `./cache/warp`.
 
 In the browser environment Warp uses [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) to cache the state - it's a low-level API for client-side storage.
 The default name for the browser IndexedDB cache is warp-cache.
