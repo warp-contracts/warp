@@ -17,6 +17,9 @@ export * from './modules/impl/TagsParser';
 export * from './modules/impl/normalize-source';
 export * from './modules/impl/StateCache';
 export * from './modules/impl/wasm/WasmSrc';
+export * from './modules/impl/handler/AbstractContractHandler';
+export * from './modules/impl/handler/JsHandlerApi';
+export * from './modules/impl/handler/WasmHandlerApi';
 
 export * from './ExecutionContextModifier';
 export * from './SmartWeaveTags';
