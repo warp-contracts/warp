@@ -7,15 +7,15 @@ import {
   ExecutionContext,
   ExecutorFactory,
   GQLNodeInterface,
+  JsHandlerApi,
   LoggerFactory,
   MemCache,
   normalizeContractSource,
   SmartWeaveGlobal,
-  WarpCache
+  WarpCache,
+  WasmHandlerApi
 } from '@warp';
-import { ContractHandlerApi } from './ContractHandlerApi';
 import loader from '@assemblyscript/loader';
-import { WasmContractHandlerApi } from './WasmContractHandlerApi';
 import { asWasmImports } from './wasm/as-wasm-imports';
 import { rustWasmImports } from './wasm/rust-wasm-imports';
 import { Go } from './wasm/go-wasm-imports';
@@ -156,7 +156,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
         }
       }
       this.logger.info(`WASM ${contractDefinition.srcWasmLang} handler created in ${benchmark.elapsed()}`);
-      return new WasmContractHandlerApi(swGlobal, contractDefinition, jsExports || wasmInstance.exports);
+      return new WasmHandlerApi(swGlobal, contractDefinition, jsExports || wasmInstance.exports);
     } else {
       this.logger.info('Creating handler for js contract', contractDefinition.txId);
       const normalizedSource = normalizeContractSource(contractDefinition.src, evaluationOptions.useVM2);
@@ -188,11 +188,11 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
           wrapper: 'commonjs'
         });
 
-        return new ContractHandlerApi(swGlobal, vm.run(vmScript), contractDefinition);
+        return new JsHandlerApi(swGlobal, contractDefinition, vm.run(vmScript));
       } else {
         const contractFunction = new Function(normalizedSource);
         const handler = contractFunction(swGlobal, BigNumber, LoggerFactory.INST.create(swGlobal.contract.id));
-        return new ContractHandlerApi(swGlobal, handler, contractDefinition);
+        return new JsHandlerApi(swGlobal, contractDefinition, handler);
       }
     }
   }
