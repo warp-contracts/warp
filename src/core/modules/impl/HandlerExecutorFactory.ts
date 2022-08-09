@@ -7,6 +7,7 @@ import {
   ExecutionContext,
   ExecutorFactory,
   GQLNodeInterface,
+  IvmHandlerApi,
   JsHandlerApi,
   LoggerFactory,
   MemCache,
@@ -20,15 +21,9 @@ import { asWasmImports } from './wasm/as-wasm-imports';
 import { rustWasmImports } from './wasm/rust-wasm-imports';
 import { Go } from './wasm/go-wasm-imports';
 import BigNumber from 'bignumber.js';
-import * as vm2 from 'vm2';
 import * as Buffer from 'buffer';
-
-class ContractError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = 'ContractError';
-  }
-}
+import { Context, Isolate, Reference } from 'isolated-vm';
+import { configureContext, configureSandbox } from './ivm/configure-ivm';
 
 /**
  * A factory that produces handlers that are compatible with the "current" style of
@@ -159,7 +154,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
       return new WasmHandlerApi(swGlobal, contractDefinition, jsExports || wasmInstance.exports);
     } else {
       this.logger.info('Creating handler for js contract', contractDefinition.txId);
-      const normalizedSource = normalizeContractSource(contractDefinition.src, evaluationOptions.useVM2);
+      const normalizedSource = normalizeContractSource(contractDefinition.src, evaluationOptions.useIVM);
 
       if (!evaluationOptions.allowUnsafeClient) {
         if (normalizedSource.includes('SmartWeave.unsafeClient')) {
@@ -168,32 +163,24 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
           );
         }
       }
+
       if (!evaluationOptions.allowBigInt) {
         if (normalizedSource.includes('BigInt')) {
           throw new Error('Using BigInt is not allowed by default. Use EvaluationOptions.allowBigInt flag.');
         }
       }
-      if (evaluationOptions.useVM2) {
-        const vmScript = new vm2.VMScript(normalizedSource);
-        const vm = new vm2.NodeVM({
-          console: 'off',
-          sandbox: {
-            SmartWeave: swGlobal,
-            BigNumber: BigNumber,
-            logger: this.logger,
-            ContractError: ContractError,
-            ContractAssert: function (cond, message) {
-              if (!cond) throw new ContractError(message);
-            }
-          },
-          compiler: 'javascript',
-          eval: false,
-          wasm: false,
-          allowAsync: true,
-          wrapper: 'commonjs'
+      if (evaluationOptions.useIVM) {
+        const isolate = new Isolate({
+          memoryLimit: evaluationOptions.ivm.memoryLimit
         });
+        const context: Context = isolate.createContextSync();
+        const sandbox: Reference<Record<number | string | symbol, any>> = context.global;
 
-        return new JsHandlerApi(swGlobal, contractDefinition, vm.run(vmScript));
+        configureSandbox(sandbox, this.arweave, swGlobal);
+        configureContext(context);
+        const contract: Reference = context.evalSync(normalizedSource, { reference: true });
+
+        return new IvmHandlerApi(swGlobal, contractDefinition, { isolate, context, sandbox, contract });
       } else {
         const contractFunction = new Function(normalizedSource);
         const handler = contractFunction(swGlobal, BigNumber, LoggerFactory.INST.create(swGlobal.contract.id));
@@ -233,12 +220,9 @@ export interface HandlerApi<State> {
   ): Promise<InteractionResult<State, Result>>;
 
   initState(state: State): void;
-}
 
-export type HandlerFunction<State, Input, Result> = (
-  state: State,
-  interaction: ContractInteraction<Input>
-) => Promise<HandlerResult<State, Result>>;
+  dispose(): Promise<void>;
+}
 
 // TODO: change to XOR between result and state?
 export type HandlerResult<State, Result> = {

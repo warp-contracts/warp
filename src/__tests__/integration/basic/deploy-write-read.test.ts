@@ -62,7 +62,7 @@ describe('Testing the Warp client', () => {
       mineArLocalBlocks: false
     });
     contractVM = warp.contract<ExampleContractState>(contractTxId).setEvaluationOptions({
-      useVM2: true,
+      useIVM: true,
       mineArLocalBlocks: false
     });
     contractInitData = warp.contract<ExampleContractState>(contractInitDataTxId).setEvaluationOptions({
