@@ -102,7 +102,7 @@ describe('Testing internal writes', () => {
       .contract<ExampleContractState>(calleeTxId)
       .setEvaluationOptions({
         internalWrites: true,
-        useVM2: true,
+        useIVM: true,
         mineArLocalBlocks: false
       })
       .connect(wallet);
@@ -118,7 +118,7 @@ describe('Testing internal writes', () => {
       .contract(callingTxId)
       .setEvaluationOptions({
         internalWrites: true,
-        useVM2: true,
+        useIVM: true,
         mineArLocalBlocks: false
       })
       .connect(wallet);
@@ -270,7 +270,7 @@ describe('Testing internal writes', () => {
         .contract<ExampleContractState>(calleeTxId)
         .setEvaluationOptions({
           internalWrites: true,
-          useVM2: true
+          useIVM: true
         });
       expect((await calleeContract2.readState()).state.counter).toEqual(634);
       expect((await calleeContract2VM.readState()).state.counter).toEqual(634);

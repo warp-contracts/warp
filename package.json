@@ -70,6 +70,7 @@
     "bignumber.js": "^9.0.1",
     "elliptic": "^6.5.4",
     "fast-copy": "^2.1.1",
+    "isolated-vm": "^4.4.1",
     "knex": "^0.95.14",
     "level": "^8.0.0",
     "lodash": "^4.17.21",
@@ -79,8 +80,7 @@
     "safe-stable-stringify": "2.3.1",
     "stream-buffers": "^3.0.2",
     "tslog": "^3.2.2",
-    "unzipit": "^1.4.0",
-    "vm2": "3.9.9"
+    "unzipit": "^1.4.0"
   },
   "devDependencies": {
     "@types/cheerio": "^0.22.30",
@@ -116,7 +116,7 @@
     "fs": false,
     "path": false,
     "crypto": false,
-    "vm2": false,
+    "isolated-vm": false,
     "archiver": false,
     "stream-buffers": false,
     "constants": false,

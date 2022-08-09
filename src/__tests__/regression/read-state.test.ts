@@ -39,7 +39,7 @@ const originalConsoleLog = console.log;
 describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
   // note: concurrent doesn't seem to be working here, duh...
   // will probably need to manually split all the test cases to separate test files
-  it.concurrent.each(contracts)(
+  it.each(contracts)(
     '.test %# %o',
     async (contractTxId: string) => {
       const blockHeight = 850127;
@@ -72,12 +72,12 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
         console.log = originalConsoleLog;
       }
     },
-    800000
+    300 * 1000
   );
 });
 
 describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
-  it.concurrent.each(contracts)(
+  it.each(contracts)(
     '.test %# %o',
     async (contractTxId: string) => {
       const blockHeight = 850127;
@@ -99,21 +99,24 @@ describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
         .contract(contractTxId)
         .setEvaluationOptions({
           useFastCopy: true,
-          useVM2: true,
-          allowUnsafeClient: true
+          useIVM: true,
+          allowUnsafeClient: true,
+          ivm: {
+            memoryLimit: 120
+          }
         })
         .readState(blockHeight);
       const result2String = stringify(result2.state).trim();
       expect(result2String).toEqual(resultString);
     },
-    800000
+    300 * 1000
   );
 });
 
 describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
   // note: concurrent doesn't seem to be working here, duh...
   // will probably need to manually split all the test cases to separate test files
-  it.concurrent.each(contracts)(
+  it.each(contracts)(
     '.test %# %o',
     async (contractTxId: string) => {
       const blockHeight = 855134;
@@ -147,16 +150,18 @@ describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
       const result2String = stringify(result2.state).trim();
       expect(result2String).toEqual(resultString);
     },
-    800000
+    300 * 1000
   );
 });
 
 describe('readState', () => {
-  it('should properly read state at requested block height', async () => {
-    const contractTxId = 'CbGCxBJn6jLeezqDl1w3o8oCSeRCb-MmtZNKPodla-0';
-    const blockHeight = 707892;
-    const result = await readContract(arweave, contractTxId, blockHeight);
-    const resultString = stringify(result).trim();
+  it(
+    'should properly read state at requested block height',
+    async () => {
+      const contractTxId = 'CbGCxBJn6jLeezqDl1w3o8oCSeRCb-MmtZNKPodla-0';
+      const blockHeight = 707892;
+      const result = await readContract(arweave, contractTxId, blockHeight);
+      const resultString = stringify(result).trim();
 
     const result2 = await WarpFactory.custom(
       arweave,
@@ -175,16 +180,20 @@ describe('readState', () => {
       .readState(blockHeight);
     const result2String = stringify(result2.state).trim();
 
-    expect(result2String).toEqual(resultString);
-  }, 800000);
+      expect(result2String).toEqual(resultString);
+    },
+    300 * 1000
+  );
 
-  it('should properly check balance of a PST contract', async () => {
-    const jwk = await arweave.wallets.generate();
-    const contractTxId = '-8A6RexFkpfWwuyVO98wzSFZh0d6VJuI-buTJvlwOJQ';
-    const v1Result = await interactRead(arweave, jwk, contractTxId, {
-      function: 'balance',
-      target: '6Z-ifqgVi1jOwMvSNwKWs6ewUEQ0gU9eo4aHYC3rN1M'
-    });
+  it(
+    'should properly check balance of a PST contract',
+    async () => {
+      const jwk = await arweave.wallets.generate();
+      const contractTxId = '-8A6RexFkpfWwuyVO98wzSFZh0d6VJuI-buTJvlwOJQ';
+      const v1Result = await interactRead(arweave, jwk, contractTxId, {
+        function: 'balance',
+        target: '6Z-ifqgVi1jOwMvSNwKWs6ewUEQ0gU9eo4aHYC3rN1M'
+      });
 
     const v2Result = await WarpFactory.custom(
       arweave,
@@ -203,6 +212,8 @@ describe('readState', () => {
         target: '6Z-ifqgVi1jOwMvSNwKWs6ewUEQ0gU9eo4aHYC3rN1M'
       });
 
-    expect(v1Result).toEqual(v2Result.result);
-  }, 800000);
+      expect(v1Result).toEqual(v2Result.result);
+    },
+    300 * 1000
+  );
 });
