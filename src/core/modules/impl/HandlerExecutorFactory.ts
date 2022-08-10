@@ -171,7 +171,10 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
       }
       if (evaluationOptions.useIVM) {
         const isolate = new Isolate({
-          memoryLimit: evaluationOptions.ivm.memoryLimit
+          memoryLimit: evaluationOptions.ivm.memoryLimit,
+          onCatastrophicError: (message) => {
+            this.logger.fatal('Catastrophic error from isolate', message);
+          }
         });
         const context: Context = isolate.createContextSync();
         const sandbox: Reference<Record<number | string | symbol, any>> = context.global;

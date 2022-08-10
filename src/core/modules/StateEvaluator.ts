@@ -117,7 +117,7 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
 
   useFastCopy = true;
 
-  useVM2 = false;
+  useIVM = false;
 
   ivm = {
     memoryLimit: 100,
@@ -194,7 +194,7 @@ export interface EvaluationOptions {
   useIVM: boolean;
 
   // Options for isolated-vm:
-  // memory limit - defaults to 50MB
+  // memory limit - defaults to 100MB
   // timeout (script time evaluation limit) - defaults to 60s
   ivm: {
     memoryLimit?: number;
