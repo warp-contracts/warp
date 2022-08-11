@@ -28,6 +28,7 @@ import {
   SigningFunction,
   sleep,
   SmartWeaveTags,
+  SortKeyCacheResult,
   SourceData,
   SourceImpl,
   Tags,
@@ -101,7 +102,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     sortKeyOrBlockHeight?: string | number,
     currentTx?: CurrentTx[],
     interactions?: GQLNodeInterface[]
-  ): Promise<EvalStateResult<State>> {
+  ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
     this.logger.info('Read state for', {
       contractTxId: this._contractTxId,
       currentTx,
@@ -146,7 +147,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       'Total:                 ': `${total.toFixed(0)}ms`
     });
 
-    return result as EvalStateResult<State>;
+    return result;
   }
 
   async viewState<Input, View>(
@@ -553,7 +554,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     // eval current state
     const evalStateResult = await stateEvaluator.eval<State>(executionContext, []);
-    this.logger.info('Current state', evalStateResult.state);
+    this.logger.info('Current state', evalStateResult.cachedValue.state);
 
     // create interaction transaction
     const interaction: ContractInteraction<Input> = {
@@ -589,7 +590,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
         currentTx: []
       },
       executionContext,
-      evalStateResult
+      evalStateResult.cachedValue
     );
 
     if (handleResult.type !== 'ok') {
@@ -613,7 +614,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const evalStateResult = await this.warp.stateEvaluator.eval<State>(executionContext, currentTx);
 
     this.logger.debug('callContractForTx - evalStateResult', {
-      result: evalStateResult.state,
+      result: evalStateResult.cachedValue.state,
       txId: this._contractTxId
     });
 
@@ -628,9 +629,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
       currentTx
     };
 
-    const result = await this.evalInteraction<Input, View>(interactionData, executionContext, evalStateResult);
-    result.originalValidity = evalStateResult.validity;
-    result.originalErrorMessages = evalStateResult.errorMessages;
+    const result = await this.evalInteraction<Input, View>(
+      interactionData,
+      executionContext,
+      evalStateResult.cachedValue
+    );
+    result.originalValidity = evalStateResult.cachedValue.validity;
+    result.originalErrorMessages = evalStateResult.cachedValue.errorMessages;
 
     return result;
   }

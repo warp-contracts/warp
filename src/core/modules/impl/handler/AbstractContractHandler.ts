@@ -131,7 +131,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
       // (by simply using destructuring operator)...
       // but this (i.e. returning always stateWithValidity from here) would break backwards compatibility
       // in current contract's source code..:/
-      return returnValidity ? deepCopy(stateWithValidity) : deepCopy(stateWithValidity.state);
+      return returnValidity ? deepCopy(stateWithValidity) : deepCopy(stateWithValidity.cachedValue.state);
     };
   }
 

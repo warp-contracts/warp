@@ -34,14 +34,14 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
   async eval<State>(
     executionContext: ExecutionContext<State, HandlerApi<State>>,
     currentTx: CurrentTx[]
-  ): Promise<EvalStateResult<State>> {
+  ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
     const cachedState = executionContext.cachedState;
     if (cachedState && cachedState.sortKey == executionContext.requestedSortKey) {
       this.cLogger.info(
         `Exact cache hit for sortKey ${executionContext?.contractDefinition?.txId}:${cachedState.sortKey}`
       );
       executionContext.handler?.initState(cachedState.cachedValue.state);
-      return cachedState.cachedValue;
+      return cachedState;
     }
 
     const missingInteractions = executionContext.sortedInteractions;
@@ -73,10 +73,13 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       this.cLogger.info(`No missing interactions ${contractTxId}`);
       if (cachedState) {
         executionContext.handler?.initState(cachedState.cachedValue.state);
-        return cachedState.cachedValue;
+        return cachedState;
       } else {
         executionContext.handler?.initState(executionContext.contractDefinition.initState);
-        return new EvalStateResult(executionContext.contractDefinition.initState, {}, {});
+        return new SortKeyCacheResult<EvalStateResult<State>>(
+          null, // no real sort-key - as we're returning the initial state
+          new EvalStateResult(executionContext.contractDefinition.initState, {}, {})
+        );
       }
     }
 

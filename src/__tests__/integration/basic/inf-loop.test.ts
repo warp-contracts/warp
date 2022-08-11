@@ -67,7 +67,7 @@ describe('Testing the Warp client', () => {
     });
     await mineBlock(warp);
 
-    expect((await contract.readState()).state.counter).toEqual(20);
+    expect((await contract.readState()).cachedValue.state.counter).toEqual(20);
   });
 
   it('should exit long running function', async () => {
@@ -89,6 +89,6 @@ describe('Testing the Warp client', () => {
     } catch {
       // noop
     }
-    expect((await contract.readState()).state.counter).toEqual(30);
+    expect((await contract.readState()).cachedValue.state.counter).toEqual(30);
   });
 });

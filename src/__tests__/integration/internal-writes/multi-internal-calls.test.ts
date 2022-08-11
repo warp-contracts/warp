@@ -124,9 +124,9 @@ describe('Testing internal writes', () => {
     });
 
     it('should deploy contracts with initial state', async () => {
-      expect((await contractA.readState()).state.counter).toEqual(100);
-      expect((await contractB.readState()).state.counter).toEqual(555);
-      expect((await contractC.readState()).state.counter).toEqual(200);
+      expect((await contractA.readState()).cachedValue.state.counter).toEqual(100);
+      expect((await contractB.readState()).cachedValue.state.counter).toEqual(555);
+      expect((await contractC.readState()).cachedValue.state.counter).toEqual(200);
     });
 
     it('should properly create multiple internal calls (1)', async () => {
@@ -135,8 +135,8 @@ describe('Testing internal writes', () => {
       await contractC.writeInteraction({ function: 'add' });
       await mineBlock(warp);
 
-      expect((await contractB.readState()).state.counter).toEqual(557);
-      expect((await contractC.readState()).state.counter).toEqual(201);
+      expect((await contractB.readState()).cachedValue.state.counter).toEqual(557);
+      expect((await contractC.readState()).cachedValue.state.counter).toEqual(201);
     });
 
     it('should properly create multiple internal calls (2)', async () => {
@@ -150,8 +150,8 @@ describe('Testing internal writes', () => {
       await contractC.writeInteraction({ function: 'add' });
       await mineBlock(warp);
 
-      expect((await contractB.readState()).state.counter).toEqual(568);
-      expect((await contractC.readState()).state.counter).toEqual(212);
+      expect((await contractB.readState()).cachedValue.state.counter).toEqual(568);
+      expect((await contractC.readState()).cachedValue.state.counter).toEqual(212);
     });
 
     it('should properly create multiple internal calls (3)', async () => {
@@ -159,8 +159,8 @@ describe('Testing internal writes', () => {
       await contractC.writeInteraction({ function: 'add' });
       await mineBlock(warp);
 
-      expect((await contractB.readState()).state.counter).toEqual(569);
-      expect((await contractC.readState()).state.counter).toEqual(213);
+      expect((await contractB.readState()).cachedValue.state.counter).toEqual(569);
+      expect((await contractC.readState()).cachedValue.state.counter).toEqual(213);
     });
 
     it('should properly create multiple internal calls (4)', async () => {
@@ -182,8 +182,8 @@ describe('Testing internal writes', () => {
       await contractC.writeInteraction({ function: 'add' });
       await mineBlock(warp);
 
-      expect((await contractB.readState()).state.counter).toEqual(590);
-      expect((await contractC.readState()).state.counter).toEqual(235);
+      expect((await contractB.readState()).cachedValue.state.counter).toEqual(590);
+      expect((await contractC.readState()).cachedValue.state.counter).toEqual(235);
     });
 
     it('should properly create multiple internal calls (5)', async () => {
@@ -197,8 +197,8 @@ describe('Testing internal writes', () => {
       await contractB.writeInteraction({ function: 'add' });
       await mineBlock(warp);
 
-      expect((await contractB.readState()).state.counter).toEqual(601);
-      expect((await contractC.readState()).state.counter).toEqual(245);
+      expect((await contractB.readState()).cachedValue.state.counter).toEqual(601);
+      expect((await contractC.readState()).cachedValue.state.counter).toEqual(245);
     });
 
     it('should properly create multiple internal calls (6)', async () => {
@@ -213,8 +213,8 @@ describe('Testing internal writes', () => {
       await contractC.writeInteraction({ function: 'add' });
       await mineBlock(warp);
 
-      expect((await contractB.readState()).state.counter).toEqual(612);
-      expect((await contractC.readState()).state.counter).toEqual(256);
+      expect((await contractB.readState()).cachedValue.state.counter).toEqual(612);
+      expect((await contractC.readState()).cachedValue.state.counter).toEqual(256);
     });
 
     it('should properly create multiple internal calls (7)', async () => {
@@ -237,13 +237,13 @@ describe('Testing internal writes', () => {
       await contractB.writeInteraction({ function: 'add' });
       await mineBlock(warp);
 
-      expect((await contractB.readState()).state.counter).toEqual(634);
-      expect((await contractC.readState()).state.counter).toEqual(276);
+      expect((await contractB.readState()).cachedValue.state.counter).toEqual(634);
+      expect((await contractC.readState()).cachedValue.state.counter).toEqual(276);
     });
 
     it('should properly evaluate again the state', async () => {
-      expect((await contractB.readState()).state.counter).toEqual(634);
-      expect((await contractC.readState()).state.counter).toEqual(276);
+      expect((await contractB.readState()).cachedValue.state.counter).toEqual(634);
+      expect((await contractC.readState()).cachedValue.state.counter).toEqual(276);
     });
   });
 
@@ -330,13 +330,13 @@ describe('Testing internal writes', () => {
       await contractB.writeInteraction({ function: 'add' });
       await mineBlock(warp);
 
-      expect((await contractB.readState()).state.counter).toEqual(634);
-      expect((await contractC.readState()).state.counter).toEqual(276);
+      expect((await contractB.readState()).cachedValue.state.counter).toEqual(634);
+      expect((await contractC.readState()).cachedValue.state.counter).toEqual(276);
     });
 
     it('should properly evaluate the state again', async () => {
-      expect((await contractB.readState()).state.counter).toEqual(634);
-      expect((await contractC.readState()).state.counter).toEqual(276);
+      expect((await contractB.readState()).cachedValue.state.counter).toEqual(634);
+      expect((await contractC.readState()).cachedValue.state.counter).toEqual(276);
     });
 
     it('should properly evaluate state with a new client', async () => {
@@ -348,8 +348,8 @@ describe('Testing internal writes', () => {
         .contract<any>(contractCTxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
-      expect((await contractB2.readState()).state.counter).toEqual(634);
-      expect((await contractC2.readState()).state.counter).toEqual(276);
+      expect((await contractB2.readState()).cachedValue.state.counter).toEqual(634);
+      expect((await contractC2.readState()).cachedValue.state.counter).toEqual(276);
     });
   });
 });

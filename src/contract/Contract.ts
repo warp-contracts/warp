@@ -5,7 +5,7 @@ import {
   EvalStateResult,
   EvaluationOptions,
   GQLNodeInterface,
-  InteractionResult,
+  InteractionResult, SortKeyCacheResult,
   Tags
 } from '@warp';
 import Transaction from 'arweave/node/lib/transaction';
@@ -101,7 +101,7 @@ export interface Contract<State = unknown> extends Source {
     sortKeyOrBlockHeight?: string | number,
     currentTx?: CurrentTx[],
     interactions?: GQLNodeInterface[]
-  ): Promise<EvalStateResult<State>>;
+  ): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
 
   /**
    * Returns the "view" of the state, computed by the SWC -

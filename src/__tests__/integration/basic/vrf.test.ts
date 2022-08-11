@@ -111,8 +111,8 @@ describe('Testing the Profit Sharing Token', () => {
     });
     await mineBlock(warp);
     const result = await pst.readState();
-    const lastTxId = Object.keys(result.validity).pop();
-    const vrf = (result.state as any).vrf[lastTxId];
+    const lastTxId = Object.keys(result.cachedValue.validity).pop();
+    const vrf = (result.cachedValue.state as any).vrf[lastTxId];
 
     expect(vrf).not.toBeUndefined();
     expect(vrf['random_6_1'] == vrf['random_6_2']).toBe(true);

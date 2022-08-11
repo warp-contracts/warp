@@ -299,10 +299,12 @@ const contract = warp.contract('YOUR_CONTRACT_TX_ID').setEvaluationOptions({
 #### `readState`
 
 ```typescript
+import {SortKeyCacheResult} from "./SortKeyCache";
+
 async function readState(
-  sortKeyOrBlockHeight?: string | number,
-  currentTx?: { contractTxId: string; interactionTxId: string }[]
-): Promise<EvalStateResult<State>>;
+        sortKeyOrBlockHeight?: string | number,
+        currentTx?: { contractTxId: string; interactionTxId: string }[]
+): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
 ```
 
 Returns state of the contract at required blockHeight or sortKey. Similar to the `readContract` from the version 1.
@@ -314,7 +316,7 @@ Returns state of the contract at required blockHeight or sortKey. Similar to the
   <summary>Example</summary>
 
 ```typescript
-const { state, validity } = await contract.readState();
+const { sortKey, cachedValue } = await contract.readState();
 ```
 
 </details>
