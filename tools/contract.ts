@@ -37,7 +37,8 @@ async function main() {
     const contract = warp.contract("K4A2YMoH3W4bVeG329C3lZr0vufEjP_ONDQIPS-_kGg");
     const {state, validity, errorMessages} = await contract
       .setEvaluationOptions({
-        useVM2: true
+        useVM2: true,
+        allowBigInt: true
       })
       .readState();
 

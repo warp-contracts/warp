@@ -83,6 +83,8 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
 
   async put(stateCacheKey: CacheKey, value: V): Promise<void> {
     const contractCache = this.db.sublevel<string, any>(stateCacheKey.contractTxId, { valueEncoding: 'json' });
+    // manually opening to fix https://github.com/Level/level/issues/221
+    await contractCache.open();
     await contractCache.put(stateCacheKey.sortKey, value);
   }
 
