@@ -5,7 +5,8 @@ import {
   EvalStateResult,
   EvaluationOptions,
   GQLNodeInterface,
-  InteractionResult, SortKeyCacheResult,
+  InteractionResult,
+  SortKeyCacheResult,
   Tags
 } from '@warp';
 import Transaction from 'arweave/node/lib/transaction';
