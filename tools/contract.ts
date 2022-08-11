@@ -34,12 +34,16 @@ async function main() {
 
   const warp = WarpFactory.forMainnet({...defaultCacheOptions, inMemory: true});
   try {
-    const contract = warp.contract("Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY");
-    const {state, validity, errorMessages} = await contract.readState();
+    const contract = warp.contract("K4A2YMoH3W4bVeG329C3lZr0vufEjP_ONDQIPS-_kGg");
+    const {state, validity, errorMessages} = await contract
+      .setEvaluationOptions({
+        useVM2: true
+      })
+      .readState();
 
     console.log(state);
   } catch (e) {
-    throw new Error("Gotcha!");
+    console.error(e);
   }
 
   const heapUsedAfter = Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100;

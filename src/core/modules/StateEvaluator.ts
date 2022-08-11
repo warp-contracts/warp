@@ -117,11 +117,11 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
 
   useFastCopy = true;
 
-  manualCacheFlush = false;
-
   useVM2 = false;
 
   allowUnsafeClient = false;
+
+  allowBigInt = false;
 
   walletBalanceUrl = 'http://nyc-1.dev.arweave.net:1984/';
 
@@ -180,8 +180,6 @@ export interface EvaluationOptions {
   // currently defaults to true
   useFastCopy: boolean;
 
-  manualCacheFlush: boolean;
-
   // Whether js contracts' code should be run within vm2 sandbox (https://github.com/patriksimek/vm2#vm2-----)
   // it greatly enhances security - at a cost of performance.
   // use for contracts that you cannot trust.
@@ -192,6 +190,10 @@ export interface EvaluationOptions {
   // if set to false - calling unsafe clinet in contract code will
   // result in throwing an exception
   allowUnsafeClient: boolean;
+
+  // whether using BigInt in contract code is allowed. Defaults to false
+  // as by default BigInt cannot be serialized to json.
+  allowBigInt: boolean;
 
   // an endpoint for retrieving wallet balance info
   walletBalanceUrl: string;

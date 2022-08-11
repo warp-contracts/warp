@@ -168,6 +168,11 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
           );
         }
       }
+      if (!evaluationOptions.allowBigInt) {
+        if (normalizedSource.includes('BigInt')) {
+          throw new Error('Using BigInt is not allowed by default. Use EvaluationOptions.allowBigInt flag.');
+        }
+      }
       if (evaluationOptions.useVM2) {
         const vmScript = new vm2.VMScript(normalizedSource);
         const vm = new vm2.NodeVM({
