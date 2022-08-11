@@ -82,13 +82,13 @@ export class IvmHandlerApi<State> extends AbstractContractHandler<State> {
   }
 
   async dispose(): Promise<void> {
-    /*try {
+    try {
       this.ivm.contract.release();
       this.ivm.sandbox.release();
       this.ivm.context.release();
       this.ivm.isolate.dispose();
     } catch (e: any) {
       this.logger.error(e);
-    }*/
+    }
   }
 }
