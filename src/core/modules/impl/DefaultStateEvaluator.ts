@@ -45,7 +45,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
   async eval<State>(
     executionContext: ExecutionContext<State, HandlerApi<State>>,
     currentTx: CurrentTx[]
-  ): Promise<EvalStateResult<State>> {
+  ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
     return this.doReadState(
       executionContext.sortedInteractions,
       new EvalStateResult<State>(executionContext.contractDefinition.initState, {}, {}),
@@ -59,11 +59,12 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     baseState: EvalStateResult<State>,
     executionContext: ExecutionContext<State, HandlerApi<State>>,
     currentTx: CurrentTx[]
-  ): Promise<EvalStateResult<State>> {
+  ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
     const { ignoreExceptions, stackTrace, internalWrites } = executionContext.evaluationOptions;
     const { contract, contractDefinition, sortedInteractions } = executionContext;
 
     let currentState = baseState.state;
+    let currentSortKey = null;
     const validity = baseState.validity;
     const errorMessages = baseState.errorMessages;
 
@@ -86,6 +87,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     for (let i = 0; i < missingInteractionsLength; i++) {
       const missingInteraction = missingInteractions[i];
       const singleInteractionBenchmark = Benchmark.measure();
+      currentSortKey = missingInteraction.sortKey;
 
       if (missingInteraction.vrf) {
         if (!this.verifyVrf(missingInteraction.vrf, missingInteraction.sortKey, this.arweave)) {
@@ -251,8 +253,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     }
 
     await executionContext.handler.dispose();
-
-    return evalStateResult;
+    return new SortKeyCacheResult(currentSortKey, evalStateResult);
   }
 
   private verifyVrf(vrf: VrfData, sortKey: string, arweave: Arweave): boolean {

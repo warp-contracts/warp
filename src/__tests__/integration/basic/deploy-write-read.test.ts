@@ -80,9 +80,9 @@ describe('Testing the Warp client', () => {
   });
 
   it('should properly deploy contract with initial state', async () => {
-    expect((await contract.readState()).state.counter).toEqual(555);
-    expect((await contractVM.readState()).state.counter).toEqual(555);
-    expect((await contractInitData.readState()).state.counter).toEqual(555);
+    expect((await contract.readState()).cachedValue.state.counter).toEqual(555);
+    expect((await contractVM.readState()).cachedValue.state.counter).toEqual(555);
+    expect((await contractInitData.readState()).cachedValue.state.counter).toEqual(555);
   });
 
   it('should properly add new interaction', async () => {
@@ -90,9 +90,9 @@ describe('Testing the Warp client', () => {
     await contractInitData.writeInteraction({ function: 'add' });
     await mineBlock(warp);
 
-    expect((await contract.readState()).state.counter).toEqual(556);
-    expect((await contractVM.readState()).state.counter).toEqual(556);
-    expect((await contractInitData.readState()).state.counter).toEqual(556);
+    expect((await contract.readState()).cachedValue.state.counter).toEqual(556);
+    expect((await contractVM.readState()).cachedValue.state.counter).toEqual(556);
+    expect((await contractInitData.readState()).cachedValue.state.counter).toEqual(556);
   });
 
   it('should properly add another interactions', async () => {
@@ -106,9 +106,9 @@ describe('Testing the Warp client', () => {
     await contractInitData.writeInteraction({ function: 'add' });
     await mineBlock(warp);
 
-    expect((await contract.readState()).state.counter).toEqual(559);
-    expect((await contractVM.readState()).state.counter).toEqual(559);
-    expect((await contractInitData.readState()).state.counter).toEqual(559);
+    expect((await contract.readState()).cachedValue.state.counter).toEqual(559);
+    expect((await contractVM.readState()).cachedValue.state.counter).toEqual(559);
+    expect((await contractInitData.readState()).cachedValue.state.counter).toEqual(559);
   });
 
   it('should properly view contract state', async () => {

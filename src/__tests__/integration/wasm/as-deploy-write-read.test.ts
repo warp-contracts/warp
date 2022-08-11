@@ -72,7 +72,7 @@ describe('Testing the Warp client for AssemblyScript WASM contract', () => {
   });
 
   it('should properly read initial state', async () => {
-    const contractState = (await contract.readState()).state;
+    const contractState = (await contract.readState()).cachedValue.state;
     expect(contractState.counter).toEqual(0);
     expect(contractState.firstName).toEqual('first_ppe');
     expect(contractState.lastName).toEqual('last_ppe');
@@ -87,7 +87,7 @@ describe('Testing the Warp client for AssemblyScript WASM contract', () => {
   it('should properly read state after adding interactions', async () => {
     await mineBlock(warp);
 
-    expect((await contract.readState()).state.counter).toEqual(100);
+    expect((await contract.readState()).cachedValue.state.counter).toEqual(100);
   });
 
   it('should properly view contract state', async () => {
@@ -146,7 +146,7 @@ describe('Testing the Warp client for AssemblyScript WASM contract', () => {
   });*/
 
   it("should properly evolve contract's source code", async () => {
-    expect((await contract.readState()).state.counter).toEqual(100);
+    expect((await contract.readState()).cachedValue.state.counter).toEqual(100);
 
     const newContractSrc = fs.readFileSync(path.join(__dirname, '../data/wasm/as/assemblyscript-counter-evolve.wasm'));
 
@@ -165,6 +165,6 @@ describe('Testing the Warp client for AssemblyScript WASM contract', () => {
     await mineBlock(warp);
 
     // note: evolve should increment by 2 instead of 1
-    expect((await contract.readState()).state.counter).toEqual(102);
+    expect((await contract.readState()).cachedValue.state.counter).toEqual(102);
   });
 });

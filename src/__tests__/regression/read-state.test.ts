@@ -66,7 +66,7 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
             allowUnsafeClient: true
           })
           .readState(blockHeight);
-        const result2String = stringify(result2.state).trim();
+        const result2String = stringify(result2.cachedValue.state).trim();
         expect(result2String).toEqual(resultString);
       } finally {
         console.log = originalConsoleLog;
@@ -106,7 +106,7 @@ describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
           }
         })
         .readState(blockHeight);
-      const result2String = stringify(result2.state).trim();
+      const result2String = stringify(result2.cachedValue.state).trim();
       expect(result2String).toEqual(resultString);
     },
     300 * 1000
@@ -132,7 +132,7 @@ describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
         .useWarpGateway({ ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null })
         .build();
       const result = await warpR.contract(contractTxId).readState(blockHeight);
-      const resultString = stringify(result.state).trim();
+      const resultString = stringify(result.cachedValue.state).trim();
 
       console.log('readState Arweave Gateway', contractTxId);
       const result2 = await WarpFactory.custom(
@@ -147,7 +147,7 @@ describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
         .build()
         .contract(contractTxId)
         .readState(blockHeight);
-      const result2String = stringify(result2.state).trim();
+      const result2String = stringify(result2.cachedValue.state).trim();
       expect(result2String).toEqual(resultString);
     },
     300 * 1000
@@ -178,7 +178,7 @@ describe('readState', () => {
           allowUnsafeClient: true
         })
         .readState(blockHeight);
-      const result2String = stringify(result2.state).trim();
+      const result2String = stringify(result2.cachedValue.state).trim();
 
       expect(result2String).toEqual(resultString);
     },

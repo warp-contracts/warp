@@ -100,14 +100,14 @@ describe('Testing internal writes', () => {
     });
 
     it('should deploy contracts with initial state', async () => {
-      expect((await tokenContract.readState()).state).toEqual({
+      expect((await tokenContract.readState()).cachedValue.state).toEqual({
         allowances: {},
         balances: {},
         owner: walletAddress,
         ticker: 'ERC-20',
         totalSupply: 0
       });
-      expect((await stakingContract.readState()).state).toEqual({
+      expect((await stakingContract.readState()).cachedValue.state).toEqual({
         minimumStake: 1000,
         stakes: {},
         tokenTxId: tokenContractTxId,
@@ -123,7 +123,7 @@ describe('Testing internal writes', () => {
       });
       await mineBlock(warp);
 
-      const tokenState = (await tokenContract.readState()).state;
+      const tokenState = (await tokenContract.readState()).cachedValue.state;
 
       expect(tokenState.balances).toEqual({
         [walletAddress]: 10000
@@ -138,9 +138,9 @@ describe('Testing internal writes', () => {
       });
       await mineBlock(warp);
 
-      expect((await stakingContract.readState()).state.stakes).toEqual({});
+      expect((await stakingContract.readState()).cachedValue.state.stakes).toEqual({});
 
-      const tokenState = (await tokenContract.readState()).state;
+      const tokenState = (await tokenContract.readState()).cachedValue.state;
       expect(tokenState.balances).toEqual({
         [walletAddress]: 10000
       });
@@ -154,7 +154,7 @@ describe('Testing internal writes', () => {
       });
       await mineBlock(warp);
 
-      expect((await tokenContract.readState()).state.allowances).toEqual({
+      expect((await tokenContract.readState()).cachedValue.state.allowances).toEqual({
         [walletAddress]: {
           [stakingContractTxId]: 9999
         }
@@ -168,14 +168,14 @@ describe('Testing internal writes', () => {
       });
       await mineBlock(warp);
 
-      expect((await stakingContract.readState()).state.stakes).toEqual({
+      expect((await stakingContract.readState()).cachedValue.state.stakes).toEqual({
         [walletAddress]: {
           amount: 1000,
           unlockWhen: 0
         }
       });
 
-      const tokenState = (await tokenContract.readState()).state;
+      const tokenState = (await tokenContract.readState()).cachedValue.state;
       expect(tokenState.balances).toEqual({
         [walletAddress]: 9000,
         [stakingContractTxId]: 1000
@@ -194,14 +194,14 @@ describe('Testing internal writes', () => {
     });
 
     it('should stake tokens', async () => {
-      expect((await tokenContract.readState()).state).toEqual({
+      expect((await tokenContract.readState()).cachedValue.state).toEqual({
         allowances: {},
         balances: {},
         owner: walletAddress,
         ticker: 'ERC-20',
         totalSupply: 0
       });
-      expect((await stakingContract.readState()).state).toEqual({
+      expect((await stakingContract.readState()).cachedValue.state).toEqual({
         minimumStake: 1000,
         stakes: {},
         tokenTxId: tokenContractTxId,
@@ -250,7 +250,7 @@ describe('Testing internal writes', () => {
       await mineBlock(warp);
 
       console.log('=========== TOKEN READ', (await arweave.network.getInfo()).height);
-      const tokenState = (await tokenContract.readState()).state;
+      const tokenState = (await tokenContract.readState()).cachedValue.state;
       expect(tokenState.balances).toEqual({
         [walletAddress]: 9000,
         [stakingContractTxId]: 1000
@@ -261,7 +261,7 @@ describe('Testing internal writes', () => {
         }
       });
       console.log('reading staking state');
-      expect((await stakingContract.readState()).state.stakes).toEqual({
+      expect((await stakingContract.readState()).cachedValue.state.stakes).toEqual({
         [walletAddress]: {
           amount: 1000,
           unlockWhen: 0
