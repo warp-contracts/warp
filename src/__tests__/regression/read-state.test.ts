@@ -130,7 +130,8 @@ describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
       )
         .useWarpGateway({ ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null })
         .build();
-      const result = await warpR.contract(contractTxId)
+      const result = await warpR
+        .contract(contractTxId)
         .setEvaluationOptions({
           useFastCopy: true,
           allowUnsafeClient: true,
@@ -171,22 +172,22 @@ describe('readState', () => {
     const result = await readContract(arweave, contractTxId, blockHeight);
     const resultString = stringify(result).trim();
 
-      const result2 = await WarpFactory.custom(
-        arweave,
-        {
-          ...defaultCacheOptions,
-          inMemory: true
-        },
-        'mainnet'
-      )
-        .useWarpGateway({ ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null })
-        .build()
-        .contract(contractTxId)
-        .setEvaluationOptions({
-          allowUnsafeClient: true
-        })
-        .readState(blockHeight);
-      const result2String = stringify(result2.cachedValue.state).trim();
+    const result2 = await WarpFactory.custom(
+      arweave,
+      {
+        ...defaultCacheOptions,
+        inMemory: true
+      },
+      'mainnet'
+    )
+      .useWarpGateway({ ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null })
+      .build()
+      .contract(contractTxId)
+      .setEvaluationOptions({
+        allowUnsafeClient: true
+      })
+      .readState(blockHeight);
+    const result2String = stringify(result2.cachedValue.state).trim();
 
     expect(result2String).toEqual(resultString);
   }, 800000);
