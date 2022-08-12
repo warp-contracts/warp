@@ -34,15 +34,15 @@ async function main() {
 
   const warp = WarpFactory.forMainnet({...defaultCacheOptions, inMemory: true});
   try {
-    const contract = warp.contract("K4A2YMoH3W4bVeG329C3lZr0vufEjP_ONDQIPS-_kGg");
-    const {state, validity, errorMessages} = await contract
+    const contract = warp.contract("-8A6RexFkpfWwuyVO98wzSFZh0d6VJuI-buTJvlwOJQ");
+    const {sortKey, cachedValue} = await contract
       .setEvaluationOptions({
-        useVM2: true,
+        useIVM: true,
         allowBigInt: true
       })
       .readState();
 
-    console.log(state);
+    console.log(sortKey);
   } catch (e) {
     console.error(e);
   }
