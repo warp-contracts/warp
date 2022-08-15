@@ -2,10 +2,14 @@ import { arrayToHex, GQLEdgeInterface, InteractionsSorter, LoggerFactory, Source
 import Arweave from 'arweave';
 
 // note: this (i.e. padding to 13 digits) should be safe between years ~1966 and ~2286
+const firstSortKeyMs = ''.padEnd(13, '0');
 const lastSortKeyMs = ''.padEnd(13, '9');
 const defaultArweaveMs = ''.padEnd(13, '0');
 
+export const sortingFirst = ''.padEnd(64, '0');
 export const sortingLast = ''.padEnd(64, 'z');
+
+export const genesisSortKey = `${''.padStart(12, '0')},${firstSortKeyMs},${sortingFirst}`;
 
 /**
  * implementation that is based on current's SDK sorting alg.

@@ -4,7 +4,9 @@ import {
   EvalStateResult,
   ExecutionContext,
   ExecutionContextModifier,
-  HandlerApi
+  genesisSortKey,
+  HandlerApi,
+  LexicographicalInteractionsSorter
 } from '@warp/core';
 import Arweave from 'arweave';
 import { GQLNodeInterface } from '@warp/legacy';
@@ -76,10 +78,12 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
         return cachedState;
       } else {
         executionContext.handler?.initState(executionContext.contractDefinition.initState);
-        return new SortKeyCacheResult<EvalStateResult<State>>(
-          null, // no real sort-key - as we're returning the initial state
-          new EvalStateResult(executionContext.contractDefinition.initState, {}, {})
-        );
+        this.cLogger.debug('Inserting initial state into cache');
+        const stateToCache = new EvalStateResult(executionContext.contractDefinition.initState, {}, {});
+        // no real sort-key - as we're returning the initial state
+        await this.cache.put(new CacheKey(contractTxId, genesisSortKey), stateToCache);
+
+        return new SortKeyCacheResult<EvalStateResult<State>>(genesisSortKey, stateToCache);
       }
     }
 
