@@ -1,9 +1,9 @@
 /* eslint-disable */
 import fs from 'fs';
 import path from 'path';
-import {interactRead, readContract} from 'smartweave';
+import { interactRead, readContract } from 'smartweave';
 import Arweave from 'arweave';
-import {defaultCacheOptions, defaultWarpGwOptions, LoggerFactory, SourceType, WarpFactory} from '@warp';
+import { defaultCacheOptions, defaultWarpGwOptions, LoggerFactory, SourceType, WarpFactory } from '@warp';
 
 const stringify = require('safe-stable-stringify');
 
@@ -49,8 +49,7 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
         .trim();
       console.log('readState', contractTxId);
       try {
-        console.log = function () {
-        }; // to hide any logs from contracts...
+        console.log = function () {}; // to hide any logs from contracts...
         const result2 = await WarpFactory.custom(
           arweave,
           {
@@ -59,7 +58,7 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
           },
           'mainnet'
         )
-          .useWarpGateway({...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null})
+          .useWarpGateway({ ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null })
           .build()
           .contract(contractTxId)
           .setEvaluationOptions({
@@ -96,7 +95,7 @@ describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
         },
         'mainnet'
       )
-        .useWarpGateway({...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null})
+        .useWarpGateway({ ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null })
         .build()
         .contract(contractTxId)
         .setEvaluationOptions({
@@ -132,7 +131,7 @@ describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
         },
         'mainnet'
       )
-        .useWarpGateway({...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null})
+        .useWarpGateway({ ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null })
         .build();
       const result = await warpR
         .contract(contractTxId)
@@ -186,7 +185,7 @@ describe('readState', () => {
         },
         'mainnet'
       )
-        .useWarpGateway({...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null})
+        .useWarpGateway({ ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null })
         .build()
         .contract(contractTxId)
         .setEvaluationOptions({
@@ -218,7 +217,7 @@ describe('readState', () => {
         },
         'mainnet'
       )
-        .useWarpGateway({...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null})
+        .useWarpGateway({ ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null })
         .build()
         .contract(contractTxId)
         .connect(jwk)
