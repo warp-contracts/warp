@@ -11,16 +11,7 @@ const runBuild = async () => {
   await clean();
 
   const webExternals = [
-    'events',
-    'fs',
-    'path',
-    'crypto',
-    'vm2',
-    'archiver',
-    'stream-buffers',
-    'constants',
-    'knex',
-    'os'
+    'events'
   ];
 
   const iifeBuild = {
