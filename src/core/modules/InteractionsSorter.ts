@@ -1,4 +1,4 @@
-import { GQLEdgeInterface } from "../../legacy/gqlResult";
+import { GQLEdgeInterface } from '../../legacy/gqlResult';
 
 /**
  * this is probably self-explanatory ;-)

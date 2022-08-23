@@ -1,4 +1,4 @@
-import { WarpCache } from "../../cache/WarpCache";
+import { WarpCache } from '../../cache/WarpCache';
 
 /**
  * A simple, in-memory cache, with keys being transaction ids (e.g. contract transaction id).

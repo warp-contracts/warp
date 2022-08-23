@@ -10,66 +10,39 @@ const clean = async () => {
 const runBuild = async () => {
   await clean();
 
-  build({
+  const buildConfig = {
     entryPoints: ['./src/index.ts'],
-    minify: false,
     bundle: true,
-    outfile: './bundles/web.bundle.js',
-    platform: 'browser',
-    target: ['esnext'],
-    format: 'iife',
-    globalName: 'warp',
-    external: ['events']
-  }).catch((e) => {
-    console.log(e);
-    process.exit(1);
-  });
-
-  build({
-    entryPoints: ['./src/index.ts'],
-    minify: true,
-    bundle: true,
-    outfile: './bundles/web.bundle.min.js',
-    platform: 'browser',
-    target: ['esnext'],
-    format: 'iife',
-    globalName: 'warp',
-    external: ['events']
-  }).catch((e) => {
-    console.log(e);
-    process.exit(1);
-  });
-
-  build({
-    entryPoints: ['./src/index.ts'],
-    minify: false,
-    bundle: true,
-    outfile: './bundles/esm.bundle.js',
     platform: 'browser',
     target: ['esnext'],
     format: 'esm',
-    globalName: 'warp',
-    external: ['events']
+    globalName: 'warp'
+  };
+
+  console.log('Building web bundle esm.');
+  build({
+    ...buildConfig,
+    minify: true,
+    outfile: './bundles/web.bundle.min.js'
   }).catch((e) => {
     console.log(e);
     process.exit(1);
   });
 
+  console.log('Building web bundle iife.');
   build({
-    entryPoints: ['./src/index.ts'],
+    ...buildConfig,
     minify: true,
-    bundle: true,
-    outfile: './bundles/esm.bundle.min.js',
-    platform: 'browser',
     target: ['esnext'],
-    format: 'esm',
-    globalName: 'warp',
-    external: ['events']
+    format: 'iife',
+    outfile: './bundles/web.iife.bundle.min.js'
   }).catch((e) => {
     console.log(e);
     process.exit(1);
   });
 };
-runBuild();
+runBuild().finally(() => {
+  console.log('Build done.');
+});
 
 module.exports = runBuild;

@@ -1,9 +1,9 @@
-import { EvolveState } from "../contract/Contract";
-import { LoggerFactory } from "../logging/LoggerFactory";
-import { ExecutionContext } from "../core/ExecutionContext";
-import { ExecutionContextModifier } from "../core/ExecutionContextModifier";
-import { SmartWeaveError, SmartWeaveErrorType } from "../legacy/errors";
-import { HandlerApi } from "../core/modules/impl/HandlerExecutorFactory";
+import { EvolveState } from '../contract/Contract';
+import { LoggerFactory } from '../logging/LoggerFactory';
+import { ExecutionContext } from '../core/ExecutionContext';
+import { ExecutionContextModifier } from '../core/ExecutionContextModifier';
+import { SmartWeaveError, SmartWeaveErrorType } from '../legacy/errors';
+import { HandlerApi } from '../core/modules/impl/HandlerExecutorFactory';
 
 function isEvolveCompatible(state: unknown): state is EvolveState {
   if (!state) {

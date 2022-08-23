@@ -1,6 +1,6 @@
-import { LogLevel } from "./LoggerSettings";
-import { WarpLogger } from "./WarpLogger";
-import { ConsoleLoggerFactory } from "./web/ConsoleLoggerFactory";
+import { LogLevel } from './LoggerSettings';
+import { WarpLogger } from './WarpLogger';
+import { ConsoleLoggerFactory } from './web/ConsoleLoggerFactory';
 
 export interface ILoggerFactory {
   setOptions(newOptions: any, moduleName?: string): void;

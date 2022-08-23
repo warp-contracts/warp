@@ -1,5 +1,5 @@
-import { mapReplacer } from "../utils/utils";
-import { InteractionData } from "./modules/impl/HandlerExecutorFactory";
+import { mapReplacer } from '../utils/utils';
+import { InteractionData } from './modules/impl/HandlerExecutorFactory';
 
 export class ContractCallStack {
   readonly interactions: Map<string, InteractionCall> = new Map();

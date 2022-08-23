@@ -15,8 +15,13 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "baseUrl": "./src",
-    "allowJs": true
+    "allowJs": true,
   },
   "include": ["src"],
-  "exclude": ["node_modules", "tools", "**/__tests__/*", "_scripts"]
+  "exclude": [
+    "node_modules",
+    "tools",
+    "**/__tests__/*",
+    "_scripts"
+  ]
 }

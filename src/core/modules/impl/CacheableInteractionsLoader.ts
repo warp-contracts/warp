@@ -1,7 +1,7 @@
-import { GQLNodeInterface } from "../../../legacy/gqlResult";
-import { LoggerFactory } from "../../../logging/LoggerFactory";
-import { InteractionsLoader, GW_TYPE } from "../InteractionsLoader";
-import { EvaluationOptions } from "../StateEvaluator";
+import { GQLNodeInterface } from '../../../legacy/gqlResult';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { InteractionsLoader, GW_TYPE } from '../InteractionsLoader';
+import { EvaluationOptions } from '../StateEvaluator';
 
 export class CacheableInteractionsLoader implements InteractionsLoader {
   private readonly logger = LoggerFactory.INST.create('CacheableInteractionsLoader');
