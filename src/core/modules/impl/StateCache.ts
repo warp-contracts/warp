@@ -1,4 +1,4 @@
-import { EvalStateResult, GQLNodeInterface } from '@warp';
+import { GQLNodeInterface } from "../../../legacy/gqlResult";
 
 //export type StateCache<State> = Array<EvalStateResult<State>>;
 export function canBeCached(tx: GQLNodeInterface): boolean {

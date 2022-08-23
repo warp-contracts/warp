@@ -1,5 +1,7 @@
 /* eslint-disable */
-import { LoggerSettings, LogLevel, lvlToOrder, WarpLogger } from '@warp';
+
+import { LoggerSettings, LogLevel, lvlToOrder } from "../../logging/LoggerSettings";
+import { WarpLogger } from "../../logging/WarpLogger";
 
 export class ConsoleLogger implements WarpLogger {
   constructor(private readonly moduleName, public settings: LoggerSettings) {}

@@ -1,23 +1,19 @@
 import Arweave from 'arweave';
-import {
-  ArweaveGatewayInteractionsLoader,
-  CacheableInteractionsLoader,
-  ContractDefinitionLoader,
-  DebuggableExecutorFactory,
-  DefinitionLoader,
-  EvalStateResult,
-  ExecutorFactory,
-  GatewayOptions,
-  HandlerApi,
-  InteractionsLoader,
-  LevelDbCache,
-  MemCache,
-  StateEvaluator,
-  Warp,
-  WarpEnvironment,
-  WarpGatewayContractDefinitionLoader,
-  WarpGatewayInteractionsLoader
-} from '@warp';
+import { MemCache } from '../cache/impl/MemCache';
+import { LevelDbCache } from '../cache/impl/LevelDbCache';
+import { DebuggableExecutorFactory } from '../plugins/DebuggableExecutorFactor';
+import { DefinitionLoader } from './modules/DefinitionLoader';
+import { ExecutorFactory } from './modules/ExecutorFactory';
+import { ArweaveGatewayInteractionsLoader } from './modules/impl/ArweaveGatewayInteractionsLoader';
+import { CacheableInteractionsLoader } from './modules/impl/CacheableInteractionsLoader';
+import { ContractDefinitionLoader } from './modules/impl/ContractDefinitionLoader';
+import { HandlerApi } from './modules/impl/HandlerExecutorFactory';
+import { WarpGatewayContractDefinitionLoader } from './modules/impl/WarpGatewayContractDefinitionLoader';
+import { WarpGatewayInteractionsLoader } from './modules/impl/WarpGatewayInteractionsLoader';
+import { InteractionsLoader } from './modules/InteractionsLoader';
+import { StateEvaluator, EvalStateResult } from './modules/StateEvaluator';
+import { WarpEnvironment, Warp } from './Warp';
+import { GatewayOptions } from './WarpFactory';
 
 export class WarpBuilder {
   private _definitionLoader?: DefinitionLoader;

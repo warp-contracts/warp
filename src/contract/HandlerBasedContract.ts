@@ -1,46 +1,27 @@
-import {
-  ArTransfer,
-  ArWallet,
-  ArweaveWrapper,
-  Benchmark,
-  BenchmarkStats,
-  Contract,
-  ContractCallStack,
-  ContractInteraction,
-  createDummyTx,
-  createInteractionTx,
-  CurrentTx,
-  DefaultEvaluationOptions,
-  emptyTransfer,
-  EvalStateResult,
-  EvaluationOptions,
-  Evolve,
-  ExecutionContext,
-  GQLNodeInterface,
-  HandlerApi,
-  InnerWritesEvaluator,
-  InteractionCall,
-  InteractionData,
-  InteractionResult,
-  InteractionsSorter,
-  LexicographicalInteractionsSorter,
-  LoggerFactory,
-  SigningFunction,
-  sleep,
-  SmartWeaveTags,
-  SortKeyCacheResult,
-  SourceData,
-  SourceImpl,
-  Tags,
-  Warp,
-  WriteInteractionOptions,
-  WriteInteractionResponse
-} from '@warp';
 import { TransactionStatusResponse } from 'arweave/node/transactions';
 import stringify from 'safe-stable-stringify';
 import * as crypto from 'crypto';
 import Transaction from 'arweave/node/lib/transaction';
-import { up } from 'arlocal/bin/db/initialize';
+import { SortKeyCacheResult } from '../cache/SortKeyCache';
+import { ContractCallStack, InteractionCall } from '../core/ContractCallStack';
+import { ExecutionContext } from '../core/ExecutionContext';
+import { InteractionResult, HandlerApi, ContractInteraction, InteractionData } from '../core/modules/impl/HandlerExecutorFactory';
+import { LexicographicalInteractionsSorter } from '../core/modules/impl/LexicographicalInteractionsSorter';
+import { InteractionsSorter } from '../core/modules/InteractionsSorter';
+import { EvaluationOptions, DefaultEvaluationOptions, EvalStateResult } from '../core/modules/StateEvaluator';
+import { SmartWeaveTags } from '../core/SmartWeaveTags';
+import { Warp } from '../core/Warp';
+import { createInteractionTx, createDummyTx } from '../legacy/create-interaction-tx';
+import { GQLNodeInterface } from '../legacy/gqlResult';
+import { Benchmark } from '../logging/Benchmark';
+import { LoggerFactory } from '../logging/LoggerFactory';
+import { Evolve } from '../plugins/Evolve';
+import { ArweaveWrapper } from '../utils/ArweaveWrapper';
+import { sleep } from '../utils/utils';
+import { Contract, BenchmarkStats, SigningFunction, CurrentTx, WriteInteractionOptions, WriteInteractionResponse } from './Contract';
+import { Tags, ArTransfer, emptyTransfer, ArWallet } from './deploy/CreateContract';
+import { SourceData, SourceImpl } from './deploy/impl/SourceImpl';
+import { InnerWritesEvaluator } from './InnerWritesEvaluator';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style

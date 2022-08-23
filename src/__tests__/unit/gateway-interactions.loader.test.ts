@@ -1,10 +1,8 @@
-import {
-  GQLNodeInterface,
-  LexicographicalInteractionsSorter,
-  LoggerFactory,
-  WarpGatewayInteractionsLoader
-} from '@warp';
 import Arweave from 'arweave';
+import { LexicographicalInteractionsSorter } from '../../core/modules/impl/LexicographicalInteractionsSorter';
+import { WarpGatewayInteractionsLoader } from '../../core/modules/impl/WarpGatewayInteractionsLoader';
+import { GQLNodeInterface } from '../../legacy/gqlResult';
+import { LoggerFactory } from '../../logging/LoggerFactory';
 
 const responseData = {
   paging: {

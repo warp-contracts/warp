@@ -18,9 +18,9 @@
     "node": ">=16.5"
   },
   "scripts": {
-    "build:cjs": "tsc -b tsconfig.json && tsc-alias -p tsconfig.json",
-    "build:esm": "tsc -b tsconfig.esm.json && tsc-alias -p tsconfig.esm.json",
-    "build:types": "tsc -b tsconfig.types.json && tsc-alias -p tsconfig.types.json",
+    "build:cjs": "tsc -b tsconfig.json",
+    "build:esm": "tsc -b tsconfig.esm.json",
+    "build:types": "tsc -b tsconfig.types.json",
     "bundle:web": "node bundle.js",
     "build": "yarn run clean && yarn build:cjs && yarn build:esm && yarn build:types && yarn bundle:web",
     "format": "prettier --write 'src/**/*.ts'",

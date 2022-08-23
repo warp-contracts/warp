@@ -3,7 +3,9 @@ import fs from 'fs';
 import path from 'path';
 import { interactRead, readContract } from 'smartweave';
 import Arweave from 'arweave';
-import { defaultCacheOptions, defaultWarpGwOptions, LoggerFactory, SourceType, WarpFactory } from '@warp';
+import { WarpFactory, defaultCacheOptions, defaultWarpGwOptions } from '../../core/WarpFactory';
+import { LoggerFactory } from '../../logging/LoggerFactory';
+import { SourceType } from '../../core/modules/impl/WarpGatewayInteractionsLoader';
 
 const stringify = require('safe-stable-stringify');
 

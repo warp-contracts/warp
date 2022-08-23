@@ -1,4 +1,5 @@
-import { ContractDefinition, EvaluationOptions } from '@warp';
+import { ContractDefinition } from "../../core/ContractDefinition";
+import { EvaluationOptions } from "./StateEvaluator";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ContractApi {}

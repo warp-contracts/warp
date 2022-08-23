@@ -4,12 +4,14 @@
 //
 // This file has been modified for use by the TinyGo compiler.
 
+import { SmartWeaveGlobal } from "../../../../legacy/smartweave-global";
+import { LoggerFactory } from "../../../../logging/LoggerFactory";
+
 // note: this file has been further modified to be used
 // with Warp SDK.
 /* tslint:disable */
 /* eslint-disable */
 /* YOLO */
-import { LoggerFactory, SmartWeaveGlobal } from '@warp';
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder('utf-8');

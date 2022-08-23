@@ -3,9 +3,13 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { InteractionResult, LoggerFactory, PstContract, PstState, Warp, WarpFactory } from '@warp';
 import path from 'path';
 import { mineBlock } from '../_helpers';
+import { PstState, PstContract } from '../../../contract/PstContract';
+import { InteractionResult } from '../../../core/modules/impl/HandlerExecutorFactory';
+import { Warp } from '../../../core/Warp';
+import { WarpFactory } from '../../../core/WarpFactory';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
 
 describe('Testing the Profit Sharing Token', () => {
   let contractSrc: string;

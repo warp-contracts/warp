@@ -3,23 +3,19 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import {
-  ArweaveGatewayInteractionsLoader,
-  defaultCacheOptions,
-  EvaluationOptions,
-  GQLNodeInterface,
-  InteractionsLoader,
-  LexicographicalInteractionsSorter,
-  LoggerFactory,
-  PstContract,
-  PstState,
-  Warp,
-  WarpFactory
-} from '@warp';
 import path from 'path';
 import { mineBlock } from '../_helpers';
 import { Evaluate } from '@idena/vrf-js';
 import elliptic from 'elliptic';
+import { PstState, PstContract } from '../../../contract/PstContract';
+import { InteractionsLoader } from '../../../core/modules/InteractionsLoader';
+import { EvaluationOptions } from '../../../core/modules/StateEvaluator';
+import { Warp } from '../../../core/Warp';
+import { WarpFactory, defaultCacheOptions } from '../../../core/WarpFactory';
+import { GQLNodeInterface } from '../../../legacy/gqlResult';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { ArweaveGatewayInteractionsLoader } from '../../../core/modules/impl/ArweaveGatewayInteractionsLoader';
+import { LexicographicalInteractionsSorter } from '../../../core/modules/impl/LexicographicalInteractionsSorter';
 
 const EC = new elliptic.ec('secp256k1');
 const key = EC.genKeyPair();

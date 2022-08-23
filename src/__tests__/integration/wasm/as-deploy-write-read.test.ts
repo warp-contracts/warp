@@ -3,9 +3,14 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, getTag, LoggerFactory, SmartWeaveTags, Warp, WarpFactory } from '@warp';
 import path from 'path';
 import { mineBlock } from '../_helpers';
+import { Contract } from '../../../contract/Contract';
+import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
+import { Warp } from '../../../core/Warp';
+import { WarpFactory } from '../../../core/WarpFactory';
+import { getTag } from '../../../legacy/utils';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
 
 interface ExampleContractState {
   counter: number;

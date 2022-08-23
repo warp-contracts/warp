@@ -15,23 +15,8 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "baseUrl": "./src",
-    "allowJs": true,
-    "paths": {
-      "@warp/cache": ["cache/index"],
-      "@warp/contract": ["contract/index"],
-      "@warp/core": ["core/index"],
-      "@warp/legacy": ["legacy/index"],
-      "@warp/plugins": ["plugins/index"],
-      "@warp/logging": ["logging/index"],
-      "@warp/utils": ["utils/index"],
-      "@warp": ["index"],
-    }
+    "allowJs": true
   },
   "include": ["src"],
-  "exclude": [
-    "node_modules",
-    "tools",
-    "**/__tests__/*",
-    "_scripts"
-  ]
+  "exclude": ["node_modules", "tools", "**/__tests__/*", "_scripts"]
 }

@@ -1,7 +1,8 @@
 /**
  * This type contains all data and meta-data of the given contact.
  */
-import { ContractType } from '@warp/contract';
+
+import { ContractType } from "../contract/deploy/CreateContract";
 
 export class ContractMetadata {
   dtor: number;

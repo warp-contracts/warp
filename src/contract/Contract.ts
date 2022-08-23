@@ -1,15 +1,10 @@
-import {
-  ArTransfer,
-  ArWallet,
-  ContractCallStack,
-  EvalStateResult,
-  EvaluationOptions,
-  GQLNodeInterface,
-  InteractionResult,
-  SortKeyCacheResult,
-  Tags
-} from '@warp';
 import Transaction from 'arweave/node/lib/transaction';
+import { SortKeyCacheResult } from '../cache/SortKeyCache';
+import { ContractCallStack } from '../core/ContractCallStack';
+import { InteractionResult } from '../core/modules/impl/HandlerExecutorFactory';
+import { EvaluationOptions, EvalStateResult } from '../core/modules/StateEvaluator';
+import { GQLNodeInterface } from '../legacy/gqlResult';
+import { ArTransfer, Tags, ArWallet } from './deploy/CreateContract';
 import { Source } from './deploy/Source';
 
 export type CurrentTx = { interactionTxId: string; contractTxId: string };

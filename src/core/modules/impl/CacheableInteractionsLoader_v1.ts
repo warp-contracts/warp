@@ -1,14 +1,10 @@
-import {
-  CacheKey,
-  defaultCacheOptions,
-  EvaluationOptions,
-  GQLNodeInterface,
-  GW_TYPE,
-  InteractionsLoader,
-  LevelDbCache,
-  LoggerFactory,
-  SortKeyCache
-} from '@warp';
+import { LevelDbCache } from "../../../cache/impl/LevelDbCache";
+import { SortKeyCache, CacheKey } from "../../../cache/SortKeyCache";
+import { defaultCacheOptions } from "../../../core/WarpFactory";
+import { GQLNodeInterface } from "../../../legacy/gqlResult";
+import { LoggerFactory } from "../../../logging/LoggerFactory";
+import { InteractionsLoader, GW_TYPE } from "../InteractionsLoader";
+import { EvaluationOptions } from "../StateEvaluator";
 
 export class CacheableInteractionsLoader_v1 implements InteractionsLoader {
   private readonly logger = LoggerFactory.INST.create('CacheableInteractionsLoader');

@@ -1,4 +1,6 @@
-import { ContractDefinition, EvaluationOptions, ExecutorFactory } from '@warp/core';
+import { ContractDefinition } from "../core/ContractDefinition";
+import { ExecutorFactory } from "../core/modules/ExecutorFactory";
+import { EvaluationOptions } from "../core/modules/StateEvaluator";
 
 /**
  * An ExecutorFactory that allows to substitute original contract's source code.

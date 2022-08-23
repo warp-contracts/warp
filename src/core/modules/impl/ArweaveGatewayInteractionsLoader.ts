@@ -1,20 +1,14 @@
-import {
-  ArweaveWrapper,
-  Benchmark,
-  EvaluationOptions,
-  GQLEdgeInterface,
-  GQLNodeInterface,
-  GQLResultInterface,
-  GQLTransactionsResultInterface,
-  InteractionsLoader,
-  InteractionsSorter,
-  LexicographicalInteractionsSorter,
-  LoggerFactory,
-  sleep,
-  SmartWeaveTags
-} from '@warp';
 import Arweave from 'arweave';
-import { GW_TYPE } from '../InteractionsLoader';
+import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
+import { GQLEdgeInterface, GQLNodeInterface, GQLTransactionsResultInterface, GQLResultInterface } from '../../../legacy/gqlResult';
+import { Benchmark } from '../../../logging/Benchmark';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { ArweaveWrapper } from '../../../utils/ArweaveWrapper';
+import { sleep } from '../../../utils/utils';
+import { GW_TYPE, InteractionsLoader } from '../InteractionsLoader';
+import { InteractionsSorter } from '../InteractionsSorter';
+import { EvaluationOptions } from '../StateEvaluator';
+import { LexicographicalInteractionsSorter } from './LexicographicalInteractionsSorter';
 
 const MAX_REQUEST = 100;
 

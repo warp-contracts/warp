@@ -1,7 +1,8 @@
+import { ILoggerFactory } from '../../logging/LoggerFactory';
+import { LogLevel } from '../../logging/LoggerSettings';
 import path from 'path';
 import { ISettingsParam, Logger } from 'tslog';
 import { WarpLogger } from '../WarpLogger';
-import { ILoggerFactory, LogLevel } from '@warp';
 
 export const defaultLoggerOptions: ISettingsParam = {
   displayFunctionName: false,

@@ -1,4 +1,5 @@
-import { ContractDefinition, ContractSource, GwTypeAware } from '@warp';
+import { ContractDefinition, ContractSource } from "../../core/ContractDefinition";
+import { GwTypeAware } from "./InteractionsLoader";
 
 /**
  * Implementors of this interface are responsible for loading contract's definitions -

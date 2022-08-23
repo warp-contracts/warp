@@ -1,5 +1,9 @@
-import { arrayToHex, GQLEdgeInterface, InteractionsSorter, LoggerFactory, SourceType } from '@warp';
 import Arweave from 'arweave';
+import { GQLEdgeInterface } from '../../../legacy/gqlResult';
+import { arrayToHex } from '../../../legacy/utils';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { InteractionsSorter } from '../InteractionsSorter';
+import { SourceType } from './WarpGatewayInteractionsLoader';
 
 // note: this (i.e. padding to 13 digits) should be safe between years ~1966 and ~2286
 const firstSortKeyMs = ''.padEnd(13, '0');
