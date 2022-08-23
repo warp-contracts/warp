@@ -1,6 +1,6 @@
 {
   "name": "warp-contracts",
-  "version": "1.2.0-bundles.9",
+  "version": "1.2.0-bundles.10",
   "description": "An implementation of the SmartWeave smart contract protocol.",
   "main": "./lib/cjs/index.js",
   "types": "./lib/types/index.d.ts",
@@ -9,7 +9,8 @@
     "./node": "./bundles/node.bundle.min.js",
     "./webnext": "./bundles/web.next.bundle.min.js",
     ".": {
-      "require": "./lib/cjs/index.js"
+      "require": "./lib/cjs/index.js",
+      "import": "./lib/esm/index.js"
     }
   },
   "sideEffects": false,
