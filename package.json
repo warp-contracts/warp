@@ -1,7 +1,8 @@
 {
   "name": "warp-contracts",
-  "version": "1.2.0-bundles.6",
+  "version": "1.2.0-bundles.7",
   "description": "An implementation of the SmartWeave smart contract protocol.",
+  "main": "./lib/cjs/index.js",
   "types": "./lib/types/index.d.ts",
   "exports": {
     "./web": "./bundles/web.bundle.min.js",
@@ -13,9 +14,10 @@
     "node": ">=16.5"
   },
   "scripts": {
+    "build:cjs": "tsc -b tsconfig.json  ",
     "build:types": "tsc -b tsconfig.types.json",
     "bundle": "node bundle.js",
-    "build": "yarn run clean && yarn build:types && yarn bundle",
+    "build": "yarn run clean && yarn build:cjs && yarn build:types && yarn bundle",
     "format": "prettier --write 'src/**/*.ts'",
     "clean": "rimraf ./lib",
     "lint": "eslint . --ext .ts",

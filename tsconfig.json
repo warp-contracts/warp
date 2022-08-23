@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json.schemastore.org/tsconfig",
+  "compileOnSave": false,
+  "include": ["src"],
+  "exclude": ["node_modules", "tools", "**/__tests__/*", "_scripts"],
+  "compilerOptions": {
+    "module": "ES6",
+    "target": "ES6",
+    "removeComments": true,
+    "types": ["jest", "node"],
+    "moduleResolution": "node",
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "baseUrl": "./src",
+    "allowJs": true,
+    "declaration": true,
+    "declarationMap": true,
+    "declarationDir": "./lib/types",
+    "outDir": "./lib/types",
+    "emitDeclarationOnly": true
+  },
+}
