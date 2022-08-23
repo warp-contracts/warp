@@ -1,5 +1,5 @@
-import { TagsParser } from "../../core/modules/impl/TagsParser";
-import { GQLNodeInterface } from "../../legacy/gqlResult";
+import { TagsParser } from '../../core/modules/impl/TagsParser';
+import { GQLNodeInterface } from '../../legacy/gqlResult';
 
 describe('TagsParser', () => {
   const sut = new TagsParser();

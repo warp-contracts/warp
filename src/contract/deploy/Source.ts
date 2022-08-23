@@ -1,6 +1,6 @@
-import { SigningFunction } from "../../contract/Contract";
-import { ArWallet } from "./CreateContract";
-import { SourceData } from "./impl/SourceImpl";
+import { SigningFunction } from '../../contract/Contract';
+import { ArWallet } from './CreateContract';
+import { SourceData } from './impl/SourceImpl';
 
 export interface Source {
   /**

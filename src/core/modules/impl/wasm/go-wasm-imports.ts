@@ -4,8 +4,8 @@
 //
 // This file has been modified for use by the TinyGo compiler.
 
-import { SmartWeaveGlobal } from "../../../../legacy/smartweave-global";
-import { LoggerFactory } from "../../../../logging/LoggerFactory";
+import { SmartWeaveGlobal } from '../../../../legacy/smartweave-global';
+import { LoggerFactory } from '../../../../logging/LoggerFactory';
 
 // note: this file has been further modified to be used
 // with Warp SDK.

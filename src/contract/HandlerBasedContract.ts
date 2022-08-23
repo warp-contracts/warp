@@ -5,7 +5,12 @@ import Transaction from 'arweave/node/lib/transaction';
 import { SortKeyCacheResult } from '../cache/SortKeyCache';
 import { ContractCallStack, InteractionCall } from '../core/ContractCallStack';
 import { ExecutionContext } from '../core/ExecutionContext';
-import { InteractionResult, HandlerApi, ContractInteraction, InteractionData } from '../core/modules/impl/HandlerExecutorFactory';
+import {
+  InteractionResult,
+  HandlerApi,
+  ContractInteraction,
+  InteractionData
+} from '../core/modules/impl/HandlerExecutorFactory';
 import { LexicographicalInteractionsSorter } from '../core/modules/impl/LexicographicalInteractionsSorter';
 import { InteractionsSorter } from '../core/modules/InteractionsSorter';
 import { EvaluationOptions, DefaultEvaluationOptions, EvalStateResult } from '../core/modules/StateEvaluator';
@@ -18,7 +23,14 @@ import { LoggerFactory } from '../logging/LoggerFactory';
 import { Evolve } from '../plugins/Evolve';
 import { ArweaveWrapper } from '../utils/ArweaveWrapper';
 import { sleep } from '../utils/utils';
-import { Contract, BenchmarkStats, SigningFunction, CurrentTx, WriteInteractionOptions, WriteInteractionResponse } from './Contract';
+import {
+  Contract,
+  BenchmarkStats,
+  SigningFunction,
+  CurrentTx,
+  WriteInteractionOptions,
+  WriteInteractionResponse
+} from './Contract';
 import { Tags, ArTransfer, emptyTransfer, ArWallet } from './deploy/CreateContract';
 import { SourceData, SourceImpl } from './deploy/impl/SourceImpl';
 import { InnerWritesEvaluator } from './InnerWritesEvaluator';

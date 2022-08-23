@@ -1,6 +1,11 @@
 import Arweave from 'arweave';
 import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
-import { GQLEdgeInterface, GQLNodeInterface, GQLTransactionsResultInterface, GQLResultInterface } from '../../../legacy/gqlResult';
+import {
+  GQLEdgeInterface,
+  GQLNodeInterface,
+  GQLTransactionsResultInterface,
+  GQLResultInterface
+} from '../../../legacy/gqlResult';
 import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { ArweaveWrapper } from '../../../utils/ArweaveWrapper';

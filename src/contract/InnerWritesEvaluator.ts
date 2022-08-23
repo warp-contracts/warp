@@ -1,4 +1,4 @@
-import { ContractCallStack, InteractionCall } from "../core/ContractCallStack";
+import { ContractCallStack, InteractionCall } from '../core/ContractCallStack';
 
 export class InnerWritesEvaluator {
   eval(callStack: ContractCallStack): Array<string> {

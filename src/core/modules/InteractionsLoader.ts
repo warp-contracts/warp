@@ -1,5 +1,5 @@
-import { GQLNodeInterface } from "../../legacy/gqlResult";
-import { EvaluationOptions } from "./StateEvaluator";
+import { GQLNodeInterface } from '../../legacy/gqlResult';
+import { EvaluationOptions } from './StateEvaluator';
 
 export type GW_TYPE = 'arweave' | 'warp';
 

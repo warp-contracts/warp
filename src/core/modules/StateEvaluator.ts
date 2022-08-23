@@ -1,7 +1,7 @@
-import { SortKeyCacheResult } from "../../cache/SortKeyCache";
-import { CurrentTx } from "../../contract/Contract";
-import { ExecutionContext } from "../../core/ExecutionContext";
-import { GQLNodeInterface } from "../../legacy/gqlResult";
+import { SortKeyCacheResult } from '../../cache/SortKeyCache';
+import { CurrentTx } from '../../contract/Contract';
+import { ExecutionContext } from '../../core/ExecutionContext';
+import { GQLNodeInterface } from '../../legacy/gqlResult';
 
 /**
  * Implementors of this class are responsible for evaluating contract's state
