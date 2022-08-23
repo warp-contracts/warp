@@ -4,8 +4,8 @@
   "description": "An implementation of the SmartWeave smart contract protocol.",
   "types": "./lib/types/index.d.ts",
   "exports": {
-    "./web": "bundles/web.bundle.min.js",
-    "./node": "bundles/node.bundle.min.js"
+    "./web": "./bundles/web.bundle.min.js",
+    "./node": "./bundles/node.bundle.min.js"
   },
   "sideEffects": false,
   "engines": {
