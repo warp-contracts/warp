@@ -7,7 +7,10 @@
   "exports": {
     "./web": "./bundles/web.bundle.min.js",
     "./node": "./bundles/node.bundle.min.js",
-    "./webnext": "./bundles/web.next.bundle.min.js"
+    "./webnext": "./bundles/web.next.bundle.min.js",
+    ".": {
+      "require": "./lib/cjs/index.js"
+    }
   },
   "sideEffects": false,
   "engines": {
