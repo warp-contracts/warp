@@ -10,18 +10,13 @@ const clean = async () => {
 const runBuild = async () => {
   await clean();
 
-  const webExternals = [
-    'events'
-  ];
-
   const iifeBuild = {
     entryPoints: ['./src/index.ts'],
     bundle: true,
     platform: 'browser',
     target: ['esnext'],
     format: 'iife',
-    globalName: 'warp',
-    external: webExternals
+    globalName: 'warp'
   };
 
   console.log('Building web legacy bundle.');
@@ -40,8 +35,7 @@ const runBuild = async () => {
     platform: 'browser',
     target: ['esnext'],
     format: 'esm',
-    globalName: 'warp',
-    external: webExternals
+    globalName: 'warp'
   };
 
   console.log('Building web bundle.');

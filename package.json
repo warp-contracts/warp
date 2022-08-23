@@ -61,6 +61,7 @@
     "arweave": "1.11.4",
     "bignumber.js": "^9.0.1",
     "elliptic": "^6.5.4",
+    "events": "3.3.0",
     "fast-copy": "^2.1.1",
     "knex": "^0.95.14",
     "level": "^8.0.0",
