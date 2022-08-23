@@ -10,66 +10,75 @@ const clean = async () => {
 const runBuild = async () => {
   await clean();
 
-  build({
+  const webExternals = [
+    'events',
+    'fs',
+    'path',
+    'crypto',
+    'vm2',
+    'archiver',
+    'stream-buffers',
+    'constants',
+    'knex',
+    'os'
+  ];
+
+  const iifeBuild = {
     entryPoints: ['./src/index.ts'],
-    minify: false,
     bundle: true,
-    outfile: './bundles/web.bundle.js',
     platform: 'browser',
     target: ['esnext'],
     format: 'iife',
     globalName: 'warp',
-    external: ['events']
-  }).catch((e) => {
-    console.log(e);
-    process.exit(1);
-  });
+    external: webExternals
+  };
 
+  console.log('Building web legacy bundle.');
   build({
-    entryPoints: ['./src/index.ts'],
+    ...iifeBuild,
     minify: true,
-    bundle: true,
-    outfile: './bundles/web.bundle.min.js',
-    platform: 'browser',
-    target: ['esnext'],
-    format: 'iife',
-    globalName: 'warp',
-    external: ['events']
+    outfile: './bundles/web.iife.bundle.min.js'
   }).catch((e) => {
     console.log(e);
     process.exit(1);
   });
 
-  build({
+  const esmBuild = {
     entryPoints: ['./src/index.ts'],
-    minify: false,
     bundle: true,
-    outfile: './bundles/esm.bundle.js',
     platform: 'browser',
     target: ['esnext'],
     format: 'esm',
     globalName: 'warp',
-    external: ['events']
+    external: webExternals
+  };
+
+  console.log('Building web bundle.');
+  build({
+    ...esmBuild,
+    minify: true,
+    outfile: './bundles/web.bundle.min.js'
   }).catch((e) => {
     console.log(e);
     process.exit(1);
   });
 
+  console.log('Building node bundle.');
   build({
     entryPoints: ['./src/index.ts'],
-    minify: true,
     bundle: true,
-    outfile: './bundles/esm.bundle.min.js',
-    platform: 'browser',
+    platform: 'node',
     target: ['esnext'],
-    format: 'esm',
-    globalName: 'warp',
-    external: ['events']
+    format: 'cjs',
+    minify: true,
+    outfile: './bundles/node.bundle.min.js'
   }).catch((e) => {
     console.log(e);
     process.exit(1);
   });
 };
-runBuild();
+runBuild().finally(() => {
+  console.log('Build done.');
+});
 
 module.exports = runBuild;
