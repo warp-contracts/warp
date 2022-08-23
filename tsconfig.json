@@ -1,15 +1,14 @@
 {
   "$schema": "http://json.schemastore.org/tsconfig",
   "compileOnSave": false,
-  "include": ["src"],
-  "exclude": ["node_modules", "tools", "**/__tests__/*", "_scripts"],
   "compilerOptions": {
-    "module": "ES6",
-    "target": "ES6",
-    "removeComments": true,
+    "target": "es2019",
+    "module": "commonjs",
     "types": ["jest", "node"],
     "moduleResolution": "node",
+    "sourceMap": true,
     "skipLibCheck": true,
+    "outDir": "./lib/cjs",
     "isolatedModules": true,
     "esModuleInterop": true,
     "suppressImplicitAnyIndexErrors": true,
@@ -17,10 +16,22 @@
     "resolveJsonModule": true,
     "baseUrl": "./src",
     "allowJs": true,
-    "declaration": true,
-    "declarationMap": true,
-    "declarationDir": "./lib/types",
-    "outDir": "./lib/types",
-    "emitDeclarationOnly": true
+    "paths": {
+      "@warp/cache": ["cache/index"],
+      "@warp/contract": ["contract/index"],
+      "@warp/core": ["core/index"],
+      "@warp/legacy": ["legacy/index"],
+      "@warp/plugins": ["plugins/index"],
+      "@warp/logging": ["logging/index"],
+      "@warp/utils": ["utils/index"],
+      "@warp": ["index"],
+    }
   },
+  "include": ["src"],
+  "exclude": [
+    "node_modules",
+    "tools",
+    "**/__tests__/*",
+    "_scripts"
+  ]
 }

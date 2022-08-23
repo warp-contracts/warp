@@ -61,6 +61,21 @@ const runBuild = async () => {
     console.log(e);
     process.exit(1);
   });
+
+  console.log('Building web bundle.');
+  build({
+    entryPoints: ['./src/index.ts'],
+    bundle: true,
+    platform: 'browser',
+    target: ['esnext'],
+    format: 'cjs',
+    minify: true,
+    outfile: './bundles/web.next.bundle.min.js'
+  }).catch((e) => {
+    console.log(e);
+    process.exit(1);
+  });
+
 };
 runBuild().finally(() => {
   console.log('Build done.');
