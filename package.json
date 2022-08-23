@@ -17,10 +17,11 @@
     "node": ">=16.5"
   },
   "scripts": {
-    "build:cjs": "tsc -b tsconfig.json  ",
+    "build:cjs": "tsc -b tsconfig.json",
+    "build:esm": "tsc -b tsconfig.esm.json",
     "build:types": "tsc -b tsconfig.types.json",
     "bundle": "node bundle.js",
-    "build": "yarn run clean && yarn build:cjs && yarn build:types && yarn bundle",
+    "build": "yarn run clean && yarn build:cjs && yarn build:esm && yarn build:types && yarn bundle",
     "format": "prettier --write 'src/**/*.ts'",
     "clean": "rimraf ./lib",
     "lint": "eslint . --ext .ts",
