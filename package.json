@@ -1,6 +1,6 @@
 {
   "name": "warp-contracts",
-  "version": "1.2.0-bundles.0",
+  "version": "1.2.0-bundles.1",
   "description": "An implementation of the SmartWeave smart contract protocol.",
   "types": "./lib/types/index.d.ts",
   "exports": {
@@ -107,6 +107,7 @@
     "stream-buffers": false,
     "constants": false,
     "knex": false,
-    "os": false
+    "os": false,
+    "process": false
   }
 }
