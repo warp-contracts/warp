@@ -47,7 +47,7 @@ const runBuild = async () => {
   console.log('Building web bundle.');
   build({
     ...esmBuild,
-    minify: true,
+    minify: false,
     outfile: './bundles/web.bundle.min.js'
   }).catch((e) => {
     console.log(e);

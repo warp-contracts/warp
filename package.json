@@ -70,7 +70,6 @@
     "redstone-wasm-metering": "1.0.3",
     "safe-stable-stringify": "2.3.1",
     "stream-buffers": "^3.0.2",
-    "tslog": "^3.2.2",
     "unzipit": "^1.4.0",
     "vm2": "3.9.9"
   },
