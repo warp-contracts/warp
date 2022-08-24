@@ -1,10 +1,11 @@
 {
   "name": "warp-contracts",
-  "version": "1.2.0-bundles.11",
+  "version": "1.2.0-bundles.12",
   "description": "An implementation of the SmartWeave smart contract protocol.",
   "types": "./lib/types/index.d.ts",
   "exports": {
     "./web": "./bundles/web.bundle.min.js",
+    "./mjs": "./lib/mjs/index.js",
     ".": {
       "require": "./lib/cjs/index.js",
       "import": "./lib/esm/index.js"
@@ -17,9 +18,11 @@
   "scripts": {
     "build:cjs": "tsc -b tsconfig.json",
     "build:esm": "gen-esm-wrapper ./lib/cjs ./lib/esm/index.js",
+    "build:mjs": "gen-esm-wrapper ./lib/cjs ./lib/mjs/index.js",
+    "mjs:burn:in:hell": "bash mjs-package.sh",
     "build:types": "tsc -b tsconfig.types.json",
     "bundle": "node bundle.js",
-    "build": "yarn run clean && yarn build:cjs && yarn build:esm && yarn build:types && yarn bundle",
+    "build": "yarn run clean && yarn build:cjs && yarn build:esm && yarn build:mjs && yarn mjs:burn:in:hell && yarn build:types && yarn bundle",
     "format": "prettier --write 'src/**/*.ts'",
     "clean": "rimraf ./lib",
     "lint": "eslint . --ext .ts",
