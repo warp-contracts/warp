@@ -3,6 +3,7 @@
   "version": "1.2.0-bundles.13",
   "description": "An implementation of the SmartWeave smart contract protocol.",
   "types": "./lib/types/index.d.ts",
+  "main": "./lib/cjs/index.js",
   "exports": {
     "./web": "./bundles/web.bundle.min.js",
     "./mjs": "./lib/mjs/index.js",
