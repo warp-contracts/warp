@@ -7,10 +7,7 @@
   "exports": {
     "./web": "./bundles/web.bundle.min.js",
     "./mjs": "./lib/mjs/index.js",
-    ".": {
-      "require": "./lib/cjs/index.js",
-      "import": "./lib/esm/index.js"
-    }
+    ".": "./lib/cjs/index.js"
   },
   "sideEffects": false,
   "engines": {
