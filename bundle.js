@@ -10,7 +10,7 @@ const clean = async () => {
 const runBuild = async () => {
   await clean();
 
-  const esmBuild = {
+  const buildConfig = {
     entryPoints: ['./src/index.ts'],
     bundle: true,
     platform: 'browser',
@@ -19,11 +19,23 @@ const runBuild = async () => {
     globalName: 'warp'
   };
 
-  console.log('Building web bundle.');
+  console.log('Building web bundle esm.');
   build({
-    ...esmBuild,
+    ...buildConfig,
     minify: true,
     outfile: './bundles/web.bundle.min.js'
+  }).catch((e) => {
+    console.log(e);
+    process.exit(1);
+  });
+
+  console.log('Building web bundle iife.');
+  build({
+    ...buildConfig,
+    minify: true,
+    target: ['esnext'],
+    format: 'iife',
+    outfile: './bundles/web.iife.bundle.min.js'
   }).catch((e) => {
     console.log(e);
     process.exit(1);
