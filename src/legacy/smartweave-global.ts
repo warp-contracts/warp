@@ -79,7 +79,7 @@ export class SmartWeaveGlobal {
         throw new Error('Not implemented - should be set by HandlerApi implementor');
       },
 
-      write: (contractId: string, input: any) => {
+      write: (contractId: string, input: any, throwOnError?: boolean) => {
         throw new Error('Not implemented - should be set by HandlerApi implementor');
       },
 

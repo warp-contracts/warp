@@ -137,6 +137,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         const newState = await this.internalWriteState<State>(contractDefinition.txId, missingInteraction.sortKey);
         if (newState !== null) {
           currentState = newState.cachedValue.state;
+          console.log(currentState);
           // we need to update the state in the wasm module
           executionContext?.handler.initState(currentState);
 
