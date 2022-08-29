@@ -1,4 +1,4 @@
-import { GQLEdgeInterface } from '@warp';
+import { GQLEdgeInterface } from '../../legacy/gqlResult';
 
 /**
  * this is probably self-explanatory ;-)

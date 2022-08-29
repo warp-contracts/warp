@@ -1,16 +1,12 @@
-import {
-  ContractDefinition,
-  CurrentTx,
-  deepCopy,
-  EvalStateResult,
-  ExecutionContext,
-  GQLNodeInterface,
-  HandlerApi,
-  InteractionData,
-  InteractionResult,
-  LoggerFactory,
-  SmartWeaveGlobal
-} from '@warp';
+import { CurrentTx } from '../../../../contract/Contract';
+import { ContractDefinition } from '../../../../core/ContractDefinition';
+import { ExecutionContext } from '../../../../core/ExecutionContext';
+import { EvalStateResult } from '../../../../core/modules/StateEvaluator';
+import { GQLNodeInterface } from '../../../../legacy/gqlResult';
+import { SmartWeaveGlobal } from '../../../../legacy/smartweave-global';
+import { LoggerFactory } from '../../../../logging/LoggerFactory';
+import { deepCopy } from '../../../../utils/utils';
+import { HandlerApi, InteractionData, InteractionResult } from '../HandlerExecutorFactory';
 
 export abstract class AbstractContractHandler<State> implements HandlerApi<State> {
   protected logger = LoggerFactory.INST.create('ContractHandler');

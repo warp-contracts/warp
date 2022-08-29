@@ -1,27 +1,23 @@
 import Arweave from 'arweave';
-import {
-  Benchmark,
-  ContractDefinition,
-  EvalStateResult,
-  EvaluationOptions,
-  ExecutionContext,
-  ExecutorFactory,
-  GQLNodeInterface,
-  JsHandlerApi,
-  LoggerFactory,
-  MemCache,
-  normalizeContractSource,
-  SmartWeaveGlobal,
-  WarpCache,
-  WasmHandlerApi
-} from '@warp';
 import loader from '@assemblyscript/loader';
 import { asWasmImports } from './wasm/as-wasm-imports';
 import { rustWasmImports } from './wasm/rust-wasm-imports';
 import { Go } from './wasm/go-wasm-imports';
 import BigNumber from 'bignumber.js';
 import * as vm2 from 'vm2';
-import * as Buffer from 'buffer';
+import { WarpCache } from '../../../cache/WarpCache';
+import { ContractDefinition } from '../../../core/ContractDefinition';
+import { ExecutionContext } from '../../../core/ExecutionContext';
+import { GQLNodeInterface } from '../../../legacy/gqlResult';
+import { SmartWeaveGlobal } from '../../../legacy/smartweave-global';
+import { Benchmark } from '../../../logging/Benchmark';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { ExecutorFactory } from '../ExecutorFactory';
+import { EvaluationOptions, EvalStateResult } from '../StateEvaluator';
+import { JsHandlerApi } from './handler/JsHandlerApi';
+import { WasmHandlerApi } from './handler/WasmHandlerApi';
+import { normalizeContractSource } from './normalize-source';
+import { MemCache } from '../../../cache/impl/MemCache';
 
 class ContractError extends Error {
   constructor(message) {

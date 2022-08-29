@@ -1,7 +1,9 @@
 import Arweave from 'arweave';
-import { ContractDefinition, EvaluationOptions, ExecutorFactory } from '@warp/core';
-import { WarpCache } from '@warp/cache';
-import { LoggerFactory } from '@warp/logging';
+import { LoggerFactory } from '../logging/LoggerFactory';
+import { WarpCache } from '../cache/WarpCache';
+import { ContractDefinition } from '../core/ContractDefinition';
+import { ExecutorFactory } from '../core/modules/ExecutorFactory';
+import { EvaluationOptions } from '../core/modules/StateEvaluator';
 
 /**
  * An implementation of ExecutorFactory that adds caching capabilities

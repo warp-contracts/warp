@@ -1,7 +1,8 @@
 import { SortKeyCache, CacheKey, SortKeyCacheResult } from '../SortKeyCache';
-import { CacheOptions, LoggerFactory } from '@warp';
 import { Level } from 'level';
 import { MemoryLevel } from 'memory-level';
+import { CacheOptions } from '../../core/WarpFactory';
+import { LoggerFactory } from '../../logging/LoggerFactory';
 
 /**
  * The LevelDB is a lexicographically sorted key-value database - so it's ideal for this use case

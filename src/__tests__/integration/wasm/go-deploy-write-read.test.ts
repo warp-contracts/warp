@@ -3,9 +3,14 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { getTag, LoggerFactory, PstContract, PstState, SmartWeaveTags, Warp, WarpFactory } from '@warp';
 import path from 'path';
 import { mineBlock } from '../_helpers';
+import { PstState, PstContract } from '../../../contract/PstContract';
+import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
+import { Warp } from '../../../core/Warp';
+import { WarpFactory } from '../../../core/WarpFactory';
+import { getTag } from '../../../legacy/utils';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
 
 describe('Testing the Go WASM Profit Sharing Token', () => {
   let wallet: JWKInterface;

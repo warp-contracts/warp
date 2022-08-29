@@ -1,13 +1,10 @@
-import {
-  Benchmark,
-  EvaluationOptions,
-  GQLNodeInterface,
-  InteractionsLoader,
-  LoggerFactory,
-  stripTrailingSlash
-} from '@warp';
+import { GQLNodeInterface } from '../../../legacy/gqlResult';
+import { Benchmark } from '../../../logging/Benchmark';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
 import 'redstone-isomorphic';
-import { GW_TYPE } from '../InteractionsLoader';
+import { stripTrailingSlash } from '../../../utils/utils';
+import { GW_TYPE, InteractionsLoader } from '../InteractionsLoader';
+import { EvaluationOptions } from '../StateEvaluator';
 
 export type ConfirmationStatus =
   | {

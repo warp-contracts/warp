@@ -1,4 +1,5 @@
-import { LogLevel, WarpLogger } from '@warp/logging';
+import { LogLevel } from './LoggerSettings';
+import { WarpLogger } from './WarpLogger';
 import { ConsoleLoggerFactory } from './web/ConsoleLoggerFactory';
 
 export interface ILoggerFactory {

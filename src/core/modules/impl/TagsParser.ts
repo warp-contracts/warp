@@ -1,4 +1,6 @@
-import { GQLNodeInterface, GQLTagInterface, LoggerFactory, SmartWeaveTags } from '@warp';
+import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
+import { GQLNodeInterface, GQLTagInterface } from '../../../legacy/gqlResult';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
 
 /**
  * A class that is responsible for retrieving "input" tag from the interaction transaction.

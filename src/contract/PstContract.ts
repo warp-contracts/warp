@@ -1,5 +1,4 @@
-import { Contract, WriteInteractionOptions, WriteInteractionResponse } from '@warp';
-import { EvolveState } from './Contract';
+import { Contract, EvolveState, WriteInteractionOptions, WriteInteractionResponse } from './Contract';
 
 /**
  * The result from the "balance" view method on the PST Contract.

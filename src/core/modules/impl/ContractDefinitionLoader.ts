@@ -1,17 +1,14 @@
-import {
-  ArweaveWrapper,
-  Benchmark,
-  ContractDefinition,
-  ContractSource,
-  ContractType,
-  DefinitionLoader,
-  getTag,
-  LoggerFactory,
-  WarpCache,
-  SmartWeaveTags
-} from '@warp';
 import Arweave from 'arweave';
 import Transaction from 'arweave/web/lib/transaction';
+import { ContractType } from '../../../contract/deploy/CreateContract';
+import { WarpCache } from '../../../cache/WarpCache';
+import { ContractDefinition, ContractSource } from '../../../core/ContractDefinition';
+import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
+import { getTag } from '../../../legacy/utils';
+import { Benchmark } from '../../../logging/Benchmark';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { ArweaveWrapper } from '../../../utils/ArweaveWrapper';
+import { DefinitionLoader } from '../DefinitionLoader';
 import { GW_TYPE } from '../InteractionsLoader';
 import { WasmSrc } from './wasm/WasmSrc';
 

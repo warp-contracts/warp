@@ -1,10 +1,12 @@
 import Arweave from 'arweave';
 import { NetworkInfoInterface } from 'arweave/node/network';
-import { GqlReqVariables, LoggerFactory, WARP_GW_URL } from '@warp';
 import { AxiosResponse } from 'axios';
 import Transaction from 'arweave/node/lib/transaction';
 import { Buffer as isomorphicBuffer } from 'redstone-isomorphic';
 import { BlockData } from 'arweave/node/blocks';
+import { GqlReqVariables } from '../core/modules/impl/ArweaveGatewayInteractionsLoader';
+import { WARP_GW_URL } from '../core/WarpFactory';
+import { LoggerFactory } from '../logging/LoggerFactory';
 
 export class ArweaveWrapper {
   private readonly logger = LoggerFactory.INST.create('ArweaveWrapper');

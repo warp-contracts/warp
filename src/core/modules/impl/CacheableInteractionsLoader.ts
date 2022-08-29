@@ -1,4 +1,7 @@
-import { EvaluationOptions, GQLNodeInterface, GW_TYPE, InteractionsLoader, LoggerFactory } from '@warp';
+import { GQLNodeInterface } from '../../../legacy/gqlResult';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { InteractionsLoader, GW_TYPE } from '../InteractionsLoader';
+import { EvaluationOptions } from '../StateEvaluator';
 
 export class CacheableInteractionsLoader implements InteractionsLoader {
   private readonly logger = LoggerFactory.INST.create('CacheableInteractionsLoader');

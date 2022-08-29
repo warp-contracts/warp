@@ -2,18 +2,16 @@ import fs from 'fs';
 
 import ArLocal from 'arlocal';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import {
-  ArweaveGatewayInteractionsLoader,
-  Contract,
-  DefaultEvaluationOptions,
-  GQLNodeInterface,
-  LexicographicalInteractionsSorter,
-  LoggerFactory,
-  Warp,
-  WarpFactory
-} from '@warp';
 import path from 'path';
 import { mineBlock } from '../_helpers';
+import { Contract } from '../../../contract/Contract';
+import { Warp } from '../../../core/Warp';
+import { WarpFactory } from '../../../core/WarpFactory';
+import { GQLNodeInterface } from '../../../legacy/gqlResult';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { ArweaveGatewayInteractionsLoader } from '../../../core/modules/impl/ArweaveGatewayInteractionsLoader';
+import { DefaultEvaluationOptions } from '../../../core/modules/StateEvaluator';
+import { LexicographicalInteractionsSorter } from '../../../core/modules/impl/LexicographicalInteractionsSorter';
 
 let arlocal: ArLocal;
 let warp: Warp;

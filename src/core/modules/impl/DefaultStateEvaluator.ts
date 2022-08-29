@@ -1,27 +1,20 @@
-import {
-  Benchmark,
-  canBeCached,
-  ContractInteraction,
-  CurrentTx,
-  EvalStateResult,
-  ExecutionContext,
-  ExecutionContextModifier,
-  GQLNodeInterface,
-  GQLTagInterface,
-  HandlerApi,
-  indent,
-  InteractionCall,
-  InteractionResult,
-  LoggerFactory,
-  SortKeyCacheResult,
-  StateEvaluator,
-  TagsParser,
-  VrfData
-} from '@warp';
 import Arweave from 'arweave';
 
 import { ProofHoHash } from '@idena/vrf-js';
 import elliptic from 'elliptic';
+import { SortKeyCacheResult } from '../../../cache/SortKeyCache';
+import { CurrentTx } from '../../../contract/Contract';
+import { InteractionCall } from '../../../core/ContractCallStack';
+import { ExecutionContext } from '../../../core/ExecutionContext';
+import { ExecutionContextModifier } from '../../../core/ExecutionContextModifier';
+import { GQLNodeInterface, VrfData, GQLTagInterface } from '../../../legacy/gqlResult';
+import { Benchmark } from '../../../logging/Benchmark';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { indent } from '../../../utils/utils';
+import { StateEvaluator, EvalStateResult } from '../StateEvaluator';
+import { HandlerApi, ContractInteraction, InteractionResult } from './HandlerExecutorFactory';
+import { canBeCached } from './StateCache';
+import { TagsParser } from './TagsParser';
 
 const EC = new elliptic.ec('secp256k1');
 

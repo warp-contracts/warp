@@ -1,25 +1,20 @@
-import {
-  DefinitionLoader,
-  EvalStateResult,
-  ExecutorFactory,
-  HandlerApi,
-  InteractionsLoader,
-  StateEvaluator,
-  WarpBuilder
-} from '@warp/core';
 import Arweave from 'arweave';
-import {
-  Contract,
-  CreateContract,
-  DefaultCreateContract,
-  HandlerBasedContract,
-  PstContract,
-  PstContractImpl
-} from '@warp/contract';
-import { GQLNodeInterface } from '@warp/legacy';
+import { LevelDbCache } from '../cache/impl/LevelDbCache';
+import { Contract } from '../contract/Contract';
+import { CreateContract } from '../contract/deploy/CreateContract';
+import { DefaultCreateContract } from '../contract/deploy/impl/DefaultCreateContract';
+import { HandlerBasedContract } from '../contract/HandlerBasedContract';
+import { PstContract } from '../contract/PstContract';
+import { PstContractImpl } from '../contract/PstContractImpl';
+import { GQLNodeInterface } from '../legacy/gqlResult';
 import { MigrationTool } from '../contract/migration/MigrationTool';
-import { LevelDbCache } from '@warp/cache';
 import { Testing } from '../contract/testing/Testing';
+import { DefinitionLoader } from './modules/DefinitionLoader';
+import { ExecutorFactory } from './modules/ExecutorFactory';
+import { HandlerApi } from './modules/impl/HandlerExecutorFactory';
+import { InteractionsLoader } from './modules/InteractionsLoader';
+import { EvalStateResult, StateEvaluator } from './modules/StateEvaluator';
+import { WarpBuilder } from './WarpBuilder';
 
 export type WarpEnvironment = 'local' | 'testnet' | 'mainnet' | 'custom';
 

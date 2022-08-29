@@ -1,14 +1,14 @@
 /* eslint-disable */
-
-import { SmartWeaveTags } from '@warp/core';
-import { LoggerFactory } from '@warp/logging';
-import { Source, SigningFunction } from '@warp';
 import metering from 'redstone-wasm-metering';
 import Arweave from 'arweave';
 import { Go } from '../../../core/modules/impl/wasm/go-wasm-imports';
 import fs, { PathOrFileDescriptor } from 'fs';
 import { matchMutClosureDtor } from '../../../core/modules/impl/wasm/wasm-bindgen-tools';
 import { ArWallet, ContractType } from '../CreateContract';
+import { SigningFunction } from '../../../contract/Contract';
+import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { Source } from '../Source';
 
 const wasmTypeMapping: Map<number, string> = new Map([
   [1, 'assemblyscript'],

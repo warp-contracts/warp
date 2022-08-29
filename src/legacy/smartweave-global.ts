@@ -1,8 +1,7 @@
 /* eslint-disable */
 import Arweave from 'arweave';
+import { EvaluationOptions } from '../core/modules/StateEvaluator';
 import { GQLNodeInterface, GQLTagInterface, VrfData } from './gqlResult';
-import { EvaluationOptions } from '@warp/core';
-import { kMaxLength } from 'buffer';
 
 /**
  *
