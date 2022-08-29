@@ -8,6 +8,45 @@ export async function handle(state, action) {
     return { state };
   }
 
+  if (action.input.function === 'writeContractAutoThrow') {
+    console.log('before calling justThrow');
+    await SmartWeave.contracts.write(action.input.contractId, {
+      function: 'justThrow',
+    });
+    if (state.errorCounter === undefined) {
+      state.errorCounter = 0;
+    }
+    state.errorCounter++;
+    console.log('after calling justThrow', state.errorCounter);
+    return { state };
+  }
+  if (action.input.function === 'writeContractForceAutoThrow') {
+    await SmartWeave.contracts.write(action.input.contractId, {
+      function: 'justThrow',
+    }, true);
+    if (state.errorCounter === undefined) {
+      state.errorCounter = 0;
+    }
+    state.errorCounter++;
+    return { state };
+  }
+  if (action.input.function === 'writeContractForceNoAutoThrow') {
+    await SmartWeave.contracts.write(action.input.contractId, {
+      function: 'justThrow',
+    }, false);
+    if (state.errorCounter === undefined) {
+      state.errorCounter = 0;
+    }
+    state.errorCounter++;
+    return { state };
+  }
+  if (action.input.function === 'writeContractManualThrow') {
+    const result = await SmartWeave.contracts.write(action.input.contractId, {
+      function: 'justThrow',
+    });
+    return { state };
+  }
+
   if (action.input.function === 'writeInDepth') {
     const value1 = await SmartWeave.contracts.write(action.input.contractId1, {
       function: 'addAmountDepth',

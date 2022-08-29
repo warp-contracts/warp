@@ -100,7 +100,7 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   // "false" may lead to some fairly simple attacks on contract, if the contract
   // does not properly validate input data.
   // "true" may lead to wrongly calculated state, even without noticing the problem
-  // (eg. when using unsafe client and Arweave does not respond properly for a while)
+  // (e.g. when using unsafe client and Arweave does not respond properly for a while)
   ignoreExceptions = true;
 
   waitForConfirmation = false;
@@ -132,6 +132,8 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   walletBalanceUrl = 'http://nyc-1.dev.arweave.net:1984/';
 
   mineArLocalBlocks = true;
+
+  throwOnInternalWriteError = true;
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some features.
@@ -206,4 +208,8 @@ export interface EvaluationOptions {
 
   // whether the local Warp instance should manually mine blocks in ArLocal. Defaults to true.
   mineArLocalBlocks: boolean;
+
+  // whether a contract should automatically throw if internal write fails.
+  // set to 'true' be default, can be set to false for backwards compatibility
+  throwOnInternalWriteError: boolean;
 }
