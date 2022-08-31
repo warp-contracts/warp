@@ -2,6 +2,8 @@
 
 > ⚠️ Following library has been renamed from **[redstone-smartweave](https://www.npmjs.com/package/redstone-smartweave)** to **warp-contracts** from version **1.0.0**! If you are using older version please read [README-LEGACY](README-LEGACY.md).
 
+> ⚠️ We're working hard on a new version - `1.2.0-rc.1` - which has many internal improvements/fixes and changes in APIs. The docs for this version are currently avilalbe [here](https://github.com/warp-contracts/warp/tree/ppe/rc#warp-sdk). 
+
 Warp SDK is the implementation of the SmartWeave [Protocol](./docs/SMARTWEAVE_PROTOCOL.md).
 
 It works in both web and Node.js environment (requires Node.js 16.5+).
