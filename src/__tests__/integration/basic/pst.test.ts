@@ -132,8 +132,7 @@ describe('Testing the Profit Sharing Token', () => {
   });
 
   it('should properly perform dry write with overwritten caller', async () => {
-    const newWallet = await warp.testing.generateWallet();
-    const overwrittenCaller = await arweave.wallets.jwkToAddress(newWallet);
+    const { jwk: newWallet, address: overwrittenCaller } = await warp.testing.generateWallet();
     await pst.transfer({
       target: overwrittenCaller,
       qty: 1000
