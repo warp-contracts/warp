@@ -102,7 +102,6 @@ export class WarpFactory {
     if (useArweaveGw) {
       return this.customArweaveGw(arweave, cacheOptions, 'mainnet');
     } else {
-      console.log(defaultWarpGwOptions);
       return this.customWarpGw(arweave, defaultWarpGwOptions, cacheOptions, 'mainnet');
     }
   }
