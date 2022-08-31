@@ -29,7 +29,7 @@ describe('Testing the Warp client', () => {
     LoggerFactory.INST.logLevel('error');
     warp = WarpFactory.forLocal(1801);
 
-    wallet = await warp.testing.generateWallet();
+    ({ jwk: wallet } = await warp.testing.generateWallet());
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/token-pst-unsafe.js'), 'utf8');
 
     // deploying contract using the new SDK.

@@ -60,7 +60,6 @@ describe('Testing internal writes', () => {
 
   let wallet: JWKInterface;
 
-  let arweave: Arweave;
   let arlocal: ArLocal;
   let warp: Warp;
   let contractA: Contract<any>;
@@ -87,7 +86,7 @@ describe('Testing internal writes', () => {
   async function deployContracts() {
     warp = WarpFactory.forLocal(port);
 
-    wallet = await warp.testing.generateWallet();
+    ({ jwk: wallet } = await warp.testing.generateWallet())
 
     contractASrc = fs.readFileSync(path.join(__dirname, '../data/writing-contract.js'), 'utf8');
     contractAInitialState = fs.readFileSync(path.join(__dirname, '../data/writing-contract-state.json'), 'utf8');

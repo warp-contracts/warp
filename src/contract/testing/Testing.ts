@@ -1,6 +1,11 @@
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 
+export type Wallet = {
+  jwk: JWKInterface;
+  address: string;
+};
+
 export class Testing {
   constructor(private readonly arweave: Arweave) {}
 
@@ -9,12 +14,15 @@ export class Testing {
     await this.arweave.api.get('mine');
   }
 
-  async generateWallet(): Promise<JWKInterface> {
+  async generateWallet(): Promise<Wallet> {
     this.validateEnv();
     const wallet = await this.arweave.wallets.generate();
     await this.addFunds(wallet);
 
-    return wallet;
+    return {
+      jwk: wallet,
+      address: await this.arweave.wallets.jwkToAddress(wallet)
+    };
   }
 
   private async addFunds(wallet: JWKInterface) {
