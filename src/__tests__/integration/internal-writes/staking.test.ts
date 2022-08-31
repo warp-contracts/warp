@@ -56,8 +56,7 @@ describe('Testing internal writes', () => {
     warp = WarpFactory.forLocal(port);
     ({ arweave } = warp);
 
-    wallet = await warp.testing.generateWallet();
-    walletAddress = await arweave.wallets.jwkToAddress(wallet);
+    ({ jwk: wallet, address: walletAddress } = await warp.testing.generateWallet());
 
     tokenContractSrc = fs.readFileSync(path.join(__dirname, '../data/staking/erc-20.js'), 'utf8');
     tokenContractInitialState = fs.readFileSync(path.join(__dirname, '../data/staking/erc-20.json'), 'utf8');

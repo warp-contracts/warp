@@ -75,7 +75,6 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         ? `Internal write auto error for call [${JSON.stringify(debugData)}]: ${result.errorMessage}`
         : result.errorMessage;
 
-      console.log('new state', result.state);
       await executionContext.warp.stateEvaluator.onInternalWriteStateUpdate(this.swGlobal._activeTx, contractTxId, {
         state: result.state as State,
         validity: {
@@ -87,9 +86,6 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
           [this.swGlobal._activeTx.id]: effectiveErrorMessage
         }
       });
-      console.log('result.type', result.type);
-      console.log('effectiveThrowOnError', effectiveThrowOnError);
-      console.log('this.swGlobal._activeTx.dry', this.swGlobal._activeTx.dry);
       if (shouldAutoThrow) {
         throw new ContractError(effectiveErrorMessage);
       }

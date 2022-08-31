@@ -44,7 +44,7 @@ describe('Testing the Arweave interactions loader', () => {
     loader = new ArweaveGatewayInteractionsLoader(arweave);
     sorter = new LexicographicalInteractionsSorter(arweave);
 
-    wallet = await warp.testing.generateWallet();
+    ({ jwk: wallet } = await warp.testing.generateWallet());
 
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/inf-loop-contract.js'), 'utf8');
     const { contractTxId } = await warp.createContract.deploy({
