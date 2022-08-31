@@ -86,7 +86,7 @@ describe('Testing internal writes', () => {
   async function deployContracts() {
     warp = WarpFactory.forLocal(port);
 
-    ({ jwk: wallet } = await warp.testing.generateWallet())
+    ({ jwk: wallet } = await warp.testing.generateWallet());
 
     contractASrc = fs.readFileSync(path.join(__dirname, '../data/writing-contract.js'), 'utf8');
     contractAInitialState = fs.readFileSync(path.join(__dirname, '../data/writing-contract-state.json'), 'utf8');
