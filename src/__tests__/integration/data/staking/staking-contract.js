@@ -17,13 +17,14 @@ export async function handle(state, action) {
 
     // TODO: use "view" functions here
     const tokenState = await SmartWeave.contracts.readContractState(tokenTxId);
+    if (!tokenState.allowances[_msgSender]) {
+      throw new ContractError('Caller must increase their allowance');
+    }
+
     if (tokenState.balances[_msgSender] < amount) {
       throw new ContractError('Cannot stake more token than you hold unstaked');
     }
 
-    if (!tokenState.allowances[_msgSender]) {
-      throw new ContractError('Caller must increase their allowance');
-    }
     const allowance = tokenState.allowances[_msgSender][SmartWeave.contract.id];
     if (allowance < amount) {
       throw new ContractError('Caller must increase their allowance');

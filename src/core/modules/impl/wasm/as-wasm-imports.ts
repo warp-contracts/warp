@@ -1,4 +1,5 @@
-import { LoggerFactory, SmartWeaveGlobal } from '@warp';
+import { SmartWeaveGlobal } from '../../../../legacy/smartweave-global';
+import { LoggerFactory } from '../../../../logging/LoggerFactory';
 
 export const asWasmImports = (swGlobal: SmartWeaveGlobal, wasmInstance: any): any => {
   const wasmLogger = LoggerFactory.INST.create('WASM:AS');

@@ -1,4 +1,5 @@
-import { GQLEdgeInterface, TagsParser } from '@warp';
+import { TagsParser } from '../../core/modules/impl/TagsParser';
+import { GQLNodeInterface } from '../../legacy/gqlResult';
 
 describe('TagsParser', () => {
   const sut = new TagsParser();
@@ -8,23 +9,21 @@ describe('TagsParser', () => {
     it('should return input tag (1)', () => {
       // given
       const interactionTx = {
-        node: {
-          tags: [
-            { name: 'foo', value: 'bar' },
-            { name: 'wtf', value: 'omg' },
-            { name: 'Contract', value: 'contractTxId_1' },
-            { name: 'Input', value: 'contractTxId1_value' },
-            { name: 'duh', value: 'blah' },
-            { name: 'Contract', value: 'contractTxId_2' },
-            { name: 'Input', value: 'contractTxId2_value' }
-          ]
-        }
+        tags: [
+          { name: 'foo', value: 'bar' },
+          { name: 'wtf', value: 'omg' },
+          { name: 'Contract', value: 'contractTxId_1' },
+          { name: 'Input', value: 'contractTxId1_value' },
+          { name: 'duh', value: 'blah' },
+          { name: 'Contract', value: 'contractTxId_2' },
+          { name: 'Input', value: 'contractTxId2_value' }
+        ]
       };
 
       // when
-      const input1 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_1');
-      const input2 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_2');
-      const allContracts = sut.getContractsWithInputs(interactionTx as GQLEdgeInterface);
+      const input1 = sut.getInputTag(interactionTx as GQLNodeInterface, 'contractTxId_1');
+      const input2 = sut.getInputTag(interactionTx as GQLNodeInterface, 'contractTxId_2');
+      const allContracts = sut.getContractsWithInputs(interactionTx as GQLNodeInterface);
 
       // then
       expect(input1.value).toEqual('contractTxId1_value');
@@ -40,20 +39,18 @@ describe('TagsParser', () => {
     it('should return input tag (2)', () => {
       // given
       const interactionTx = {
-        node: {
-          tags: [
-            { name: 'Contract', value: 'contractTxId_1' },
-            { name: 'Input', value: 'contractTxId11_value' },
-            { name: 'Contract', value: 'contractTxId_2' },
-            { name: 'Input', value: 'contractTxId22_value' }
-          ]
-        }
+        tags: [
+          { name: 'Contract', value: 'contractTxId_1' },
+          { name: 'Input', value: 'contractTxId11_value' },
+          { name: 'Contract', value: 'contractTxId_2' },
+          { name: 'Input', value: 'contractTxId22_value' }
+        ]
       };
 
       // when
-      const input1 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_1');
-      const input2 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_2');
-      const allContracts = sut.getContractsWithInputs(interactionTx as GQLEdgeInterface);
+      const input1 = sut.getInputTag(interactionTx as GQLNodeInterface, 'contractTxId_1');
+      const input2 = sut.getInputTag(interactionTx as GQLNodeInterface, 'contractTxId_2');
+      const allContracts = sut.getContractsWithInputs(interactionTx as GQLNodeInterface);
 
       // then
       expect(input1.value).toEqual('contractTxId11_value');
@@ -69,27 +66,25 @@ describe('TagsParser', () => {
     it('should return input tag (3)', () => {
       // given
       const interactionTx = {
-        node: {
-          tags: [
-            { name: 'Contract', value: 'contractTxId_2' },
-            { name: 'Input', value: 'contractTxId22_value' },
-            { name: 'Contract', value: 'contractTxId_1' },
-            { name: 'Input', value: 'contractTxId11_value' },
-            { name: 'foo', value: 'bar' },
-            { name: 'Contract', value: 'contractTxId_3' },
-            { name: 'Input', value: 'contractTxId33_value' },
-            { name: 'Contract', value: 'contractTxId_4' },
-            { name: 'Input', value: 'contractTxId44_value' }
-          ]
-        }
+        tags: [
+          { name: 'Contract', value: 'contractTxId_2' },
+          { name: 'Input', value: 'contractTxId22_value' },
+          { name: 'Contract', value: 'contractTxId_1' },
+          { name: 'Input', value: 'contractTxId11_value' },
+          { name: 'foo', value: 'bar' },
+          { name: 'Contract', value: 'contractTxId_3' },
+          { name: 'Input', value: 'contractTxId33_value' },
+          { name: 'Contract', value: 'contractTxId_4' },
+          { name: 'Input', value: 'contractTxId44_value' }
+        ]
       };
 
       // when
-      const input1 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_1');
-      const input2 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_2');
-      const input3 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_3');
-      const input4 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_4');
-      const allContracts = sut.getContractsWithInputs(interactionTx as GQLEdgeInterface);
+      const input1 = sut.getInputTag(interactionTx as GQLNodeInterface, 'contractTxId_1');
+      const input2 = sut.getInputTag(interactionTx as GQLNodeInterface, 'contractTxId_2');
+      const input3 = sut.getInputTag(interactionTx as GQLNodeInterface, 'contractTxId_3');
+      const input4 = sut.getInputTag(interactionTx as GQLNodeInterface, 'contractTxId_4');
+      const allContracts = sut.getContractsWithInputs(interactionTx as GQLNodeInterface);
 
       // then
       expect(input1.value).toEqual('contractTxId11_value');
@@ -109,25 +104,23 @@ describe('TagsParser', () => {
     it('should return undefined if ordering is not proper', () => {
       // given
       const interactionTx = {
-        node: {
-          tags: [
-            { name: 'Contract', value: 'contractTxId_2' },
-            { name: 'foo', value: 'bar' },
-            { name: 'Input', value: 'contractTxId22_value' },
-            { name: 'Contract', value: 'contractTxId_1' },
-            { name: 'bar', value: 'foo' },
-            { name: 'Input', value: 'contractTxId11_value' },
-            { name: 'Contract', value: 'contractTxId_3' },
-            { name: 'Input', value: 'contractTxId33_value' }
-          ]
-        }
+        tags: [
+          { name: 'Contract', value: 'contractTxId_2' },
+          { name: 'foo', value: 'bar' },
+          { name: 'Input', value: 'contractTxId22_value' },
+          { name: 'Contract', value: 'contractTxId_1' },
+          { name: 'bar', value: 'foo' },
+          { name: 'Input', value: 'contractTxId11_value' },
+          { name: 'Contract', value: 'contractTxId_3' },
+          { name: 'Input', value: 'contractTxId33_value' }
+        ]
       };
 
       // when
-      const input1 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_1');
-      const input2 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_2');
-      const input3 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_3');
-      const allContracts = sut.getContractsWithInputs(interactionTx as GQLEdgeInterface);
+      const input1 = sut.getInputTag(interactionTx as GQLNodeInterface, 'contractTxId_1');
+      const input2 = sut.getInputTag(interactionTx as GQLNodeInterface, 'contractTxId_2');
+      const input3 = sut.getInputTag(interactionTx as GQLNodeInterface, 'contractTxId_3');
+      const allContracts = sut.getContractsWithInputs(interactionTx as GQLNodeInterface);
 
       // then
       expect(input1).toBeUndefined();
@@ -148,20 +141,18 @@ describe('TagsParser', () => {
     it('should return the first occurrence of the input tag (1)', () => {
       // given
       const interactionTx = {
-        node: {
-          tags: [
-            { name: 'Contract', value: 'contractTxId_1' },
-            { name: 'foo', value: 'bar' },
-            { name: 'wtf', value: 'omg' },
-            { name: 'duh', value: 'blah' },
-            { name: 'Input', value: 'contractTxId1_value' }
-          ]
-        }
+        tags: [
+          { name: 'Contract', value: 'contractTxId_1' },
+          { name: 'foo', value: 'bar' },
+          { name: 'wtf', value: 'omg' },
+          { name: 'duh', value: 'blah' },
+          { name: 'Input', value: 'contractTxId1_value' }
+        ]
       };
 
       // when
-      const input1 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_1');
-      const allContracts = sut.getContractsWithInputs(interactionTx as GQLEdgeInterface);
+      const input1 = sut.getInputTag(interactionTx as GQLNodeInterface, 'contractTxId_1');
+      const allContracts = sut.getContractsWithInputs(interactionTx as GQLNodeInterface);
 
       // then
       expect(input1.value).toEqual('contractTxId1_value');
@@ -172,18 +163,16 @@ describe('TagsParser', () => {
   it('should return the first occurrence of the input tag (2)', () => {
     // given
     const interactionTx = {
-      node: {
-        tags: [
-          { name: 'Input', value: 'contractTxId1_value' },
-          { name: 'foo', value: 'bar' },
-          { name: 'duh', value: 'blah' }
-        ]
-      }
+      tags: [
+        { name: 'Input', value: 'contractTxId1_value' },
+        { name: 'foo', value: 'bar' },
+        { name: 'duh', value: 'blah' }
+      ]
     };
 
     // when
-    const input1 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_1');
-    const allContracts = sut.getContractsWithInputs(interactionTx as GQLEdgeInterface);
+    const input1 = sut.getInputTag(interactionTx as GQLNodeInterface, 'contractTxId_1');
+    const allContracts = sut.getContractsWithInputs(interactionTx as GQLNodeInterface);
 
     // then
     expect(input1.value).toEqual('contractTxId1_value');
@@ -193,18 +182,16 @@ describe('TagsParser', () => {
   it('should return the first occurrence of the input tag (3)', () => {
     // given
     const interactionTx = {
-      node: {
-        tags: [
-          { name: 'Input', value: 'contractTxId1_value' },
-          { name: 'Input', value: 'contractTxId2_value' },
-          { name: 'Input', value: 'contractTxId3_value' }
-        ]
-      }
+      tags: [
+        { name: 'Input', value: 'contractTxId1_value' },
+        { name: 'Input', value: 'contractTxId2_value' },
+        { name: 'Input', value: 'contractTxId3_value' }
+      ]
     };
 
     // when
-    const input1 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_1');
-    const allContracts = sut.getContractsWithInputs(interactionTx as GQLEdgeInterface);
+    const input1 = sut.getInputTag(interactionTx as GQLNodeInterface, 'contractTxId_1');
+    const allContracts = sut.getContractsWithInputs(interactionTx as GQLNodeInterface);
 
     // then
     expect(input1.value).toEqual('contractTxId1_value');
@@ -214,20 +201,18 @@ describe('TagsParser', () => {
   it('should return the first occurrence of the input tag (4)', () => {
     // given
     const interactionTx = {
-      node: {
-        tags: [
-          { name: 'foo', value: 'bar' },
-          { name: 'Input', value: 'contractTxId666_value' },
-          { name: 'wtf', value: 'omg' },
-          { name: 'duh', value: 'blah' },
-          { name: 'Contract', value: 'contractTxId_1' }
-        ]
-      }
+      tags: [
+        { name: 'foo', value: 'bar' },
+        { name: 'Input', value: 'contractTxId666_value' },
+        { name: 'wtf', value: 'omg' },
+        { name: 'duh', value: 'blah' },
+        { name: 'Contract', value: 'contractTxId_1' }
+      ]
     };
 
     // when
-    const input1 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_1');
-    const allContracts = sut.getContractsWithInputs(interactionTx as GQLEdgeInterface);
+    const input1 = sut.getInputTag(interactionTx as GQLNodeInterface, 'contractTxId_1');
+    const allContracts = sut.getContractsWithInputs(interactionTx as GQLNodeInterface);
 
     // then
     expect(input1.value).toEqual('contractTxId666_value');
@@ -237,18 +222,16 @@ describe('TagsParser', () => {
   it('should return undefined if no "Input" tag', () => {
     // given
     const interactionTx = {
-      node: {
-        tags: [
-          { name: 'foo', value: 'bar' },
-          { name: 'duh', value: 'blah' },
-          { name: 'one', value: 'two' }
-        ]
-      }
+      tags: [
+        { name: 'foo', value: 'bar' },
+        { name: 'duh', value: 'blah' },
+        { name: 'one', value: 'two' }
+      ]
     };
 
     // when
-    const input1 = sut.getInputTag(interactionTx as GQLEdgeInterface, 'contractTxId_1');
-    const allContracts = sut.getContractsWithInputs(interactionTx as GQLEdgeInterface);
+    const input1 = sut.getInputTag(interactionTx as GQLNodeInterface, 'contractTxId_1');
+    const allContracts = sut.getContractsWithInputs(interactionTx as GQLNodeInterface);
 
     // then
     expect(input1).toBeUndefined();
@@ -258,18 +241,16 @@ describe('TagsParser', () => {
   it('should return single interact write contract', () => {
     // given
     const interactionTx = {
-      node: {
-        tags: [
-          { name: 'foo', value: 'bar' },
-          { name: 'duh', value: 'blah' },
-          { name: 'Interact-Write', value: 'Contract A' },
-          { name: 'one', value: 'two' }
-        ]
-      }
+      tags: [
+        { name: 'foo', value: 'bar' },
+        { name: 'duh', value: 'blah' },
+        { name: 'Interact-Write', value: 'Contract A' },
+        { name: 'one', value: 'two' }
+      ]
     };
 
     // when
-    const result = sut.getInteractWritesContracts(interactionTx as GQLEdgeInterface);
+    const result = sut.getInteractWritesContracts(interactionTx as GQLNodeInterface);
     // then
     expect(result).toEqual(['Contract A']);
   });
@@ -277,21 +258,19 @@ describe('TagsParser', () => {
   it('should return multiple interact write contracts', () => {
     // given
     const interactionTx = {
-      node: {
-        tags: [
-          { name: 'foo', value: 'bar' },
-          { name: 'Interact-Write', value: 'Contract C' },
-          { name: 'Interact-Write', value: 'Contract D' },
-          { name: 'duh', value: 'blah' },
-          { name: 'Interact-Write', value: 'Contract A' },
-          { name: 'one', value: 'two' },
-          { name: 'Interact-Write', value: 'Contract E' }
-        ]
-      }
+      tags: [
+        { name: 'foo', value: 'bar' },
+        { name: 'Interact-Write', value: 'Contract C' },
+        { name: 'Interact-Write', value: 'Contract D' },
+        { name: 'duh', value: 'blah' },
+        { name: 'Interact-Write', value: 'Contract A' },
+        { name: 'one', value: 'two' },
+        { name: 'Interact-Write', value: 'Contract E' }
+      ]
     };
 
     // when
-    const result = sut.getInteractWritesContracts(interactionTx as GQLEdgeInterface);
+    const result = sut.getInteractWritesContracts(interactionTx as GQLNodeInterface);
     // then
     expect(result).toEqual(['Contract C', 'Contract D', 'Contract A', 'Contract E']);
   });
@@ -299,18 +278,16 @@ describe('TagsParser', () => {
   it('should return empty interact write contract', () => {
     // given
     const interactionTx = {
-      node: {
-        tags: [
-          { name: 'foo', value: 'bar' },
-          { name: 'duh', value: 'blah' },
-          { name: 'one', value: 'two' },
-          { name: 'Interact-Writee', value: 'Contract E' }
-        ]
-      }
+      tags: [
+        { name: 'foo', value: 'bar' },
+        { name: 'duh', value: 'blah' },
+        { name: 'one', value: 'two' },
+        { name: 'Interact-Writee', value: 'Contract E' }
+      ]
     };
 
     // when
-    const result = sut.getInteractWritesContracts(interactionTx as GQLEdgeInterface);
+    const result = sut.getInteractWritesContracts(interactionTx as GQLNodeInterface);
     // then
     expect(result).toEqual([]);
   });

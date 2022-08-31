@@ -1,19 +1,18 @@
-import {
-  ArweaveWrapper,
-  Benchmark,
-  ContractDefinition,
-  ContractSource,
-  getTag,
-  LoggerFactory,
-  SmartWeaveTags,
-  stripTrailingSlash,
-  WarpCache
-} from '@warp';
 import Arweave from 'arweave';
 import { ContractDefinitionLoader } from './ContractDefinitionLoader';
 import 'redstone-isomorphic';
 import { WasmSrc } from './wasm/WasmSrc';
 import Transaction from 'arweave/node/lib/transaction';
+import { GW_TYPE } from '../InteractionsLoader';
+import { WarpCache } from 'cache/WarpCache';
+import { ContractDefinition, ContractSource } from '../../../core/ContractDefinition';
+import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
+import { getTag } from '../../../legacy/utils';
+import { Benchmark } from '../../../logging/Benchmark';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { ArweaveWrapper } from '../../../utils/ArweaveWrapper';
+import { stripTrailingSlash } from '../../../utils/utils';
+import { DefinitionLoader } from '../DefinitionLoader';
 
 /**
  * An extension to {@link ContractDefinitionLoader} that makes use of
@@ -23,7 +22,7 @@ import Transaction from 'arweave/node/lib/transaction';
  * If the contract data is not available on Warp Gateway - it fallbacks to default implementation
  * in {@link ContractDefinitionLoader} - i.e. loads the definition from Arweave gateway.
  */
-export class WarpGatewayContractDefinitionLoader {
+export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
   private readonly rLogger = LoggerFactory.INST.create('WarpGatewayContractDefinitionLoader');
   private contractDefinitionLoader: ContractDefinitionLoader;
   private arweaveWrapper: ArweaveWrapper;
@@ -92,5 +91,9 @@ export class WarpGatewayContractDefinitionLoader {
 
   async loadContractSource(contractSrcTxId: string): Promise<ContractSource> {
     return await this.contractDefinitionLoader.loadContractSource(contractSrcTxId);
+  }
+
+  type(): GW_TYPE {
+    return 'warp';
   }
 }

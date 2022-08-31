@@ -1,16 +1,15 @@
-import { BlockHeightCacheResult, BlockHeightKey, BlockHeightWarpCache } from '@warp/cache';
-import {
-  DefaultStateEvaluator,
-  EvalStateResult,
-  ExecutionContext,
-  ExecutionContextModifier,
-  HandlerApi,
-  StateCache
-} from '@warp/core';
 import Arweave from 'arweave';
-import { GQLNodeInterface } from '@warp/legacy';
-import { LoggerFactory } from '@warp/logging';
-import { CurrentTx } from '@warp/contract';
+import { SortKeyCache, SortKeyCacheResult, CacheKey } from '../../../cache/SortKeyCache';
+import { CurrentTx } from '../../../contract/Contract';
+import { ExecutionContext } from '../../../core/ExecutionContext';
+import { ExecutionContextModifier } from '../../../core/ExecutionContextModifier';
+import { GQLNodeInterface } from '../../../legacy/gqlResult';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { indent } from '../../../utils/utils';
+import { EvalStateResult } from '../StateEvaluator';
+import { DefaultStateEvaluator } from './DefaultStateEvaluator';
+import { HandlerApi } from './HandlerExecutorFactory';
+import { genesisSortKey } from './LexicographicalInteractionsSorter';
 
 /**
  * An implementation of DefaultStateEvaluator that adds caching capabilities.
@@ -25,7 +24,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
 
   constructor(
     arweave: Arweave,
-    private readonly cache: BlockHeightWarpCache<StateCache<unknown>>,
+    private readonly cache: SortKeyCache<EvalStateResult<unknown>>,
     executionContextModifiers: ExecutionContextModifier[] = []
   ) {
     super(arweave, executionContextModifiers);
@@ -34,68 +33,54 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
   async eval<State>(
     executionContext: ExecutionContext<State, HandlerApi<State>>,
     currentTx: CurrentTx[]
-  ): Promise<EvalStateResult<State>> {
-    const requestedBlockHeight = executionContext.blockHeight;
-    this.cLogger.debug(`Requested state block height: ${requestedBlockHeight}`);
-
+  ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
     const cachedState = executionContext.cachedState;
-    if (cachedState?.cachedHeight === requestedBlockHeight) {
+    if (cachedState && cachedState.sortKey == executionContext.requestedSortKey) {
+      this.cLogger.info(
+        `Exact cache hit for sortKey ${executionContext?.contractDefinition?.txId}:${cachedState.sortKey}`
+      );
       executionContext.handler?.initState(cachedState.cachedValue.state);
-      return cachedState.cachedValue;
+      return cachedState;
     }
 
-    this.cLogger.debug('executionContext.sortedInteractions', executionContext.sortedInteractions.length);
+    const missingInteractions = executionContext.sortedInteractions;
 
-    const sortedInteractionsUpToBlock = executionContext.sortedInteractions.filter((tx) => {
-      return tx.node.block.height <= executionContext.blockHeight;
-    });
-
-    let missingInteractions = sortedInteractionsUpToBlock.slice();
-
-    this.cLogger.debug('missingInteractions', missingInteractions.length);
-
-    // if there was anything to cache...
-    if (sortedInteractionsUpToBlock.length > 0) {
-      if (cachedState != null) {
-        this.cLogger.debug(`Cached state for ${executionContext.contractDefinition.txId}`, {
-          cachedHeight: cachedState.cachedHeight,
-          requestedBlockHeight
-        });
-
-        // verify if for the requested block height there are any interactions
-        // with higher block height than latest value stored in cache - basically if there are any non-cached interactions.
-        missingInteractions = sortedInteractionsUpToBlock.filter(
-          ({ node }) => node.block.height > cachedState.cachedHeight && node.block.height <= requestedBlockHeight
-        );
-      }
-
-      this.cLogger.debug(`Interactions until [${requestedBlockHeight}]`, {
-        total: sortedInteractionsUpToBlock.length,
-        cached: sortedInteractionsUpToBlock.length - missingInteractions.length
-      });
-
-      // TODO: this is tricky part, needs proper description
-      // for now: it prevents from infinite loop calls between calls that are making
-      // internal interact writes.
-      for (const entry of currentTx || []) {
-        if (entry.contractTxId === executionContext.contractDefinition.txId) {
-          const index = missingInteractions.findIndex((tx) => tx.node.id === entry.interactionTxId);
-          if (index !== -1) {
-            this.cLogger.debug('Inf. Loop fix - removing interaction', {
-              height: missingInteractions[index].node.block.height,
-              contractTxId: entry.contractTxId,
-              interactionTxId: entry.interactionTxId
-            });
-            missingInteractions.splice(index);
-          }
+    // TODO: this is tricky part, needs proper description
+    // for now: it prevents from infinite loop calls between calls that are making
+    // internal interact writes.
+    const contractTxId = executionContext.contractDefinition.txId;
+    // sanity check...
+    if (!contractTxId) {
+      throw new Error('Contract tx id not set in the execution context');
+    }
+    for (const entry of currentTx || []) {
+      if (entry.contractTxId === executionContext.contractDefinition.txId) {
+        const index = missingInteractions.findIndex((tx) => tx.id === entry.interactionTxId);
+        if (index !== -1) {
+          this.cLogger.debug('Inf. Loop fix - removing interaction', {
+            height: missingInteractions[index].block.height,
+            contractTxId: entry.contractTxId,
+            interactionTxId: entry.interactionTxId,
+            sortKey: missingInteractions[index].sortKey
+          });
+          missingInteractions.splice(index);
         }
       }
+    }
 
-      // if cache is up-to date - return immediately to speed-up the whole process
-      if (missingInteractions.length === 0 && cachedState) {
-        this.cLogger.debug(`State up to requested height [${requestedBlockHeight}] fully cached!`);
+    if (missingInteractions.length == 0) {
+      this.cLogger.info(`No missing interactions ${contractTxId}`);
+      if (cachedState) {
         executionContext.handler?.initState(cachedState.cachedValue.state);
-        return cachedState.cachedValue;
+        return cachedState;
+      } else {
+        executionContext.handler?.initState(executionContext.contractDefinition.initState);
+        this.cLogger.debug('Inserting initial state into cache');
+        const stateToCache = new EvalStateResult(executionContext.contractDefinition.initState, {}, {});
+        // no real sort-key - as we're returning the initial state
+        await this.cache.put(new CacheKey(contractTxId, genesisSortKey), stateToCache);
+
+        return new SortKeyCacheResult<EvalStateResult<State>>(genesisSortKey, stateToCache);
       }
     }
 
@@ -103,11 +88,14 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       cachedState == null ? executionContext.contractDefinition.initState : cachedState.cachedValue.state;
 
     const baseValidity = cachedState == null ? {} : cachedState.cachedValue.validity;
+    const baseErrorMessages = cachedState == null ? {} : cachedState.cachedValue.errorMessages;
 
-    // eval state for the missing transactions - starting from latest value from cache.
+    this.cLogger.debug('Base state', baseState);
+
+    // eval state for the missing transactions - starting from the latest value from cache.
     return await this.doReadState(
       missingInteractions,
-      new EvalStateResult(baseState, baseValidity),
+      new EvalStateResult(baseState, baseValidity, baseErrorMessages || {}),
       executionContext,
       currentTx
     );
@@ -119,59 +107,52 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     state: EvalStateResult<State>
   ): Promise<void> {
     const contractTxId = executionContext.contractDefinition.txId;
-    this.cLogger.debug(`onStateEvaluated: cache update for contract ${contractTxId} [${transaction.block.height}]`);
+    this.cLogger.debug(
+      `${indent(executionContext.contract.callDepth())}onStateEvaluated: cache update for contract ${contractTxId} [${
+        transaction.sortKey
+      }]`
+    );
 
     // this will be problematic if we decide to cache only "onStateEvaluated" and containsInteractionsFromSequencer = true
     // as a workaround, we're now caching every 100 interactions
-    await this.putInCache(
-      contractTxId,
-      transaction,
-      state,
-      executionContext.blockHeight,
-      executionContext.containsInteractionsFromSequencer
-    );
-    if (!executionContext.evaluationOptions.manualCacheFlush) {
-      await this.cache.flush();
-    }
+    await this.putInCache(contractTxId, transaction, state);
   }
 
   async onStateUpdate<State>(
     transaction: GQLNodeInterface,
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>,
-    nthInteraction?: number
+    force = false
   ): Promise<void> {
-    if (
-      executionContext.evaluationOptions.updateCacheForEachInteraction ||
-      executionContext.evaluationOptions.internalWrites ||
-      (nthInteraction || 1) % 100 == 0
-    ) {
-      await this.putInCache(
-        executionContext.contractDefinition.txId,
-        transaction,
-        state,
-        executionContext.blockHeight,
-        executionContext.containsInteractionsFromSequencer
+    if (executionContext.evaluationOptions.updateCacheForEachInteraction || force) {
+      this.cLogger.debug(
+        `onStateUpdate: cache update for contract ${executionContext.contractDefinition.txId} [${transaction.sortKey}]`,
+        {
+          contract: executionContext.contractDefinition.txId,
+          state: state.state,
+          sortKey: transaction.sortKey
+        }
       );
+      await this.putInCache(executionContext.contractDefinition.txId, transaction, state);
     }
   }
 
   async latestAvailableState<State>(
     contractTxId: string,
-    blockHeight: number
-  ): Promise<BlockHeightCacheResult<EvalStateResult<State>> | null> {
-    this.cLogger.debug('Searching for', { contractTxId, blockHeight });
-    const stateCache = (await this.cache.getLessOrEqual(contractTxId, blockHeight)) as BlockHeightCacheResult<
-      StateCache<State>
-    >;
-
-    this.cLogger.debug('Latest available state at', stateCache?.cachedHeight);
-
-    if (stateCache == null) {
-      return null;
+    sortKey?: string
+  ): Promise<SortKeyCacheResult<EvalStateResult<State>> | null> {
+    this.cLogger.debug('Searching for', { contractTxId, sortKey });
+    if (sortKey) {
+      const stateCache = (await this.cache.getLessOrEqual(contractTxId, sortKey)) as SortKeyCacheResult<
+        EvalStateResult<State>
+      >;
+      if (stateCache) {
+        this.cLogger.debug(`Latest available state at ${contractTxId}: ${stateCache.sortKey}`);
+      }
+      return stateCache;
+    } else {
+      return (await this.cache.getLast(contractTxId)) as SortKeyCacheResult<EvalStateResult<State>>;
     }
-
-    return new BlockHeightCacheResult<EvalStateResult<State>>(stateCache.cachedHeight, stateCache.cachedValue);
   }
 
   async onInternalWriteStateUpdate<State>(
@@ -180,9 +161,10 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     state: EvalStateResult<State>
   ): Promise<void> {
     this.cLogger.debug('Internal write state update:', {
-      height: transaction.block.height,
+      sortKey: transaction.sortKey,
+      dry: transaction.dry,
       contractTxId,
-      state
+      state: state.state
     });
     await this.putInCache(contractTxId, transaction, state);
   }
@@ -192,17 +174,24 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>
   ): Promise<void> {
-    // TODO: this has been properly fixed in the "leveldb" branch (1.2.0 version)
-    // switching off for now here, as in some very rare situations it can cause issues
-    // await this.putInCache(executionContext.contractDefinition.txId, transaction, state);
+    if (executionContext.sortedInteractions?.length == 0) {
+      return;
+    }
+    const txIndex = executionContext.sortedInteractions.indexOf(transaction);
+    if (txIndex < 1) {
+      return;
+    }
+    await this.putInCache(
+      executionContext.contractDefinition.txId,
+      executionContext.sortedInteractions[txIndex - 1],
+      state
+    );
   }
 
-  protected async putInCache<State>(
+  public async putInCache<State>(
     contractTxId: string,
     transaction: GQLNodeInterface,
-    state: EvalStateResult<State>,
-    requestedBlockHeight: number = null,
-    containsInteractionsFromSequencer = false
+    state: EvalStateResult<State>
   ): Promise<void> {
     if (transaction.dry) {
       return;
@@ -210,37 +199,45 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     if (transaction.confirmationStatus !== undefined && transaction.confirmationStatus !== 'confirmed') {
       return;
     }
-    // example:
-    // requested - 10
-    // tx - 9, 10 - caching should be skipped
-    const txBlockHeight = transaction.block.height;
-    this.cLogger.debug(`requestedBlockHeight: ${requestedBlockHeight}, txBlockHeight: ${txBlockHeight}`);
-    if (
-      requestedBlockHeight !== null &&
-      txBlockHeight >= requestedBlockHeight - 1 &&
-      containsInteractionsFromSequencer
-    ) {
-      this.cLogger.debug(`skipping caching of the last blocks`);
-      return;
-    }
-    const transactionId = transaction.id;
-    const stateToCache = new EvalStateResult(state.state, state.validity, transactionId, transaction.block.id);
+    const stateToCache = new EvalStateResult(state.state, state.validity, state.errorMessages || {});
 
-    await this.cache.put(new BlockHeightKey(contractTxId, txBlockHeight), stateToCache);
+    this.cLogger.debug('Putting into cache', {
+      contractTxId,
+      transaction: transaction.id,
+      sortKey: transaction.sortKey,
+      dry: transaction.dry,
+      state: stateToCache.state,
+      validity: stateToCache.validity
+    });
+
+    await this.cache.put(new CacheKey(contractTxId, transaction.sortKey), stateToCache);
   }
 
-  async flushCache(): Promise<void> {
-    return await this.cache.flush();
+  async syncState(contractTxId: string, sortKey: string, state: any, validity: any): Promise<void> {
+    const stateToCache = new EvalStateResult(state, validity, {});
+    await this.cache.put(new CacheKey(contractTxId, sortKey), stateToCache);
   }
 
-  async syncState(
+  async dumpCache(): Promise<any> {
+    return await this.cache.dump();
+  }
+
+  async internalWriteState<State>(
     contractTxId: string,
-    blockHeight: number,
-    transactionId: string,
-    state: any,
-    validity: any
-  ): Promise<void> {
-    const stateToCache = new EvalStateResult(state, validity, transactionId);
-    await this.cache.put(new BlockHeightKey(contractTxId, blockHeight), stateToCache);
+    sortKey: string
+  ): Promise<SortKeyCacheResult<EvalStateResult<State>> | null> {
+    return (await this.cache.get(contractTxId, sortKey)) as SortKeyCacheResult<EvalStateResult<State>>;
+  }
+
+  async hasContractCached(contractTxId: string): Promise<boolean> {
+    return (await this.cache.getLast(contractTxId)) != null;
+  }
+
+  async lastCachedSortKey(): Promise<string | null> {
+    return await this.cache.getLastSortKey();
+  }
+
+  async allCachedContracts(): Promise<string[]> {
+    return await this.cache.allContracts();
   }
 }

@@ -1,11 +1,13 @@
 import fs from 'fs';
 
 import ArLocal from 'arlocal';
-import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, LoggerFactory, Warp, WarpNodeFactory } from '@warp';
 import path from 'path';
-import { addFunds, mineBlock } from '../_helpers';
+import { mineBlock } from '../_helpers';
+import { Contract } from '../../../contract/Contract';
+import { Warp } from '../../../core/Warp';
+import { WarpFactory } from '../../../core/WarpFactory';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
 
 interface ExampleContractState {
   counter: number;
@@ -26,7 +28,6 @@ describe('Testing the Warp client', () => {
 
   let wallet: JWKInterface;
 
-  let arweave: Arweave;
   let arlocal: ArLocal;
   let warp: Warp;
   let contract: Contract<ExampleContractState>;
@@ -39,18 +40,9 @@ describe('Testing the Warp client', () => {
     arlocal = new ArLocal(1810, false);
     await arlocal.start();
 
-    arweave = Arweave.init({
-      host: 'localhost',
-      port: 1810,
-      protocol: 'http'
-    });
-
     LoggerFactory.INST.logLevel('error');
-
-    warp = WarpNodeFactory.forTesting(arweave);
-
-    wallet = await arweave.wallets.generate();
-    await addFunds(arweave, wallet);
+    warp = WarpFactory.forLocal(1810);
+    ({ jwk: wallet } = await warp.testing.generateWallet());
 
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/example-contract.js'), 'utf8');
     initialState = fs.readFileSync(path.join(__dirname, '../data/example-contract-state.json'), 'utf8');
@@ -69,16 +61,21 @@ describe('Testing the Warp client', () => {
       src: contractSrc
     });
 
-    contract = warp.contract(contractTxId);
-    contractVM = warp.contract<ExampleContractState>(contractTxId).setEvaluationOptions({
-      useVM2: true
+    contract = warp.contract<ExampleContractState>(contractTxId).setEvaluationOptions({
+      mineArLocalBlocks: false
     });
-    contractInitData = warp.contract(contractInitDataTxId);
+    contractVM = warp.contract<ExampleContractState>(contractTxId).setEvaluationOptions({
+      useVM2: true,
+      mineArLocalBlocks: false
+    });
+    contractInitData = warp.contract<ExampleContractState>(contractInitDataTxId).setEvaluationOptions({
+      mineArLocalBlocks: false
+    });
     contract.connect(wallet);
     contractVM.connect(wallet);
     contractInitData.connect(wallet);
 
-    await mineBlock(arweave);
+    await mineBlock(warp);
   });
 
   afterAll(async () => {
@@ -86,35 +83,35 @@ describe('Testing the Warp client', () => {
   });
 
   it('should properly deploy contract with initial state', async () => {
-    expect((await contract.readState()).state.counter).toEqual(555);
-    expect((await contractVM.readState()).state.counter).toEqual(555);
-    expect((await contractInitData.readState()).state.counter).toEqual(555);
+    expect((await contract.readState()).cachedValue.state.counter).toEqual(555);
+    expect((await contractVM.readState()).cachedValue.state.counter).toEqual(555);
+    expect((await contractInitData.readState()).cachedValue.state.counter).toEqual(555);
   });
 
   it('should properly add new interaction', async () => {
     await contract.writeInteraction({ function: 'add' });
     await contractInitData.writeInteraction({ function: 'add' });
-    await mineBlock(arweave);
+    await mineBlock(warp);
 
-    expect((await contract.readState()).state.counter).toEqual(556);
-    expect((await contractVM.readState()).state.counter).toEqual(556);
-    expect((await contractInitData.readState()).state.counter).toEqual(556);
+    expect((await contract.readState()).cachedValue.state.counter).toEqual(556);
+    expect((await contractVM.readState()).cachedValue.state.counter).toEqual(556);
+    expect((await contractInitData.readState()).cachedValue.state.counter).toEqual(556);
   });
 
   it('should properly add another interactions', async () => {
     await contract.writeInteraction({ function: 'add' });
     await contractInitData.writeInteraction({ function: 'add' });
-    await mineBlock(arweave);
+    await mineBlock(warp);
     await contract.writeInteraction({ function: 'add' });
     await contractInitData.writeInteraction({ function: 'add' });
-    await mineBlock(arweave);
+    await mineBlock(warp);
     await contract.writeInteraction({ function: 'add' });
     await contractInitData.writeInteraction({ function: 'add' });
-    await mineBlock(arweave);
+    await mineBlock(warp);
 
-    expect((await contract.readState()).state.counter).toEqual(559);
-    expect((await contractVM.readState()).state.counter).toEqual(559);
-    expect((await contractInitData.readState()).state.counter).toEqual(559);
+    expect((await contract.readState()).cachedValue.state.counter).toEqual(559);
+    expect((await contractVM.readState()).cachedValue.state.counter).toEqual(559);
+    expect((await contractInitData.readState()).cachedValue.state.counter).toEqual(559);
   });
 
   it('should properly view contract state', async () => {

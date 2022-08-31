@@ -3,9 +3,13 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { InteractionResult, LoggerFactory, PstContract, PstState, Warp, WarpNodeFactory } from '@warp';
 import path from 'path';
-import { addFunds, mineBlock } from '../_helpers';
+import { mineBlock } from '../_helpers';
+import { PstState, PstContract } from '../../../contract/PstContract';
+import { InteractionResult } from '../../../core/modules/impl/HandlerExecutorFactory';
+import { Warp } from '../../../core/Warp';
+import { WarpFactory } from '../../../core/WarpFactory';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
 
 describe('Testing the Profit Sharing Token', () => {
   let contractSrc: string;
@@ -26,20 +30,12 @@ describe('Testing the Profit Sharing Token', () => {
     // with another files has to have ArLocal set to a different port!)
     arlocal = new ArLocal(1820, false);
     await arlocal.start();
-
-    arweave = Arweave.init({
-      host: 'localhost',
-      port: 1820,
-      protocol: 'http'
-    });
-
     LoggerFactory.INST.logLevel('error');
 
-    warp = WarpNodeFactory.forTesting(arweave);
+    warp = WarpFactory.forLocal(1820);
 
-    wallet = await arweave.wallets.generate();
-    await addFunds(arweave, wallet);
-    walletAddress = await arweave.wallets.jwkToAddress(wallet);
+    ({ arweave } = warp);
+    ({ jwk: wallet, address: walletAddress } = await warp.testing.generateWallet());
 
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/token-pst.js'), 'utf8');
     const stateFromFile: PstState = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/token-pst.json'), 'utf8'));
@@ -72,7 +68,7 @@ describe('Testing the Profit Sharing Token', () => {
     pst.connect(wallet);
     pstVM.connect(wallet);
 
-    await mineBlock(arweave);
+    await mineBlock(warp);
   });
 
   afterAll(async () => {
@@ -97,7 +93,7 @@ describe('Testing the Profit Sharing Token', () => {
       qty: 555
     });
 
-    await mineBlock(arweave);
+    await mineBlock(warp);
 
     expect((await pst.currentState()).balances[walletAddress]).toEqual(555669 - 555);
     expect((await pstVM.currentState()).balances[walletAddress]).toEqual(555669 - 555);
@@ -125,10 +121,10 @@ describe('Testing the Profit Sharing Token', () => {
     const newSource = fs.readFileSync(path.join(__dirname, '../data/token-evolve.js'), 'utf8');
 
     const newSrcTxId = await pst.save({ src: newSource });
-    await mineBlock(arweave);
+    await mineBlock(warp);
 
     await pst.evolve(newSrcTxId);
-    await mineBlock(arweave);
+    await mineBlock(warp);
 
     // note: the evolved balance always adds 555 to the result
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(555114 + 555);
@@ -136,14 +132,13 @@ describe('Testing the Profit Sharing Token', () => {
   });
 
   it('should properly perform dry write with overwritten caller', async () => {
-    const newWallet = await arweave.wallets.generate();
-    const overwrittenCaller = await arweave.wallets.jwkToAddress(newWallet);
+    const { jwk: newWallet, address: overwrittenCaller } = await warp.testing.generateWallet();
     await pst.transfer({
       target: overwrittenCaller,
       qty: 1000
     });
 
-    await mineBlock(arweave);
+    await mineBlock(warp);
 
     // note: transfer should be done from the "overwrittenCaller" address, not the "walletAddress"
     const result: InteractionResult<PstState, unknown> = await pst.dryWrite(

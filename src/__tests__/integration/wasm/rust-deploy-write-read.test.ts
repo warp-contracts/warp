@@ -3,19 +3,16 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import {
-  ArweaveWrapper,
-  getTag,
-  LoggerFactory,
-  PstContract,
-  PstState,
-  Warp,
-  WarpNodeFactory,
-  SmartWeaveTags
-} from '@warp';
 import path from 'path';
-import { addFunds, mineBlock } from '../_helpers';
+import { mineBlock } from '../_helpers';
 import { WasmSrc } from '../../../core/modules/impl/wasm/WasmSrc';
+import { PstState, PstContract } from '../../../contract/PstContract';
+import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
+import { Warp } from '../../../core/Warp';
+import { WarpFactory } from '../../../core/WarpFactory';
+import { getTag } from '../../../legacy/utils';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { ArweaveWrapper } from '../../../utils/ArweaveWrapper';
 
 describe('Testing the Rust WASM Profit Sharing Token', () => {
   let wallet: JWKInterface;
@@ -41,20 +38,13 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     arlocal = new ArLocal(1201, false);
     await arlocal.start();
 
-    arweave = Arweave.init({
-      host: 'localhost',
-      port: 1201,
-      protocol: 'http'
-    });
-
-    arweaveWrapper = new ArweaveWrapper(arweave);
-
     LoggerFactory.INST.logLevel('error');
 
-    warp = WarpNodeFactory.forTesting(arweave);
+    warp = WarpFactory.forLocal(1201);
+    ({ arweave } = warp);
+    arweaveWrapper = new ArweaveWrapper(arweave);
 
-    wallet = await arweave.wallets.generate();
-    await addFunds(arweave, wallet);
+    ({ jwk: wallet } = await warp.testing.generateWallet());
     walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
     const contractSrc = fs.readFileSync(path.join(__dirname, '../data/wasm/rust/rust-pst_bg.wasm'));
@@ -114,7 +104,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     // connecting wallet to the PST contract
     pst.connect(wallet);
 
-    await mineBlock(arweave);
+    await mineBlock(warp);
   }, 50000);
 
   afterAll(async () => {
@@ -154,7 +144,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
       qty: 555
     });
 
-    await mineBlock(arweave);
+    await mineBlock(warp);
 
     expect((await pst.currentState()).balances[walletAddress]).toEqual(555669 - 555);
     expect((await pst.currentState()).balances['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']).toEqual(10000555);
@@ -172,7 +162,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
       function: 'foreignCall',
       contract_tx_id: wrongForeignContractTxId
     });
-    await mineBlock(arweave);
+    await mineBlock(warp);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(555669 - 555);
     expect((await pst.currentState()).balances['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']).toEqual(10000000 + 555);
 
@@ -180,7 +170,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
       function: 'foreignCall',
       contract_tx_id: properForeignContractTxId
     });
-    await mineBlock(arweave);
+    await mineBlock(warp);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(555669 - 555 + 1000);
     expect((await pst.currentState()).balances['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']).toEqual(
       10000000 + 555 + 1000
@@ -237,10 +227,10 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
       wasmGlueCode: path.join(__dirname, '../data/wasm/rust/rust-pst-evolve.js')
     });
 
-    await mineBlock(arweave);
+    await mineBlock(warp);
 
     await pst.evolve(newSrcTxId);
-    await mineBlock(arweave);
+    await mineBlock(warp);
 
     // note: evolve should add to the transfer additional 200
     await pst.transfer({
@@ -248,7 +238,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
       qty: 555
     });
 
-    await mineBlock(arweave);
+    await mineBlock(warp);
 
     expect((await pst.currentState()).balances['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']).toEqual(
       10000000 + 555 + 1000 + 555 + 200

@@ -1,11 +1,17 @@
-import { BlockHeightCacheResult, CurrentTx, ExecutionContext, GQLNodeInterface } from '@warp';
+import { SortKeyCacheResult } from '../../cache/SortKeyCache';
+import { CurrentTx } from '../../contract/Contract';
+import { ExecutionContext } from '../../core/ExecutionContext';
+import { GQLNodeInterface } from '../../legacy/gqlResult';
 
 /**
  * Implementors of this class are responsible for evaluating contract's state
  * - based on the {@link ExecutionContext}.
  */
 export interface StateEvaluator {
-  eval<State>(executionContext: ExecutionContext<State>, currentTx: CurrentTx[]): Promise<EvalStateResult<State>>;
+  eval<State>(
+    executionContext: ExecutionContext<State>,
+    currentTx: CurrentTx[]
+  ): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
 
   /**
    * a hook that is called on each state update (i.e. after evaluating state for each interaction transaction)
@@ -14,7 +20,7 @@ export interface StateEvaluator {
     transaction: GQLNodeInterface,
     executionContext: ExecutionContext<State>,
     state: EvalStateResult<State>,
-    nthInteraction?: number
+    force?: boolean
   ): Promise<void>;
 
   /**
@@ -53,32 +59,39 @@ export interface StateEvaluator {
   ): Promise<void>;
 
   /**
-   * loads latest available state for given contract for given blockHeight.
-   * - implementors should be aware that there might multiple interactions
-   * for single block - and sort them according to protocol specification.
+   * loads the latest available state for given contract for given sortKey.
    */
   latestAvailableState<State>(
     contractTxId: string,
-    blockHeight: number
-  ): Promise<BlockHeightCacheResult<EvalStateResult<State>> | null>;
+    sortKey?: string
+  ): Promise<SortKeyCacheResult<EvalStateResult<State>> | null>;
 
-  /**
-   * allows to manually flush state cache into underneath storage.
-   */
-  flushCache(): Promise<void>;
+  putInCache<State>(contractTxId: string, transaction: GQLNodeInterface, state: EvalStateResult<State>): Promise<void>;
 
   /**
    * allows to syncState with an external state source (like Warp Distributed Execution Network)
    */
-  syncState(contractTxId: string, blockHeight: number, transactionId: string, state: any, validity: any): Promise<void>;
+  syncState(contractTxId: string, sortKey: string, state: any, validity: any): Promise<void>;
+
+  internalWriteState<State>(
+    contractTxId: string,
+    sortKey: string
+  ): Promise<SortKeyCacheResult<EvalStateResult<State>> | null>;
+
+  dumpCache(): Promise<any>;
+
+  hasContractCached(contractTxId: string): Promise<boolean>;
+
+  lastCachedSortKey(): Promise<string | null>;
+
+  allCachedContracts(): Promise<string[]>;
 }
 
 export class EvalStateResult<State> {
   constructor(
     readonly state: State,
     readonly validity: Record<string, boolean>,
-    readonly transactionId?: string,
-    readonly blockId?: string
+    readonly errorMessages: Record<string, string>
   ) {}
 }
 
@@ -87,7 +100,7 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   // "false" may lead to some fairly simple attacks on contract, if the contract
   // does not properly validate input data.
   // "true" may lead to wrongly calculated state, even without noticing the problem
-  // (eg. when using unsafe client and Arweave does not respond properly for a while)
+  // (e.g. when using unsafe client and Arweave does not respond properly for a while)
   ignoreExceptions = true;
 
   waitForConfirmation = false;
@@ -110,16 +123,20 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
 
   useFastCopy = true;
 
-  manualCacheFlush = false;
-
   useVM2 = false;
 
   allowUnsafeClient = false;
 
+  allowBigInt = false;
+
   walletBalanceUrl = 'http://nyc-1.dev.arweave.net:1984/';
+
+  mineArLocalBlocks = true;
+
+  throwOnInternalWriteError = true;
 }
 
-// an interface for the contract EvaluationOptions - can be used to change the behaviour of some of the features.
+// an interface for the contract EvaluationOptions - can be used to change the behaviour of some features.
 export interface EvaluationOptions {
   // whether exceptions from given transaction interaction should be ignored
   ignoreExceptions: boolean;
@@ -171,8 +188,6 @@ export interface EvaluationOptions {
   // currently defaults to true
   useFastCopy: boolean;
 
-  manualCacheFlush: boolean;
-
   // Whether js contracts' code should be run within vm2 sandbox (https://github.com/patriksimek/vm2#vm2-----)
   // it greatly enhances security - at a cost of performance.
   // use for contracts that you cannot trust.
@@ -184,6 +199,17 @@ export interface EvaluationOptions {
   // result in throwing an exception
   allowUnsafeClient: boolean;
 
+  // whether using BigInt in contract code is allowed. Defaults to false
+  // as by default BigInt cannot be serialized to json.
+  allowBigInt: boolean;
+
   // an endpoint for retrieving wallet balance info
   walletBalanceUrl: string;
+
+  // whether the local Warp instance should manually mine blocks in ArLocal. Defaults to true.
+  mineArLocalBlocks: boolean;
+
+  // whether a contract should automatically throw if internal write fails.
+  // set to 'true' be default, can be set to false for backwards compatibility
+  throwOnInternalWriteError: boolean;
 }

@@ -1,8 +1,7 @@
 /* eslint-disable */
 import Arweave from 'arweave';
+import { EvaluationOptions } from '../core/modules/StateEvaluator';
 import { GQLNodeInterface, GQLTagInterface, VrfData } from './gqlResult';
-import { EvaluationOptions } from '@warp/core';
-import { kMaxLength } from 'buffer';
 
 /**
  *
@@ -80,7 +79,7 @@ export class SmartWeaveGlobal {
         throw new Error('Not implemented - should be set by HandlerApi implementor');
       },
 
-      write: (contractId: string, input: any) => {
+      write: (contractId: string, input: any, throwOnError?: boolean) => {
         throw new Error('Not implemented - should be set by HandlerApi implementor');
       },
 

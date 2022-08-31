@@ -2,6 +2,11 @@ export async function handle(state, action) {
   if (state.counter === undefined) {
     state.counter = 0;
   }
+  if (action.input.function === 'div') {
+    state.counter = state.counter / 2;
+    return { state };
+  }
+
   if (action.input.function === 'add') {
     state.counter++;
     return { state };
@@ -42,5 +47,9 @@ export async function handle(state, action) {
     const id = action.input.contractId;
     const value = SmartWeave.contracts.readContractState(id);
     return { result: value };
+  }
+  if (action.input.function === 'justThrow') {
+    console.log('called justThrow');
+    throw new ContractError('Error from justThrow function');
   }
 }

@@ -1,13 +1,14 @@
 import fs from 'fs';
 
 import ArLocal from 'arlocal';
-import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, LoggerFactory, Warp, WarpNodeFactory } from '@warp';
 import path from 'path';
-import { addFunds, mineBlock } from '../_helpers';
+import { mineBlock } from '../_helpers';
+import { Contract } from '../../../contract/Contract';
+import { Warp } from '../../../core/Warp';
+import { WarpFactory } from '../../../core/WarpFactory';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
 
-let arweave: Arweave;
 let arlocal: ArLocal;
 let warp: Warp;
 let contract: Contract<any>;
@@ -24,19 +25,11 @@ describe('Testing the Warp client', () => {
     arlocal = new ArLocal(1800, false);
     await arlocal.start();
 
-    arweave = Arweave.init({
-      host: 'localhost',
-      port: 1800,
-      protocol: 'http'
-    });
-
     LoggerFactory.INST.logLevel('error');
 
-    warp = WarpNodeFactory.forTesting(arweave);
+    warp = WarpFactory.forLocal(1800);
 
-    wallet = await arweave.wallets.generate();
-    await addFunds(arweave, wallet);
-
+    ({ jwk: wallet } = await warp.testing.generateWallet());
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/very-complicated-contract.js'), 'utf8');
 
     // deploying contract using the new SDK.
@@ -46,14 +39,17 @@ describe('Testing the Warp client', () => {
       src: contractSrc
     });
 
-    contract = warp.contract(contractTxId);
+    contract = warp.contract(contractTxId).setEvaluationOptions({
+      mineArLocalBlocks: false
+    });
     contractVM = warp.contract(contractTxId).setEvaluationOptions({
-      useVM2: true
+      useVM2: true,
+      mineArLocalBlocks: false
     });
     contract.connect(wallet);
     contractVM.connect(wallet);
 
-    await mineBlock(arweave);
+    await mineBlock(warp);
   });
 
   afterAll(async () => {

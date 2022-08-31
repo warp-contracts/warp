@@ -3,7 +3,9 @@ import fs from 'fs';
 import path from 'path';
 import { interactRead, readContract } from 'smartweave';
 import Arweave from 'arweave';
-import { LoggerFactory, WarpNodeFactory, WarpWebFactory, SourceType } from '@warp';
+import { WarpFactory, defaultCacheOptions, defaultWarpGwOptions } from '../../core/WarpFactory';
+import { LoggerFactory } from '../../logging/LoggerFactory';
+import { SourceType } from '../../core/modules/impl/WarpGatewayInteractionsLoader';
 
 const stringify = require('safe-stable-stringify');
 
@@ -50,16 +52,24 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
       console.log('readState', contractTxId);
       try {
         console.log = function () {}; // to hide any logs from contracts...
-        const result2 = await WarpNodeFactory.memCachedBased(arweave, 1)
-          .useWarpGateway(null, SourceType.ARWEAVE)
+        const result2 = await WarpFactory.custom(
+          arweave,
+          {
+            ...defaultCacheOptions,
+            inMemory: true
+          },
+          'mainnet'
+        )
+          .useWarpGateway({ ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null })
           .build()
           .contract(contractTxId)
           .setEvaluationOptions({
             useFastCopy: true,
-            allowUnsafeClient: true
+            allowUnsafeClient: true,
+            allowBigInt: true
           })
           .readState(blockHeight);
-        const result2String = stringify(result2.state).trim();
+        const result2String = stringify(result2.cachedValue.state).trim();
         expect(result2String).toEqual(resultString);
       } finally {
         console.log = originalConsoleLog;
@@ -79,17 +89,25 @@ describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
         .readFileSync(path.join(__dirname, 'test-cases', 'contracts', `${contractTxId}.json`), 'utf-8')
         .trim();
       console.log('readState', contractTxId);
-      const result2 = await WarpNodeFactory.memCachedBased(arweave, 1)
-        .useWarpGateway(null, SourceType.ARWEAVE)
+      const result2 = await WarpFactory.custom(
+        arweave,
+        {
+          ...defaultCacheOptions,
+          inMemory: true
+        },
+        'mainnet'
+      )
+        .useWarpGateway({ ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null })
         .build()
         .contract(contractTxId)
         .setEvaluationOptions({
           useFastCopy: true,
           useVM2: true,
-          allowUnsafeClient: true
+          allowUnsafeClient: true,
+          allowBigInt: true
         })
         .readState(blockHeight);
-      const result2String = stringify(result2.state).trim();
+      const result2String = stringify(result2.cachedValue.state).trim();
       expect(result2String).toEqual(resultString);
     },
     800000
@@ -104,17 +122,45 @@ describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
     async (contractTxId: string) => {
       const blockHeight = 855134;
       console.log('readState Warp Gateway', contractTxId);
-      const warpR = WarpWebFactory.memCachedBased(arweave, 1).useWarpGateway(null, SourceType.ARWEAVE).build();
-      const result = await warpR.contract(contractTxId).readState(blockHeight);
-      const resultString = stringify(result.state).trim();
+      const warpR = await WarpFactory.custom(
+        arweave,
+        {
+          ...defaultCacheOptions,
+          inMemory: true
+        },
+        'mainnet'
+      )
+        .useWarpGateway({ ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null })
+        .build();
+      const result = await warpR
+        .contract(contractTxId)
+        .setEvaluationOptions({
+          useFastCopy: true,
+          allowUnsafeClient: true,
+          allowBigInt: true
+        })
+        .readState(blockHeight);
+      const resultString = stringify(result.cachedValue.state).trim();
 
       console.log('readState Arweave Gateway', contractTxId);
-      const result2 = await WarpNodeFactory.memCachedBased(arweave, 1)
+      const result2 = await WarpFactory.custom(
+        arweave,
+        {
+          ...defaultCacheOptions,
+          inMemory: true
+        },
+        'mainnet'
+      )
         .useArweaveGateway()
         .build()
         .contract(contractTxId)
+        .setEvaluationOptions({
+          useFastCopy: true,
+          allowUnsafeClient: true,
+          allowBigInt: true
+        })
         .readState(blockHeight);
-      const result2String = stringify(result2.state).trim();
+      const result2String = stringify(result2.cachedValue.state).trim();
       expect(result2String).toEqual(resultString);
     },
     800000
@@ -128,15 +174,22 @@ describe('readState', () => {
     const result = await readContract(arweave, contractTxId, blockHeight);
     const resultString = stringify(result).trim();
 
-    const result2 = await WarpNodeFactory.memCachedBased(arweave, 1)
-      .useWarpGateway(null, SourceType.ARWEAVE)
+    const result2 = await WarpFactory.custom(
+      arweave,
+      {
+        ...defaultCacheOptions,
+        inMemory: true
+      },
+      'mainnet'
+    )
+      .useWarpGateway({ ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null })
       .build()
       .contract(contractTxId)
       .setEvaluationOptions({
         allowUnsafeClient: true
       })
       .readState(blockHeight);
-    const result2String = stringify(result2.state).trim();
+    const result2String = stringify(result2.cachedValue.state).trim();
 
     expect(result2String).toEqual(resultString);
   }, 800000);
@@ -149,8 +202,15 @@ describe('readState', () => {
       target: '6Z-ifqgVi1jOwMvSNwKWs6ewUEQ0gU9eo4aHYC3rN1M'
     });
 
-    const v2Result = await WarpNodeFactory.memCachedBased(arweave, 1)
-      .useWarpGateway(null, SourceType.ARWEAVE)
+    const v2Result = await WarpFactory.custom(
+      arweave,
+      {
+        ...defaultCacheOptions,
+        inMemory: true
+      },
+      'mainnet'
+    )
+      .useWarpGateway({ ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null })
       .build()
       .contract(contractTxId)
       .connect(jwk)
