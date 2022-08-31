@@ -2,20 +2,20 @@ import fs from 'fs';
 
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
-import {JWKInterface} from 'arweave/node/lib/wallet';
+import { JWKInterface } from 'arweave/node/lib/wallet';
 import path from 'path';
-import {mineBlock} from '../_helpers';
-import {Evaluate} from '@idena/vrf-js';
+import { mineBlock } from '../_helpers';
+import { Evaluate } from '@idena/vrf-js';
 import elliptic from 'elliptic';
-import {PstContract, PstState} from '../../../contract/PstContract';
-import {InteractionsLoader} from '../../../core/modules/InteractionsLoader';
-import {EvaluationOptions} from '../../../core/modules/StateEvaluator';
-import {Warp} from '../../../core/Warp';
-import {defaultCacheOptions, WarpFactory} from '../../../core/WarpFactory';
-import {GQLNodeInterface} from '../../../legacy/gqlResult';
-import {LoggerFactory} from '../../../logging/LoggerFactory';
-import {ArweaveGatewayInteractionsLoader} from '../../../core/modules/impl/ArweaveGatewayInteractionsLoader';
-import {LexicographicalInteractionsSorter} from '../../../core/modules/impl/LexicographicalInteractionsSorter';
+import { PstContract, PstState } from '../../../contract/PstContract';
+import { InteractionsLoader } from '../../../core/modules/InteractionsLoader';
+import { EvaluationOptions } from '../../../core/modules/StateEvaluator';
+import { Warp } from '../../../core/Warp';
+import { defaultCacheOptions, WarpFactory } from '../../../core/WarpFactory';
+import { GQLNodeInterface } from '../../../legacy/gqlResult';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { ArweaveGatewayInteractionsLoader } from '../../../core/modules/impl/ArweaveGatewayInteractionsLoader';
+import { LexicographicalInteractionsSorter } from '../../../core/modules/impl/LexicographicalInteractionsSorter';
 
 const EC = new elliptic.ec('secp256k1');
 const key = EC.genKeyPair();
@@ -82,7 +82,7 @@ describe('Testing the Profit Sharing Token', () => {
       }
     };
 
-    const {contractTxId} = await warp.createContract.deploy({
+    const { contractTxId } = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify(initialState),
       src: contractSrc
@@ -122,7 +122,7 @@ describe('Testing the Profit Sharing Token', () => {
   });
 
   it('should throw if random cannot be verified', async () => {
-    const {originalTxId: txId} = await pst.writeInteraction({
+    const { originalTxId: txId } = await pst.writeInteraction({
       function: 'vrf'
     });
     await mineBlock(warp);
@@ -130,7 +130,7 @@ describe('Testing the Profit Sharing Token', () => {
     await expect(pst.readState()).rejects.toThrow('Vrf verification failed.');
     useWrongIndex.pop();
 
-    const {originalTxId: txId2} = await pst.writeInteraction({
+    const { originalTxId: txId2 } = await pst.writeInteraction({
       function: 'vrf'
     });
     await mineBlock(warp);
