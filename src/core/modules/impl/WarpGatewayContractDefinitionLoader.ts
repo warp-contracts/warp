@@ -1,10 +1,8 @@
 import Arweave from 'arweave';
 import { ContractDefinitionLoader } from './ContractDefinitionLoader';
 import 'redstone-isomorphic';
-import { WasmSrc } from './wasm/WasmSrc';
 import Transaction from 'arweave/node/lib/transaction';
 import { GW_TYPE } from '../InteractionsLoader';
-import { WarpCache } from 'cache/WarpCache';
 import { ContractDefinition, ContractSource } from '../../../core/ContractDefinition';
 import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
 import { getTag } from '../../../legacy/utils';
@@ -13,6 +11,8 @@ import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { ArweaveWrapper } from '../../../utils/ArweaveWrapper';
 import { stripTrailingSlash } from '../../../utils/utils';
 import { DefinitionLoader } from '../DefinitionLoader';
+import { WarpCache } from '../../../cache/WarpCache';
+import { WasmSrc } from './wasm/WasmSrc';
 
 /**
  * An extension to {@link ContractDefinitionLoader} that makes use of
