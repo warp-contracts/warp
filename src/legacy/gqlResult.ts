@@ -48,6 +48,7 @@ export interface GQLNodeInterface {
   };
   dry?: boolean;
   sortKey?: string; // added dynamically by Warp Sequencer
+  strict?: boolean;
   confirmationStatus?: string;
   source?: string;
   bundlerTxId?: string;

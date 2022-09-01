@@ -70,7 +70,10 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
       ]);
 
       this.logger.debug('Cache result?:', !this.swGlobal._activeTx.dry);
-      const shouldAutoThrow = result.type !== 'ok' && effectiveThrowOnError && !this.swGlobal._activeTx.dry;
+      const shouldAutoThrow =
+        result.type !== 'ok' &&
+        effectiveThrowOnError &&
+        (!this.swGlobal._activeTx.dry || (this.swGlobal._activeTx.dry && this.swGlobal._activeTx.strict));
       const effectiveErrorMessage = shouldAutoThrow
         ? `Internal write auto error for call [${JSON.stringify(debugData)}]: ${result.errorMessage}`
         : result.errorMessage;
