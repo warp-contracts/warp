@@ -299,20 +299,26 @@ describe('Testing internal writes', () => {
     });
 
     it('should auto throw on default settings during writeInteraction if strict', async () => {
-      await expect(callingContract.writeInteraction({
-        function: 'writeContractAutoThrow',
-        contractId: calleeTxId
-      }, {strict: true})).rejects.toThrowError(
-        /^Cannot create interaction: Internal write auto error for call/
-      );
+      await expect(
+        callingContract.writeInteraction(
+          {
+            function: 'writeContractAutoThrow',
+            contractId: calleeTxId
+          },
+          { strict: true }
+        )
+      ).rejects.toThrowError(/^Cannot create interaction: Internal write auto error for call/);
     });
 
     it('should not auto throw on default settings during writeInteraction if strict and IW call force to NOT throw an exception', async () => {
-      const {originalTxId} = await callingContract.writeInteraction({
-        function: 'writeContractForceNoAutoThrow',
-        contractId: calleeTxId
-      }, {strict: true});
-      expect(originalTxId.length).toEqual(43)
+      const { originalTxId } = await callingContract.writeInteraction(
+        {
+          function: 'writeContractForceNoAutoThrow',
+          contractId: calleeTxId
+        },
+        { strict: true }
+      );
+      expect(originalTxId.length).toEqual(43);
     });
 
     it('should not auto throw on default settings if IW call force to NOT throw an exception', async () => {
