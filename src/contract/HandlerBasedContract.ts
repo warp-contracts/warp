@@ -310,7 +310,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       // 3. Verify the callStack and search for any "internalWrites" transactions
       // 4. For each found "internalWrite" transaction - generate additional tag:
       // {name: 'InternalWrite', value: callingContractTxId}
-      const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer);
+      const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer, strict);
       if (strict && handlerResult.type !== 'ok') {
         throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
       }
@@ -329,7 +329,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       this.logger.debug('Tags with inner calls', tags);
     } else {
       if (strict) {
-        const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer);
+        const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer, strict);
         if (handlerResult.type !== 'ok') {
           throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
         }
@@ -509,7 +509,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     caller?: string,
     sortKey?: string,
     tags: Tags = [],
-    transfer: ArTransfer = emptyTransfer
+    transfer: ArTransfer = emptyTransfer,
+    strict = false
   ): Promise<InteractionResult<State, View>> {
     this.logger.info('Call contract input', input);
     this.maybeResetRootContract();
@@ -575,7 +576,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     });
 
     dummyTx.sortKey = await this._sorter.createSortKey(dummyTx.block.id, dummyTx.id, dummyTx.block.height, true);
-
+    dummyTx.strict = strict;
     const handleResult = await this.evalInteraction<Input, View>(
       {
         interaction,

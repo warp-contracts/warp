@@ -298,7 +298,24 @@ describe('Testing internal writes', () => {
       expect(result.cachedValue.state.errorCounter).toBeUndefined();
     });
 
-    it('should not auto throw on default settings if IW call force to NOT throw an exception ', async () => {
+    it('should auto throw on default settings during writeInteraction if strict', async () => {
+      await expect(callingContract.writeInteraction({
+        function: 'writeContractAutoThrow',
+        contractId: calleeTxId
+      }, {strict: true})).rejects.toThrowError(
+        /^Cannot create interaction: Internal write auto error for call/
+      );
+    });
+
+    it('should not auto throw on default settings during writeInteraction if strict and IW call force to NOT throw an exception', async () => {
+      const {originalTxId} = await callingContract.writeInteraction({
+        function: 'writeContractForceNoAutoThrow',
+        contractId: calleeTxId
+      }, {strict: true});
+      expect(originalTxId.length).toEqual(43)
+    });
+
+    it('should not auto throw on default settings if IW call force to NOT throw an exception', async () => {
       const { originalTxId } = await callingContract.writeInteraction({
         function: 'writeContractForceNoAutoThrow',
         contractId: calleeTxId
@@ -309,7 +326,7 @@ describe('Testing internal writes', () => {
 
       // note: in this case the calling contract "didn't notice" that the IW call failed
       expect(result.cachedValue.errorMessages[originalTxId]).toBeUndefined();
-      expect(result.cachedValue.state.errorCounter).toEqual(1);
+      expect(result.cachedValue.state.errorCounter).toEqual(2);
     });
 
     it('should not auto throw if evaluationOptions.throwOnInternalWriteError set to false', async () => {
@@ -327,7 +344,7 @@ describe('Testing internal writes', () => {
 
       // note: in this case the calling contract "didn't notice" that the IW call failed
       expect(result.cachedValue.errorMessages[originalTxId]).toBeUndefined();
-      expect(result.cachedValue.state.errorCounter).toEqual(2);
+      expect(result.cachedValue.state.errorCounter).toEqual(3);
     });
 
     it('should auto throw if evaluationOptions.throwOnInternalWriteError set to true', async () => {
@@ -347,7 +364,7 @@ describe('Testing internal writes', () => {
       expect(result.cachedValue.errorMessages[originalTxId]).toContain('Internal write auto error for call');
 
       // this shouldn't change from the prev. test
-      expect(result.cachedValue.state.errorCounter).toEqual(2);
+      expect(result.cachedValue.state.errorCounter).toEqual(3);
     });
 
     it('should auto throw if evaluationOptions.throwOnInternalWriteError set to false and IW call force to throw an exception', async () => {
@@ -367,7 +384,7 @@ describe('Testing internal writes', () => {
       expect(result.cachedValue.errorMessages[originalTxId]).toContain('Internal write auto error for call');
 
       // this shouldn't change from the prev. test
-      expect(result.cachedValue.state.errorCounter).toEqual(2);
+      expect(result.cachedValue.state.errorCounter).toEqual(3);
     });
 
     it('should not auto throw if evaluationOptions.throwOnInternalWriteError set to true and IW call force to NOT throw an exception', async () => {
@@ -384,7 +401,7 @@ describe('Testing internal writes', () => {
       const result = await callingContract.readState();
 
       expect(result.cachedValue.errorMessages[originalTxId]).toBeUndefined();
-      expect(result.cachedValue.state.errorCounter).toEqual(3);
+      expect(result.cachedValue.state.errorCounter).toEqual(4);
     });
   });
 });
