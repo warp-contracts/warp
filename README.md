@@ -34,12 +34,11 @@ If you are interested in the main assumptions for Warp ecosystem as well as its 
   - [VM2](#vm2)
   - [Internal writes](#internal-writes)
   - [UnsafeClient](#unsafeclient)
-  - [Performance - best practices](#performance---best-practices)
   - [Examples](#examples)
   - [Migrations](#migrations)
     - [Old factories to WarpFactory](#old-factories-to-warpfactory)
     - [Sqlite to LevelDB](#sqlite-to-leveldb)
-- [Examples](#examples)
+    - [Additional changes](#additional-changes)
 - [Warp transaction lifecycle](#warp-transaction-lifecycle)
 
 ## Development
@@ -554,7 +553,7 @@ It is possible to use the in-memory cache instead by setting `cacheOptions.inMem
 
 #### old factories to WarpFactory
 
-1. Mainnet
+1. Mainnet  
    This is how you would intiialize Warp 'the old way':
 
 ```typescript
@@ -625,14 +624,31 @@ const result = await warp.migrationTool.migrateSqlite('./tools/sqlite/contracts-
 yarn ts-node -r tsconfig-paths/register tools/migrate.ts
 ```
 
+#### Additional changes
+1. the type of the result of the readState has changed: https://github.com/warp-contracts/warp#readstate
+
+2. the `bundleInteraction` method has been removed. The SDK now decides automatically how the transaction should be posted (based on the environment - i.e. whether the warp instance has been created for mainnet, testnet or local env).
+
+3. the internalWrite, if the write itself fails, now throws the `ContractError` by default. There's no longer need to manually check the result of the write inside the contract code (and throw error manually if result.type != 'ok').
+   If you want to leave the check in the contract code - set the
+```
+.setEvaluationOptions({
+  throwOnInternalWriteError: true
+});
+```  
+
+4. The warp instance now contains info about the environment - https://github.com/warp-contracts/warp#warpenvironment . This might be useful for writing deployment scripts, etc.
+5. if the `warp` instance was obtained via `WarpFactor.forLocal` (which should be used for local testing with ArLocal), then:
+
+* you can use `warp.testing.generateWallet()` for generating the wallet - it returns both the jwk and wallet address - [example](https://github.com/warp-contracts/warp/blob/main/src/__tests__/integration/internal-writes/internal-write-depth.test.ts#L89).
+* you can use `warp.testing.mineBlock()` to manually mine ArLocal blocks
+* the ArLocal blocks are mined automatically after calling `.writeInteraction`. This can be switched off by setting `evaluationOptions.mineArLocalBlocks` to `false` - [example](https://github.com/warp-contracts/warp/blob/main/src/__tests__/integration/internal-writes/internal-write-depth.test.ts#L118).
+
 ### Examples
 
-Usage examples can be found in
-a dedicated [repository](https://github.com/redstone-finance/redstone-smartweave-examples).
-Please follow instructions in its README.md (and detail-ish comments in the examples files) to learn more.
-There is also a separate repository with a web application [example](https://github.com/redstone-finance/redstone-smartcontracts-app).
+We've created an [academy](https://redstone.academy/) that introduces to the process of writing your own SmartWeave contract from scratch and describes how to interact with it using Warp SDK.
 
-We've also created an [academy](https://redstone.academy/) that introduces to the process of writing your own SmartWeave contract from scratch and describes how to interact with it using Warp SDK.
+The example usages with different web bundlers and in Node.js env are available [here](https://github.com/warp-contracts/bundlers).
 
 A community package - [arweave-jest-fuzzing](https://github.com/Hansa-Network/arweave-jest-fuzzing/blob/master/README.md) has been released thanks to Hansa Network to help SmartWeave developers write fuzzy tests.
 
