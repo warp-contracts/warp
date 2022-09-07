@@ -1,7 +1,6 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import {LoggerFactory, WarpNodeFactory} from '../src';
-import {TsLogFactory} from '../src/logging/node/TsLogFactory';
+import {defaultCacheOptions, defaultWarpGwOptions, LoggerFactory, WarpFactory} from '../src';
 import fs from 'fs';
 import path from 'path';
 import {JWKInterface} from 'arweave/node/lib/wallet';
@@ -18,18 +17,30 @@ async function main() {
   });
 
   try {
-    const warp = WarpNodeFactory.memCached(arweave);
+    const warp = WarpFactory.forMainnet({...defaultCacheOptions, inMemory: true});
+    /*const warp = WarpFactory
+      .custom(arweave, {
+        ...defaultCacheOptions,
+        inMemory: true
+      }, "mainnet")
+      .useWarpGateway({
+        ...defaultWarpGwOptions,
+        address: "http://13.53.39.138:5666"
+      })
+      .build()*/
+    const contract = warp.contract("f4skRMstoodrRluvl4OCY-Xo50AamgxYwBCZKzw3Uvo");
 
-    const jsContractSrc = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.js'), 'utf8');
+
+    /*const jsContractSrc = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.js'), 'utf8');
     const wasmContractSrc = fs.readFileSync(path.join(__dirname, 'data/rust/rust-pst_bg.wasm'));
     const initialState = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.json'), 'utf8');
 
     // case 1 - full deploy, js contract
-    const contractTxId = await warp.createContract.deploy({
+    const {contractTxId} = await warp.createContract.deploy({
       wallet,
       initState: initialState,
       src: jsContractSrc,
-    }, true);
+    });*/
 
     // case 2 - deploy from source, js contract
     /*const contractTxId = await warp.createContract.deployFromSourceTx({
@@ -54,27 +65,31 @@ async function main() {
       srcTxId: "5wXT-A0iugP9pWEyw-iTbB0plZ_AbmvlNKyBfGS3AUY",
     }, true);*/
 
-    const contract = warp.contract(contractTxId).connect(wallet);
+    /*const contract = warp.contract(contractTxId)
+      .setEvaluationOptions({
+        bundlerUrl: "http://13.53.39.138:5666/"
+      })
+      .connect(wallet);
 
-    await contract.bundleInteraction<any>({
+    await contract.writeInteraction<any>({
       function: "storeBalance",
       target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
     });
 
-    await contract.bundleInteraction<any>({
+    await contract.writeInteraction<any>({
       function: "storeBalance",
       target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
     });
 
-    await contract.bundleInteraction<any>({
+    await contract.writeInteraction<any>({
       function: "storeBalance",
       target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
-    });
+    });*/
 
-    const {state, validity} = await contract.readState();
+    const {cachedValue} = await contract.readState();
 
-    logger.info("Result", state);
-    logger.info("Validity", validity);
+    logger.info("Result", cachedValue.state);
+    logger.info("Validity", cachedValue.validity);
 
   } catch (e) {
     logger.error(e)
