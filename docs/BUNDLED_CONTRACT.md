@@ -35,7 +35,7 @@ Gateway (`/gateway/contracts/deploy` endpoint) (this is the default behaviour of
 The Warp Gateway then:
 
 1. Posts contract transactions (i.e. the base contract transaction and contract source transaction - or only the
-   contract interaction, if deploying from existing source) to the Bundlr network. Each contract transaction is sent as
+   contract transaction, if deploying from existing source) to the Bundlr network. Each contract transaction is sent as
    a separate Bundlr transaction - as the `data` of the bundled transaction. The Bundlr transaction in this case might
    be considered as a "carrier" of the original transaction. Additionally - some additional tags to the Bundlr transaction
    are added.
@@ -70,10 +70,9 @@ signature!
 
 ## Contract transaction retrieval via Arweave gateway
 
-1. Directly via `response.bundleContractId` - e.g. https://arweave.net/Yy9WoplIYqy03O7_ovUr4TrvwryxHEneuNep7ATDftI
-   **NOTE 1** The response object contains the full, original tx - including its data and id
-   - `hs9JlOG0LMkTa4VdJ-nf6I46kLbWbCpvZczdl3N-ASQ` in this case.
-   **NOTE 2** The `data` field contains the original contract's data. Usually it is an initial contract state or an asset - for AtomicNFT contracts.
+1. Directly via `response.bundleContractId` - e.g. https://arweave.net/Yy9WoplIYqy03O7_ovUr4TrvwryxHEneuNep7ATDftI  
+   **NOTE 1** The response object contains the full, original tx - including its data and id (`hs9JlOG0LMkTa4VdJ-nf6I46kLbWbCpvZczdl3N-ASQ` in this case).  
+   **NOTE 2** The `data` field contains the original contract's data. Usually it is an initial contract state or an asset - for AtomicNFT contracts.  
    **NOTE 3** The `Yy9WoplIYqy03O7_ovUr4TrvwryxHEneuNep7ATDftI` is the Bundlr's tx id - assigned by
    the `bundlr.createTransaction()`.
    It is part of `ANS-104` bundle, that is uploaded to Arweave by Bundlr network - with the original tx as a `data-item`.
