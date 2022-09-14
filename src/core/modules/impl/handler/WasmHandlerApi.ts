@@ -42,6 +42,10 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
         gasUsed: this.swGlobal.gasUsed
       };
     } catch (e) {
+      if (!(e instanceof Error)) {
+        throw e;
+      }
+
       // note: as exceptions handling in WASM is currently somewhat non-existent
       // https://www.assemblyscript.org/status.html#exceptions
       // and since we have to somehow differentiate different types of exceptions
@@ -124,6 +128,7 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
           if (errorKey == 'RuntimeError') {
             throw new Error(`[RE:RE]${errorArgs}`);
           } else {
+            throw handleResult.Err;
             throw new Error(`[CE:${errorKey}${errorArgs}]`);
           }
         }
