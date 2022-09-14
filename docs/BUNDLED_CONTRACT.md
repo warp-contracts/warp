@@ -68,6 +68,22 @@ signature!
 - `response.srcTxId` - the original contract source transaction id
 - `response.bundleSrcId` - the Bundlr source tx id.
 
+## Resulting transaction structure
+
+This is how the example contract transaction `hs9JlOG0LMkTa4VdJ-nf6I46kLbWbCpvZczdl3N-ASQ` looks like on [ViewBlock](https://viewblock.io/arweave/tx/Yy9WoplIYqy03O7_ovUr4TrvwryxHEneuNep7ATDftI).  
+
+**NOTE** Keep in mind that it takes some time before Bundlr posts given bundle to Arweave and ViewBlock actually index such bundle and its contents - usually it may take 1-2 days.
+![img_2.png](img_2.png)
+
+1. The `Yy9WoplIYqy03O7_ovUr4TrvwryxHEneuNep7ATDftI` is the id of the bundled item - assigned by Bundlr during data item creation - according to ANS-104 [specs](https://github.com/ArweaveTeam/arweave-standards/blob/master/ans/ANS-104.md#2-dataitem-signature-and-id).
+2. The `udJBlYAXNhFnjeb1YABQzqqVog3VpcauonBbO1MSwvc` is the id of the Arweave bundle transaction - that contains a data item from point 1, stored in `data` field - according to ANS-104 [specs](https://github.com/ArweaveTeam/arweave-standards/blob/master/ans/ANS-104.md#12-transaction-body-format)  
+**NOTE** This is the only "real" Arweave transaction
+3. The `hs9JlOG0LMkTa4VdJ-nf6I46kLbWbCpvZczdl3N-ASQ` is the original transaction id - as it was created and signed by the original protocol user.
+The transaction with this id is effectively a content of the bundle item (point 1.) - i.e. is stored in `dataItem.data` [field](https://github.com/ArweaveTeam/arweave-standards/blob/master/ans/ANS-104.md#13-dataitem-format)
+
+**NOTE** Only the last transaction (from point 3.) is effectively important from the SmartWeave protocol perspective - it is the transaction that the protocol 'sees' when it loads the contract.
+
+
 ## Contract transaction retrieval via Arweave gateway
 
 1. Directly via `response.bundleContractId` - e.g. https://arweave.net/Yy9WoplIYqy03O7_ovUr4TrvwryxHEneuNep7ATDftI  
