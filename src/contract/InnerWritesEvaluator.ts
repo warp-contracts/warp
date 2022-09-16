@@ -3,7 +3,8 @@ import { ContractCallStack, InteractionCall } from '../core/ContractCallStack';
 export class InnerWritesEvaluator {
   eval(callStack: ContractCallStack): Array<string> {
     const result = [];
-    callStack.interactions.forEach((interaction) => {
+    Object.keys(callStack.interactions).forEach((k) => {
+      const interaction = callStack.interactions[k];
       this.evalForeignCalls(callStack.contractTxId, interaction, result);
     });
 
@@ -11,8 +12,10 @@ export class InnerWritesEvaluator {
   }
 
   private evalForeignCalls(rootContractTxId: string, interaction: InteractionCall, result: Array<string>) {
-    interaction.interactionInput.foreignContractCalls.forEach((foreignContractCall) => {
-      foreignContractCall.interactions.forEach((foreignInteraction) => {
+    Object.keys(interaction.interactionInput.foreignContractCalls).forEach((foreignContractCallKey) => {
+      const foreignContractCall = interaction.interactionInput.foreignContractCalls[foreignContractCallKey];
+      Object.keys(foreignContractCall.interactions).forEach((k) => {
+        const foreignInteraction = foreignContractCall.interactions[k];
         if (
           foreignInteraction.interactionInput.dryWrite &&
           !result.includes(foreignContractCall.contractTxId) &&
