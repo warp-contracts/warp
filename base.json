@@ -1,0 +1,39 @@
+{
+  "contractTxId": "0NT3T1UHEtMrdUdD0r3B8Mx8rkH5aD-opSSJDqtwHmw",
+  "depth": 0,
+  "label": "",
+  "id": "9f3ba619-44f6-4a50-b7ff-07b345ade647",
+  "interactions": {
+    "o-wxRDh27ciT9KpVpB1GAq5TxhrkyNWlBYMhxjMShDE": {
+      "interactionInput": {
+        "txId": "o-wxRDh27ciT9KpVpB1GAq5TxhrkyNWlBYMhxjMShDE",
+        "sortKey": "000000000003,9999999999999,f3648b9ca073a0fe9a2523c8bf516ce729d2b5be79faabaad10ea000b4e85861",
+        "blockHeight": 3,
+        "blockTimestamp": 1663344783,
+        "caller": "NT3I1wgIDXBb1bDaade7lQxKCUy2-ZUOfemrJ884eyQ",
+        "functionName": "deposit",
+        "functionArguments": {
+          "function": "deposit",
+          "tokenId": "qvLnj9pCRMGiDxcmLAVol3puHbiIP3akL-DfNyCD5u4",
+          "qty": 1,
+          "txID": "43qU5V835zbWAO0QOaGAEsXpR5RJ_-eW0rTKM8jqZfM"
+        },
+        "dryWrite": true,
+        "foreignContractCalls": {
+          "qvLnj9pCRMGiDxcmLAVol3puHbiIP3akL-DfNyCD5u4": {
+            "contractTxId": "qvLnj9pCRMGiDxcmLAVol3puHbiIP3akL-DfNyCD5u4",
+            "depth": 1,
+            "label": "",
+            "id": "1e112e20-a42e-400c-bd59-dc23c498ac71",
+            "interactions": {}
+          }
+        }
+      },
+      "interactionOutput": {
+        "cacheHit": false,
+        "executionTime": 24,
+        "valid": true
+      }
+    }
+  }
+}

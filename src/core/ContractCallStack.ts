@@ -1,13 +1,14 @@
-import { mapReplacer } from '../utils/utils';
 import { InteractionData } from './modules/impl/HandlerExecutorFactory';
+import { randomUUID } from 'crypto';
 
 export class ContractCallStack {
-  readonly interactions: Map<string, InteractionCall> = new Map();
+  readonly interactions: { [key: string]: InteractionCall } = {};
 
   constructor(
     public readonly contractTxId: string,
     public readonly depth: number,
-    public readonly label: string = ''
+    public readonly label: string = '',
+    public readonly id = randomUUID()
   ) {}
 
   addInteractionData(interactionData: InteractionData<any>): InteractionCall {
@@ -23,26 +24,27 @@ export class ContractCallStack {
         interaction?.input.function,
         interaction?.input,
         interactionTx.dry,
-        new Map()
+        {}
       )
     );
 
-    this.interactions.set(interactionTx.id, interactionCall);
+    this.interactions[interactionTx.id] = interactionCall;
 
     return interactionCall;
   }
 
   getInteraction(txId: string): InteractionCall {
-    return this.interactions.get(txId);
+    return this.interactions[txId];
   }
 
   print(): string {
-    return JSON.stringify(this, mapReplacer);
+    return JSON.stringify(this);
   }
 }
 
 export class InteractionCall {
   interactionOutput: InteractionOutput;
+
   private constructor(readonly interactionInput: InteractionInput) {}
 
   static create(interactionInput: InteractionInput): InteractionCall {
@@ -64,7 +66,7 @@ export class InteractionInput {
     public readonly functionName: string,
     public readonly functionArguments: [],
     public readonly dryWrite: boolean,
-    public readonly foreignContractCalls: Map<string, ContractCallStack> = new Map()
+    public readonly foreignContractCalls: { [key: string]: ContractCallStack } = {}
   ) {}
 }
 
