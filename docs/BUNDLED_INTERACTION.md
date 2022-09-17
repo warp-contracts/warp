@@ -130,7 +130,7 @@ Using the `sort_key`, `vrf-proof` and `vrf-pubkey`, the client can always verify
 **NOTE** The original transaction is not modified in any way - this is to preserve the original
 signature!
 
-After receiving proper response and recipes from Bundlr, the Warp gateway indexes the contract interaction
+After receiving proper response and receipt from Bundlr, the Warp gateway indexes the contract interaction
 internally - to make it instantly available.
 
 #### 4. Finally, the Warp gateway returns the response from the Bundlr to the client.

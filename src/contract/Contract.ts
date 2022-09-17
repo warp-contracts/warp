@@ -63,6 +63,10 @@ export interface EvolveState {
   evolve: string;
 }
 
+export type InnerCallType = 'read' | 'view' | 'write';
+
+export type InnerCallData = { callingInteraction: GQLNodeInterface; callType: InnerCallType };
+
 /**
  * A base interface to be implemented by SmartWeave Contracts clients
  * - contains "low-level" methods that allow to interact with any contract
@@ -91,8 +95,7 @@ export interface Contract<State = unknown> extends Source {
   setEvaluationOptions(options: Partial<EvaluationOptions>): Contract<State>;
 
   /**
-   * Returns state of the contract at required blockHeight.
-   * Similar to {@link readContract} from the current version.
+   * Returns state of the contract at required sortKey or blockHeight.
    *
    * @param sortKeyOrBlockHeight - either a sortKey or block height at which the contract should be read
    *

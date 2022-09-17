@@ -29,7 +29,8 @@ import {
   SigningFunction,
   CurrentTx,
   WriteInteractionOptions,
-  WriteInteractionResponse
+  WriteInteractionResponse,
+  InnerCallData
 } from './Contract';
 import { Tags, ArTransfer, emptyTransfer, ArWallet } from './deploy/CreateContract';
 import { SourceData, SourceImpl } from './deploy/impl/SourceImpl';
@@ -62,7 +63,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     private readonly _contractTxId: string,
     protected readonly warp: Warp,
     private readonly _parentContract: Contract = null,
-    private readonly _callingInteraction: GQLNodeInterface = null
+    private readonly _innerCallData: InnerCallData = null
   ) {
     this.waitForConfirmation = this.waitForConfirmation.bind(this);
     this._arweaveWrapper = new ArweaveWrapper(warp.arweave);
@@ -70,7 +71,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
     if (_parentContract != null) {
       this._evaluationOptions = _parentContract.evaluationOptions();
       this._callDepth = _parentContract.callDepth() + 1;
-      const callingInteraction: InteractionCall = _parentContract.getCallStack().getInteraction(_callingInteraction.id);
+      const callingInteraction: InteractionCall = _parentContract
+        .getCallStack()
+        .getInteraction(_innerCallData.callingInteraction.id);
 
       if (this._callDepth > this._evaluationOptions.maxCallDepth) {
         throw Error(
@@ -79,14 +82,30 @@ export class HandlerBasedContract<State> implements Contract<State> {
           )}`
         );
       }
-      this.logger.debug('Calling interaction', { id: _callingInteraction.id, sortKey: _callingInteraction.sortKey });
-      const callStack = new ContractCallStack(_contractTxId, this._callDepth);
+      this.logger.debug('Calling interaction', {
+        id: _innerCallData.callingInteraction.id,
+        sortKey: _innerCallData.callingInteraction.sortKey,
+        type: _innerCallData.callType
+      });
+
+      // if you're reading a state of the contract, on which you've just made a write - you're doing it wrong.
+      // the current state of the callee contract is always in the result of an internal write.
+      // following is a protection against naughty developers who might be doing such crazy things ;-)
+      if (
+        callingInteraction.interactionInput?.foreignContractCalls[_contractTxId]?.innerCallType === 'write' &&
+        _innerCallData.callType === 'read'
+      ) {
+        throw new Error(
+          'Calling a readContractState after performing an inner write is wrong - instead use a state from the result of an internal write.'
+        );
+      }
+
+      const callStack = new ContractCallStack(_contractTxId, this._callDepth, _innerCallData?.callType);
       callingInteraction.interactionInput.foreignContractCalls[_contractTxId] = callStack;
       this._callStack = callStack;
       this._rootSortKey = _parentContract.rootSortKey;
 
-      console.log('====CHILD constructor, parent callstack: ', _parentContract.getCallStack().print());
-
+      // console.log('==== CHILD constructor, parent callstack: ', _parentContract.getCallStack().print());
     } else {
       this._callDepth = 0;
       this._callStack = new ContractCallStack(_contractTxId, 0);
@@ -318,7 +337,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer, strict);
 
       if ((input as any).function === 'deposit') {
-        console.log('====== handlerResult ======', handlerResult);
+        // console.log('====== handlerResult ======', handlerResult);
       }
       if (strict && handlerResult.type !== 'ok') {
         throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
@@ -329,8 +348,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
       this.logger.debug('Callstack', callStack.print());
 
       if ((input as any).function === 'deposit') {
-        console.log('====== Call stack ======', callStack.print());
-        console.log('====== Inner Writes ======', innerWrites);
+        // console.log('====== Call stack ======', callStack.print());
+        // console.log('====== Inner Writes ======', innerWrites);
       }
 
       innerWrites.forEach((contractTxId) => {
@@ -624,13 +643,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
     // there could haven been some earlier, non-cached interactions - which will be added
     // after eval in line 619. We need to clear them, as it is only the currently
     // being added interaction that we're interested in.
-    if (this._parentContract) {
+    /*if (this._parentContract) {
       console.log('======== CLEARING CALL STACK');
       const callStack = new ContractCallStack(this.txId(), this._callDepth);
       const callingInteraction = this._parentContract.getCallStack().getInteraction(this._callingInteraction.id);
       callingInteraction.interactionInput.foreignContractCalls[this.txId()] = callStack;
       this._callStack = callStack;
-    }
+    }*/
     this.logger.debug('callContractForTx - evalStateResult', {
       result: evalStateResult.cachedValue.state,
       txId: this._contractTxId
@@ -647,7 +666,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       currentTx
     };
 
-    console.log('====== evalInteraction');
+    // console.log('====== evalInteraction');
     const result = await this.evalInteraction<Input, View>(
       interactionData,
       executionContext,
@@ -664,15 +683,15 @@ export class HandlerBasedContract<State> implements Contract<State> {
     executionContext: ExecutionContext<State, HandlerApi<State>>,
     evalStateResult: EvalStateResult<State>
   ) {
-    console.log('====== addInteractionData to callStack', interactionData.interaction.input);
-    console.log('====== addInteractionData to callStack - callstack', this.getCallStack().print());
-    console.log('====== addInteractionData to callStack - parent callstack', this.parent()?.getCallStack().print());
+    // console.log('====== addInteractionData to callStack', interactionData.interaction.input);
+    // console.log('====== addInteractionData to callStack - callstack', this.getCallStack().print());
+    // console.log('====== addInteractionData to callStack - parent callstack', this.parent()?.getCallStack().print());
 
     const interactionCall: InteractionCall = this.getCallStack().addInteractionData(interactionData);
 
-    console.log('====== AFTER ADDING ======');
-    console.log('====== addInteractionData to callStack - callstack', this.getCallStack().print());
-    console.log('====== addInteractionData to callStack - parent callstack', this.parent()?.getCallStack().print());
+    // console.log('====== AFTER ADDING ======');
+    // console.log('====== addInteractionData to callStack - callstack', this.getCallStack().print());
+    // console.log('====== addInteractionData to callStack - parent callstack', this.parent()?.getCallStack().print());
 
     const benchmark = Benchmark.measure();
     const result = await executionContext.handler.handle<Input, View>(
@@ -680,6 +699,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
       evalStateResult,
       interactionData
     );
+
+    // console.log('RESULT', result);
 
     interactionCall.update({
       cacheHit: false,
@@ -690,8 +711,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
       gasUsed: result.gasUsed
     });
 
-    console.log('==== Callstack after interaction call', this.getCallStack().print());
-    console.log('==== PARENT Callstack after interaction call', this.parent()?.getCallStack().print());
+    // console.log('==== Callstack after interaction call', this.getCallStack().print());
+    // console.log('==== PARENT Callstack after interaction call', this.parent()?.getCallStack().print());
 
     return result;
   }
@@ -761,10 +782,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const srcTx = await source.save(sourceData, this.signer);
 
     return srcTx.id;
-  }
-
-  get callingInteraction(): GQLNodeInterface | null {
-    return this._callingInteraction;
   }
 
   get rootSortKey(): string {
