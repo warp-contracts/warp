@@ -55,11 +55,10 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
       this.logger.debug('swGlobal.write call:', debugData);
 
       // The contract that we want to call and modify its state
-      const calleeContract = executionContext.warp.contract(
-        contractTxId,
-        executionContext.contract,
-        this.swGlobal._activeTx
-      );
+      const calleeContract = executionContext.warp.contract(contractTxId, executionContext.contract, {
+        callingInteraction: this.swGlobal._activeTx,
+        callType: 'write'
+      });
 
       const result = await calleeContract.dryWriteFromTx<Input>(input, this.swGlobal._activeTx, [
         ...(currentTx || []),
@@ -104,11 +103,10 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         to: contractTxId,
         input
       });
-      const childContract = executionContext.warp.contract(
-        contractTxId,
-        executionContext.contract,
-        this.swGlobal._activeTx
-      );
+      const childContract = executionContext.warp.contract(contractTxId, executionContext.contract, {
+        callingInteraction: this.swGlobal._activeTx,
+        callType: 'view'
+      });
 
       return await childContract.viewStateForTx(input, this.swGlobal._activeTx);
     };
@@ -129,7 +127,10 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
       });
 
       const { stateEvaluator } = executionContext.warp;
-      const childContract = executionContext.warp.contract(contractTxId, executionContext.contract, interactionTx);
+      const childContract = executionContext.warp.contract(contractTxId, executionContext.contract, {
+        callingInteraction: interactionTx,
+        callType: 'read'
+      });
 
       await stateEvaluator.onContractCall(interactionTx, executionContext, currentResult);
 

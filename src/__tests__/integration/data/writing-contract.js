@@ -9,7 +9,6 @@ export async function handle(state, action) {
   }
 
   if (action.input.function === 'writeContractAutoThrow') {
-    console.log('before calling justThrow');
     await SmartWeave.contracts.write(action.input.contractId, {
       function: 'justThrow',
     });
@@ -17,7 +16,6 @@ export async function handle(state, action) {
       state.errorCounter = 0;
     }
     state.errorCounter++;
-    console.log('after calling justThrow', state.errorCounter);
     return { state };
   }
   if (action.input.function === 'writeContractForceAutoThrow') {

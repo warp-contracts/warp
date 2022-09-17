@@ -49,7 +49,6 @@ export async function handle(state, action) {
     return { result: value };
   }
   if (action.input.function === 'justThrow') {
-    console.log('called justThrow');
     throw new ContractError('Error from justThrow function');
   }
 }

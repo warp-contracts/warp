@@ -107,11 +107,10 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           .addInteractionData({ interaction: null, interactionTx: missingInteraction, currentTx });
 
         // creating a Contract instance for the "writing" contract
-        const writingContract = executionContext.warp.contract(
-          writingContractTxId,
-          executionContext.contract,
-          missingInteraction
-        );
+        const writingContract = executionContext.warp.contract(writingContractTxId, executionContext.contract, {
+          callingInteraction: missingInteraction,
+          callType: 'read'
+        });
 
         await this.onContractCall(
           missingInteraction,

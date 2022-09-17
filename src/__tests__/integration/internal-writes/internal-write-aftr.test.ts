@@ -281,7 +281,74 @@ describe('Testing internal writes', () => {
           ['communityLogo', '']
         ]
       });
+    });
+  });
 
+
+  describe('AFTR test case - with an illegal read state after an internal write', () => {
+    it('should throw an Error if contract makes readContractState after write on the same contract', async () => {
+      const newWarpInstance = WarpFactory.forLocal(port);
+      const { jwk: wallet2 } = await newWarpInstance.testing.generateWallet();
+
+      const aftrBrokenContractSrc = fs.readFileSync(path.join(__dirname, '../data/aftr/sampleContractSrc_broken.js'), 'utf8');
+
+      const aftrBrokenContractInitialState = fs.readFileSync(path.join(__dirname, '../data/aftr/sampleContractInitState.json'), 'utf8');
+      const pst2InitState = fs.readFileSync(path.join(__dirname, '../data/aftr/pstInitState.json'), 'utf8');
+
+      const {contractTxId: aftrBrokenTxId, srcTxId: brokenSrcTxId} = await newWarpInstance.createContract.deploy({
+        wallet: wallet2,
+        initState: aftrBrokenContractInitialState,
+        src: aftrBrokenContractSrc
+      });
+
+      const {contractTxId: pst2TxId} = await newWarpInstance.createContract.deployFromSourceTx({
+        wallet: wallet2,
+        initState: pst2InitState,
+        srcTxId: brokenSrcTxId
+      });
+
+      const aftrBroken = newWarpInstance
+        .contract<any>(aftrBrokenTxId)
+        .setEvaluationOptions({
+          internalWrites: true
+        })
+        .connect(wallet2);
+
+      const pst2 = newWarpInstance
+        .contract<any>(pst2TxId)
+        .setEvaluationOptions({
+          internalWrites: true
+        })
+        .connect(wallet2);
+
+      await mineBlock(newWarpInstance);
+
+      // (o) mint 10000 tokens in pst contract
+      await pst2.writeInteraction({
+        function: "mint",
+        qty: 10000
+      });
+
+      const transferQty = 1;
+      // (o) set allowance on pst contract for aftr contract
+      const {originalTxId} = await pst2.writeInteraction({
+        function: "allow",
+        target: aftrBrokenTxId,
+        qty: transferQty,
+      });
+
+      // (o) make a deposit transaction on the AFTR contract
+      // note: this transaction makes internalWrite on PST contract
+      // and then makes a readContractState on a PST contract
+      // - such operation is not allowed.
+      await expect(aftrBroken.writeInteraction({
+        function: "deposit",
+        tokenId: pst2TxId,
+        qty: transferQty,
+        txID: originalTxId,
+      }, { strict: true })).rejects.toThrowError(
+        /Calling a readContractState after performing an inner write is wrong - instead use a state from the result of an internal write./
+      );
     });
   });
 });

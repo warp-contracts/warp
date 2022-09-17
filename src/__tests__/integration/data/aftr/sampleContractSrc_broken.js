@@ -74,13 +74,17 @@ async function handle(state, action) {
     if (input.lockLength) {
       lockLength = input.lockLength;
     }
-    const transferResult = await SmartWeave.contracts.write(input.tokenId, {
+
+    await SmartWeave.contracts.write(input.tokenId, {
       function: "claim",
       txID: input.txID,
       qty: input.qty
     });
 
-    const tokenInfo = getTokenInfo(transferResult.state);
+    // note: getTokenInfo underneath makes a readContractState on input.tokenId
+    // the SDK should now throw in such case (i.e. making a read on a contract on which
+    // we've just made write).
+    const tokenInfo = await getTokenInfo(input.tokenId);
     const txObj = {
       txID: input.txID,
       tokenId: input.tokenId,
@@ -181,19 +185,9 @@ function isArweaveAddress(addy) {
   return address;
 }
 
-function getTokenInfo(currentTokenState) {
-
-  //console.log('====== AFTR CONTRACT manual readState PST state');
-
-  // note: this was the root cause of the issue.
-  // readContractState (in the getTokenInfo) was causing the callstack created by the internal write to be resetted.
-  // note2: it is also in general wrong and unnecessary - at this point the current state of the callee contract
-  // is in the result of the internal write.
-  // During a dry-run, when the internalWrite interaction is being generated on a contract -
-  // "SmartWeave.contracts.readContractState" on this contract will return state WITHOUT this currently generated transaction.
-  // const assetState = await SmartWeave.contracts.readContractState(contractId);
-  // console.log('====== AFTR CONTRACT manual readState PST state result', assetState);
-  const settings = new Map(currentTokenState.settings);
+async function getTokenInfo(contractId) {
+  const assetState = await SmartWeave.contracts.readContractState(contractId);
+  const settings = new Map(assetState.settings);
   return {
     name: currentTokenState.name,
     ticker: currentTokenState.ticker,

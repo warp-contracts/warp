@@ -59,7 +59,7 @@ Transaction which is sent to Bundlr, consists of:
 **NOTE** The original transaction is not modified in any way - this is to preserve the original
 signature!
 
-2. After receiving proper response and recipes from Bundlr, the Warp gateway indexes the contract
+2. After receiving proper response and receipt from Bundlr, the Warp gateway indexes the contract
    transactions data internally - to make them instantly available.
 
 3. Finally, the Warp gateway returns an object as a `response` - that consists of fields:

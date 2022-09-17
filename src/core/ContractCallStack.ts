@@ -1,15 +1,14 @@
 import { InteractionData } from './modules/impl/HandlerExecutorFactory';
 import { randomUUID } from 'crypto';
+import { InnerCallType } from '../contract/Contract';
 
 export class ContractCallStack {
   readonly interactions: { [key: string]: InteractionCall } = {};
+  readonly id: string;
 
-  constructor(
-    public readonly contractTxId: string,
-    public readonly depth: number,
-    public readonly label: string = '',
-    public readonly id = randomUUID()
-  ) {}
+  constructor(readonly contractTxId: string, readonly depth: number, readonly innerCallType: InnerCallType = null) {
+    this.id = randomUUID();
+  }
 
   addInteractionData(interactionData: InteractionData<any>): InteractionCall {
     const { interaction, interactionTx } = interactionData;
@@ -38,7 +37,7 @@ export class ContractCallStack {
   }
 
   print(): string {
-    return JSON.stringify(this);
+    return JSON.stringify(this, null, 2);
   }
 }
 

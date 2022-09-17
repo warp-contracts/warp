@@ -1,6 +1,6 @@
 import Arweave from 'arweave';
 import { LevelDbCache } from '../cache/impl/LevelDbCache';
-import { Contract } from '../contract/Contract';
+import {Contract, InnerCallData, InnerCallType} from '../contract/Contract';
 import { CreateContract } from '../contract/deploy/CreateContract';
 import { DefaultCreateContract } from '../contract/deploy/impl/DefaultCreateContract';
 import { HandlerBasedContract } from '../contract/HandlerBasedContract';
@@ -61,9 +61,9 @@ export class Warp {
   contract<State>(
     contractTxId: string,
     callingContract?: Contract,
-    callingInteraction?: GQLNodeInterface
+    innerCallData?: InnerCallData
   ): Contract<State> {
-    return new HandlerBasedContract<State>(contractTxId, this, callingContract, callingInteraction);
+    return new HandlerBasedContract<State>(contractTxId, this, callingContract, innerCallData);
   }
 
   /**
