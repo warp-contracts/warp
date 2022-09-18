@@ -9,11 +9,14 @@ import {
 import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { ArweaveWrapper } from '../../../utils/ArweaveWrapper';
-import { sleep } from '../../../utils/utils';
+import { bufToBn, sleep } from '../../../utils/utils';
 import { GW_TYPE, InteractionsLoader } from '../InteractionsLoader';
 import { InteractionsSorter } from '../InteractionsSorter';
 import { EvaluationOptions } from '../StateEvaluator';
 import { LexicographicalInteractionsSorter } from './LexicographicalInteractionsSorter';
+import { WarpEnvironment } from '../../Warp';
+import elliptic from 'elliptic';
+import { Evaluate } from '@idena/vrf-js';
 
 const MAX_REQUEST = 100;
 
@@ -37,6 +40,10 @@ export interface GqlReqVariables {
 export function bundledTxsFilter(tx: GQLEdgeInterface) {
   return !tx.node.parent?.id && !tx.node.bundledIn?.id;
 }
+
+const EC = new elliptic.ec('secp256k1');
+const key = EC.genKeyPair();
+const pubKeyS = key.getPublic(true, 'hex');
 
 export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
   private readonly logger = LoggerFactory.INST.create('ArweaveGatewayInteractionsLoader');
@@ -75,7 +82,7 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
   private readonly arweaveWrapper: ArweaveWrapper;
   private readonly sorter: InteractionsSorter;
 
-  constructor(protected readonly arweave: Arweave) {
+  constructor(protected readonly arweave: Arweave, private readonly environment: WarpEnvironment) {
     this.arweaveWrapper = new ArweaveWrapper(arweave);
     this.sorter = new LexicographicalInteractionsSorter(arweave);
   }
@@ -163,7 +170,28 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
       time: loadingBenchmark.elapsed()
     });
 
-    return sortedInteractions.map((i) => i.node);
+    const isLocalOrTestnetEnv = this.environment === 'local' || this.environment === 'testnet';
+    return sortedInteractions.map((i) => {
+      const interaction = i.node;
+      if (isLocalOrTestnetEnv) {
+        if (
+          interaction.tags.some((t) => {
+            return t.name == SmartWeaveTags.REQUEST_VRF && t.value === 'true';
+          })
+        ) {
+          const data = this.arweave.utils.stringToBuffer(interaction.sortKey);
+          const [index, proof] = Evaluate(key.getPrivate().toArray(), data);
+          interaction.vrf = {
+            index: this.arweave.utils.bufferTob64Url(index),
+            proof: this.arweave.utils.bufferTob64Url(proof),
+            bigint: bufToBn(index).toString(),
+            pubkey: pubKeyS
+          };
+        }
+      }
+
+      return interaction;
+    });
   }
 
   private async loadPages(variables: GqlReqVariables) {

@@ -1,6 +1,7 @@
 /* eslint-disable */
 import cloneDeep from 'lodash/cloneDeep';
 import copy from 'fast-copy';
+import { Buffer } from 'redstone-isomorphic';
 
 export const sleep = (ms: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -58,4 +59,19 @@ export function stripTrailingSlash(str: string) {
 
 export function indent(callDepth: number) {
   return ''.padEnd(callDepth * 2, ' ');
+}
+
+export function bufToBn(buf: Buffer) {
+  const hex = [];
+  const u8 = Uint8Array.from(buf);
+
+  u8.forEach(function (i) {
+    let h = i.toString(16);
+    if (h.length % 2) {
+      h = '0' + h;
+    }
+    hex.push(h);
+  });
+
+  return BigInt('0x' + hex.join(''));
 }

@@ -209,7 +209,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     if (!this.signer) {
       throw new Error("Wallet not connected. Use 'connect' method first.");
     }
-    const { arweave, interactionsLoader } = this.warp;
+    const { arweave, interactionsLoader, environment } = this.warp;
 
     const effectiveTags = options?.tags || [];
     const effectiveTransfer = options?.transfer || emptyTransfer;
@@ -228,7 +228,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       throw new Error('Ar Transfers are not allowed for bundled interactions');
     }
 
-    if (effectiveVrf && !bundleInteraction) {
+    if (effectiveVrf && !bundleInteraction && environment === 'mainnet') {
       throw new Error('Vrf generation is only available for bundle interaction');
     }
 
@@ -245,7 +245,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
         effectiveTransfer,
         effectiveStrict,
         false,
-        false,
+        effectiveVrf && environment !== 'mainnet',
         effectiveReward
       );
       const response = await arweave.transactions.post(interactionTx);
