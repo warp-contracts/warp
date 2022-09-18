@@ -63,6 +63,7 @@ Some examples of different types of inner contract writes are available:
 1. In the DEX [tutorial](https://academy.warp.cc/tutorials/dex/introduction/intro) 
 2. The ERC-20 [staking](https://github.com/warp-contracts/wrc/blob/master/examples/staking/src/actions/staking.rs#L35) example.
 3. In the integration [tests](https://github.com/warp-contracts/warp/tree/main/src/__tests__/integration/internal-writes) of the inner writes feature.  
+4. In the [staking example](https://github.com/warp-contracts/wrc/tree/master/examples/staking#-staking) of the ERC-20 token standard.
 **NOTE** Do not overuse the inner writes feature - as it can quickly make the debugging and contracts' interaction analysis very difficult.
 
 ### Security
@@ -76,6 +77,11 @@ The id of the calling contract can be obtained from `SmartWeave.caller`.
 and option to set gas limits gives the best security.
 
 ### Example inner write call flow
+
+#### Stage I - preparing inner write transaction
+
+
+#### Stage II - 
 Contract `Contract B` makes an internal write on contract `Contract A` at interaction `i(n)`.
 
 **(1)** Evaluator loads the state of the `Contract A` up to internal write interaction `i(n)`.  
