@@ -104,8 +104,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
       callingInteraction.interactionInput.foreignContractCalls[_contractTxId] = callStack;
       this._callStack = callStack;
       this._rootSortKey = _parentContract.rootSortKey;
-
-      // console.log('==== CHILD constructor, parent callstack: ', _parentContract.getCallStack().print());
     } else {
       this._callDepth = 0;
       this._callStack = new ContractCallStack(_contractTxId, 0);
@@ -336,9 +334,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
       // {name: 'InternalWrite', value: callingContractTxId}
       const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer, strict);
 
-      if ((input as any).function === 'deposit') {
-        // console.log('====== handlerResult ======', handlerResult);
-      }
       if (strict && handlerResult.type !== 'ok') {
         throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
       }
@@ -346,11 +341,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
       const innerWrites = this._innerWritesEvaluator.eval(callStack);
       this.logger.debug('Input', input);
       this.logger.debug('Callstack', callStack.print());
-
-      if ((input as any).function === 'deposit') {
-        // console.log('====== Call stack ======', callStack.print());
-        // console.log('====== Inner Writes ======', innerWrites);
-      }
 
       innerWrites.forEach((contractTxId) => {
         tags.push({
@@ -640,16 +630,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const executionContext = await this.createExecutionContextFromTx(this._contractTxId, interactionTx);
     const evalStateResult = await this.warp.stateEvaluator.eval<State>(executionContext, currentTx);
 
-    // there could haven been some earlier, non-cached interactions - which will be added
-    // after eval in line 619. We need to clear them, as it is only the currently
-    // being added interaction that we're interested in.
-    /*if (this._parentContract) {
-      console.log('======== CLEARING CALL STACK');
-      const callStack = new ContractCallStack(this.txId(), this._callDepth);
-      const callingInteraction = this._parentContract.getCallStack().getInteraction(this._callingInteraction.id);
-      callingInteraction.interactionInput.foreignContractCalls[this.txId()] = callStack;
-      this._callStack = callStack;
-    }*/
     this.logger.debug('callContractForTx - evalStateResult', {
       result: evalStateResult.cachedValue.state,
       txId: this._contractTxId
@@ -666,7 +646,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
       currentTx
     };
 
-    // console.log('====== evalInteraction');
     const result = await this.evalInteraction<Input, View>(
       interactionData,
       executionContext,
@@ -683,24 +662,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
     executionContext: ExecutionContext<State, HandlerApi<State>>,
     evalStateResult: EvalStateResult<State>
   ) {
-    // console.log('====== addInteractionData to callStack', interactionData.interaction.input);
-    // console.log('====== addInteractionData to callStack - callstack', this.getCallStack().print());
-    // console.log('====== addInteractionData to callStack - parent callstack', this.parent()?.getCallStack().print());
-
     const interactionCall: InteractionCall = this.getCallStack().addInteractionData(interactionData);
-
-    // console.log('====== AFTER ADDING ======');
-    // console.log('====== addInteractionData to callStack - callstack', this.getCallStack().print());
-    // console.log('====== addInteractionData to callStack - parent callstack', this.parent()?.getCallStack().print());
-
     const benchmark = Benchmark.measure();
     const result = await executionContext.handler.handle<Input, View>(
       executionContext,
       evalStateResult,
       interactionData
     );
-
-    // console.log('RESULT', result);
 
     interactionCall.update({
       cacheHit: false,
@@ -710,9 +678,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
       errorMessage: result.errorMessage,
       gasUsed: result.gasUsed
     });
-
-    // console.log('==== Callstack after interaction call', this.getCallStack().print());
-    // console.log('==== PARENT Callstack after interaction call', this.parent()?.getCallStack().print());
 
     return result;
   }

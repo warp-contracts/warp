@@ -279,7 +279,7 @@ describe('Testing internal writes', () => {
     });
   });
 
-  fdescribe('with internal writes throwing exceptions', () => {
+  describe('with internal writes throwing exceptions', () => {
     beforeAll(async () => {
       await deployContracts();
     });
