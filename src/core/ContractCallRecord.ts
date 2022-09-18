@@ -2,7 +2,7 @@ import { InteractionData } from './modules/impl/HandlerExecutorFactory';
 import { randomUUID } from 'crypto';
 import { InnerCallType } from '../contract/Contract';
 
-export class ContractCallStack {
+export class ContractCallRecord {
   readonly interactions: { [key: string]: InteractionCall } = {};
   readonly id: string;
 
@@ -65,7 +65,7 @@ export class InteractionInput {
     public readonly functionName: string,
     public readonly functionArguments: [],
     public readonly dryWrite: boolean,
-    public readonly foreignContractCalls: { [key: string]: ContractCallStack } = {}
+    public readonly foreignContractCalls: { [key: string]: ContractCallRecord } = {}
   ) {}
 }
 

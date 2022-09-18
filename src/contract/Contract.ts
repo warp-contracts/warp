@@ -1,6 +1,6 @@
 import Transaction from 'arweave/node/lib/transaction';
 import { SortKeyCacheResult } from '../cache/SortKeyCache';
-import { ContractCallStack } from '../core/ContractCallStack';
+import { ContractCallRecord } from '../core/ContractCallRecord';
 import { InteractionResult } from '../core/modules/impl/HandlerExecutorFactory';
 import { EvaluationOptions, EvalStateResult } from '../core/modules/StateEvaluator';
 import { GQLNodeInterface } from '../legacy/gqlResult';
@@ -182,7 +182,7 @@ export interface Contract<State = unknown> extends Source {
    * Returns the full call tree report the last
    * interaction with contract (eg. after reading state)
    */
-  getCallStack(): ContractCallStack;
+  getCallStack(): ContractCallRecord;
 
   /**
    * Gets the parent contract - ie. contract that called THIS contract during the

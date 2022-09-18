@@ -1,7 +1,7 @@
-import { ContractCallStack, InteractionCall } from '../core/ContractCallStack';
+import { ContractCallRecord, InteractionCall } from '../core/ContractCallRecord';
 
 export class InnerWritesEvaluator {
-  eval(callStack: ContractCallStack): Array<string> {
+  eval(callStack: ContractCallRecord): Array<string> {
     const result = [];
     Object.keys(callStack.interactions).forEach((k) => {
       const interaction = callStack.interactions[k];
