@@ -73,7 +73,9 @@ export class WarpBuilder {
 
   public useArweaveGateway(): WarpBuilder {
     this._definitionLoader = new ContractDefinitionLoader(this._arweave, new MemCache());
-    this._interactionsLoader = new CacheableInteractionsLoader(new ArweaveGatewayInteractionsLoader(this._arweave));
+    this._interactionsLoader = new CacheableInteractionsLoader(
+      new ArweaveGatewayInteractionsLoader(this._arweave, this._environment)
+    );
     return this;
   }
 
