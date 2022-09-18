@@ -4,7 +4,7 @@ import { ProofHoHash } from '@idena/vrf-js';
 import elliptic from 'elliptic';
 import { SortKeyCacheResult } from '../../../cache/SortKeyCache';
 import { CurrentTx } from '../../../contract/Contract';
-import { InteractionCall } from '../../../core/ContractCallStack';
+import { InteractionCall } from '../../ContractCallRecord';
 import { ExecutionContext } from '../../../core/ExecutionContext';
 import { ExecutionContextModifier } from '../../../core/ExecutionContextModifier';
 import { GQLNodeInterface, VrfData, GQLTagInterface } from '../../../legacy/gqlResult';

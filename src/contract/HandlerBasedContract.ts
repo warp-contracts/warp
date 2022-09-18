@@ -3,7 +3,7 @@ import stringify from 'safe-stable-stringify';
 import * as crypto from 'crypto';
 import Transaction from 'arweave/node/lib/transaction';
 import { SortKeyCacheResult } from '../cache/SortKeyCache';
-import { ContractCallStack, InteractionCall } from '../core/ContractCallStack';
+import { ContractCallRecord, InteractionCall } from '../core/ContractCallRecord';
 import { ExecutionContext } from '../core/ExecutionContext';
 import {
   InteractionResult,
@@ -45,7 +45,7 @@ import { InnerWritesEvaluator } from './InnerWritesEvaluator';
 export class HandlerBasedContract<State> implements Contract<State> {
   private readonly logger = LoggerFactory.INST.create('HandlerBasedContract');
 
-  private _callStack: ContractCallStack;
+  private _callStack: ContractCallRecord;
   private _evaluationOptions: EvaluationOptions = new DefaultEvaluationOptions();
   private readonly _innerWritesEvaluator = new InnerWritesEvaluator();
   private readonly _callDepth: number;
@@ -100,13 +100,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
         );
       }
 
-      const callStack = new ContractCallStack(_contractTxId, this._callDepth, _innerCallData?.callType);
+      const callStack = new ContractCallRecord(_contractTxId, this._callDepth, _innerCallData?.callType);
       callingInteraction.interactionInput.foreignContractCalls[_contractTxId] = callStack;
       this._callStack = callStack;
       this._rootSortKey = _parentContract.rootSortKey;
     } else {
       this._callDepth = 0;
-      this._callStack = new ContractCallStack(_contractTxId, 0);
+      this._callStack = new ContractCallRecord(_contractTxId, 0);
       this._rootSortKey = null;
     }
 
@@ -337,7 +337,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       if (strict && handlerResult.type !== 'ok') {
         throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
       }
-      const callStack: ContractCallStack = this.getCallStack();
+      const callStack: ContractCallRecord = this.getCallStack();
       const innerWrites = this._innerWritesEvaluator.eval(callStack);
       this.logger.debug('Input', input);
       this.logger.debug('Callstack', callStack.print());
@@ -384,7 +384,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return this._contractTxId;
   }
 
-  getCallStack(): ContractCallStack {
+  getCallStack(): ContractCallRecord {
     return this._callStack;
   }
 
@@ -521,7 +521,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   private maybeResetRootContract() {
     if (this._parentContract == null) {
       this.logger.debug('Clearing call stack for the root contract');
-      this._callStack = new ContractCallStack(this.txId(), 0);
+      this._callStack = new ContractCallRecord(this.txId(), 0);
       this._rootSortKey = null;
       this.warp.interactionsLoader.clearCache();
     }

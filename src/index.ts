@@ -32,7 +32,7 @@ export * from './core/ExecutionContextModifier';
 export * from './core/SmartWeaveTags';
 export * from './core/ExecutionContext';
 export * from './core/ContractDefinition';
-export * from './core/ContractCallStack';
+export * from './core/ContractCallRecord';
 
 export * from './core/WarpFactory';
 export * from './core/Warp';
