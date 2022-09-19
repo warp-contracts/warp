@@ -395,7 +395,7 @@ async function writeInteraction<Input = unknown>(
 ): Promise<WriteInteractionResponse | null>;
 ```
 
-Writes a new "interaction" transaction - ie. such transaction that stores input for the contract.
+Writes a new "interaction" transaction - i.e. such transaction that stores input for the contract.
 
 - `input` the interaction input
 - `options` - an object with some custom options (see [WriteInteractionOptions](https://github.com/warp-contracts/warp/blob/src/contract/Contract.ts#L46))
@@ -487,21 +487,22 @@ contract = warp.contract(contractTxId).setEvaluationOptions({
 
 ### Internal writes
 
-SmartWeave protocol currently natively does not support writes between contract - contracts can only read each others' state. This lack of interoperability is a big limitation for real-life applications - especially if you want to implement features like staking/vesting, disputes - or even a standard approve/transferFrom flow from ERC-20 tokens.
+SmartWeave protocol currently natively does not support writes between contract - contracts can only read each others' state.
+This lack of interoperability is a big limitation for real-life applications - especially if you want to implement
+features like staking/vesting, disputes - or even a standard approve/transferFrom flow from ERC-20 tokens.
 
 SmartWeave protocol has been extended in Warp by adding internal writes feature.
 
 A new method has been added to SmartWeave global object. It allows to perform writes on other contracts.
 
-1. The method first evaluates the target (ie. specified by the contractTxId given in the first parameter) contract's state up to the "current" block height (ie. block height of the interaction that is calling the write method) and then applies the input (specified as the secon parameter of the write method). The result is memoized in cache.
-
-```
-await SmartWeave.contracts.write(contractTxId, { function: 'add' });
+```js
+const result = await SmartWeave.contracts.write(contractTxId, { function: 'add' });
 ```
 
-2. For each newly created interaction with given contract - a dry run is performed and the call report of the dry-run is analysed. A list of all inner-calls between contracts is generated. For each generated inner call - an additional tag is generated: {'interactWrite': contractTxId}- where contractTxId is the callee contract.
-
-3. When state is evaluated for the given contract ("Contract A") all the interactions - `direct` and `internalWrites`. If it is an `internalWrite` interaction - contract specified in the `internalWrite` ("Contract B") tag is loaded and its state is evaluate. This will cause the `write` method (described in p.1) to be called. After evaluating the "Contract B" contract state - the latest state of the "Contract A" is loaded from cache (it has been updated by the write method) and evaluation moves to next interaction.
+The `result` of the internal write contains the result type (`ok`, `error`, `exception`) and the most current state 
+of the callee contract (i.e. after performing a write).
+If the function called by the `SmartWeave.contracts.write` throws an error, the parent transaction throws a `ContractError`
+by default - so there is no need to manually check the result of the internal write.
 
 In order for internal calls to work you need to set `evaluationOptions` to `true`:
 
@@ -514,13 +515,14 @@ const callingContract = smartweave
   .connect(wallet);
 ```
 
+A more detailed description of internal writes feature is available [here](docs/INTERNAL_WRITES.md).  
+A list of real life examples are available [here](docs/INTERNAL_WRITES.md#examples).
+
 You can also perform internal read to the contract (originally introduced by the protocol):
 
 ```
 await SmartWeave.contracts.readContractState(action.input.contractId);
 ```
-
-You can view some more examples in the [internal writes test directory](https://github.com/redstone-finance/redstone-smartcontracts/tree/main/src/__tests__/integration/internal-writes). If you would like to read whole specification and motivation which stands behind introducing internal writes feature, please read [following issue](https://github.com/redstone-finance/redstone-smartcontracts/issues/37).
 
 ### unsafeClient
 
