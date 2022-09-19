@@ -260,7 +260,11 @@ In case of the above example - a tag `Interact-Write` with value `O7DwbsFFOVLg-9
 
 #### Stage II - evaluating contract state
 
-Contract `Contract B` makes an internal write on contract `Contract A` at interaction `i(n)`.
+`Contract B` makes an internal write on `Contract A` at interaction `i(n)`.
+Using ids from the `Stage I` - let's assume that `Contract B` = `HRIQNh2VNT8RPggWSXmoEGIUg-66J8iXEwuNNJFRPOA`
+and it makes a write on a `O7DwbsFFOVLg-99nJv89UeEVtYOAmn0eQoUjRgxC6OQ` `Contract A` - calls its `claim` function.
+
+We're evaluating the state of the `Contract A`.
 
 **(1)** Evaluator loads the state of the `Contract A` up to internal write interaction `i(n)`.  
 **(2)** `i(n)` is an internal write interaction. Thanks to tag data saved in the interaction, the evaluator
