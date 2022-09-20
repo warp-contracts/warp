@@ -31,18 +31,34 @@ async function main() {
     logging: false // Enable network request logging
   });
 
+  // Base Contract - e.g. a PST in a separate library
+  const BaseContract = {
+    handle: function init(state, action) {
+      //blah blah
+    }
+  };
+
+  // You own contract, that imports the base contract
+  (function() {
+    const baseHandle = BaseContract.handle;
+    BaseContract.handle = handle;
+
+    function handle(state, action) {
+      baseHandle.call(BaseContract, [state, action]);
+      // you contract's additional code.
+    }
+  })();
 
   const warp = WarpFactory.forMainnet({...defaultCacheOptions, inMemory: true});
   try {
-    const contract = warp.contract("K4A2YMoH3W4bVeG329C3lZr0vufEjP_ONDQIPS-_kGg");
-    const {state, validity, errorMessages} = await contract
+    const contract = warp.contract("6VHC739Bry-PuwE9xxYuPgj6HK75MQKCWyo8yf2fi-k");
+    const cacheResult = await contract
       .setEvaluationOptions({
-        useVM2: true,
         allowBigInt: true
       })
       .readState();
 
-    console.log(state);
+    console.log(cacheResult.cachedValue.state);
   } catch (e) {
     console.error(e);
   }

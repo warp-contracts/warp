@@ -1,14 +1,11 @@
 import { InteractionData } from './modules/impl/HandlerExecutorFactory';
-import { randomUUID } from 'crypto';
 import { InnerCallType } from '../contract/Contract';
 
 export class ContractCallRecord {
   readonly interactions: { [key: string]: InteractionCall } = {};
   readonly id: string;
 
-  constructor(readonly contractTxId: string, readonly depth: number, readonly innerCallType: InnerCallType = null) {
-    this.id = randomUUID();
-  }
+  constructor(readonly contractTxId: string, readonly depth: number, readonly innerCallType: InnerCallType = null) {}
 
   addInteractionData(interactionData: InteractionData<any>): InteractionCall {
     const { interaction, interactionTx } = interactionData;
