@@ -1,11 +1,14 @@
 import { InteractionData } from './modules/impl/HandlerExecutorFactory';
 import { InnerCallType } from '../contract/Contract';
+import { isomorphicRandomUUID } from '../utils/utils';
 
 export class ContractCallRecord {
   readonly interactions: { [key: string]: InteractionCall } = {};
   readonly id: string;
 
-  constructor(readonly contractTxId: string, readonly depth: number, readonly innerCallType: InnerCallType = null) {}
+  constructor(readonly contractTxId: string, readonly depth: number, readonly innerCallType: InnerCallType = null) {
+    this.id = isomorphicRandomUUID();
+  }
 
   addInteractionData(interactionData: InteractionData<any>): InteractionCall {
     const { interaction, interactionTx } = interactionData;

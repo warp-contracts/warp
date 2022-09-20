@@ -1,7 +1,8 @@
 /* eslint-disable */
 import cloneDeep from 'lodash/cloneDeep';
 import copy from 'fast-copy';
-import { Buffer } from 'redstone-isomorphic';
+import {Buffer} from 'redstone-isomorphic';
+import {randomUUID} from "crypto";
 
 export const sleep = (ms: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -74,4 +75,12 @@ export function bufToBn(buf: Buffer) {
   });
 
   return BigInt('0x' + hex.join(''));
+}
+
+export function isomorphicRandomUUID() {
+  if (self.crypto) {
+    return self.crypto.randomUUID();
+  } else {
+    return randomUUID();
+  }
 }
