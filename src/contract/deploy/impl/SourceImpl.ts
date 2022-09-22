@@ -9,6 +9,7 @@ import { SigningFunction } from '../../../contract/Contract';
 import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { Source } from '../Source';
+import { Buffer } from 'redstone-isomorphic';
 
 const wasmTypeMapping: Map<number, string> = new Map([
   [1, 'assemblyscript'],
@@ -59,6 +60,7 @@ export class SourceImpl implements Source {
         lang = go.exports.lang();
         wasmVersion = go.exports.version();
       } else {
+        // @ts-ignore
         const module: WebAssembly.Instance = await WebAssembly.instantiate(src, dummyImports(moduleImports));
         // @ts-ignore
         if (!module.instance.exports.lang) {
