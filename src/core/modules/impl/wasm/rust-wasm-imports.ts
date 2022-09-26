@@ -276,8 +276,8 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance, dtorVal
       getInt32Memory0()[arg0 / 4 + 0] = ptr0;
     },
 
-    __wbg_randomInt: function (arg0, arg1) {
-      var ret = rawImports.Vrf.randomInt(arg1);
+    __wbg_randomInt: function (arg0) {
+      var ret = rawImports.Vrf.randomInt(arg0);
       return ret;
     }
   };
