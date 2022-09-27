@@ -13,7 +13,7 @@ import { WarpGatewayInteractionsLoader } from './modules/impl/WarpGatewayInterac
 import { InteractionsLoader } from './modules/InteractionsLoader';
 import { StateEvaluator, EvalStateResult } from './modules/StateEvaluator';
 import { WarpEnvironment, Warp } from './Warp';
-import { GatewayOptions } from './WarpFactory';
+import { CacheOptions, GatewayOptions } from './WarpFactory';
 
 export class WarpBuilder {
   private _definitionLoader?: DefinitionLoader;
@@ -55,7 +55,7 @@ export class WarpBuilder {
     return this.build();
   }
 
-  public useWarpGateway(gatewayOptions: GatewayOptions): WarpBuilder {
+  public useWarpGateway(gatewayOptions: GatewayOptions, cacheOptions: CacheOptions): WarpBuilder {
     this._interactionsLoader = new CacheableInteractionsLoader(
       new WarpGatewayInteractionsLoader(
         gatewayOptions.address,
@@ -66,13 +66,13 @@ export class WarpBuilder {
     this._definitionLoader = new WarpGatewayContractDefinitionLoader(
       gatewayOptions.address,
       this._arweave,
-      new MemCache()
+      cacheOptions
     );
     return this;
   }
 
   public useArweaveGateway(): WarpBuilder {
-    this._definitionLoader = new ContractDefinitionLoader(this._arweave, new MemCache());
+    this._definitionLoader = new ContractDefinitionLoader(this._arweave);
     this._interactionsLoader = new CacheableInteractionsLoader(
       new ArweaveGatewayInteractionsLoader(this._arweave, this._environment)
     );

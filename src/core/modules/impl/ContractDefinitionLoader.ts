@@ -19,23 +19,14 @@ export class ContractDefinitionLoader implements DefinitionLoader {
 
   protected arweaveWrapper: ArweaveWrapper;
 
-  constructor(
-    private readonly arweave: Arweave,
-    // TODO: cache should be removed from the core layer and implemented in a wrapper of the core implementation
-    protected readonly cache?: WarpCache<string, ContractDefinition<unknown>>
-  ) {
+  constructor(private readonly arweave: Arweave) {
     this.arweaveWrapper = new ArweaveWrapper(arweave);
   }
 
   async load<State>(contractTxId: string, evolvedSrcTxId?: string): Promise<ContractDefinition<State>> {
-    if (!evolvedSrcTxId && this.cache?.contains(contractTxId)) {
-      this.logger.debug('ContractDefinitionLoader: Hit from cache!');
-      return Promise.resolve(this.cache?.get(contractTxId) as ContractDefinition<State>);
-    }
     const benchmark = Benchmark.measure();
     const contract = await this.doLoad<State>(contractTxId, evolvedSrcTxId);
     this.logger.info(`Contract definition loaded in: ${benchmark.elapsed()}`);
-    this.cache?.put(contractTxId, contract);
 
     return contract;
   }
