@@ -22,7 +22,7 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
    * and there doesn't seem to be any public interface/abstract type for all Level implementations
    * (the AbstractLevel is not exported from the package...)
    */
-  private db: MemoryLevel;
+  private readonly db: MemoryLevel;
 
   constructor(cacheOptions: CacheOptions) {
     if (cacheOptions.inMemory) {

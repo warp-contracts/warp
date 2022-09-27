@@ -17,7 +17,7 @@ async function main() {
   });
 
   try {
-    const warp = WarpFactory.forMainnet({...defaultCacheOptions, inMemory: true});
+    const warp = WarpFactory.forMainnet({...defaultCacheOptions, inMemory: false});
     /*const warp = WarpFactory
       .custom(arweave, {
         ...defaultCacheOptions,
@@ -90,6 +90,8 @@ async function main() {
 
     logger.info("Result", cachedValue.state);
     logger.info("Validity", cachedValue.validity);
+
+    const result2 = await contract.readState();
 
   } catch (e) {
     logger.error(e)
