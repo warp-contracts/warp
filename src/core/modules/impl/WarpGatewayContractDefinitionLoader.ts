@@ -31,11 +31,7 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
   private arweaveWrapper: ArweaveWrapper;
   private readonly db: MemoryLevel<string, any>;
 
-  constructor(
-    private readonly baseUrl: string,
-    arweave: Arweave,
-    cacheOptions: CacheOptions
-  ) {
+  constructor(private readonly baseUrl: string, arweave: Arweave, cacheOptions: CacheOptions) {
     this.baseUrl = stripTrailingSlash(baseUrl);
     this.contractDefinitionLoader = new ContractDefinitionLoader(arweave);
     this.arweaveWrapper = new ArweaveWrapper(arweave);
