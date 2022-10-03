@@ -31,12 +31,11 @@ async function main() {
     logging: false // Enable network request logging
   });
 
-  const warp = WarpFactory.forMainnet({...defaultCacheOptions, inMemory: false});
+  const warp = WarpFactory.forMainnet({...defaultCacheOptions, inMemory: true});
   try {
-    const contract = warp.contract("5Yt1IujBmOm1LSux9KDUTjCE7rJqepzP7gZKf_DyzWI");
+    const contract = warp.contract("Ws9hhYckc-zSnVmbBep6q_kZD5zmzYzDmgMC50nMiuE");
     const cacheResult = await contract
       .setEvaluationOptions({
-        allowBigInt: true
       })
       .readState();
 

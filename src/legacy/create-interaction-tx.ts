@@ -29,8 +29,8 @@ export async function createInteractionTx(
   }
 
   // both reward and last_tx are irrelevant in case of interactions
-  // that are bundled. So to speed up the procees (and prevent the arweave-js
-  // from calling /tx_anchor and /price endpoints) - we're presetting theses
+  // that are bundled. So to speed up the process (and prevent the arweave-js
+  // from calling /tx_anchor and /price endpoints) - we're presetting these
   // values here
   if (dummy) {
     options.reward = '72600854';
