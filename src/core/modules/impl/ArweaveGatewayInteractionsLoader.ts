@@ -9,14 +9,13 @@ import {
 import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { ArweaveWrapper } from '../../../utils/ArweaveWrapper';
-import { bufToBn, sleep } from '../../../utils/utils';
+import { sleep } from '../../../utils/utils';
 import { GW_TYPE, InteractionsLoader } from '../InteractionsLoader';
 import { InteractionsSorter } from '../InteractionsSorter';
 import { EvaluationOptions } from '../StateEvaluator';
 import { LexicographicalInteractionsSorter } from './LexicographicalInteractionsSorter';
 import { WarpEnvironment } from '../../Warp';
-import elliptic from 'elliptic';
-import { Evaluate } from '@idena/vrf-js';
+import { generateMockVrf } from '../../../utils/vrf';
 
 const MAX_REQUEST = 100;
 
@@ -40,10 +39,6 @@ export interface GqlReqVariables {
 export function bundledTxsFilter(tx: GQLEdgeInterface) {
   return !tx.node.parent?.id && !tx.node.bundledIn?.id;
 }
-
-const EC = new elliptic.ec('secp256k1');
-const key = EC.genKeyPair();
-const pubKeyS = key.getPublic(true, 'hex');
 
 export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
   private readonly logger = LoggerFactory.INST.create('ArweaveGatewayInteractionsLoader');
@@ -179,14 +174,7 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
             return t.name == SmartWeaveTags.REQUEST_VRF && t.value === 'true';
           })
         ) {
-          const data = this.arweave.utils.stringToBuffer(interaction.sortKey);
-          const [index, proof] = Evaluate(key.getPrivate().toArray(), data);
-          interaction.vrf = {
-            index: this.arweave.utils.bufferTob64Url(index),
-            proof: this.arweave.utils.bufferTob64Url(proof),
-            bigint: bufToBn(index).toString(),
-            pubkey: pubKeyS
-          };
+          interaction.vrf = generateMockVrf(interaction.sortKey, this.arweave);
         }
       }
 

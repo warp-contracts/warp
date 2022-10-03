@@ -170,6 +170,75 @@ describe('Testing the Profit Sharing Token', () => {
     expect(vrf['random_99_1'] == vrf['random_99_2']).toBe(true);
     expect(vrf['random_99_2'] == vrf['random_99_3']).toBe(true);
   });
+
+  it('should allow to test VRF on a standard forLocal Warp instance in strict mode', async () => {
+    const localWarp = WarpFactory.forLocal(1823);
+
+    const { contractTxId: vrfContractTxId } = await localWarp.createContract.deploy({
+      wallet,
+      initState: JSON.stringify(initialState),
+      src: contractSrc
+    });
+
+    await mineBlock(localWarp);
+    const vrfContract = localWarp.contract(vrfContractTxId).connect(wallet);
+    await vrfContract.writeInteraction(
+      {
+        function: 'vrf'
+      },
+      { vrf: true, strict: true }
+    );
+    const result = await vrfContract.readState();
+    const lastTxId = Object.keys(result.cachedValue.validity).pop();
+    const vrf = (result.cachedValue.state as any).vrf[lastTxId];
+
+    expect(vrf).not.toBeUndefined();
+    expect(vrf['random_6_1'] == vrf['random_6_2']).toBe(true);
+    expect(vrf['random_6_2'] == vrf['random_6_3']).toBe(true);
+    expect(vrf['random_12_1'] == vrf['random_12_2']).toBe(true);
+    expect(vrf['random_12_2'] == vrf['random_12_3']).toBe(true);
+    expect(vrf['random_46_1'] == vrf['random_46_2']).toBe(true);
+    expect(vrf['random_46_2'] == vrf['random_46_3']).toBe(true);
+    expect(vrf['random_99_1'] == vrf['random_99_2']).toBe(true);
+    expect(vrf['random_99_2'] == vrf['random_99_3']).toBe(true);
+  });
+
+  it('should allow to test VRF on a standard forLocal Warp instance with internal writes', async () => {
+    const localWarp = WarpFactory.forLocal(1823);
+
+    const { contractTxId: vrfContractTxId } = await localWarp.createContract.deploy({
+      wallet,
+      initState: JSON.stringify(initialState),
+      src: contractSrc
+    });
+
+    await mineBlock(localWarp);
+    const vrfContract = localWarp
+      .contract(vrfContractTxId)
+      .setEvaluationOptions({
+        internalWrites: true
+      })
+      .connect(wallet);
+    const result2 = await vrfContract.writeInteraction(
+      {
+        function: 'vrf'
+      },
+      { vrf: true, strict: true }
+    );
+    const result = await vrfContract.readState();
+    const lastTxId = Object.keys(result.cachedValue.validity).pop();
+    const vrf = (result.cachedValue.state as any).vrf[lastTxId];
+
+    expect(vrf).not.toBeUndefined();
+    expect(vrf['random_6_1'] == vrf['random_6_2']).toBe(true);
+    expect(vrf['random_6_2'] == vrf['random_6_3']).toBe(true);
+    expect(vrf['random_12_1'] == vrf['random_12_2']).toBe(true);
+    expect(vrf['random_12_2'] == vrf['random_12_3']).toBe(true);
+    expect(vrf['random_46_1'] == vrf['random_46_2']).toBe(true);
+    expect(vrf['random_46_2'] == vrf['random_46_3']).toBe(true);
+    expect(vrf['random_99_1'] == vrf['random_99_2']).toBe(true);
+    expect(vrf['random_99_2'] == vrf['random_99_3']).toBe(true);
+  });
 });
 
 class VrfDecorator extends ArweaveGatewayInteractionsLoader {

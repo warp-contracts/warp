@@ -35,6 +35,7 @@ import {
 import { Tags, ArTransfer, emptyTransfer, ArWallet } from './deploy/CreateContract';
 import { SourceData, SourceImpl } from './deploy/impl/SourceImpl';
 import { InnerWritesEvaluator } from './InnerWritesEvaluator';
+import { generateMockVrf } from '../utils/vrf';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -332,7 +333,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       // 3. Verify the callStack and search for any "internalWrites" transactions
       // 4. For each found "internalWrite" transaction - generate additional tag:
       // {name: 'InternalWrite', value: callingContractTxId}
-      const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer, strict);
+      const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer, strict, vrf);
 
       if (strict && handlerResult.type !== 'ok') {
         throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
@@ -352,7 +353,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       this.logger.debug('Tags with inner calls', tags);
     } else {
       if (strict) {
-        const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer, strict);
+        const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer, strict, vrf);
         if (handlerResult.type !== 'ok') {
           throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
         }
@@ -533,7 +534,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     sortKey?: string,
     tags: Tags = [],
     transfer: ArTransfer = emptyTransfer,
-    strict = false
+    strict = false,
+    vrf = false
   ): Promise<InteractionResult<State, View>> {
     this.logger.info('Call contract input', input);
     this.maybeResetRootContract();
@@ -552,6 +554,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     if (caller) {
       effectiveCaller = caller;
     } else if (this.signer) {
+      // we're creating this transaction just to call the signing function on it
+      // - and retrieve the caller/owner
       const dummyTx = await arweave.createTransaction({
         data: Math.random().toString().slice(-4),
         reward: '72600854',
@@ -600,6 +604,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     dummyTx.sortKey = await this._sorter.createSortKey(dummyTx.block.id, dummyTx.id, dummyTx.block.height, true);
     dummyTx.strict = strict;
+    if (vrf) {
+      dummyTx.vrf = generateMockVrf(dummyTx.sortKey, arweave);
+    }
+
     const handleResult = await this.evalInteraction<Input, View>(
       {
         interaction,
