@@ -188,6 +188,37 @@ describe('Testing internal writes', () => {
         }
       });
     });
+
+
+    it('should rollback all changes if outer interaction failed', async () => {
+      await stakingContract.writeInteraction({
+        function: 'stake',
+        amount: 1000,
+        throwError: true
+      });
+      await mineBlock(warp);
+
+      // note: the staked amount should NOT change from the previous test
+      expect((await stakingContract.readState()).cachedValue.state.stakes).toEqual({
+        [walletAddress]: {
+          amount: 1000,
+          unlockWhen: 0
+        }
+      });
+
+      console.log('============ Token read');
+      const tokenState = (await tokenContract.readState()).cachedValue.state;
+      expect(tokenState.balances).toEqual({
+        [walletAddress]: 9000,
+        [stakingContractTxId]: 1000
+      });
+      /*expect(tokenState.allowances).toEqual({
+        [walletAddress]: {
+          [stakingContractTxId]: 8999
+        }
+      });*/
+    });
+
   });
 
   describe('with read states at the end', () => {

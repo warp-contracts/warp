@@ -15,6 +15,11 @@ export interface SortKeyCache<V> {
   getLast(contractTxId: string): Promise<SortKeyCacheResult<V> | null>;
 
   /**
+   * returns previous value stored for given contractTxId
+   */
+  getPrev(contractTxId: string, sortKey: string): Promise<SortKeyCacheResult<V> | null>;
+
+  /**
    * returns last cached sort key - takes all contracts into account
    */
   getLastSortKey(): Promise<string | null>;

@@ -58,7 +58,21 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
 
   async getLast(contractTxId: string): Promise<SortKeyCacheResult<V> | null> {
     const contractCache = this.db.sublevel<string, any>(contractTxId, { valueEncoding: 'json' });
+    contractCache.get
     const keys = await contractCache.keys({ reverse: true, limit: 1 }).all();
+    if (keys.length) {
+      return {
+        sortKey: keys[0],
+        cachedValue: await contractCache.get(keys[0])
+      };
+    } else {
+      return null;
+    }
+  }
+
+  async getPrev(contractTxId: string, sortKey: string): Promise<SortKeyCacheResult<V> | null> {
+    const contractCache = this.db.sublevel<string, any>(contractTxId, { valueEncoding: 'json' });
+    const keys = await contractCache.keys({ reverse: true, lt: sortKey, limit: 1 }).all();
     if (keys.length) {
       return {
         sortKey: keys[0],
@@ -124,4 +138,5 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
 
     return Array.from(result);
   }
+
 }

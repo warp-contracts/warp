@@ -41,6 +41,10 @@ export async function handle(state, action) {
       unlockWhen: 0
     };
 
+    if (_input.throwError) {
+      throw new ContractError('Forced ContractError from staking contract');
+    }
+
     return { state };
   }
 

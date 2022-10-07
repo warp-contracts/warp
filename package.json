@@ -53,7 +53,13 @@
   ],
   "keywords": [
     "smartweave",
-    "arweave"
+    "arweave",
+    "smart",
+    "contracts",
+    "wasm",
+    "rust",
+    "assemblyscript",
+    "warp"
   ],
   "bugs": {
     "url": "https://github.com/warp-contracts/warp/issues"

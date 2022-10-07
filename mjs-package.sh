@@ -1,5 +1,6 @@
 cat > lib/mjs/package.json <<!EOF
 {
-    "type": "module"
+    "type": "module",
+    "license": "MIT"
 }
 !EOF

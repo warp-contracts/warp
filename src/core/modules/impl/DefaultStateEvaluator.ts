@@ -5,8 +5,8 @@ import elliptic from 'elliptic';
 import { SortKeyCacheResult } from '../../../cache/SortKeyCache';
 import { CurrentTx } from '../../../contract/Contract';
 import { InteractionCall } from '../../ContractCallRecord';
-import { ExecutionContext } from '../../../core/ExecutionContext';
-import { ExecutionContextModifier } from '../../../core/ExecutionContextModifier';
+import { ExecutionContext } from '../../ExecutionContext';
+import { ExecutionContextModifier } from '../../ExecutionContextModifier';
 import { GQLNodeInterface, VrfData, GQLTagInterface } from '../../../legacy/gqlResult';
 import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
@@ -124,36 +124,84 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
          This in turn will cause the state of THIS contract to be
          updated in cache - see {@link ContractHandlerApi.assignWrite}
          */
-        await writingContract.readState(missingInteraction.sortKey, [
+        const writingContractResult = await writingContract.readState(missingInteraction.sortKey, [
           ...(currentTx || []),
           {
             contractTxId: contractDefinition.txId, //not: writingContractTxId!
             interactionTxId: missingInteraction.id
           }
         ]);
+        if (writingContractResult.cachedValue.validity[missingInteraction.sortKey] === true) {
+          // loading latest state of THIS contract from cache
+          const newState = await this.internalWriteState<State>(contractDefinition.txId, missingInteraction.sortKey);
+          if (newState !== null) {
+            currentState = newState.cachedValue.state;
+            // we need to update the state in the wasm module
+            executionContext?.handler.initState(currentState);
 
-        // loading latest state of THIS contract from cache
-        const newState = await this.internalWriteState<State>(contractDefinition.txId, missingInteraction.sortKey);
-        if (newState !== null) {
-          currentState = newState.cachedValue.state;
-          // we need to update the state in the wasm module
-          executionContext?.handler.initState(currentState);
+            validity[missingInteraction.id] = newState.cachedValue.validity[missingInteraction.id];
+            if (newState.cachedValue.errorMessages?.[missingInteraction.id]) {
+              errorMessages[missingInteraction.id] = newState.cachedValue.errorMessages[missingInteraction.id];
+            }
 
-          validity[missingInteraction.id] = newState.cachedValue.validity[missingInteraction.id];
-          if (newState.cachedValue.errorMessages?.[missingInteraction.id]) {
-            errorMessages[missingInteraction.id] = newState.cachedValue.errorMessages[missingInteraction.id];
-          }
-
-          const toCache = new EvalStateResult(currentState, validity, errorMessages);
-          await this.onStateUpdate<State>(missingInteraction, executionContext, toCache);
-          if (canBeCached(missingInteraction)) {
-            lastConfirmedTxState = {
-              tx: missingInteraction,
-              state: toCache
-            };
+            const toCache = new EvalStateResult(currentState, validity, errorMessages);
+            await this.onStateUpdate<State>(missingInteraction, executionContext, toCache);
+            if (canBeCached(missingInteraction)) {
+              lastConfirmedTxState = {
+                tx: missingInteraction,
+                state: toCache
+              };
+            }
+          } else {
+            validity[missingInteraction.id] = false;
           }
         } else {
-          validity[missingInteraction.id] = false;
+          console.log('========= Writing contract error', {
+            writingContractTxId,
+            missingTxId: missingInteraction.id,
+            contractTxId: contractDefinition.txId
+          });
+          const cache = executionContext.warp.levelDb;
+          const prevState = await cache.getPrev(contractDefinition.txId, missingInteraction.sortKey);
+          console.log('========== prev state:', contractDefinition.txId);
+          console.dir(prevState, { depth: null });
+          await this.putInCache(
+            contractDefinition.txId,
+            missingInteraction,
+            new EvalStateResult(prevState.cachedValue.state, validity, errorMessages)
+          );
+
+         /*
+          console.dir(interactionCall, {depth: null});
+          const writingContractCallRecord = interactionCall.interactionInput.foreignContractCalls[writingContractTxId];
+          const writingContractInteraction = writingContractCallRecord.interactions[missingInteraction.id];
+          const*/
+
+          /*console.dir(
+            interactionCall.interactionInput.foreignContractCalls[contractDefinition.txId].getInteraction(
+              missingInteraction.id
+            ).interactionInput.foreignContractCalls[writingContractTxId],
+            { depth: null }
+          );
+          const fc = interactionCall.interactionInput.foreignContractCalls[contractDefinition.txId].getInteraction(
+            missingInteraction.id
+          ).interactionInput.foreignContractCalls[writingContractTxId];
+          console.log('============ foreign call');
+          console.dir(fc, { depth: null });
+          const contractTxId = fc.contractTxId;
+
+          const cache = executionContext.warp.levelDb;
+          const prevState = await cache.getPrev(contractTxId, interactionCall.interactionInput.sortKey);
+          console.log('========== prev state:', contractTxId);
+          console.dir(prevState, { depth: null });
+          await this.putInCache(
+            contractTxId,
+            missingInteraction,
+            new EvalStateResult(prevState.cachedValue.state, validity, errorMessages)
+          );
+
+          for (const k of Object.keys(interactionCall.interactionInput.foreignContractCalls)) {
+          }*/
         }
 
         interactionCall.update({
@@ -200,6 +248,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         errorMessage = result.errorMessage;
         if (result.type !== 'ok') {
           errorMessages[missingInteraction.id] = errorMessage;
+          await this.rollbackInnerWritesCalls(interactionCall);
         }
 
         this.logResult<State>(result, missingInteraction, executionContext);
@@ -343,4 +392,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
   abstract lastCachedSortKey(): Promise<string | null>;
 
   abstract allCachedContracts(): Promise<string[]>;
+
+  private async rollbackInnerWritesCalls(interactionCall: InteractionCall): Promise<void> {
+    console.dir(interactionCall.interactionInput.foreignContractCalls, { depth: null });
+  }
 }
