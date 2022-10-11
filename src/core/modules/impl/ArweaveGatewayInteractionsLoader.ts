@@ -112,7 +112,7 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
     };
 
     const loadingBenchmark = Benchmark.measure();
-    let interactions = await this.loadPages(mainTransactionsVariables);
+    let interactions = await this.loadPages(mainTransactionsVariables, evaluationOptions);
     loadingBenchmark.stop();
 
     if (evaluationOptions.internalWrites) {
@@ -129,7 +129,7 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
         },
         first: MAX_REQUEST
       };
-      const innerWritesInteractions = await this.loadPages(innerWritesVariables);
+      const innerWritesInteractions = await this.loadPages(innerWritesVariables, evaluationOptions);
       this.logger.debug('Inner writes interactions length:', innerWritesInteractions.length);
       interactions = interactions.concat(innerWritesInteractions);
     }
@@ -182,13 +182,16 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
     });
   }
 
-  private async loadPages(variables: GqlReqVariables) {
+  private async loadPages(variables: GqlReqVariables, evaluationOptions: EvaluationOptions) {
     let transactions = await this.getNextPage(variables);
 
     // note: according to https://discord.com/channels/357957786904166400/756557551234973696/920918240702660638
     // protection against "bundledIn" should not be necessary..but..better safe than sorry :-)
     // note: it will be now necessary - with RedStone Sequencer
-    const txInfos: GQLEdgeInterface[] = transactions.edges.filter((tx) => bundledTxsFilter(tx));
+    let txInfos = transactions.edges;
+    if (!evaluationOptions.includeBundledInteractions) {
+      txInfos = txInfos.filter(bundledTxsFilter);
+    }
 
     while (transactions.pageInfo.hasNextPage) {
       const cursor = transactions.edges[MAX_REQUEST - 1].cursor;
@@ -199,8 +202,12 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
       };
 
       transactions = await this.getNextPage(variables);
+      let newTxInfos = transactions.edges;
+      if (!evaluationOptions.includeBundledInteractions) {
+        newTxInfos = newTxInfos.filter(bundledTxsFilter);
+      }
 
-      txInfos.push(...transactions.edges.filter((tx) => bundledTxsFilter(tx)));
+      txInfos.push(...newTxInfos);
     }
     return txInfos;
   }

@@ -1,16 +1,10 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import { LoggerFactory } from '../src';
-import { TsLogFactory } from '../src/logging/node/TsLogFactory';
-import fs from 'fs';
-import path from 'path';
-import { ArweaveGatewayInteractionsLoader } from '../src/core/modules/impl/ArweaveGatewayInteractionsLoader';
-import { DefaultEvaluationOptions } from '../src/core/modules/StateEvaluator';
-import {GQLEdgeInterface, GQLTagInterface} from "smartweave/lib/interfaces/gqlResult";
+import {LoggerFactory, WARP_GW_URL, WarpGatewayInteractionsLoader} from '../src';
+import {ArweaveGatewayInteractionsLoader} from '../src/core/modules/impl/ArweaveGatewayInteractionsLoader';
+import {DefaultEvaluationOptions} from '../src/core/modules/StateEvaluator';
 
 async function main() {
-  LoggerFactory.use(new TsLogFactory());
-
   LoggerFactory.INST.logLevel('debug');
 
   const arweave = Arweave.init({
@@ -21,41 +15,83 @@ async function main() {
     logging: false // Enable network request logging
   });
 
-  const transactionsLoader = new ArweaveGatewayInteractionsLoader(arweave);
+  const arweaveLoader = new ArweaveGatewayInteractionsLoader(arweave, 'mainnet');
+  const warpLoader = new WarpGatewayInteractionsLoader(WARP_GW_URL, {notCorrupted: true});
 
-  const result = await transactionsLoader.load(
-    '5pSyVjFI07z8mbLeQhYBMsQ4M_MPidXIGX6T77rnF2s',
-    0,
-    886399,
+  const resultArweave = await arweaveLoader.load(
+    'XIutiOKujGI21_ywULlBeyy-L9d8goHxt0ZyUayGaDg',
+    null,
+    null,
+    {
+      ...new DefaultEvaluationOptions(),
+      includeBundledInteractions: true
+    }
+  );
+
+  const resultWarp = await warpLoader.load(
+    'XIutiOKujGI21_ywULlBeyy-L9d8goHxt0ZyUayGaDg',
+    null,
+    null,
     new DefaultEvaluationOptions()
   );
 
-  const ids = new Set<string>();
+  console.log("all arweave", resultArweave.length);
+  console.log("all warp", resultWarp.length);
 
-  let withDoubleContract = 0;
+  let arweaveFromArweave = 0;
+  let arweaveFromSequencer = 0;
 
-  result.forEach(r => {
-    const contractTags = findTag(r, "Contract");
-    if (contractTags.length > 1) {
-      withDoubleContract++;
+  let warpFromArweave = 0;
+  let warpFromSequencer = 0;
+
+  let missingSequencerTx = [];
+
+  const arweaveSequencerTx = [];
+
+  resultArweave.forEach(t => {
+    if (t.tags.some(tg => tg.name === 'Sequencer')) {
+      arweaveFromSequencer++;
+      arweaveSequencerTx.push(t);
+    } else {
+      arweaveFromArweave++;
     }
-    ids.add(r.node.id);
   });
 
-  console.log("all", result.length);
-  console.log("unique", ids.size);
-  console.log("with double contract tag", withDoubleContract);
+  resultWarp.forEach(t => {
+    if (t.source === 'redstone-sequencer') {
+      warpFromSequencer++;
+      const txId = t.id;
+      let found = false;
 
-  fs.writeFileSync(path.join(__dirname, 'data', 'transactions-live.json'), JSON.stringify(result));
+      for (const ast of arweaveSequencerTx) {
+        if (ast.tags.some(tg => tg.name === 'Sequencer-Tx-Id' && tg.value === txId)) {
+          arweaveFromSequencer++;
+          arweaveSequencerTx.push(t);
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        missingSequencerTx.push(txId);
+      }
+    } else {
+      warpFromArweave++;
+    }
+  });
+
+  console.log({
+    arweaveFromArweave,
+    warpFromArweave,
+    arweaveFromSequencer,
+    warpFromSequencer,
+    "missing sequencer tx": missingSequencerTx.length
+  });
+
+  console.dir(missingSequencerTx, {depth: null});
+
+
+
+
 }
 
 main().catch((e) => console.error(e));
-
-function findTag(
-  interaction: GQLEdgeInterface,
-  tagName: string
-): GQLTagInterface[] {
-  return interaction.node.tags.filter((t) => {
-    return t.name === tagName;
-  });
-}
