@@ -1,12 +1,14 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import {defaultCacheOptions, defaultWarpGwOptions, LoggerFactory, WarpFactory} from '../src';
+import {defaultCacheOptions, LoggerFactory, WarpFactory} from '../src';
 import fs from 'fs';
 import path from 'path';
 import {JWKInterface} from 'arweave/node/lib/wallet';
+import Transaction from "arweave/node/lib/transaction";
 
 async function main() {
-  let wallet: JWKInterface = readJSON('./.secrets/33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA.json');;
+  let wallet: JWKInterface = readJSON('./.secrets/33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA.json');
+  ;
   LoggerFactory.INST.logLevel('debug');
   const logger = LoggerFactory.INST.create('deploy');
 
@@ -35,19 +37,40 @@ async function main() {
     const wasmContractSrc = fs.readFileSync(path.join(__dirname, 'data/rust/rust-pst_bg.wasm'));
     const initialState = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.json'), 'utf8');
 
-    // case 1 - full deploy, js contract
-    const {contractTxId} = await warp.createContract.deploy({
+    /*// case 1 - full deploy, js contract
+    const {contractTxId, srcTxId} = await warp.createContract.deploy({
       wallet,
       initState: initialState,
       src: jsContractSrc,
     });
 
+    console.log(srcTxId);*/
+
     // case 2 - deploy from source, js contract
-    /*const {contractTxId} = await warp.createContract.deployFromSourceTx({
+    const result = await warp.createContract.deployFromSourceTx({
       wallet,
       initState: initialState,
-      srcTxId: "Hj0S0iK5rG8yVf_5u-usb9vRZg1ZFkylQLXu6rcDt-0",
-    });*/
+      srcTxId: "h8xDd2vFxrsLpqWKYD0bn4J1wnnN65cSnAkSuieG8ME",
+      tags: [{
+        name: 'ppe-foo',
+        value: 'ppe-bar'
+      }]
+    });
+    console.log("New contract tx", result.contractTxId);
+
+    const response = await fetch(`https://gateway.redstone.finance/gateway/contract?txId=${result.contractTxId}`);
+    const contractTx = new Transaction((await response.json()).contractTx);
+    let allTags = [];
+    // @ts-ignore
+    contractTx.get("tags").forEach((tag) => {
+      let key = tag.get("name", {decode: true, string: true});
+      let value = tag.get("value", {decode: true, string: true});
+      allTags.push({key, value,});
+    });
+    console.dir(allTags, {depth: null});
+
+    /*const def = await warp.definitionLoader.load("lcKAr6rAtqAJkEAD6kt72Nz4g9X4qlqKHOIzMSiCtlI");
+    console.log(def.)*/
 
     // case 3 - full deploy, wasm contract
     /*const {contractTxId} = await warp.createContract.deploy({
@@ -65,10 +88,10 @@ async function main() {
       srcTxId: "5wXT-A0iugP9pWEyw-iTbB0plZ_AbmvlNKyBfGS3AUY",
     });*/
 
-    const contract = warp.contract(contractTxId)
-      /*.setEvaluationOptions({
+    /*const contract = warp.contract(contractTxId)
+      /!*.setEvaluationOptions({
         bundlerUrl: "http://13.53.39.138:5666/"
-      })*/
+      })*!/
       .connect(wallet);
 
     await contract.writeInteraction<any>({
@@ -91,7 +114,7 @@ async function main() {
     logger.info("Result", cachedValue.state);
     logger.info("Validity", cachedValue.validity);
 
-    const result2 = await contract.readState();
+    const result2 = await contract.readState();*/
 
   } catch (e) {
     logger.error(e)
