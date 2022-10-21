@@ -11,7 +11,7 @@ export type CurrentTx = { interactionTxId: string; contractTxId: string };
 export type BenchmarkStats = { gatewayCommunication: number; stateEvaluation: number; total: number };
 
 export type SigningFunction = (tx: Transaction) => Promise<void>;
-
+export type Signature = { signer: SigningFunction; signatureType: 'arweave' | 'ethereum' };
 export class ContractError extends Error {
   constructor(message) {
     super(message);
@@ -85,7 +85,7 @@ export interface Contract<State = unknown> extends Source {
    *
    * @param signer - either {@link ArWallet} that will be connected to this contract or custom {@link SigningFunction}
    */
-  connect(signer: ArWallet | SigningFunction): Contract<State>;
+  connect(signature: ArWallet | Signature): Contract<State>;
 
   /**
    * Allows to set ({@link EvaluationOptions})
