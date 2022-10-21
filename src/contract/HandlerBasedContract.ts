@@ -382,6 +382,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       transfer.target,
       transfer.winstonQty,
       bundle,
+      this.warp.environment === 'testnet',
       reward
     );
     return interactionTx;
@@ -613,7 +614,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
       tags,
       transfer.target,
       transfer.winstonQty,
-      true
+      true,
+      this.warp.environment === 'testnet'
     );
     const dummyTx = createDummyTx(tx, executionContext.caller, currentBlockData);
 

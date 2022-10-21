@@ -17,5 +17,6 @@ export enum SmartWeaveTags {
   WASM_LANG_VERSION = 'Wasm-Lang-Version',
   WASM_META = 'Wasm-Meta',
   REQUEST_VRF = 'Request-Vrf',
-  SIGNATURE_TYPE = 'Signature-Type'
+  SIGNATURE_TYPE = 'Signature-Type',
+  WARP_TESTNET = 'Warp-Testnet'
 }
