@@ -1,6 +1,6 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import {defaultCacheOptions, LoggerFactory, WarpFactory} from '../src';
+import {defaultCacheOptions, LexicographicalInteractionsSorter, LoggerFactory, WarpFactory} from '../src';
 import * as fs from 'fs';
 import knex from 'knex';
 import os from 'os';
@@ -84,6 +84,11 @@ function printTestInfo() {
   console.log('  ', 'CPU      ', cpus);
   console.log('  ', 'Memory   ', (os.totalmem() / 1024 / 1024 / 1024).toFixed(0), 'GB');
   console.log('===============');
+
+
+  const sorter = new LexicographicalInteractionsSorter(arweave);
+
+  warp.interactionsLoader.load(contractId, sorter.generateLastSortKey(666), sorter.generateLastSortKey(777));
 }
 
 main().catch((e) => console.error(e));
