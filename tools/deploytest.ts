@@ -17,7 +17,7 @@ async function main() {
   });
 
   try {
-    const warp = WarpFactory.forMainnet({...defaultCacheOptions, inMemory: false});
+    const warp = WarpFactory.forMainnet({...defaultCacheOptions, inMemory: true});
     /*const warp = WarpFactory
       .custom(arweave, {
         ...defaultCacheOptions,
@@ -36,12 +36,11 @@ async function main() {
     const initialState = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.json'), 'utf8');
 
     // case 1 - full deploy, js contract
-    const {contractTxId} = await warp.createContract.deploy({
+    /*const {contractTxId} = await warp.createContract.deploy({
       wallet,
       initState: initialState,
       src: jsContractSrc,
-    });
-
+    });*/
     // case 2 - deploy from source, js contract
     /*const {contractTxId} = await warp.createContract.deployFromSourceTx({
       wallet,
@@ -65,35 +64,34 @@ async function main() {
       srcTxId: "5wXT-A0iugP9pWEyw-iTbB0plZ_AbmvlNKyBfGS3AUY",
     });*/
 
-    const contract = warp.contract(contractTxId)
+    const contract = warp.contract("RpyfKrvw7pCRgdJ-EML8jaZUH6eidDlhHACsShNYhEo")
       .setEvaluationOptions({
         bundlerUrl: "http://localhost:5666/"
       })
       .connect(wallet);
 
-    await contract.writeInteraction<any>({
-      function: "transfer",
-      target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
-      qty: 10000
-    }, {tags: [{name: 'Signature-Type', value: 'ethereum'}]});
-
-    /*await contract.writeInteraction<any>({
-      function: "storeBalance",
-      target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+    await contract.writeInteraction({
+      function: 'transfer',
+      target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M',
+      qty: 55555
     });
 
-    await contract.writeInteraction<any>({
-      function: "storeBalance",
-      target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+   /* await contract.writeInteraction({
+      function: 'transfer',
+      target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M',
+      qty: 55555
+    });
+
+    await contract.writeInteraction({
+      function: 'transfer',
+      target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M',
+      qty: 55555
     });*/
 
-    const {cachedValue} = await contract.readState();
+    /*const {cachedValue} = await contract.readState();
 
     logger.info("Result", cachedValue.state);
-    logger.info("Validity", cachedValue.validity);
-
-    const result2 = await contract.readState();
-
+    logger.info("Validity", cachedValue.validity);*/
   } catch (e) {
     logger.error(e)
 

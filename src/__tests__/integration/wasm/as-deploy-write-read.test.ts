@@ -155,10 +155,13 @@ describe('Testing the Warp client for AssemblyScript WASM contract', () => {
 
     const newContractSrc = fs.readFileSync(path.join(__dirname, '../data/wasm/as/assemblyscript-counter-evolve.wasm'));
 
-    const newSrcTxId = await contract.save({
-      src: newContractSrc,
-      wasmSrcCodeDir: path.join(__dirname, '../data/wasm/as/assembly-evolve')
-    });
+    const newSrcTxId = await contract.save(
+      {
+        src: newContractSrc,
+        wasmSrcCodeDir: path.join(__dirname, '../data/wasm/as/assembly-evolve')
+      },
+      warp.environment
+    );
     await mineBlock(warp);
 
     await contract.evolve(newSrcTxId);

@@ -15,6 +15,7 @@ import { WasmSrc } from './wasm/WasmSrc';
 import { CacheOptions } from '../../WarpFactory';
 import { MemoryLevel } from 'memory-level';
 import { Level } from 'level';
+import { WarpEnvironment } from '../../Warp';
 
 /**
  * An extension to {@link ContractDefinitionLoader} that makes use of
@@ -28,21 +29,26 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
   private readonly rLogger = LoggerFactory.INST.create('WarpGatewayContractDefinitionLoader');
   private contractDefinitionLoader: ContractDefinitionLoader;
   private arweaveWrapper: ArweaveWrapper;
-  private readonly db: MemoryLevel<string, any>;
+  private readonly db: MemoryLevel<string, ContractDefinition<unknown>>;
 
-  constructor(private readonly baseUrl: string, arweave: Arweave, cacheOptions: CacheOptions) {
+  constructor(
+    private readonly baseUrl: string,
+    arweave: Arweave,
+    cacheOptions: CacheOptions,
+    private readonly env: WarpEnvironment
+  ) {
     this.baseUrl = stripTrailingSlash(baseUrl);
-    this.contractDefinitionLoader = new ContractDefinitionLoader(arweave);
+    this.contractDefinitionLoader = new ContractDefinitionLoader(arweave, env);
     this.arweaveWrapper = new ArweaveWrapper(arweave);
 
     if (cacheOptions.inMemory) {
-      this.db = new MemoryLevel<string, any>({ valueEncoding: 'json' });
+      this.db = new MemoryLevel<string, ContractDefinition<unknown>>({ valueEncoding: 'json' });
     } else {
       if (!cacheOptions.dbLocation) {
         throw new Error('LevelDb cache configuration error - no db location specified');
       }
       const dbLocation = cacheOptions.dbLocation;
-      this.db = new Level<string, any>(`${dbLocation}/contracts`, { valueEncoding: 'json' });
+      this.db = new Level<string, ContractDefinition<unknown>>(`${dbLocation}/contracts`, { valueEncoding: 'json' });
     }
   }
 
@@ -67,11 +73,13 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
       if (cacheResult.contractType == 'wasm') {
         cacheResult.srcBinary = Buffer.from(cacheResult.srcBinary.data);
       }
+      this.verifyEnv(cacheResult);
       return cacheResult;
     }
     const benchmark = Benchmark.measure();
     const contract = await this.doLoad<State>(contractTxId, evolvedSrcTxId);
     this.rLogger.info(`Contract definition loaded in: ${benchmark.elapsed()}`);
+    this.verifyEnv(contract);
     await this.db.put(cacheKey, contract);
 
     return contract;
@@ -122,5 +130,14 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
 
   type(): GW_TYPE {
     return 'warp';
+  }
+
+  private verifyEnv(def: ContractDefinition<unknown>): void {
+    if (def.testnet && this.env !== 'testnet') {
+      throw new Error('Trying to use testnet contract in a non-testnet env. Use the "forTestnet" factory method.');
+    }
+    if (!def.testnet && this.env === 'testnet') {
+      throw new Error('Trying to use non-testnet contract in a testnet env.');
+    }
   }
 }

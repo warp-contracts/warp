@@ -30,4 +30,5 @@ export type ContractDefinition<State> = {
   metadata?: ContractMetadata;
   contractTx: any;
   srcTx: any;
+  testnet: string | null;
 };

@@ -212,6 +212,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
     const { arweave, interactionsLoader, environment } = this.warp;
 
+    // we're calling this to verify whether proper env is used for this contract
+    // (e.g. test env for test contract)
+    await this.warp.definitionLoader.load(this._contractTxId);
+
     const effectiveTags = options?.tags || [];
     const effectiveTransfer = options?.transfer || emptyTransfer;
     const effectiveStrict = options?.strict === true;
@@ -775,7 +779,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const { arweave } = this.warp;
     const source = new SourceImpl(arweave);
 
-    const srcTx = await source.save(sourceData, this.signature.signer);
+    const srcTx = await source.save(sourceData, this.warp.environment, this.signature.signer);
 
     return srcTx.id;
   }

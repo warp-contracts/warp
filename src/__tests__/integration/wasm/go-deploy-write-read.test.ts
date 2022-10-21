@@ -193,10 +193,13 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
 
     const newContractSrc = fs.readFileSync(path.join(__dirname, '../data/wasm/go/go-pst-evolve.wasm'));
 
-    const newSrcTxId = await pst.save({
-      src: newContractSrc,
-      wasmSrcCodeDir: path.join(__dirname, '../data/wasm/go/src-evolve')
-    });
+    const newSrcTxId = await pst.save(
+      {
+        src: newContractSrc,
+        wasmSrcCodeDir: path.join(__dirname, '../data/wasm/go/src-evolve')
+      },
+      warp.environment
+    );
 
     await mineBlock(warp);
 

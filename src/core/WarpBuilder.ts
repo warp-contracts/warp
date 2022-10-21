@@ -66,13 +66,14 @@ export class WarpBuilder {
     this._definitionLoader = new WarpGatewayContractDefinitionLoader(
       gatewayOptions.address,
       this._arweave,
-      cacheOptions
+      cacheOptions,
+      this._environment
     );
     return this;
   }
 
   public useArweaveGateway(): WarpBuilder {
-    this._definitionLoader = new ContractDefinitionLoader(this._arweave);
+    this._definitionLoader = new ContractDefinitionLoader(this._arweave, this._environment);
     this._interactionsLoader = new CacheableInteractionsLoader(
       new ArweaveGatewayInteractionsLoader(this._arweave, this._environment)
     );

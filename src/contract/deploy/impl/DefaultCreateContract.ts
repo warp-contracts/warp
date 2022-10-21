@@ -23,7 +23,7 @@ export class DefaultCreateContract implements CreateContract {
 
     const source = new SourceImpl(this.arweave);
 
-    const srcTx = await source.save(contractData, wallet, effectiveUseBundler);
+    const srcTx = await source.save(contractData, this.warp.environment, wallet, effectiveUseBundler);
     this.logger.debug('Creating new contract');
 
     return await this.deployFromSourceTx(
@@ -79,6 +79,10 @@ export class DefaultCreateContract implements CreateContract {
       contractTX.addTag(SmartWeaveTags.INIT_STATE, initState);
     } else {
       contractTX.addTag(SmartWeaveTags.CONTENT_TYPE, 'application/json');
+    }
+
+    if (this.warp.environment === 'testnet') {
+      contractTX.addTag(SmartWeaveTags.WARP_TESTNET, '1.0.0');
     }
 
     await this.arweave.transactions.sign(contractTX, wallet);

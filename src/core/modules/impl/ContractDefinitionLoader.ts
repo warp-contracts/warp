@@ -10,6 +10,7 @@ import { ArweaveWrapper } from '../../../utils/ArweaveWrapper';
 import { DefinitionLoader } from '../DefinitionLoader';
 import { GW_TYPE } from '../InteractionsLoader';
 import { WasmSrc } from './wasm/WasmSrc';
+import { WarpEnvironment } from '../../Warp';
 
 const supportedSrcContentTypes = ['application/javascript', 'application/wasm'];
 
@@ -18,7 +19,7 @@ export class ContractDefinitionLoader implements DefinitionLoader {
 
   protected arweaveWrapper: ArweaveWrapper;
 
-  constructor(private readonly arweave: Arweave) {
+  constructor(private readonly arweave: Arweave, private readonly env: WarpEnvironment) {
     this.arweaveWrapper = new ArweaveWrapper(arweave);
   }
 
@@ -39,6 +40,13 @@ export class ContractDefinitionLoader implements DefinitionLoader {
     benchmark.reset();
 
     const contractSrcTxId = forcedSrcTxId ? forcedSrcTxId : getTag(contractTx, SmartWeaveTags.CONTRACT_SRC_TX_ID);
+    const testnet = getTag(contractTx, SmartWeaveTags.WARP_TESTNET) || null;
+    if (testnet && this.env !== 'testnet') {
+      throw new Error('Trying to use testnet contract in a non-testnet env. Use the "forTestnet" factory method.');
+    }
+    if (!testnet && this.env === 'testnet') {
+      throw new Error('Trying to use non-testnet contract in a testnet env.');
+    }
     const minFee = getTag(contractTx, SmartWeaveTags.MIN_FEE);
     this.logger.debug('Tags decoding', benchmark.elapsed());
     benchmark.reset();
@@ -63,7 +71,8 @@ export class ContractDefinitionLoader implements DefinitionLoader {
       contractType,
       metadata,
       contractTx: contractTx.toJSON(),
-      srcTx
+      srcTx,
+      testnet
     };
   }
 
