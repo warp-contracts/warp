@@ -15,6 +15,7 @@ import { StateEvaluator, EvalStateResult } from '../StateEvaluator';
 import { HandlerApi, ContractInteraction, InteractionResult } from './HandlerExecutorFactory';
 import { canBeCached } from './StateCache';
 import { TagsParser } from './TagsParser';
+import { WarpPlugin } from '../../WarpPlugin';
 
 const EC = new elliptic.ec('secp256k1');
 
@@ -53,8 +54,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     executionContext: ExecutionContext<State, HandlerApi<State>>,
     currentTx: CurrentTx[]
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
-    const { ignoreExceptions, stackTrace, internalWrites } = executionContext.evaluationOptions;
-    const { contract, contractDefinition, sortedInteractions } = executionContext;
+    const { ignoreExceptions, stackTrace, internalWrites, validateTransactions } = executionContext.evaluationOptions;
+    const { contract, contractDefinition, sortedInteractions, warp } = executionContext;
 
     let currentState = baseState.state;
     let currentSortKey = null;
@@ -85,6 +86,17 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       if (missingInteraction.vrf) {
         if (!this.verifyVrf(missingInteraction.vrf, missingInteraction.sortKey, this.arweave)) {
           throw new Error('Vrf verification failed.');
+        }
+      }
+
+      if (
+        this.isEvmSigned(missingInteraction) &&
+        validateTransactions &&
+        warp.hasPlugin('evm-signature-verification')
+      ) {
+        const plugin = warp.loadPlugin<GQLNodeInterface, boolean>('evm-signature-verification');
+        if (!plugin.process(missingInteraction)) {
+          throw new Error('EVM Signature verification failed');
         }
       }
 
@@ -245,6 +257,10 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     }
 
     return new SortKeyCacheResult(currentSortKey, evalStateResult);
+  }
+
+  private isEvmSigned(missingInteraction: GQLNodeInterface) {
+    return false;
   }
 
   private verifyVrf(vrf: VrfData, sortKey: string, arweave: Arweave): boolean {
