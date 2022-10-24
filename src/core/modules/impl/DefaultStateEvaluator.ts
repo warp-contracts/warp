@@ -15,7 +15,6 @@ import { StateEvaluator, EvalStateResult } from '../StateEvaluator';
 import { HandlerApi, ContractInteraction, InteractionResult } from './HandlerExecutorFactory';
 import { canBeCached } from './StateCache';
 import { TagsParser } from './TagsParser';
-import { WarpPlugin } from '../../WarpPlugin';
 
 const EC = new elliptic.ec('secp256k1');
 
