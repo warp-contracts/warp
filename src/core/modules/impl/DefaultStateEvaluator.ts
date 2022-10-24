@@ -89,8 +89,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       }
 
       if (
-        this.isEvmSigned(missingInteraction) &&
         validateTransactions &&
+        this.tagsParser.isEvmSigned(missingInteraction) &&
         warp.hasPlugin('evm-signature-verification')
       ) {
         const plugin = warp.loadPlugin<GQLNodeInterface, boolean>('evm-signature-verification');
@@ -256,10 +256,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     }
 
     return new SortKeyCacheResult(currentSortKey, evalStateResult);
-  }
-
-  private isEvmSigned(missingInteraction: GQLNodeInterface) {
-    return false;
   }
 
   private verifyVrf(vrf: VrfData, sortKey: string, arweave: Arweave): boolean {
