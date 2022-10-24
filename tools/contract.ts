@@ -45,7 +45,7 @@ async function main() {
 
   const warp = WarpFactory
     .forMainnet({...defaultCacheOptions, inMemory: true})
-    .use(new ExamplePlugin());
+    .use(new ExamplePlugin())
 
   try {
     const contract = warp.contract("Ws9hhYckc-zSnVmbBep6q_kZD5zmzYzDmgMC50nMiuE");

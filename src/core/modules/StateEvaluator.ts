@@ -121,8 +121,6 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
 
   gasLimit = Number.MAX_SAFE_INTEGER;
 
-  useFastCopy = true;
-
   useVM2 = false;
 
   allowUnsafeClient = false;
@@ -183,12 +181,6 @@ export interface EvaluationOptions {
   bundlerUrl: string;
 
   gasLimit: number;
-
-  // Whether fast-copy library should be used during the state evaluation
-  // https://github.com/planttheidea/fast-copy#isstrict
-  // it's much faster (e.g. almost twice for the SJ3l7474UHh3Dw6dWVT1bzsJ-8JvOewtGoDdOecWIZo contract)
-  // currently defaults to true
-  useFastCopy: boolean;
 
   // Whether js contracts' code should be run within vm2 sandbox (https://github.com/patriksimek/vm2#vm2-----)
   // it greatly enhances security - at a cost of performance.

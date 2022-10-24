@@ -1,5 +1,4 @@
 /* eslint-disable */
-import cloneDeep from 'lodash/cloneDeep';
 import copy from 'fast-copy';
 import { Buffer } from 'redstone-isomorphic';
 import { randomUUID } from 'crypto';
@@ -8,8 +7,8 @@ export const sleep = (ms: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
-export const deepCopy = (input: unknown, useFastCopy = false): any => {
-  return useFastCopy ? copy(input) : cloneDeep(input);
+export const deepCopy = (input: unknown): any => {
+  return copy(input);
 };
 
 export const mapReplacer = (key: unknown, value: unknown) => {
