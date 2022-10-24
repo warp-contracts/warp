@@ -66,12 +66,18 @@ async function main() {
     });*/
 
     const contract = warp.contract(contractTxId)
-      /*.setEvaluationOptions({
-        bundlerUrl: "http://13.53.39.138:5666/"
-      })*/
+      .setEvaluationOptions({
+        bundlerUrl: "http://localhost:5666/"
+      })
       .connect(wallet);
 
     await contract.writeInteraction<any>({
+      function: "transfer",
+      target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+      qty: 10000
+    }, {tags: [{name: 'Signature-Type', value: 'ethereum'}]});
+
+    /*await contract.writeInteraction<any>({
       function: "storeBalance",
       target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
     });
@@ -79,12 +85,7 @@ async function main() {
     await contract.writeInteraction<any>({
       function: "storeBalance",
       target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
-    });
-
-    await contract.writeInteraction<any>({
-      function: "storeBalance",
-      target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
-    });
+    });*/
 
     const {cachedValue} = await contract.readState();
 
