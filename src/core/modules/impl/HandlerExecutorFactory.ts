@@ -3,7 +3,6 @@ import loader from '@assemblyscript/loader';
 import { asWasmImports } from './wasm/as-wasm-imports';
 import { rustWasmImports } from './wasm/rust-wasm-imports';
 import { Go } from './wasm/go-wasm-imports';
-import BigNumber from 'bignumber.js';
 import * as vm2 from 'vm2';
 import { WarpCache } from '../../../cache/WarpCache';
 import { ContractDefinition } from '../../../core/ContractDefinition';
@@ -18,6 +17,7 @@ import { JsHandlerApi } from './handler/JsHandlerApi';
 import { WasmHandlerApi } from './handler/WasmHandlerApi';
 import { normalizeContractSource } from './normalize-source';
 import { MemCache } from '../../../cache/impl/MemCache';
+import BigNumber from '../../../legacy/bignumber';
 
 class ContractError extends Error {
   constructor(message) {

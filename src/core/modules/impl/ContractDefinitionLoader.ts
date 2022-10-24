@@ -1,7 +1,6 @@
 import Arweave from 'arweave';
-import Transaction from 'arweave/web/lib/transaction';
+import Transaction from 'arweave/node/lib/transaction';
 import { ContractType } from '../../../contract/deploy/CreateContract';
-import { WarpCache } from '../../../cache/WarpCache';
 import { ContractDefinition, ContractSource } from '../../../core/ContractDefinition';
 import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
 import { getTag } from '../../../legacy/utils';
