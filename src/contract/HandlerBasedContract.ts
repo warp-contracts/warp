@@ -30,8 +30,7 @@ import {
   WriteInteractionOptions,
   WriteInteractionResponse,
   InnerCallData,
-  Signature,
-  SigningFunction
+  Signature
 } from './Contract';
 import { Tags, ArTransfer, emptyTransfer, ArWallet } from './deploy/CreateContract';
 import { SourceData, SourceImpl } from './deploy/impl/SourceImpl';
@@ -208,7 +207,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     options?: WriteInteractionOptions
   ): Promise<WriteInteractionResponse | null> {
     this.logger.info('Write interaction', { input, options });
-    if (!this.signature.signer) {
+    if (!this.signature) {
       throw new Error("Wallet not connected. Use 'connect' method first.");
     }
     const { arweave, interactionsLoader, environment } = this.warp;
@@ -561,7 +560,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   ): Promise<InteractionResult<State, View>> {
     this.logger.info('Call contract input', input);
     this.maybeResetRootContract();
-    if (!this.signature.signer) {
+    if (!this.signature) {
       this.logger.warn('Wallet not set.');
     }
     const { arweave, stateEvaluator } = this.warp;
@@ -575,7 +574,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     let effectiveCaller;
     if (caller) {
       effectiveCaller = caller;
-    } else if (this.signature.signer) {
+    } else if (this.signature) {
       // we're creating this transaction just to call the signing function on it
       // - and retrieve the caller/owner
       const dummyTx = await arweave.createTransaction({
@@ -608,7 +607,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     this.logger.debug('interaction', interaction);
     const tx = await createInteractionTx(
       arweave,
-      this.signature.signer,
+      this.signature?.signer,
       this._contractTxId,
       input,
       tags,
@@ -768,7 +767,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   }
 
   async save(sourceData: SourceData): Promise<any> {
-    if (!this.signature.signer) {
+    if (!this.signature) {
       throw new Error("Wallet not connected. Use 'connect' method first.");
     }
     const { arweave } = this.warp;
