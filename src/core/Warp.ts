@@ -76,7 +76,7 @@ export class Warp {
   use(plugin: WarpPlugin<unknown, unknown>): Warp {
     const pluginType = plugin.type();
     if (!knownWarpPlugins.some((p) => p == pluginType)) {
-      throw new Error(`Unknown plugin type ${pluginType}`);
+      throw new Error(`Unknown plugin type ${pluginType}.`);
     }
     this.plugins.set(pluginType, plugin);
 
@@ -87,9 +87,9 @@ export class Warp {
     return this.plugins.has(type);
   }
 
-  loadPlugin<P, Q>(type: WarpPluginType) {
+  loadPlugin<P, Q>(type: WarpPluginType): WarpPlugin<P, Q> {
     if (!this.hasPlugin(type)) {
-      throw new Error(`Plugin ${type} not registered`);
+      throw new Error(`Plugin ${type} not registered.`);
     }
 
     return this.plugins.get(type) as WarpPlugin<P, Q>;

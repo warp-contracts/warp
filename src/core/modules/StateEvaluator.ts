@@ -132,8 +132,6 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   mineArLocalBlocks = true;
 
   throwOnInternalWriteError = true;
-
-  validateTransactions = true;
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some features.
@@ -206,9 +204,4 @@ export interface EvaluationOptions {
   // whether a contract should automatically throw if internal write fails.
   // set to 'true' be default, can be set to false for backwards compatibility
   throwOnInternalWriteError: boolean;
-
-  // whether each processed transaction should be cryptographically validated
-  // Note: this affects the performance, but may be useful if you don't trust
-  // the gateway
-  validateTransactions: boolean;
 }
