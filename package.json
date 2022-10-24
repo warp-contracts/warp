@@ -64,7 +64,6 @@
     "@idena/vrf-js": "^1.0.1",
     "archiver": "^5.3.0",
     "arweave": "1.11.6",
-    "bignumber.js": "^9.0.1",
     "elliptic": "^6.5.4",
     "events": "3.3.0",
     "fast-copy": "^2.1.1",
