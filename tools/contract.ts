@@ -6,6 +6,8 @@ import knex from 'knex';
 import os from 'os';
 import path from "path";
 import stringify from "safe-stable-stringify";
+import {WarpPlugin, WarpPluginType} from "../src/core/WarpPlugin";
+import {GQLNodeInterface} from "smartweave/lib/interfaces/gqlResult";
 
 const logger = LoggerFactory.INST.create('Contract');
 
@@ -31,7 +33,20 @@ async function main() {
     logging: false // Enable network request logging
   });
 
-  const warp = WarpFactory.forMainnet({...defaultCacheOptions, inMemory: true});
+  class ExamplePlugin implements WarpPlugin<GQLNodeInterface, boolean> {
+    process(input: GQLNodeInterface): boolean {
+      return false;
+    }
+
+    type(): WarpPluginType {
+      return 'evm-signature-verification';
+    }
+  }
+
+  const warp = WarpFactory
+    .forMainnet({...defaultCacheOptions, inMemory: true})
+    .use(new ExamplePlugin());
+
   try {
     const contract = warp.contract("Ws9hhYckc-zSnVmbBep6q_kZD5zmzYzDmgMC50nMiuE");
     const cacheResult = await contract
