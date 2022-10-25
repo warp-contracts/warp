@@ -1,4 +1,4 @@
-import { normalizeContractSource } from '@warp';
+import { normalizeContractSource } from '../../core/modules/impl/normalize-source';
 
 describe('normalizeContractSource function', () => {
   const exampleSrcIIFEArrow = `(() => {

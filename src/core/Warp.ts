@@ -1,22 +1,22 @@
-import {
-  DefinitionLoader,
-  ExecutorFactory,
-  HandlerApi,
-  InteractionsLoader,
-  InteractionsSorter,
-  WarpBuilder,
-  StateEvaluator
-} from '@warp/core';
 import Arweave from 'arweave';
-import {
-  Contract,
-  HandlerBasedContract,
-  CreateContract,
-  DefaultCreateContract,
-  PstContract,
-  PstContractImpl
-} from '@warp/contract';
-import { GQLNodeInterface } from '@warp/legacy';
+import { LevelDbCache } from '../cache/impl/LevelDbCache';
+import { Contract, InnerCallData, InnerCallType } from '../contract/Contract';
+import { CreateContract } from '../contract/deploy/CreateContract';
+import { DefaultCreateContract } from '../contract/deploy/impl/DefaultCreateContract';
+import { HandlerBasedContract } from '../contract/HandlerBasedContract';
+import { PstContract } from '../contract/PstContract';
+import { PstContractImpl } from '../contract/PstContractImpl';
+import { GQLNodeInterface } from '../legacy/gqlResult';
+import { MigrationTool } from '../contract/migration/MigrationTool';
+import { Testing } from '../contract/testing/Testing';
+import { DefinitionLoader } from './modules/DefinitionLoader';
+import { ExecutorFactory } from './modules/ExecutorFactory';
+import { HandlerApi } from './modules/impl/HandlerExecutorFactory';
+import { InteractionsLoader } from './modules/InteractionsLoader';
+import { EvalStateResult, StateEvaluator } from './modules/StateEvaluator';
+import { WarpBuilder } from './WarpBuilder';
+
+export type WarpEnvironment = 'local' | 'testnet' | 'mainnet' | 'custom';
 
 /**
  * The Warp "motherboard" ;-).
@@ -28,21 +28,29 @@ import { GQLNodeInterface } from '@warp/legacy';
  */
 export class Warp {
   readonly createContract: CreateContract;
+  readonly migrationTool: MigrationTool;
+  readonly testing: Testing;
 
   constructor(
     readonly arweave: Arweave,
+    readonly levelDb: LevelDbCache<EvalStateResult<unknown>>,
     readonly definitionLoader: DefinitionLoader,
     readonly interactionsLoader: InteractionsLoader,
-    readonly interactionsSorter: InteractionsSorter,
     readonly executorFactory: ExecutorFactory<HandlerApi<unknown>>,
     readonly stateEvaluator: StateEvaluator,
-    readonly useWarpGwInfo: boolean = false
+    readonly environment: WarpEnvironment = 'custom'
   ) {
-    this.createContract = new DefaultCreateContract(arweave);
+    this.createContract = new DefaultCreateContract(arweave, this);
+    this.migrationTool = new MigrationTool(arweave, levelDb);
+    this.testing = new Testing(arweave);
   }
 
-  static builder(arweave: Arweave): WarpBuilder {
-    return new WarpBuilder(arweave);
+  static builder(
+    arweave: Arweave,
+    cache: LevelDbCache<EvalStateResult<unknown>>,
+    environment: WarpEnvironment
+  ): WarpBuilder {
+    return new WarpBuilder(arweave, cache, environment);
   }
 
   /**
@@ -50,12 +58,8 @@ export class Warp {
    * @param contractTxId
    * @param callingContract
    */
-  contract<State>(
-    contractTxId: string,
-    callingContract?: Contract,
-    callingInteraction?: GQLNodeInterface
-  ): Contract<State> {
-    return new HandlerBasedContract<State>(contractTxId, this, callingContract, callingInteraction);
+  contract<State>(contractTxId: string, callingContract?: Contract, innerCallData?: InnerCallData): Contract<State> {
+    return new HandlerBasedContract<State>(contractTxId, this, callingContract, innerCallData);
   }
 
   /**
@@ -64,9 +68,5 @@ export class Warp {
    */
   pst(contractTxId: string): PstContract {
     return new PstContractImpl(contractTxId, this);
-  }
-
-  async flushCache(): Promise<void> {
-    await this.stateEvaluator.flushCache();
   }
 }

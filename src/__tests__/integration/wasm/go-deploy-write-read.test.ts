@@ -3,9 +3,14 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { getTag, LoggerFactory, PstContract, PstState, Warp, WarpNodeFactory, SmartWeaveTags } from '@warp';
 import path from 'path';
-import { addFunds, mineBlock } from '../_helpers';
+import { mineBlock } from '../_helpers';
+import { PstState, PstContract } from '../../../contract/PstContract';
+import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
+import { Warp } from '../../../core/Warp';
+import { WarpFactory } from '../../../core/WarpFactory';
+import { getTag } from '../../../legacy/utils';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
 
 describe('Testing the Go WASM Profit Sharing Token', () => {
   let wallet: JWKInterface;
@@ -29,18 +34,12 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
     arlocal = new ArLocal(1150, false);
     await arlocal.start();
 
-    arweave = Arweave.init({
-      host: 'localhost',
-      port: 1150,
-      protocol: 'http'
-    });
-
     LoggerFactory.INST.logLevel('error');
 
-    warp = WarpNodeFactory.forTesting(arweave);
+    warp = WarpFactory.forLocal(1150);
+    ({ arweave } = warp);
 
-    wallet = await arweave.wallets.generate();
-    await addFunds(arweave, wallet);
+    ({ jwk: wallet } = await warp.testing.generateWallet());
     walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
     const contractSrc = fs.readFileSync(path.join(__dirname, '../data/wasm/go/go-pst.wasm'));
@@ -58,14 +57,14 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
     };
 
     // deploying contract using the new SDK.
-    contractTxId = await warp.createContract.deploy({
+    ({ contractTxId } = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify(initialState),
       src: contractSrc,
       wasmSrcCodeDir: path.join(__dirname, '../data/wasm/go/src')
-    });
+    }));
 
-    properForeignContractTxId = await warp.createContract.deploy({
+    ({ contractTxId: properForeignContractTxId } = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify({
         ...initialState,
@@ -76,9 +75,9 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
       }),
       src: contractSrc,
       wasmSrcCodeDir: path.join(__dirname, '../data/wasm/go/src')
-    });
+    }));
 
-    wrongForeignContractTxId = await warp.createContract.deploy({
+    ({ contractTxId: wrongForeignContractTxId } = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify({
         ...initialState,
@@ -89,7 +88,7 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
       }),
       src: contractSrc,
       wasmSrcCodeDir: path.join(__dirname, '../data/wasm/go/src')
-    });
+    }));
 
     // connecting to the PST contract
     pst = warp.pst(contractTxId);
@@ -97,7 +96,7 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
     // connecting wallet to the PST contract
     pst.connect(wallet);
 
-    await mineBlock(arweave);
+    await mineBlock(warp);
   }, 50000);
 
   afterAll(async () => {
@@ -128,7 +127,7 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
       qty: 555
     });
 
-    await mineBlock(arweave);
+    await mineBlock(warp);
 
     expect((await pst.currentState()).balances[walletAddress]).toEqual(555669 - 555);
     expect((await pst.currentState()).balances['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']).toEqual(10000000 + 555);
@@ -146,7 +145,7 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
       function: 'foreignCall',
       contractTxId: wrongForeignContractTxId
     });
-    await mineBlock(arweave);
+    await mineBlock(warp);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(555669 - 555);
     expect((await pst.currentState()).balances['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']).toEqual(10000000 + 555);
 
@@ -154,7 +153,7 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
       function: 'foreignCall',
       contractTxId: properForeignContractTxId
     });
-    await mineBlock(arweave);
+    await mineBlock(warp);
     expect((await pst.currentState()).balances[walletAddress]).toEqual(555669 - 555 + 1000);
     expect((await pst.currentState()).balances['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']).toEqual(
       10000000 + 555 + 1000
@@ -199,10 +198,10 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
       wasmSrcCodeDir: path.join(__dirname, '../data/wasm/go/src-evolve')
     });
 
-    await mineBlock(arweave);
+    await mineBlock(warp);
 
     await pst.evolve(newSrcTxId);
-    await mineBlock(arweave);
+    await mineBlock(warp);
 
     // note: evolve should add to the transfer additional 200
     await pst.transfer({
@@ -210,7 +209,7 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
       qty: 555
     });
 
-    await mineBlock(arweave);
+    await mineBlock(warp);
 
     expect((await pst.currentState()).balances['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']).toEqual(
       10000000 + 555 + 1000 + 555 + 200

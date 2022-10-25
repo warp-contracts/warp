@@ -48,6 +48,7 @@ export interface GQLNodeInterface {
   };
   dry?: boolean;
   sortKey?: string; // added dynamically by Warp Sequencer
+  strict?: boolean;
   confirmationStatus?: string;
   source?: string;
   bundlerTxId?: string;
@@ -62,9 +63,6 @@ export interface VrfData {
 }
 
 export interface GQLEdgeInterface {
-  // added dynamically by the LexicographicalInteractionsSorter
-  // or rewritten from GQLNodeInterface.sortKey (if added there by Warp Sequencer)
-  sortKey?: string;
   cursor: string;
   node: GQLNodeInterface;
 }

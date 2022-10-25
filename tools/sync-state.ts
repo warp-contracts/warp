@@ -1,9 +1,9 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import {LoggerFactory, WarpNodeFactory} from '../src';
+import { LoggerFactory, WarpNodeFactory } from '../src';
 import fs from 'fs';
-import {JWKInterface} from 'arweave/node/lib/wallet';
-import {TsLogFactory} from "../src/logging/node/TsLogFactory";
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import { TsLogFactory } from '../src/logging/node/TsLogFactory';
 
 async function main() {
   LoggerFactory.use(new TsLogFactory());
@@ -18,25 +18,22 @@ async function main() {
 
   try {
     const contract = await WarpNodeFactory.memCached(arweave)
-      .contract("XIutiOKujGI21_ywULlBeyy-L9d8goHxt0ZyUayGaDg")
-      .syncState("http://134.209.84.136:8080");
+      .contract('KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY')
+      .syncState('https://d2rkt3biev1br2.cloudfront.net/state', { validity: true, safeHeight: true });
 
-    const call = await contract
-      .viewState({
-        function: "owner",
-        tokenId: "N44xR9fFg98mHmdIA8cOyHA19qNDmT4Xbd8dww8KSDk"
-      });
+    const call = await contract.viewState({
+      function: 'balance',
+      target: 'ZTUZKdajVSLxqoGZVrK923Miuds-iIFGf28pzPHcwMY'
+    });
 
     logger.info(call.result);
-
   } catch (e) {
-    logger.error(e)
+    logger.error(e);
   }
-
 }
 
 export function readJSON(path: string): JWKInterface {
-  const content = fs.readFileSync(path, "utf-8");
+  const content = fs.readFileSync(path, 'utf-8');
   try {
     return JSON.parse(content);
   } catch (e) {

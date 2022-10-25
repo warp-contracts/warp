@@ -1,14 +1,9 @@
-import {
-  BlockHeightCacheResult,
-  Contract,
-  ContractDefinition,
-  EvalStateResult,
-  EvaluationOptions,
-  GQLEdgeInterface,
-  Warp
-} from '@warp';
-import { NetworkInfoInterface } from 'arweave/node/network';
-import { BlockData } from 'arweave/node/blocks';
+import { SortKeyCacheResult } from '../cache/SortKeyCache';
+import { Contract } from '../contract/Contract';
+import { GQLNodeInterface } from '../legacy/gqlResult';
+import { ContractDefinition } from './ContractDefinition';
+import { EvaluationOptions, EvalStateResult } from './modules/StateEvaluator';
+import { Warp } from './Warp';
 
 /**
  * current execution context of the contract - contains all elements
@@ -31,14 +26,10 @@ export type ExecutionContext<State, Api = unknown> = {
    */
   contractDefinition: ContractDefinition<State>;
   /**
-   * block height used for all operations - either requested block height or current network block height
-   */
-  blockHeight: number;
-  /**
-   * interaction sorted using either {@link LexicographicalInteractionsSorter} or {@link BlockHeightInteractionsSorter}
+   * interaction sorted using either {@link LexicographicalInteractionsSorter}
    * - crucial for proper and deterministic state evaluation
    */
-  sortedInteractions: GQLEdgeInterface[];
+  sortedInteractions: GQLNodeInterface[];
   /**
    * evaluation options currently being used
    * TODO: this can be removed, as it should be accessible from the {@link Contract}
@@ -49,15 +40,7 @@ export type ExecutionContext<State, Api = unknown> = {
    * performs all the computation.
    */
   handler: Api;
-  currentNetworkInfo?: NetworkInfoInterface;
-  currentBlockData?: BlockData;
   caller?: string; // note: this is only set for "viewState" operations
-  cachedState?: BlockHeightCacheResult<EvalStateResult<State>>;
-
-  // if the interactions list contains interactions from sequencer
-  // we cannot cache at requested block height - as it may happen that after this state
-  // evaluation - new transactions will be available on the same block height.
-  containsInteractionsFromSequencer: boolean;
-
-  upToTransactionId?: string;
+  cachedState?: SortKeyCacheResult<EvalStateResult<State>>;
+  requestedSortKey?: string;
 };

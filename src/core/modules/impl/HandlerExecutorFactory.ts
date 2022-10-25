@@ -1,27 +1,23 @@
 import Arweave from 'arweave';
-import {
-  Benchmark,
-  ContractDefinition,
-  EvalStateResult,
-  EvaluationOptions,
-  ExecutionContext,
-  ExecutorFactory,
-  GQLNodeInterface,
-  LoggerFactory,
-  MemCache,
-  normalizeContractSource,
-  SmartWeaveGlobal,
-  WarpCache
-} from '@warp';
-import { ContractHandlerApi } from './ContractHandlerApi';
 import loader from '@assemblyscript/loader';
-import { WasmContractHandlerApi } from './WasmContractHandlerApi';
 import { asWasmImports } from './wasm/as-wasm-imports';
 import { rustWasmImports } from './wasm/rust-wasm-imports';
 import { Go } from './wasm/go-wasm-imports';
 import BigNumber from 'bignumber.js';
-import { NodeVM, VMScript } from 'vm2';
-import * as Buffer from 'buffer';
+import * as vm2 from 'vm2';
+import { WarpCache } from '../../../cache/WarpCache';
+import { ContractDefinition } from '../../../core/ContractDefinition';
+import { ExecutionContext } from '../../../core/ExecutionContext';
+import { GQLNodeInterface } from '../../../legacy/gqlResult';
+import { SmartWeaveGlobal } from '../../../legacy/smartweave-global';
+import { Benchmark } from '../../../logging/Benchmark';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { ExecutorFactory } from '../ExecutorFactory';
+import { EvaluationOptions, EvalStateResult } from '../StateEvaluator';
+import { JsHandlerApi } from './handler/JsHandlerApi';
+import { WasmHandlerApi } from './handler/WasmHandlerApi';
+import { normalizeContractSource } from './normalize-source';
+import { MemCache } from '../../../cache/impl/MemCache';
 
 class ContractError extends Error {
   constructor(message) {
@@ -156,7 +152,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
         }
       }
       this.logger.info(`WASM ${contractDefinition.srcWasmLang} handler created in ${benchmark.elapsed()}`);
-      return new WasmContractHandlerApi(swGlobal, contractDefinition, jsExports || wasmInstance.exports);
+      return new WasmHandlerApi(swGlobal, contractDefinition, jsExports || wasmInstance.exports);
     } else {
       this.logger.info('Creating handler for js contract', contractDefinition.txId);
       const normalizedSource = normalizeContractSource(contractDefinition.src, evaluationOptions.useVM2);
@@ -168,10 +164,14 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
           );
         }
       }
-
+      if (!evaluationOptions.allowBigInt) {
+        if (normalizedSource.includes('BigInt')) {
+          throw new Error('Using BigInt is not allowed by default. Use EvaluationOptions.allowBigInt flag.');
+        }
+      }
       if (evaluationOptions.useVM2) {
-        const vmScript = new VMScript(normalizedSource);
-        const vm = new NodeVM({
+        const vmScript = new vm2.VMScript(normalizedSource);
+        const vm = new vm2.NodeVM({
           console: 'off',
           sandbox: {
             SmartWeave: swGlobal,
@@ -189,11 +189,11 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
           wrapper: 'commonjs'
         });
 
-        return new ContractHandlerApi(swGlobal, vm.run(vmScript), contractDefinition);
+        return new JsHandlerApi(swGlobal, contractDefinition, vm.run(vmScript));
       } else {
         const contractFunction = new Function(normalizedSource);
         const handler = contractFunction(swGlobal, BigNumber, LoggerFactory.INST.create(swGlobal.contract.id));
-        return new ContractHandlerApi(swGlobal, handler, contractDefinition);
+        return new JsHandlerApi(swGlobal, contractDefinition, handler);
       }
     }
   }
@@ -246,6 +246,8 @@ export type HandlerResult<State, Result> = {
 export type InteractionResult<State, Result> = HandlerResult<State, Result> & {
   type: InteractionResultType;
   errorMessage?: string;
+  originalValidity?: Record<string, boolean>;
+  originalErrorMessages?: Record<string, string>;
 };
 
 export type ContractInteraction<Input> = {

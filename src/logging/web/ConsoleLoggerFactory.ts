@@ -1,6 +1,7 @@
-import { ILoggerFactory, LoggerSettings, WarpLogger } from '@warp';
 import { ConsoleLogger } from './ConsoleLogger';
-import { LogLevel } from '../LoggerSettings';
+import { LoggerSettings, LogLevel } from '../LoggerSettings';
+import { ILoggerFactory } from '../../logging/LoggerFactory';
+import { WarpLogger } from '../../logging/WarpLogger';
 
 export class ConsoleLoggerFactory implements ILoggerFactory {
   private registeredLoggers: { [moduleName: string]: ConsoleLogger } = {};

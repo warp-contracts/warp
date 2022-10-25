@@ -1,17 +1,15 @@
-import {
-  ArweaveWrapper,
-  Benchmark,
-  ContractDefinition,
-  ContractSource,
-  ContractType,
-  DefinitionLoader,
-  getTag,
-  LoggerFactory,
-  WarpCache,
-  SmartWeaveTags
-} from '@warp';
 import Arweave from 'arweave';
 import Transaction from 'arweave/web/lib/transaction';
+import { ContractType } from '../../../contract/deploy/CreateContract';
+import { WarpCache } from '../../../cache/WarpCache';
+import { ContractDefinition, ContractSource } from '../../../core/ContractDefinition';
+import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
+import { getTag } from '../../../legacy/utils';
+import { Benchmark } from '../../../logging/Benchmark';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { ArweaveWrapper } from '../../../utils/ArweaveWrapper';
+import { DefinitionLoader } from '../DefinitionLoader';
+import { GW_TYPE } from '../InteractionsLoader';
 import { WasmSrc } from './wasm/WasmSrc';
 
 const supportedSrcContentTypes = ['application/javascript', 'application/wasm'];
@@ -21,23 +19,14 @@ export class ContractDefinitionLoader implements DefinitionLoader {
 
   protected arweaveWrapper: ArweaveWrapper;
 
-  constructor(
-    private readonly arweave: Arweave,
-    // TODO: cache should be removed from the core layer and implemented in a wrapper of the core implementation
-    protected readonly cache?: WarpCache<string, ContractDefinition<unknown>>
-  ) {
+  constructor(private readonly arweave: Arweave) {
     this.arweaveWrapper = new ArweaveWrapper(arweave);
   }
 
   async load<State>(contractTxId: string, evolvedSrcTxId?: string): Promise<ContractDefinition<State>> {
-    if (!evolvedSrcTxId && this.cache?.contains(contractTxId)) {
-      this.logger.debug('ContractDefinitionLoader: Hit from cache!');
-      return Promise.resolve(this.cache?.get(contractTxId) as ContractDefinition<State>);
-    }
     const benchmark = Benchmark.measure();
     const contract = await this.doLoad<State>(contractTxId, evolvedSrcTxId);
     this.logger.info(`Contract definition loaded in: ${benchmark.elapsed()}`);
-    this.cache?.put(contractTxId, contract);
 
     return contract;
   }
@@ -128,5 +117,9 @@ export class ContractDefinitionLoader implements DefinitionLoader {
     } else {
       return this.arweaveWrapper.txDataString(contractTx.id);
     }
+  }
+
+  type(): GW_TYPE {
+    return 'arweave';
   }
 }

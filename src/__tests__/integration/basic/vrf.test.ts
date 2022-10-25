@@ -3,22 +3,19 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import {
-  ArweaveGatewayInteractionsLoader,
-  EvaluationOptions,
-  GQLEdgeInterface,
-  InteractionsLoader,
-  LexicographicalInteractionsSorter,
-  LoggerFactory,
-  PstContract,
-  PstState,
-  Warp,
-  WarpNodeFactory
-} from '@warp';
 import path from 'path';
-import { addFunds, mineBlock } from '../_helpers';
+import { mineBlock } from '../_helpers';
 import { Evaluate } from '@idena/vrf-js';
 import elliptic from 'elliptic';
+import { PstContract, PstState } from '../../../contract/PstContract';
+import { InteractionsLoader } from '../../../core/modules/InteractionsLoader';
+import { EvaluationOptions } from '../../../core/modules/StateEvaluator';
+import { Warp } from '../../../core/Warp';
+import { defaultCacheOptions, WarpFactory } from '../../../core/WarpFactory';
+import { GQLNodeInterface } from '../../../legacy/gqlResult';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { ArweaveGatewayInteractionsLoader } from '../../../core/modules/impl/ArweaveGatewayInteractionsLoader';
+import { LexicographicalInteractionsSorter } from '../../../core/modules/impl/LexicographicalInteractionsSorter';
 
 const EC = new elliptic.ec('secp256k1');
 const key = EC.genKeyPair();
@@ -56,10 +53,19 @@ describe('Testing the Profit Sharing Token', () => {
     loader = new VrfDecorator(arweave);
     LoggerFactory.INST.logLevel('error');
 
-    warp = WarpNodeFactory.memCachedBased(arweave).useArweaveGateway().setInteractionsLoader(loader).build();
+    warp = WarpFactory.custom(
+      arweave,
+      {
+        ...defaultCacheOptions,
+        inMemory: true
+      },
+      'testnet'
+    )
+      .useArweaveGateway()
+      .setInteractionsLoader(loader)
+      .build();
 
-    wallet = await arweave.wallets.generate();
-    await addFunds(arweave, wallet);
+    ({ jwk: wallet, address: walletAddress } = await warp.testing.generateWallet());
     walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/token-pst.js'), 'utf8');
@@ -76,7 +82,7 @@ describe('Testing the Profit Sharing Token', () => {
       }
     };
 
-    const contractTxId = await warp.createContract.deploy({
+    const { contractTxId } = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify(initialState),
       src: contractSrc
@@ -88,7 +94,7 @@ describe('Testing the Profit Sharing Token', () => {
     // connecting wallet to the PST contract
     pst.connect(wallet);
 
-    await mineBlock(arweave);
+    await mineBlock(warp);
   });
 
   afterAll(async () => {
@@ -99,12 +105,10 @@ describe('Testing the Profit Sharing Token', () => {
     await pst.writeInteraction({
       function: 'vrf'
     });
-    await mineBlock(arweave);
+    await mineBlock(warp);
     const result = await pst.readState();
-    const lastTxId = Object.keys(result.validity).pop();
-    const vrf = (result.state as any).vrf[lastTxId];
-
-    console.log(vrf);
+    const lastTxId = Object.keys(result.cachedValue.validity).pop();
+    const vrf = (result.cachedValue.state as any).vrf[lastTxId];
 
     expect(vrf).not.toBeUndefined();
     expect(vrf['random_6_1'] == vrf['random_6_2']).toBe(true);
@@ -118,49 +122,150 @@ describe('Testing the Profit Sharing Token', () => {
   });
 
   it('should throw if random cannot be verified', async () => {
-    const txId = await pst.writeInteraction({
+    const { originalTxId: txId } = await pst.writeInteraction({
       function: 'vrf'
     });
-    await mineBlock(arweave);
+    await mineBlock(warp);
     useWrongIndex.push(txId);
     await expect(pst.readState()).rejects.toThrow('Vrf verification failed.');
     useWrongIndex.pop();
 
-    const txId2 = await pst.writeInteraction({
+    const { originalTxId: txId2 } = await pst.writeInteraction({
       function: 'vrf'
     });
-    await mineBlock(arweave);
+    await mineBlock(warp);
     useWrongProof.push(txId2);
     await expect(pst.readState()).rejects.toThrow('Vrf verification failed.');
     useWrongProof.pop();
+  });
+
+  it('should allow to test VRF on a standard forLocal Warp instance', async () => {
+    const localWarp = WarpFactory.forLocal(1823);
+
+    const { contractTxId: vrfContractTxId } = await localWarp.createContract.deploy({
+      wallet,
+      initState: JSON.stringify(initialState),
+      src: contractSrc
+    });
+
+    await mineBlock(localWarp);
+    const vrfContract = localWarp.contract(vrfContractTxId).connect(wallet);
+    await vrfContract.writeInteraction(
+      {
+        function: 'vrf'
+      },
+      { vrf: true }
+    );
+    const result = await vrfContract.readState();
+    const lastTxId = Object.keys(result.cachedValue.validity).pop();
+    const vrf = (result.cachedValue.state as any).vrf[lastTxId];
+
+    expect(vrf).not.toBeUndefined();
+    expect(vrf['random_6_1'] == vrf['random_6_2']).toBe(true);
+    expect(vrf['random_6_2'] == vrf['random_6_3']).toBe(true);
+    expect(vrf['random_12_1'] == vrf['random_12_2']).toBe(true);
+    expect(vrf['random_12_2'] == vrf['random_12_3']).toBe(true);
+    expect(vrf['random_46_1'] == vrf['random_46_2']).toBe(true);
+    expect(vrf['random_46_2'] == vrf['random_46_3']).toBe(true);
+    expect(vrf['random_99_1'] == vrf['random_99_2']).toBe(true);
+    expect(vrf['random_99_2'] == vrf['random_99_3']).toBe(true);
+  });
+
+  it('should allow to test VRF on a standard forLocal Warp instance in strict mode', async () => {
+    const localWarp = WarpFactory.forLocal(1823);
+
+    const { contractTxId: vrfContractTxId } = await localWarp.createContract.deploy({
+      wallet,
+      initState: JSON.stringify(initialState),
+      src: contractSrc
+    });
+
+    await mineBlock(localWarp);
+    const vrfContract = localWarp.contract(vrfContractTxId).connect(wallet);
+    await vrfContract.writeInteraction(
+      {
+        function: 'vrf'
+      },
+      { vrf: true, strict: true }
+    );
+    const result = await vrfContract.readState();
+    const lastTxId = Object.keys(result.cachedValue.validity).pop();
+    const vrf = (result.cachedValue.state as any).vrf[lastTxId];
+
+    expect(vrf).not.toBeUndefined();
+    expect(vrf['random_6_1'] == vrf['random_6_2']).toBe(true);
+    expect(vrf['random_6_2'] == vrf['random_6_3']).toBe(true);
+    expect(vrf['random_12_1'] == vrf['random_12_2']).toBe(true);
+    expect(vrf['random_12_2'] == vrf['random_12_3']).toBe(true);
+    expect(vrf['random_46_1'] == vrf['random_46_2']).toBe(true);
+    expect(vrf['random_46_2'] == vrf['random_46_3']).toBe(true);
+    expect(vrf['random_99_1'] == vrf['random_99_2']).toBe(true);
+    expect(vrf['random_99_2'] == vrf['random_99_3']).toBe(true);
+  });
+
+  it('should allow to test VRF on a standard forLocal Warp instance with internal writes', async () => {
+    const localWarp = WarpFactory.forLocal(1823);
+
+    const { contractTxId: vrfContractTxId } = await localWarp.createContract.deploy({
+      wallet,
+      initState: JSON.stringify(initialState),
+      src: contractSrc
+    });
+
+    await mineBlock(localWarp);
+    const vrfContract = localWarp
+      .contract(vrfContractTxId)
+      .setEvaluationOptions({
+        internalWrites: true
+      })
+      .connect(wallet);
+    const result2 = await vrfContract.writeInteraction(
+      {
+        function: 'vrf'
+      },
+      { vrf: true, strict: true }
+    );
+    const result = await vrfContract.readState();
+    const lastTxId = Object.keys(result.cachedValue.validity).pop();
+    const vrf = (result.cachedValue.state as any).vrf[lastTxId];
+
+    expect(vrf).not.toBeUndefined();
+    expect(vrf['random_6_1'] == vrf['random_6_2']).toBe(true);
+    expect(vrf['random_6_2'] == vrf['random_6_3']).toBe(true);
+    expect(vrf['random_12_1'] == vrf['random_12_2']).toBe(true);
+    expect(vrf['random_12_2'] == vrf['random_12_3']).toBe(true);
+    expect(vrf['random_46_1'] == vrf['random_46_2']).toBe(true);
+    expect(vrf['random_46_2'] == vrf['random_46_3']).toBe(true);
+    expect(vrf['random_99_1'] == vrf['random_99_2']).toBe(true);
+    expect(vrf['random_99_2'] == vrf['random_99_3']).toBe(true);
   });
 });
 
 class VrfDecorator extends ArweaveGatewayInteractionsLoader {
   constructor(protected readonly arweave: Arweave) {
-    super(arweave);
+    super(arweave, 'local');
   }
 
   async load(
-    contractId: string,
-    fromBlockHeight: number,
-    toBlockHeight: number,
-    evaluationOptions: EvaluationOptions
-  ): Promise<GQLEdgeInterface[]> {
-    const result = await super.load(contractId, fromBlockHeight, toBlockHeight, evaluationOptions);
+    contractTxId: string,
+    fromSortKey?: string,
+    toSortKey?: string,
+    evaluationOptions?: EvaluationOptions
+  ): Promise<GQLNodeInterface[]> {
+    const result = await super.load(contractTxId, fromSortKey, toSortKey, evaluationOptions);
     const arUtils = this.arweave.utils;
 
     const sorter = new LexicographicalInteractionsSorter(this.arweave);
 
     for (const r of result) {
-      r.node.sortKey = await sorter.createSortKey(r.node.block.id, r.node.id, r.node.block.height);
-      const data = arUtils.stringToBuffer(r.node.sortKey);
+      r.sortKey = await sorter.createSortKey(r.block.id, r.id, r.block.height);
+      const data = arUtils.stringToBuffer(r.sortKey);
       const [index, proof] = Evaluate(key.getPrivate().toArray(), data);
-      r.node.vrf = {
-        index: useWrongIndex.includes(r.node.id)
+      r.vrf = {
+        index: useWrongIndex.includes(r.id)
           ? arUtils.bufferTob64Url(Uint8Array.of(1, 2, 3))
           : arUtils.bufferTob64Url(index),
-        proof: useWrongProof.includes(r.node.id)
+        proof: useWrongProof.includes(r.id)
           ? 'pK5HGnXo_rJkZPJorIX7TBCAEikcemL2DgJaPB3Pfm2D6tZUdK9mDuBSRUkcHUDNnrO02O0-ogq1e32JVEuVvgR4i5YFa-UV9MEoHgHg4yv0e318WNfzNWPc9rlte7P7RoO57idHu5SSkm7Qj0f4pBjUR7lWODVKBYp9fEJ-PObZ'
           : arUtils.bufferTob64Url(proof),
         bigint: bufToBn(index).toString(),

@@ -1,16 +1,21 @@
-import {
-  ArweaveWrapper,
-  Benchmark,
-  EvaluationOptions,
-  GQLEdgeInterface,
-  GQLResultInterface,
-  GQLTransactionsResultInterface,
-  InteractionsLoader,
-  LoggerFactory,
-  sleep,
-  SmartWeaveTags
-} from '@warp';
 import Arweave from 'arweave';
+import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
+import {
+  GQLEdgeInterface,
+  GQLNodeInterface,
+  GQLTransactionsResultInterface,
+  GQLResultInterface
+} from '../../../legacy/gqlResult';
+import { Benchmark } from '../../../logging/Benchmark';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { ArweaveWrapper } from '../../../utils/ArweaveWrapper';
+import { sleep } from '../../../utils/utils';
+import { GW_TYPE, InteractionsLoader } from '../InteractionsLoader';
+import { InteractionsSorter } from '../InteractionsSorter';
+import { EvaluationOptions } from '../StateEvaluator';
+import { LexicographicalInteractionsSorter } from './LexicographicalInteractionsSorter';
+import { WarpEnvironment } from '../../Warp';
+import { generateMockVrf } from '../../../utils/vrf';
 
 const MAX_REQUEST = 100;
 
@@ -21,7 +26,7 @@ interface TagFilter {
 
 interface BlockFilter {
   min?: number;
-  max: number;
+  max?: number;
 }
 
 export interface GqlReqVariables {
@@ -70,18 +75,24 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
   private static readonly _30seconds = 30 * 1000;
 
   private readonly arweaveWrapper: ArweaveWrapper;
+  private readonly sorter: InteractionsSorter;
 
-  constructor(protected readonly arweave: Arweave) {
+  constructor(protected readonly arweave: Arweave, private readonly environment: WarpEnvironment) {
     this.arweaveWrapper = new ArweaveWrapper(arweave);
+    this.sorter = new LexicographicalInteractionsSorter(arweave);
   }
 
   async load(
     contractId: string,
-    fromBlockHeight: number,
-    toBlockHeight: number,
-    evaluationOptions: EvaluationOptions
-  ): Promise<GQLEdgeInterface[]> {
-    this.logger.debug('Loading interactions for', { contractId, fromBlockHeight, toBlockHeight });
+    fromSortKey?: string,
+    toSortKey?: string,
+    evaluationOptions?: EvaluationOptions
+  ): Promise<GQLNodeInterface[]> {
+    this.logger.debug('Loading interactions for', { contractId, fromSortKey, toSortKey });
+
+    const fromBlockHeight = this.sorter.extractBlockHeight(fromSortKey);
+    const toBlockHeight = this.sorter.extractBlockHeight(toSortKey);
+
     const mainTransactionsVariables: GqlReqVariables = {
       tags: [
         {
@@ -123,14 +134,52 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
       interactions = interactions.concat(innerWritesInteractions);
     }
 
-    this.logger.info('All loaded interactions:', {
-      from: fromBlockHeight,
-      to: toBlockHeight,
-      loaded: interactions.length,
+    /**
+     * Because the behaviour of the Arweave gateway in case of passing null to min/max block height
+     * in the gql query params is unknown (https://discord.com/channels/908759493943394334/908766823342801007/983643012947144725)
+     * - we're removing all the interactions, that have null block data.
+     */
+    interactions = interactions.filter((i) => i.node.block && i.node.block.id && i.node.block.height);
+
+    // note: this operation adds the "sortKey" to the interactions
+    let sortedInteractions = await this.sorter.sort(interactions);
+
+    if (fromSortKey && toSortKey) {
+      sortedInteractions = sortedInteractions.filter((i) => {
+        return i.node.sortKey.localeCompare(fromSortKey) > 0 && i.node.sortKey.localeCompare(toSortKey) <= 0;
+      });
+    } else if (fromSortKey && !toSortKey) {
+      sortedInteractions = sortedInteractions.filter((i) => {
+        return i.node.sortKey.localeCompare(fromSortKey) > 0;
+      });
+    } else if (!fromSortKey && toSortKey) {
+      sortedInteractions = sortedInteractions.filter((i) => {
+        return i.node.sortKey.localeCompare(toSortKey) <= 0;
+      });
+    }
+
+    this.logger.debug('All loaded interactions:', {
+      from: fromSortKey,
+      to: toSortKey,
+      loaded: sortedInteractions.length,
       time: loadingBenchmark.elapsed()
     });
 
-    return interactions;
+    const isLocalOrTestnetEnv = this.environment === 'local' || this.environment === 'testnet';
+    return sortedInteractions.map((i) => {
+      const interaction = i.node;
+      if (isLocalOrTestnetEnv) {
+        if (
+          interaction.tags.some((t) => {
+            return t.name == SmartWeaveTags.REQUEST_VRF && t.value === 'true';
+          })
+        ) {
+          interaction.vrf = generateMockVrf(interaction.sortKey, this.arweave);
+        }
+      }
+
+      return interaction;
+    });
   }
 
   private async loadPages(variables: GqlReqVariables) {
@@ -183,5 +232,13 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
     const txs = data.data.transactions;
 
     return txs;
+  }
+
+  type(): GW_TYPE {
+    return 'arweave';
+  }
+
+  clearCache(): void {
+    // noop
   }
 }

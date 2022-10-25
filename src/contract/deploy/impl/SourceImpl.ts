@@ -1,14 +1,15 @@
 /* eslint-disable */
-
-import { SmartWeaveTags } from '@warp/core';
-import { LoggerFactory } from '@warp/logging';
-import { Source, SigningFunction } from '@warp';
 import metering from 'redstone-wasm-metering';
 import Arweave from 'arweave';
 import { Go } from '../../../core/modules/impl/wasm/go-wasm-imports';
 import fs, { PathOrFileDescriptor } from 'fs';
 import { matchMutClosureDtor } from '../../../core/modules/impl/wasm/wasm-bindgen-tools';
 import { ArWallet, ContractType } from '../CreateContract';
+import { SigningFunction } from '../../../contract/Contract';
+import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { Source } from '../Source';
+import { Buffer } from 'redstone-isomorphic';
 
 const wasmTypeMapping: Map<number, string> = new Map([
   [1, 'assemblyscript'],
@@ -59,6 +60,7 @@ export class SourceImpl implements Source {
         lang = go.exports.lang();
         wasmVersion = go.exports.version();
       } else {
+        // @ts-ignore
         const module: WebAssembly.Instance = await WebAssembly.instantiate(src, dummyImports(moduleImports));
         // @ts-ignore
         if (!module.instance.exports.lang) {
@@ -122,15 +124,18 @@ export class SourceImpl implements Source {
     // note: in case of useBundler = true, we're posting both
     // src tx and contract tx in one request.
     let responseOk = true;
+    let response: { status: number; statusText: string; data: any };
     if (!useBundler) {
-      const response = await this.arweave.transactions.post(srcTx);
+      response = await this.arweave.transactions.post(srcTx);
       responseOk = response.status === 200 || response.status === 208;
     }
 
     if (responseOk) {
       return srcTx;
     } else {
-      throw new Error(`Unable to write Contract Source`);
+      throw new Error(
+        `Unable to write Contract Source. Arweave responded with status ${response.status}: ${response.statusText}`
+      );
     }
   }
 

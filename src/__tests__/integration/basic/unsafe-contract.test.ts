@@ -3,11 +3,13 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, LoggerFactory, Warp, WarpNodeFactory } from '@warp';
 import path from 'path';
-import { addFunds, mineBlock } from '../_helpers';
+import { mineBlock } from '../_helpers';
+import { Contract } from '../../../contract/Contract';
+import { Warp } from '../../../core/Warp';
+import { WarpFactory } from '../../../core/WarpFactory';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
 
-let arweave: Arweave;
 let arlocal: ArLocal;
 let warp: Warp;
 let contract: Contract<any>;
@@ -24,36 +26,30 @@ describe('Testing the Warp client', () => {
     arlocal = new ArLocal(1801, false);
     await arlocal.start();
 
-    arweave = Arweave.init({
-      host: 'localhost',
-      port: 1801,
-      protocol: 'http'
-    });
-
     LoggerFactory.INST.logLevel('error');
+    warp = WarpFactory.forLocal(1801);
 
-    warp = WarpNodeFactory.forTesting(arweave);
-
-    wallet = await arweave.wallets.generate();
-    await addFunds(arweave, wallet);
-
+    ({ jwk: wallet } = await warp.testing.generateWallet());
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/token-pst-unsafe.js'), 'utf8');
 
     // deploying contract using the new SDK.
-    const contractTxId = await warp.createContract.deploy({
+    const { contractTxId } = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify({}),
       src: contractSrc
     });
 
-    contract = warp.contract(contractTxId);
+    contract = warp.contract(contractTxId).setEvaluationOptions({
+      mineArLocalBlocks: false
+    });
     contractWithUnsafe = warp.contract(contractTxId).setEvaluationOptions({
-      allowUnsafeClient: true
+      allowUnsafeClient: true,
+      mineArLocalBlocks: false
     });
     contract.connect(wallet);
     contractWithUnsafe.connect(wallet);
 
-    await mineBlock(arweave);
+    await mineBlock(warp);
   });
 
   afterAll(async () => {

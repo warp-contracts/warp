@@ -1,19 +1,21 @@
-import {
-  ArweaveWrapper,
-  Benchmark,
-  ContractDefinition,
-  ContractSource,
-  getTag,
-  LoggerFactory,
-  SmartWeaveTags,
-  stripTrailingSlash,
-  WarpCache
-} from '@warp';
 import Arweave from 'arweave';
 import { ContractDefinitionLoader } from './ContractDefinitionLoader';
-import 'redstone-isomorphic';
-import { WasmSrc } from './wasm/WasmSrc';
+import { Buffer } from 'redstone-isomorphic';
 import Transaction from 'arweave/node/lib/transaction';
+import { GW_TYPE } from '../InteractionsLoader';
+import { ContractDefinition, ContractSource } from '../../../core/ContractDefinition';
+import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
+import { getTag } from '../../../legacy/utils';
+import { Benchmark } from '../../../logging/Benchmark';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { ArweaveWrapper } from '../../../utils/ArweaveWrapper';
+import { stripTrailingSlash } from '../../../utils/utils';
+import { DefinitionLoader } from '../DefinitionLoader';
+import { WarpCache } from '../../../cache/WarpCache';
+import { WasmSrc } from './wasm/WasmSrc';
+import { CacheOptions } from '../../WarpFactory';
+import { MemoryLevel } from 'memory-level';
+import { Level } from 'level';
 
 /**
  * An extension to {@link ContractDefinitionLoader} that makes use of
@@ -23,30 +25,55 @@ import Transaction from 'arweave/node/lib/transaction';
  * If the contract data is not available on Warp Gateway - it fallbacks to default implementation
  * in {@link ContractDefinitionLoader} - i.e. loads the definition from Arweave gateway.
  */
-export class WarpGatewayContractDefinitionLoader {
+export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
   private readonly rLogger = LoggerFactory.INST.create('WarpGatewayContractDefinitionLoader');
   private contractDefinitionLoader: ContractDefinitionLoader;
   private arweaveWrapper: ArweaveWrapper;
+  private readonly db: MemoryLevel<string, any>;
 
-  constructor(
-    private readonly baseUrl: string,
-    arweave: Arweave,
-    private readonly cache?: WarpCache<string, ContractDefinition<unknown>>
-  ) {
+  constructor(private readonly baseUrl: string, arweave: Arweave, cacheOptions: CacheOptions) {
     this.baseUrl = stripTrailingSlash(baseUrl);
-    this.contractDefinitionLoader = new ContractDefinitionLoader(arweave, cache);
+    this.contractDefinitionLoader = new ContractDefinitionLoader(arweave);
     this.arweaveWrapper = new ArweaveWrapper(arweave);
+
+    if (cacheOptions.inMemory) {
+      this.db = new MemoryLevel<string, any>({ valueEncoding: 'json' });
+    } else {
+      if (!cacheOptions.dbLocation) {
+        throw new Error('LevelDb cache configuration error - no db location specified');
+      }
+      const dbLocation = cacheOptions.dbLocation;
+      this.db = new Level<string, any>(`${dbLocation}/contracts`, { valueEncoding: 'json' });
+    }
   }
 
   async load<State>(contractTxId: string, evolvedSrcTxId?: string): Promise<ContractDefinition<State>> {
-    if (!evolvedSrcTxId && this.cache?.contains(contractTxId)) {
+    let cacheKey = contractTxId;
+    if (evolvedSrcTxId) {
+      cacheKey += `_${evolvedSrcTxId}`;
+    }
+
+    let cacheResult = null;
+    try {
+      cacheResult = await this.db.get(cacheKey);
+    } catch (e: any) {
+      if (e.code == 'LEVEL_NOT_FOUND') {
+        cacheResult = null;
+      } else {
+        throw e;
+      }
+    }
+    if (cacheResult) {
       this.rLogger.debug('WarpGatewayContractDefinitionLoader: Hit from cache!');
-      return Promise.resolve(this.cache?.get(contractTxId) as ContractDefinition<State>);
+      if (cacheResult.contractType == 'wasm') {
+        cacheResult.srcBinary = Buffer.from(cacheResult.srcBinary.data);
+      }
+      return cacheResult;
     }
     const benchmark = Benchmark.measure();
     const contract = await this.doLoad<State>(contractTxId, evolvedSrcTxId);
     this.rLogger.info(`Contract definition loaded in: ${benchmark.elapsed()}`);
-    this.cache?.put(contractTxId, contract);
+    await this.db.put(cacheKey, contract);
 
     return contract;
   }
@@ -92,5 +119,9 @@ export class WarpGatewayContractDefinitionLoader {
 
   async loadContractSource(contractSrcTxId: string): Promise<ContractSource> {
     return await this.contractDefinitionLoader.loadContractSource(contractSrcTxId);
+  }
+
+  type(): GW_TYPE {
+    return 'warp';
   }
 }

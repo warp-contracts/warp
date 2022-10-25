@@ -1,12 +1,11 @@
 /* eslint-disable */
 import Arweave from 'arweave';
+import { EvaluationOptions } from '../core/modules/StateEvaluator';
 import { GQLNodeInterface, GQLTagInterface, VrfData } from './gqlResult';
-import { EvaluationOptions } from '@warp/core';
-import { kMaxLength } from 'buffer';
 
 /**
  *
- * This class is be exposed as a global for contracts
+ * This class is exposed as a global for contracts
  * as 'SmartWeave' and provides an API for getting further
  * information or using utility and crypto functions from
  * inside the contracts execution.
@@ -68,25 +67,6 @@ export class SmartWeaveGlobal {
 
     this.evaluationOptions = evaluationOptions;
 
-    this.arweave.wallets.getBalance = async (address: string): Promise<string> => {
-      if (!this._activeTx) {
-        throw new Error('Cannot read balance - active tx is not set.');
-      }
-      if (!this.block.height) {
-        throw new Error('Cannot read balance - block height not set.');
-      }
-
-      // http://nyc-1.dev.arweave.net:1984/block/height/914387/wallet/M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI/balance
-      return await fetch(
-        `${evaluationOptions.walletBalanceUrl}block/height/${this.block.height}/wallet/${address}/balance`
-      )
-        .then((res) => {
-          return res.ok ? res.text() : Promise.reject(res);
-        })
-        .catch((error) => {
-          throw new Error(`Unable to read wallet balance. ${error.status}. ${error.body?.message}`);
-        });
-    };
     this.contract = contract;
     this.transaction = new Transaction(this);
     this.block = new Block(this);
@@ -99,7 +79,7 @@ export class SmartWeaveGlobal {
         throw new Error('Not implemented - should be set by HandlerApi implementor');
       },
 
-      write: (contractId: string, input: any) => {
+      write: (contractId: string, input: any, throwOnError?: boolean) => {
         throw new Error('Not implemented - should be set by HandlerApi implementor');
       },
 
@@ -148,87 +128,87 @@ export class SmartWeaveGlobal {
 
 // tslint:disable-next-line: max-classes-per-file
 class Transaction {
-  constructor(private readonly global: SmartWeaveGlobal) {}
+  constructor(private readonly smartWeaveGlobal: SmartWeaveGlobal) {}
 
   get id() {
-    if (!this.global._activeTx) {
+    if (!this.smartWeaveGlobal._activeTx) {
       throw new Error('No current Tx');
     }
-    return this.global._activeTx.id;
+    return this.smartWeaveGlobal._activeTx.id;
   }
 
   get owner() {
-    if (!this.global._activeTx) {
+    if (!this.smartWeaveGlobal._activeTx) {
       throw new Error('No current Tx');
     }
-    return this.global._activeTx.owner.address;
+    return this.smartWeaveGlobal._activeTx.owner.address;
   }
 
   get target() {
-    if (!this.global._activeTx) {
+    if (!this.smartWeaveGlobal._activeTx) {
       throw new Error('No current Tx');
     }
-    return this.global._activeTx.recipient;
+    return this.smartWeaveGlobal._activeTx.recipient;
   }
 
   get tags(): GQLTagInterface[] {
-    if (!this.global._activeTx) {
+    if (!this.smartWeaveGlobal._activeTx) {
       throw new Error('No current Tx');
     }
-    return this.global._activeTx.tags;
+    return this.smartWeaveGlobal._activeTx.tags;
   }
 
   get quantity() {
-    if (!this.global._activeTx) {
+    if (!this.smartWeaveGlobal._activeTx) {
       throw new Error('No current Tx');
     }
-    return this.global._activeTx.quantity.winston;
+    return this.smartWeaveGlobal._activeTx.quantity.winston;
   }
 
   get reward() {
-    if (!this.global._activeTx) {
+    if (!this.smartWeaveGlobal._activeTx) {
       throw new Error('No current Tx');
     }
-    return this.global._activeTx.fee.winston;
+    return this.smartWeaveGlobal._activeTx.fee.winston;
   }
 }
 
 // tslint:disable-next-line: max-classes-per-file
 class Block {
-  constructor(private readonly global: SmartWeaveGlobal) {}
+  constructor(private readonly smartWeaveGlobal: SmartWeaveGlobal) {}
 
   get height() {
-    if (!this.global._activeTx) {
+    if (!this.smartWeaveGlobal._activeTx) {
       throw new Error('No current Tx');
     }
-    return this.global._activeTx.block.height;
+    return this.smartWeaveGlobal._activeTx.block.height;
   }
 
   get indep_hash() {
-    if (!this.global._activeTx) {
+    if (!this.smartWeaveGlobal._activeTx) {
       throw new Error('No current Tx');
     }
-    return this.global._activeTx.block.id;
+    return this.smartWeaveGlobal._activeTx.block.id;
   }
 
   get timestamp() {
-    if (!this.global._activeTx) {
+    if (!this.smartWeaveGlobal._activeTx) {
       throw new Error('No current tx');
     }
-    return this.global._activeTx.block.timestamp;
+    return this.smartWeaveGlobal._activeTx.block.timestamp;
   }
 }
 
 class Vrf {
-  constructor(private readonly global: SmartWeaveGlobal) {}
+  constructor(private readonly smartWeaveGlobal: SmartWeaveGlobal) {}
 
   get data(): VrfData {
-    return this.global._activeTx.vrf;
+    return this.smartWeaveGlobal._activeTx.vrf;
   }
 
   // returns the original generated random number as a BigInt string;
   get value(): string {
-    return this.global._activeTx.vrf.bigint;
+    return this.smartWeaveGlobal._activeTx.vrf.bigint;
   }
 
   // returns a random value in a range from 1 to maxValue
@@ -236,7 +216,7 @@ class Vrf {
     if (!Number.isInteger(maxValue)) {
       throw new Error('Integer max value required for random integer generation');
     }
-    const result = (BigInt(this.global._activeTx.vrf.bigint) % BigInt(maxValue)) + BigInt(1);
+    const result = (BigInt(this.smartWeaveGlobal._activeTx.vrf.bigint) % BigInt(maxValue)) + BigInt(1);
 
     if (result > Number.MAX_SAFE_INTEGER || result < Number.MIN_SAFE_INTEGER) {
       throw new Error('Random int cannot be cast to number');
