@@ -78,7 +78,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     executionContext.handler.initState(currentState);
 
     const evmSignatureVerificationPlugin = warp.hasPlugin('evm-signature-verification')
-      ? warp.loadPlugin('evm-signature-verification')
+      ? warp.loadPlugin<GQLNodeInterface, Promise<boolean>>('evm-signature-verification')
       : null;
 
     for (let i = 0; i < missingInteractionsLength; i++) {
@@ -94,7 +94,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
       if (evmSignatureVerificationPlugin && this.tagsParser.isEvmSigned(missingInteraction)) {
         try {
-          if (!evmSignatureVerificationPlugin.process(missingInteraction)) {
+          if (!(await evmSignatureVerificationPlugin.process(missingInteraction))) {
             this.logger.warn(`Interaction ${missingInteraction.id} was not verified, skipping.`);
             continue;
           }
