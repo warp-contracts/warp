@@ -1,4 +1,4 @@
-import { ContractError, CurrentTx } from '../../../../contract/Contract';
+import { CurrentTx } from '../../../../contract/Contract';
 import { ContractDefinition } from '../../../../core/ContractDefinition';
 import { ExecutionContext } from '../../../../core/ExecutionContext';
 import { EvalStateResult } from '../../../../core/modules/StateEvaluator';
@@ -89,7 +89,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         }
       });
       if (shouldAutoThrow) {
-        throw new ContractError(effectiveErrorMessage);
+        throw new Error(effectiveErrorMessage);
       }
 
       return result;

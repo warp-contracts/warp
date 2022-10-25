@@ -1,3 +1,5 @@
+import { BadGatewayResponse } from '../core/modules/InteractionsLoader';
+import { CustomError, Err } from '../utils/CustomError';
 import Transaction from 'arweave/node/lib/transaction';
 import { SortKeyCacheResult } from '../cache/SortKeyCache';
 import { ContractCallRecord } from '../core/ContractCallRecord';
@@ -12,12 +14,23 @@ export type BenchmarkStats = { gatewayCommunication: number; stateEvaluation: nu
 
 export type SigningFunction = (tx: Transaction) => Promise<void>;
 
-export class ContractError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = 'ContractError';
-  }
-}
+// Make these two error cases individual as they could be used in different places
+export type NoWalletConnected = Err<'NoWalletConnected'>;
+export type InvalidInteraction = Err<'InvalidInteraction'>;
+
+export type BundleInteractionErrorDetail =
+  | NoWalletConnected
+  | InvalidInteraction
+  | BadGatewayResponse
+  | Err<'CannotBundle'>;
+export class BundleInteractionError extends CustomError<BundleInteractionErrorDetail> {}
+
+// export class ContractError extends Error {
+//   constructor(message) {
+//     super(message);
+//     this.name = 'ContractError';
+//   }
+// }
 
 interface BundlrResponse {
   id: string;

@@ -3,7 +3,7 @@ import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import 'redstone-isomorphic';
 import { stripTrailingSlash } from '../../../utils/utils';
-import { GW_TYPE, InteractionsLoader } from '../InteractionsLoader';
+import { GW_TYPE, InteractionsLoader, InteractionsLoaderError } from '../InteractionsLoader';
 import { EvaluationOptions } from '../StateEvaluator';
 
 export type ConfirmationStatus =
@@ -91,7 +91,8 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
           if (error.body?.message) {
             this.logger.error(error.body.message);
           }
-          throw new Error(`Unable to retrieve transactions. Warp gateway responded with status ${error.status}.`);
+          const errorMessage = `Unable to retrieve transactions. Redstone gateway responded with status ${error.status}.`;
+          throw new InteractionsLoaderError({ type: 'BadGatewayResponse', status: error.status }, errorMessage, error);
         });
       this.logger.debug(`Loading interactions: page ${page} loaded in ${benchmarkRequestTime.elapsed()}`);
 

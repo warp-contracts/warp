@@ -1,6 +1,7 @@
 import Arweave from 'arweave';
 import { LexicographicalInteractionsSorter } from '../../core/modules/impl/LexicographicalInteractionsSorter';
 import { WarpGatewayInteractionsLoader } from '../../core/modules/impl/WarpGatewayInteractionsLoader';
+import { InteractionsLoaderError } from '../../core/modules/InteractionsLoader';
 import { GQLNodeInterface } from '../../legacy/gqlResult';
 import { LoggerFactory } from '../../logging/LoggerFactory';
 
@@ -140,8 +141,9 @@ describe('WarpGatewayInteractionsLoader -> load', () => {
     const loader = new WarpGatewayInteractionsLoader('http://baseUrl');
     try {
       await loader.load(contractId, fromBlockHeight, toBlockHeight);
-    } catch (e) {
-      expect(e).toEqual(new Error('Unable to retrieve transactions. Warp gateway responded with status 504.'));
+    } catch (rawError) {
+      const error = rawError as InteractionsLoaderError;
+      expect(error.detail.type === 'BadGatewayResponse' && error.detail.status === 504).toBeTruthy();
     }
   });
   it('should throw an error when request fails', async () => {
@@ -151,8 +153,9 @@ describe('WarpGatewayInteractionsLoader -> load', () => {
     const loader = new WarpGatewayInteractionsLoader('http://baseUrl');
     try {
       await loader.load(contractId, fromBlockHeight, toBlockHeight);
-    } catch (e) {
-      expect(e).toEqual(new Error('Unable to retrieve transactions. Warp gateway responded with status 500.'));
+    } catch (rawError) {
+      const error = rawError as InteractionsLoaderError;
+      expect(error.detail.type === 'BadGatewayResponse' && error.detail.status === 500).toBeTruthy();
     }
   });
 });

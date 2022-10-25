@@ -1,5 +1,14 @@
+import { CustomError, Err } from '../../utils/CustomError';
 import { GQLNodeInterface } from '../../legacy/gqlResult';
 import { EvaluationOptions } from './StateEvaluator';
+
+// Make this error case individual as it is also used in `src/contract/Contract.ts`.
+export type BadGatewayResponse = Err<'BadGatewayResponse'> & { status: number };
+
+// InteractionsLoaderErrorDetail is effectively only an alias to BadGatewayResponse but it could
+// also include other kinds of errors in the future.
+export type InteractionsLoaderErrorDetail = BadGatewayResponse;
+export class InteractionsLoaderError extends CustomError<InteractionsLoaderErrorDetail> {}
 
 export type GW_TYPE = 'arweave' | 'warp';
 
