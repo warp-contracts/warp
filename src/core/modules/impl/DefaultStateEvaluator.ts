@@ -93,8 +93,13 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       }
 
       if (evmSignatureVerificationPlugin && this.tagsParser.isEvmSigned(missingInteraction)) {
-        if (!evmSignatureVerificationPlugin.process(missingInteraction)) {
-          this.logger.warn(`Interaction ${missingInteraction.id} was not verified, skipping.`);
+        try {
+          if (!evmSignatureVerificationPlugin.process(missingInteraction)) {
+            this.logger.warn(`Interaction ${missingInteraction.id} was not verified, skipping.`);
+            continue;
+          }
+        } catch (e) {
+          this.logger.error(e);
           continue;
         }
       }
