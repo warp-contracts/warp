@@ -14,6 +14,7 @@ export const sortingFirst = ''.padEnd(64, '0');
 export const sortingLast = ''.padEnd(64, 'z');
 
 export const genesisSortKey = `${''.padStart(12, '0')},${firstSortKeyMs},${sortingFirst}`;
+export const lastPossibleKey = `${''.padStart(12, '9')},${lastSortKeyMs},${sortingLast}`;
 
 /**
  * implementation that is based on current's SDK sorting alg.

@@ -2,7 +2,7 @@ import Arweave from 'arweave';
 
 import { ProofHoHash } from '@idena/vrf-js';
 import elliptic from 'elliptic';
-import { SortKeyCacheResult } from '../../../cache/SortKeyCache';
+import { SortKeyCache, SortKeyCacheResult } from '../../../cache/SortKeyCache';
 import { CurrentTx } from '../../../contract/Contract';
 import { InteractionCall } from '../../ContractCallRecord';
 import { ExecutionContext } from '../../../core/ExecutionContext';
@@ -359,4 +359,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
   abstract lastCachedSortKey(): Promise<string | null>;
 
   abstract allCachedContracts(): Promise<string[]>;
+
+  abstract setCache(cache: SortKeyCache<EvalStateResult<unknown>>): void;
+
+  abstract getCache(): SortKeyCache<EvalStateResult<unknown>>;
 }

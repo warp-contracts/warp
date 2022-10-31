@@ -11,6 +11,7 @@ import { GW_TYPE } from '../InteractionsLoader';
 import { TagsParser } from './TagsParser';
 import { WasmSrc } from './wasm/WasmSrc';
 import { WarpEnvironment } from '../../Warp';
+import { SortKeyCache } from 'cache/SortKeyCache';
 
 const supportedSrcContentTypes = ['application/javascript', 'application/wasm'];
 
@@ -133,5 +134,12 @@ export class ContractDefinitionLoader implements DefinitionLoader {
 
   type(): GW_TYPE {
     return 'arweave';
+  }
+
+  setCache(cache: SortKeyCache<ContractDefinition<any>>): void {
+    throw new Error('No cache implemented for this loader');
+  }
+  getCache(): SortKeyCache<ContractDefinition<any>> {
+    throw new Error('No cache implemented for this loader');
   }
 }

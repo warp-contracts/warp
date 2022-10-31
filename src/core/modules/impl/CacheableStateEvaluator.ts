@@ -24,7 +24,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
 
   constructor(
     arweave: Arweave,
-    private readonly cache: SortKeyCache<EvalStateResult<unknown>>,
+    private cache: SortKeyCache<EvalStateResult<unknown>>,
     executionContextModifiers: ExecutionContextModifier[] = []
   ) {
     super(arweave, executionContextModifiers);
@@ -205,9 +205,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       contractTxId,
       transaction: transaction.id,
       sortKey: transaction.sortKey,
-      dry: transaction.dry,
-      state: stateToCache.state,
-      validity: stateToCache.validity
+      dry: transaction.dry
     });
 
     await this.cache.put(new CacheKey(contractTxId, transaction.sortKey), stateToCache);
@@ -239,5 +237,13 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
 
   async allCachedContracts(): Promise<string[]> {
     return await this.cache.allContracts();
+  }
+
+  setCache(cache: SortKeyCache<EvalStateResult<unknown>>): void {
+    this.cache = cache;
+  }
+
+  getCache(): SortKeyCache<EvalStateResult<unknown>> {
+    return this.cache;
   }
 }

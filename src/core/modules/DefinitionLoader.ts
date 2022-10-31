@@ -1,5 +1,6 @@
 import { ContractDefinition, ContractSource } from '../../core/ContractDefinition';
 import { GwTypeAware } from './InteractionsLoader';
+import { SortKeyCache } from '../../cache/SortKeyCache';
 
 /**
  * Implementors of this interface are responsible for loading contract's definitions -
@@ -8,5 +9,10 @@ import { GwTypeAware } from './InteractionsLoader';
  */
 export interface DefinitionLoader extends GwTypeAware {
   load<State>(contractTxId: string, evolvedSrcTxId?: string): Promise<ContractDefinition<State>>;
+
   loadContractSource(srcTxId: string): Promise<ContractSource>;
+
+  setCache(cache: SortKeyCache<ContractDefinition<any>>): void;
+
+  getCache(): SortKeyCache<ContractDefinition<any>>;
 }

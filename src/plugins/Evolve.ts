@@ -62,7 +62,7 @@ export class Evolve implements ExecutionContextModifier {
           return executionContext;
         } catch (e) {
           throw new SmartWeaveError(SmartWeaveErrorType.CONTRACT_NOT_FOUND, {
-            message: `Contract having txId: ${contractTxId} not found`,
+            message: `Error while evolving ${contractTxId} from ${currentSrcTxId} to ${evolvedSrcTxId}: ${e}`,
             requestedTxId: contractTxId
           });
         }

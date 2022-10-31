@@ -5,6 +5,8 @@ export * from './logging/LoggerFactory';
 export * from './logging/LoggerSettings';
 export * from './logging/Benchmark';
 
+export * from './cache/SortKeyCache';
+
 export * from './core/modules/DefinitionLoader';
 export * from './core/modules/ExecutorFactory';
 export * from './core/modules/InteractionsLoader';
