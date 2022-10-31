@@ -39,7 +39,8 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
 
   async get(contractTxId: string, sortKey: string, returnDeepCopy?: boolean): Promise<SortKeyCacheResult<V> | null> {
     const contractCache = this.db.sublevel<string, any>(contractTxId, { valueEncoding: 'json' });
-
+    // manually opening to fix https://github.com/Level/level/issues/221
+    await contractCache.open();
     try {
       const result = await contractCache.get(sortKey);
 
@@ -58,6 +59,8 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
 
   async getLast(contractTxId: string): Promise<SortKeyCacheResult<V> | null> {
     const contractCache = this.db.sublevel<string, any>(contractTxId, { valueEncoding: 'json' });
+    // manually opening to fix https://github.com/Level/level/issues/221
+    await contractCache.open();
     const keys = await contractCache.keys({ reverse: true, limit: 1 }).all();
     if (keys.length) {
       return {
@@ -71,6 +74,8 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
 
   async getLessOrEqual(contractTxId: string, sortKey: string): Promise<SortKeyCacheResult<V> | null> {
     const contractCache = this.db.sublevel<string, any>(contractTxId, { valueEncoding: 'json' });
+    // manually opening to fix https://github.com/Level/level/issues/221
+    await contractCache.open();
     const keys = await contractCache.keys({ reverse: true, lte: sortKey, limit: 1 }).all();
     if (keys.length) {
       return {
@@ -102,6 +107,7 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
   // the lastSortKey should be probably memoized during "put"
   async getLastSortKey(): Promise<string | null> {
     let lastSortKey = '';
+    await this.db.open();
     const keys = await this.db.keys().all();
 
     for (const key of keys) {
@@ -117,6 +123,7 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
   }
 
   async allContracts(): Promise<string[]> {
+    await this.db.open();
     const keys = await this.db.keys().all();
 
     const result = new Set<string>();
