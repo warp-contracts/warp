@@ -4,6 +4,7 @@ import { EvalStateResult } from '../../core/modules/StateEvaluator';
 import knex from 'knex';
 import { LoggerFactory } from '../../logging/LoggerFactory';
 import { LevelDbCache } from '../../cache/impl/LevelDbCache';
+import {SortKeyCache} from "../../cache/SortKeyCache";
 
 export type MigrationResult = Array<{ contractTxId: string; height: number; sortKey: string }>;
 
@@ -11,7 +12,7 @@ export class MigrationTool {
   private readonly logger = LoggerFactory.INST.create('MigrationTool');
   private readonly sorter: LexicographicalInteractionsSorter;
 
-  constructor(private readonly arweave: Arweave, private readonly levelDb: LevelDbCache<EvalStateResult<unknown>>) {
+  constructor(private readonly arweave: Arweave, private readonly stateCache: SortKeyCache<EvalStateResult<unknown>>) {
     this.sorter = new LexicographicalInteractionsSorter(arweave);
   }
 
@@ -45,7 +46,7 @@ export class MigrationTool {
 
       this.logger.debug(`Migrating ${contractTxId} at height ${height}: ${sortKey}`);
 
-      await this.levelDb.put(
+      await this.stateCache.put(
         {
           contractTxId,
           sortKey

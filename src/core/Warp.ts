@@ -15,6 +15,7 @@ import { HandlerApi } from './modules/impl/HandlerExecutorFactory';
 import { InteractionsLoader } from './modules/InteractionsLoader';
 import { EvalStateResult, StateEvaluator } from './modules/StateEvaluator';
 import { WarpBuilder } from './WarpBuilder';
+import {SortKeyCache} from "../cache/SortKeyCache";
 
 export type WarpEnvironment = 'local' | 'testnet' | 'mainnet' | 'custom';
 
@@ -33,7 +34,7 @@ export class Warp {
 
   constructor(
     readonly arweave: Arweave,
-    readonly levelDb: LevelDbCache<EvalStateResult<unknown>>,
+    readonly stateCache: SortKeyCache<EvalStateResult<unknown>>,
     readonly definitionLoader: DefinitionLoader,
     readonly interactionsLoader: InteractionsLoader,
     readonly executorFactory: ExecutorFactory<HandlerApi<unknown>>,
@@ -41,13 +42,13 @@ export class Warp {
     readonly environment: WarpEnvironment = 'custom'
   ) {
     this.createContract = new DefaultCreateContract(arweave, this);
-    this.migrationTool = new MigrationTool(arweave, levelDb);
+    this.migrationTool = new MigrationTool(arweave, stateCache);
     this.testing = new Testing(arweave);
   }
 
   static builder(
     arweave: Arweave,
-    cache: LevelDbCache<EvalStateResult<unknown>>,
+    cache: SortKeyCache<EvalStateResult<unknown>>,
     environment: WarpEnvironment
   ): WarpBuilder {
     return new WarpBuilder(arweave, cache, environment);
