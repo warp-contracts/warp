@@ -9,6 +9,7 @@ import { ConfirmationStatus, SourceType } from './modules/impl/WarpGatewayIntera
 import { EvalStateResult } from './modules/StateEvaluator';
 import { WarpEnvironment, Warp } from './Warp';
 import { WarpBuilder } from './WarpBuilder';
+import { SortKeyCache } from '../cache/SortKeyCache';
 
 export type GatewayOptions = {
   confirmationStatus: ConfirmationStatus;
@@ -41,6 +42,8 @@ export const defaultCacheOptions: CacheOptions = {
  * All versions use the {@link Evolve} plugin.
  */
 export class WarpFactory {
+  private stateCache: SortKeyCache<EvalStateResult<unknown>>;
+
   /**
    * creates a Warp instance suitable for testing in a local environment
    * (e.g. usually using ArLocal)
@@ -115,16 +118,16 @@ export class WarpFactory {
    * @param arweave
    * @param cacheOptions
    */
-  static custom(arweave: Arweave, cacheOptions: CacheOptions, environment: WarpEnvironment): WarpBuilder {
-    const cache = new LevelDbCache<EvalStateResult<unknown>>({
+  static custom(arweave: Arweave, cacheOptions: CacheOptions, environment: WarpEnvironment, ): WarpBuilder {
+    const stateCache = new LevelDbCache<EvalStateResult<unknown>>({
       ...cacheOptions,
       dbLocation: `${cacheOptions.dbLocation}/state`
     });
 
     const executorFactory = new CacheableExecutorFactory(arweave, new HandlerExecutorFactory(arweave), new MemCache());
-    const stateEvaluator = new CacheableStateEvaluator(arweave, cache, [new Evolve()]);
+    const stateEvaluator = new CacheableStateEvaluator(arweave, stateCache, [new Evolve()]);
 
-    return Warp.builder(arweave, cache, environment)
+    return Warp.builder(arweave, stateCache, environment)
       .setExecutorFactory(executorFactory)
       .setStateEvaluator(stateEvaluator);
   }

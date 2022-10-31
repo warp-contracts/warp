@@ -1,4 +1,4 @@
-import { SortKeyCacheResult } from '../../cache/SortKeyCache';
+import { SortKeyCache, SortKeyCacheResult } from '../../cache/SortKeyCache';
 import { CurrentTx } from '../../contract/Contract';
 import { ExecutionContext } from '../../core/ExecutionContext';
 import { GQLNodeInterface } from '../../legacy/gqlResult';
@@ -85,6 +85,10 @@ export interface StateEvaluator {
   lastCachedSortKey(): Promise<string | null>;
 
   allCachedContracts(): Promise<string[]>;
+
+  setCache(cache: SortKeyCache<EvalStateResult<unknown>>): void;
+
+  getCache(): SortKeyCache<EvalStateResult<unknown>>;
 }
 
 export class EvalStateResult<State> {

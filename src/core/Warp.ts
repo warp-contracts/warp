@@ -1,12 +1,10 @@
 import Arweave from 'arweave';
-import { LevelDbCache } from '../cache/impl/LevelDbCache';
 import { Contract, InnerCallData } from '../contract/Contract';
 import { CreateContract } from '../contract/deploy/CreateContract';
 import { DefaultCreateContract } from '../contract/deploy/impl/DefaultCreateContract';
 import { HandlerBasedContract } from '../contract/HandlerBasedContract';
 import { PstContract } from '../contract/PstContract';
 import { PstContractImpl } from '../contract/PstContractImpl';
-import { MigrationTool } from '../contract/migration/MigrationTool';
 import { Testing, Wallet } from '../contract/testing/Testing';
 import { DefinitionLoader } from './modules/DefinitionLoader';
 import { ExecutorFactory } from './modules/ExecutorFactory';
@@ -15,6 +13,8 @@ import { InteractionsLoader } from './modules/InteractionsLoader';
 import { EvalStateResult, StateEvaluator } from './modules/StateEvaluator';
 import { WarpBuilder } from './WarpBuilder';
 import { WarpPluginType, WarpPlugin, knownWarpPlugins } from './WarpPlugin';
+import { SortKeyCache } from '../cache/SortKeyCache';
+import { ContractDefinition } from './ContractDefinition';
 
 export type WarpEnvironment = 'local' | 'testnet' | 'mainnet' | 'custom';
 
@@ -28,14 +28,12 @@ export type WarpEnvironment = 'local' | 'testnet' | 'mainnet' | 'custom';
  */
 export class Warp {
   readonly createContract: CreateContract;
-  readonly migrationTool: MigrationTool;
   readonly testing: Testing;
 
   private readonly plugins: Map<WarpPluginType, WarpPlugin<unknown, unknown>> = new Map();
 
   constructor(
     readonly arweave: Arweave,
-    readonly levelDb: LevelDbCache<EvalStateResult<unknown>>,
     readonly definitionLoader: DefinitionLoader,
     readonly interactionsLoader: InteractionsLoader,
     readonly executorFactory: ExecutorFactory<HandlerApi<unknown>>,
@@ -43,16 +41,15 @@ export class Warp {
     readonly environment: WarpEnvironment = 'custom'
   ) {
     this.createContract = new DefaultCreateContract(arweave, this);
-    this.migrationTool = new MigrationTool(arweave, levelDb);
     this.testing = new Testing(arweave);
   }
 
   static builder(
     arweave: Arweave,
-    cache: LevelDbCache<EvalStateResult<unknown>>,
+    stateCache: SortKeyCache<EvalStateResult<unknown>>,
     environment: WarpEnvironment
   ): WarpBuilder {
-    return new WarpBuilder(arweave, cache, environment);
+    return new WarpBuilder(arweave, stateCache, environment);
   }
 
   /**
@@ -70,6 +67,16 @@ export class Warp {
    */
   pst(contractTxId: string): PstContract {
     return new PstContractImpl(contractTxId, this);
+  }
+
+  useStateCache(stateCache: SortKeyCache<EvalStateResult<unknown>>): Warp {
+    this.stateEvaluator.setCache(stateCache);
+    return this;
+  }
+
+  useContractCache(contractsCache: SortKeyCache<ContractDefinition<any>>): Warp {
+    this.definitionLoader.setCache(contractsCache);
+    return this;
   }
 
   use(plugin: WarpPlugin<unknown, unknown>): Warp {

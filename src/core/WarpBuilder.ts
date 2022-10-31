@@ -1,6 +1,4 @@
 import Arweave from 'arweave';
-import { MemCache } from '../cache/impl/MemCache';
-import { LevelDbCache } from '../cache/impl/LevelDbCache';
 import { DebuggableExecutorFactory } from '../plugins/DebuggableExecutorFactor';
 import { DefinitionLoader } from './modules/DefinitionLoader';
 import { ExecutorFactory } from './modules/ExecutorFactory';
@@ -14,6 +12,8 @@ import { InteractionsLoader } from './modules/InteractionsLoader';
 import { StateEvaluator, EvalStateResult } from './modules/StateEvaluator';
 import { WarpEnvironment, Warp } from './Warp';
 import { CacheOptions, GatewayOptions } from './WarpFactory';
+import { SortKeyCache } from '../cache/SortKeyCache';
+import { LevelDbCache } from '../cache/impl/LevelDbCache';
 
 export class WarpBuilder {
   private _definitionLoader?: DefinitionLoader;
@@ -23,7 +23,7 @@ export class WarpBuilder {
 
   constructor(
     private readonly _arweave: Arweave,
-    private readonly _cache: LevelDbCache<EvalStateResult<unknown>>,
+    private readonly _stateCache: SortKeyCache<EvalStateResult<unknown>>,
     private readonly _environment: WarpEnvironment = 'custom'
   ) {}
 
@@ -63,10 +63,16 @@ export class WarpBuilder {
         gatewayOptions.source
       )
     );
+
+    const contractsCache = new LevelDbCache({
+      ...cacheOptions,
+      dbLocation: `${cacheOptions.dbLocation}/contracts`
+    });
+
     this._definitionLoader = new WarpGatewayContractDefinitionLoader(
       gatewayOptions.address,
       this._arweave,
-      cacheOptions,
+      contractsCache,
       this._environment
     );
     return this;
@@ -83,7 +89,6 @@ export class WarpBuilder {
   build(): Warp {
     return new Warp(
       this._arweave,
-      this._cache,
       this._definitionLoader,
       this._interactionsLoader,
       this._executorFactory,

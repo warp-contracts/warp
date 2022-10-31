@@ -17,7 +17,9 @@ async function main() {
   });
 
   try {
-    const warp = WarpFactory.forMainnet({...defaultCacheOptions, inMemory: true});
+    const warp = WarpFactory
+      .forMainnet({...defaultCacheOptions, inMemory: true})
+      .useStateCache(new LmdbCache());
     /*const warp = WarpFactory
       .custom(arweave, {
         ...defaultCacheOptions,

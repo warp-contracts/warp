@@ -16,6 +16,7 @@ import { MemoryLevel } from 'memory-level';
 import { Level } from 'level';
 import { WarpEnvironment } from '../../Warp';
 import { TagsParser } from './TagsParser';
+import { SortKeyCache } from '../../../cache/SortKeyCache';
 
 /**
  * An extension to {@link ContractDefinitionLoader} that makes use of
@@ -29,29 +30,18 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
   private readonly rLogger = LoggerFactory.INST.create('WarpGatewayContractDefinitionLoader');
   private contractDefinitionLoader: ContractDefinitionLoader;
   private arweaveWrapper: ArweaveWrapper;
-  private readonly db: MemoryLevel<string, ContractDefinition<unknown>>;
   private readonly tagsParser: TagsParser;
 
   constructor(
     private readonly baseUrl: string,
     arweave: Arweave,
-    cacheOptions: CacheOptions,
+    private cache: SortKeyCache<ContractDefinition<any>>,
     private readonly env: WarpEnvironment
   ) {
     this.baseUrl = stripTrailingSlash(baseUrl);
     this.contractDefinitionLoader = new ContractDefinitionLoader(arweave, env);
     this.arweaveWrapper = new ArweaveWrapper(arweave);
     this.tagsParser = new TagsParser();
-
-    if (cacheOptions.inMemory) {
-      this.db = new MemoryLevel<string, ContractDefinition<unknown>>({ valueEncoding: 'json' });
-    } else {
-      if (!cacheOptions.dbLocation) {
-        throw new Error('LevelDb cache configuration error - no db location specified');
-      }
-      const dbLocation = cacheOptions.dbLocation;
-      this.db = new Level<string, ContractDefinition<unknown>>(`${dbLocation}/contracts`, { valueEncoding: 'json' });
-    }
   }
 
   async load<State>(contractTxId: string, evolvedSrcTxId?: string): Promise<ContractDefinition<State>> {
@@ -60,29 +50,22 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
       cacheKey += `_${evolvedSrcTxId}`;
     }
 
-    let cacheResult = null;
-    try {
-      cacheResult = await this.db.get(cacheKey);
-    } catch (e: any) {
-      if (e.code == 'LEVEL_NOT_FOUND') {
-        cacheResult = null;
-      } else {
-        throw e;
-      }
-    }
+    const cacheResult = await this.cache.get(cacheKey, 'cd');
     if (cacheResult) {
       this.rLogger.debug('WarpGatewayContractDefinitionLoader: Hit from cache!');
-      if (cacheResult.contractType == 'wasm') {
-        cacheResult.srcBinary = Buffer.from(cacheResult.srcBinary.data);
+      const result = cacheResult.cachedValue;
+      // LevelDB serializes Buffer to an object with 'type' and 'data' fields
+      if (result.contractType == 'wasm' && (result.srcBinary as any).data) {
+        result.srcBinary = Buffer.from((result.srcBinary as any).data);
       }
-      this.verifyEnv(cacheResult);
-      return cacheResult;
+      this.verifyEnv(result);
+      return result;
     }
     const benchmark = Benchmark.measure();
     const contract = await this.doLoad<State>(contractTxId, evolvedSrcTxId);
     this.rLogger.info(`Contract definition loaded in: ${benchmark.elapsed()}`);
     this.verifyEnv(contract);
-    await this.db.put(cacheKey, contract);
+    await this.cache.put({ contractTxId: cacheKey, sortKey: 'cd' }, contract);
 
     return contract;
   }
@@ -132,6 +115,14 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
 
   type(): GW_TYPE {
     return 'warp';
+  }
+
+  setCache(cache: SortKeyCache<ContractDefinition<any>>): void {
+    this.cache = cache;
+  }
+
+  getCache(): SortKeyCache<ContractDefinition<any>> {
+    return this.cache;
   }
 
   private verifyEnv(def: ContractDefinition<unknown>): void {

@@ -39,9 +39,14 @@ export interface SortKeyCache<V> {
 
   /**
    * Return all cached contracts.
-   * Slow, as LevelDB in general kinda sucks in case of iterating all keys/values.
    */
   allContracts(): Promise<string[]>;
+
+  /**
+   * returns underlying storage (LevelDB, LMDB, sqlite...)
+   * - useful for performing low-level operations
+   */
+  storage<S>(): S;
 }
 
 export class CacheKey {
