@@ -16,14 +16,15 @@ const runBuild = async () => {
     platform: 'browser',
     target: ['esnext'],
     format: 'esm',
-    globalName: 'warp'
+    globalName: 'warp',
+    external: ["bun:ffi", "url"]
   };
 
   console.log('Building web bundle esm.');
   build({
     ...buildConfig,
     minify: true,
-    outfile: './bundles/web.bundle.min.js'
+    outfile: './bundles/web.bundle.min.js',
   }).catch((e) => {
     console.log(e);
     process.exit(1);
