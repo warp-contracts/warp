@@ -14,7 +14,7 @@ import { InteractionsLoader } from './modules/InteractionsLoader';
 import { StateEvaluator, EvalStateResult } from './modules/StateEvaluator';
 import { WarpEnvironment, Warp } from './Warp';
 import { CacheOptions, GatewayOptions } from './WarpFactory';
-import {SortKeyCache} from "../cache/SortKeyCache";
+import { SortKeyCache } from '../cache/SortKeyCache';
 
 export class WarpBuilder {
   private _definitionLoader?: DefinitionLoader;

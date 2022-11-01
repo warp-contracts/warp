@@ -205,9 +205,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       contractTxId,
       transaction: transaction.id,
       sortKey: transaction.sortKey,
-      dry: transaction.dry,
-      state: stateToCache.state,
-      validity: stateToCache.validity
+      dry: transaction.dry
     });
 
     await this.cache.put(new CacheKey(contractTxId, transaction.sortKey), stateToCache);

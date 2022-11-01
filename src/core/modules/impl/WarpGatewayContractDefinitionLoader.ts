@@ -36,7 +36,8 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
     this.contractDefinitionLoader = new ContractDefinitionLoader(arweave);
     this.arweaveWrapper = new ArweaveWrapper(arweave);
 
-    if (cacheOptions.inMemory) {
+    this.db = new MemoryLevel<string, any>({ valueEncoding: 'json' });
+    /*if (cacheOptions.inMemory) {
       this.db = new MemoryLevel<string, any>({ valueEncoding: 'json' });
     } else {
       if (!cacheOptions.dbLocation) {
@@ -44,7 +45,7 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
       }
       const dbLocation = cacheOptions.dbLocation;
       this.db = new Level<string, any>(`${dbLocation}/contracts`, { valueEncoding: 'json' });
-    }
+    }*/
   }
 
   async load<State>(contractTxId: string, evolvedSrcTxId?: string): Promise<ContractDefinition<State>> {

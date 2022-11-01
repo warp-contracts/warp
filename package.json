@@ -70,6 +70,7 @@
     "fast-copy": "^2.1.1",
     "knex": "^0.95.14",
     "level": "^8.0.0",
+    "lmdb": "^2.6.9",
     "lodash": "^4.17.21",
     "memory-level": "^1.0.0",
     "redstone-isomorphic": "1.1.8",

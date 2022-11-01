@@ -9,6 +9,7 @@ import { ConfirmationStatus, SourceType } from './modules/impl/WarpGatewayIntera
 import { EvalStateResult } from './modules/StateEvaluator';
 import { WarpEnvironment, Warp } from './Warp';
 import { WarpBuilder } from './WarpBuilder';
+import { SortKeyCache } from '../cache/SortKeyCache';
 
 export type GatewayOptions = {
   confirmationStatus: ConfirmationStatus;
@@ -110,11 +111,18 @@ export class WarpFactory {
    * @param arweave
    * @param cacheOptions
    */
-  static custom(arweave: Arweave, cacheOptions: CacheOptions, environment: WarpEnvironment): WarpBuilder {
-    const cache = new LevelDbCache<EvalStateResult<unknown>>({
-      ...cacheOptions,
-      dbLocation: `${cacheOptions.dbLocation}/state`
-    });
+  static custom(
+    arweave: Arweave,
+    cacheOptions: CacheOptions,
+    environment: WarpEnvironment,
+    cache?: SortKeyCache<EvalStateResult<unknown>>
+  ): WarpBuilder {
+    if (!cache) {
+      cache = new LevelDbCache<EvalStateResult<unknown>>({
+        ...cacheOptions,
+        dbLocation: `${cacheOptions.dbLocation}/state`
+      });
+    }
 
     const executorFactory = new CacheableExecutorFactory(arweave, new HandlerExecutorFactory(arweave), new MemCache());
     const stateEvaluator = new CacheableStateEvaluator(arweave, cache, [new Evolve()]);
@@ -127,7 +135,8 @@ export class WarpFactory {
   private static customArweaveGw(
     arweave: Arweave,
     cacheOptions: CacheOptions = defaultCacheOptions,
-    environment: WarpEnvironment
+    environment: WarpEnvironment,
+    cache?: SortKeyCache<EvalStateResult<unknown>>
   ): Warp {
     return this.custom(arweave, cacheOptions, environment).useArweaveGateway().build();
   }
@@ -136,7 +145,8 @@ export class WarpFactory {
     arweave: Arweave,
     gatewayOptions: GatewayOptions = defaultWarpGwOptions,
     cacheOptions: CacheOptions = defaultCacheOptions,
-    environment: WarpEnvironment
+    environment: WarpEnvironment,
+    cache?: SortKeyCache<EvalStateResult<unknown>>
   ): Warp {
     return this.custom(arweave, cacheOptions, environment).useWarpGateway(gatewayOptions, cacheOptions).build();
   }

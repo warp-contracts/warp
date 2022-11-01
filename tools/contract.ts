@@ -1,19 +1,16 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import {defaultCacheOptions, LoggerFactory, WarpFactory} from '../src';
-import * as fs from 'fs';
-import knex from 'knex';
+import {defaultCacheOptions, defaultWarpGwOptions, LoggerFactory, WarpFactory} from '../src';
 import os from 'os';
-import path from "path";
-import stringify from "safe-stable-stringify";
+import {LmdbCache} from "../src/cache/impl/LmdbCache";
 
 const logger = LoggerFactory.INST.create('Contract');
 
 //LoggerFactory.use(new TsLogFactory());
-LoggerFactory.INST.logLevel('debug');
-LoggerFactory.INST.logLevel('debug', 'ArweaveGatewayInteractionsLoader');
-LoggerFactory.INST.logLevel('info', 'CacheableStateEvaluator');
-LoggerFactory.INST.logLevel('info', 'WASM:Rust');
+LoggerFactory.INST.logLevel('error');
+LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
+LoggerFactory.INST.logLevel('debug', 'HandlerBasedContract');
+
 //LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
 
 async function main() {
@@ -23,7 +20,7 @@ async function main() {
   const rssUsedBefore = Math.round((process.memoryUsage().rss / 1024 / 1024) * 100) / 100;
 
   const arweave = Arweave.init({
-/*    host: 'arweave.testnet1.bundlr.network',*/ // Hostname or IP address for a Arweave host
+    /*    host: 'arweave.testnet1.bundlr.network',*/ // Hostname or IP address for a Arweave host
     host: 'arweave.net',
     port: 443, // Port
     protocol: 'https', // Network protocol http or https
@@ -31,15 +28,18 @@ async function main() {
     logging: false // Enable network request logging
   });
 
-  const warp = WarpFactory.forMainnet({...defaultCacheOptions, inMemory: true});
+  const warp = WarpFactory
+    .custom(arweave, defaultCacheOptions, 'mainnet', new LmdbCache(defaultCacheOptions))
+    .useWarpGateway(defaultWarpGwOptions, defaultCacheOptions)
+    .build();
+
   try {
-    const contract = warp.contract("Ws9hhYckc-zSnVmbBep6q_kZD5zmzYzDmgMC50nMiuE");
+    const contract = warp.contract("Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY");
     const cacheResult = await contract
-      .setEvaluationOptions({
-      })
+      .setEvaluationOptions({allowBigInt: true})
       .readState();
 
-    console.log(cacheResult.cachedValue.state);
+    console.log(cacheResult.sortKey);
   } catch (e) {
     console.error(e);
   }

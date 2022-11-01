@@ -4,7 +4,7 @@ import { EvalStateResult } from '../../core/modules/StateEvaluator';
 import knex from 'knex';
 import { LoggerFactory } from '../../logging/LoggerFactory';
 import { LevelDbCache } from '../../cache/impl/LevelDbCache';
-import {SortKeyCache} from "../../cache/SortKeyCache";
+import { SortKeyCache } from '../../cache/SortKeyCache';
 
 export type MigrationResult = Array<{ contractTxId: string; height: number; sortKey: string }>;
 
