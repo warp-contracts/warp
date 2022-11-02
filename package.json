@@ -62,6 +62,7 @@
   "dependencies": {
     "@assemblyscript/loader": "^0.19.23",
     "@aws-sdk/client-s3": "^3.200.0",
+    "@aws-sdk/client-sns": "^3.201.0",
     "@idena/vrf-js": "^1.0.1",
     "archiver": "^5.3.0",
     "arweave": "1.11.6",
