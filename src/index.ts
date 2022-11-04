@@ -5,7 +5,6 @@ export * from './logging/LoggerFactory';
 export * from './logging/LoggerSettings';
 export * from './logging/Benchmark';
 
-export * from './cache/impl/LmdbCache';
 export * from './cache/SortKeyCache';
 
 export * from './core/modules/DefinitionLoader';

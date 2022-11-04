@@ -48,10 +48,10 @@ export class Warp {
 
   static builder(
     arweave: Arweave,
-    cache: SortKeyCache<EvalStateResult<unknown>>,
+    stateCache: SortKeyCache<EvalStateResult<unknown>>,
     environment: WarpEnvironment
   ): WarpBuilder {
-    return new WarpBuilder(arweave, cache, environment);
+    return new WarpBuilder(arweave, stateCache, environment);
   }
 
   /**

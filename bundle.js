@@ -16,8 +16,7 @@ const runBuild = async () => {
     platform: 'browser',
     target: ['esnext'],
     format: 'esm',
-    globalName: 'warp',
-    external: ["bun:ffi", "url"]
+    globalName: 'warp'
   };
 
   console.log('Building web bundle esm.');

@@ -15,6 +15,7 @@ import { StateEvaluator, EvalStateResult } from './modules/StateEvaluator';
 import { WarpEnvironment, Warp } from './Warp';
 import { CacheOptions, GatewayOptions } from './WarpFactory';
 import { SortKeyCache } from '../cache/SortKeyCache';
+import { ContractDefinition } from './ContractDefinition';
 
 export class WarpBuilder {
   private _definitionLoader?: DefinitionLoader;
@@ -24,7 +25,7 @@ export class WarpBuilder {
 
   constructor(
     private readonly _arweave: Arweave,
-    private readonly _cache: SortKeyCache<EvalStateResult<unknown>>,
+    private readonly _stateCache: SortKeyCache<EvalStateResult<unknown>>,
     private readonly _environment: WarpEnvironment = 'custom'
   ) {}
 
@@ -56,7 +57,11 @@ export class WarpBuilder {
     return this.build();
   }
 
-  public useWarpGateway(gatewayOptions: GatewayOptions, cacheOptions: CacheOptions): WarpBuilder {
+  public useWarpGateway(
+    gatewayOptions: GatewayOptions,
+    cacheOptions: CacheOptions,
+    cache?: SortKeyCache<ContractDefinition<any>>
+  ): WarpBuilder {
     this._interactionsLoader = new CacheableInteractionsLoader(
       new WarpGatewayInteractionsLoader(
         gatewayOptions.address,
@@ -64,11 +69,14 @@ export class WarpBuilder {
         gatewayOptions.source
       )
     );
-    this._definitionLoader = new WarpGatewayContractDefinitionLoader(
-      gatewayOptions.address,
-      this._arweave,
-      cacheOptions
-    );
+    if (!cache) {
+      cache = new LevelDbCache({
+        ...cacheOptions,
+        dbLocation: `${cacheOptions.dbLocation}/contracts`
+      });
+    }
+
+    this._definitionLoader = new WarpGatewayContractDefinitionLoader(gatewayOptions.address, this._arweave, cache);
     return this;
   }
 
@@ -83,7 +91,7 @@ export class WarpBuilder {
   build(): Warp {
     return new Warp(
       this._arweave,
-      this._cache,
+      this._stateCache,
       this._definitionLoader,
       this._interactionsLoader,
       this._executorFactory,

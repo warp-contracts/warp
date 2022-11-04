@@ -115,19 +115,19 @@ export class WarpFactory {
     arweave: Arweave,
     cacheOptions: CacheOptions,
     environment: WarpEnvironment,
-    cache?: SortKeyCache<EvalStateResult<unknown>>
+    stateCache?: SortKeyCache<EvalStateResult<unknown>>
   ): WarpBuilder {
-    if (!cache) {
-      cache = new LevelDbCache<EvalStateResult<unknown>>({
+    if (!stateCache) {
+      stateCache = new LevelDbCache<EvalStateResult<unknown>>({
         ...cacheOptions,
         dbLocation: `${cacheOptions.dbLocation}/state`
       });
     }
 
     const executorFactory = new CacheableExecutorFactory(arweave, new HandlerExecutorFactory(arweave), new MemCache());
-    const stateEvaluator = new CacheableStateEvaluator(arweave, cache, [new Evolve()]);
+    const stateEvaluator = new CacheableStateEvaluator(arweave, stateCache, [new Evolve()]);
 
-    return Warp.builder(arweave, cache, environment)
+    return Warp.builder(arweave, stateCache, environment)
       .setExecutorFactory(executorFactory)
       .setStateEvaluator(stateEvaluator);
   }
@@ -135,8 +135,7 @@ export class WarpFactory {
   private static customArweaveGw(
     arweave: Arweave,
     cacheOptions: CacheOptions = defaultCacheOptions,
-    environment: WarpEnvironment,
-    cache?: SortKeyCache<EvalStateResult<unknown>>
+    environment: WarpEnvironment
   ): Warp {
     return this.custom(arweave, cacheOptions, environment).useArweaveGateway().build();
   }
@@ -145,8 +144,7 @@ export class WarpFactory {
     arweave: Arweave,
     gatewayOptions: GatewayOptions = defaultWarpGwOptions,
     cacheOptions: CacheOptions = defaultCacheOptions,
-    environment: WarpEnvironment,
-    cache?: SortKeyCache<EvalStateResult<unknown>>
+    environment: WarpEnvironment
   ): Warp {
     return this.custom(arweave, cacheOptions, environment).useWarpGateway(gatewayOptions, cacheOptions).build();
   }
