@@ -2,7 +2,7 @@
 import Arweave from 'arweave';
 import {defaultCacheOptions, defaultWarpGwOptions, LoggerFactory, WarpFactory} from '../src';
 import os from 'os';
-import {LmdbCache} from "../src/cache/impl/LmdbCache";
+import {LmdbCache} from "warp-contracts-lmdb";
 
 const logger = LoggerFactory.INST.create('Contract');
 
@@ -10,6 +10,7 @@ const logger = LoggerFactory.INST.create('Contract');
 LoggerFactory.INST.logLevel('error');
 LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
 LoggerFactory.INST.logLevel('debug', 'HandlerBasedContract');
+LoggerFactory.INST.logLevel('debug', 'WarpGatewayContractDefinitionLoader');
 
 //LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
 
@@ -29,12 +30,20 @@ async function main() {
   });
 
   const warp = WarpFactory
-    .custom(arweave, defaultCacheOptions, 'mainnet', new LmdbCache(defaultCacheOptions))
-    .useWarpGateway(defaultWarpGwOptions, defaultCacheOptions)
+    .custom(arweave, defaultCacheOptions, 'mainnet', new LmdbCache({
+      ...defaultCacheOptions,
+      dbLocation: `./cache/warp/lmdb-3/state`
+    }))
+    .useWarpGateway(defaultWarpGwOptions, defaultCacheOptions, new LmdbCache({
+      ...defaultCacheOptions,
+      dbLocation: `./cache/warp/lmdb-3/contracts`
+    }))
     .build();
 
+  // const warp = WarpFactory.forMainnet();
+
   try {
-    const contract = warp.contract("Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY");
+    const contract = warp.contract("5Yt1IujBmOm1LSux9KDUTjCE7rJqepzP7gZKf_DyzWI");
     const cacheResult = await contract
       .setEvaluationOptions({allowBigInt: true})
       .readState();

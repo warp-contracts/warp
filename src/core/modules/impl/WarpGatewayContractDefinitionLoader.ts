@@ -47,7 +47,8 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
     if (cacheResult) {
       this.rLogger.debug('WarpGatewayContractDefinitionLoader: Hit from cache!');
       const result = cacheResult.cachedValue;
-      if (result.contractType == 'wasm' && !(result.srcBinary instanceof Buffer)) {
+      // LevelDB serializes Buffer to an object with 'type' and 'data' fields
+      if (result.contractType == 'wasm' && (result.srcBinary as any).data) {
         result.srcBinary = Buffer.from((result.srcBinary as any).data);
       }
       return result;

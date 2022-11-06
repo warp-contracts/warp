@@ -102,7 +102,8 @@
     "sqlite3": "^5.0.2",
     "ts-jest": "^28.0.7",
     "ts-node": "^10.2.1",
-    "typescript": "^4.7.4"
+    "typescript": "^4.7.4",
+    "warp-contracts-lmdb": "^1.0.4"
   },
   "browser": {
     "fs": false,
