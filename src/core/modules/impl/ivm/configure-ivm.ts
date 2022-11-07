@@ -1,7 +1,8 @@
 import ivm, { Context, Reference } from 'isolated-vm';
 import Arweave from 'arweave';
-import { LoggerFactory, SmartWeaveGlobal } from '@warp';
 import { bigNumberLib } from './bigNumber-ivm';
+import { SmartWeaveGlobal } from '../../../../legacy/smartweave-global';
+import { LoggerFactory } from '../../../../logging/LoggerFactory';
 
 class ContractError extends Error {
   constructor(message) {

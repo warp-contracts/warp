@@ -1,13 +1,10 @@
-import {
-  ContractDefinition,
-  EvalStateResult,
-  ExecutionContext,
-  InteractionData,
-  InteractionResult,
-  SmartWeaveGlobal
-} from '@warp';
 import { AbstractContractHandler } from './AbstractContractHandler';
 import { Context, Isolate, Reference } from 'isolated-vm';
+import { SmartWeaveGlobal } from '../../../../legacy/smartweave-global';
+import { ContractDefinition } from '../../../ContractDefinition';
+import { ExecutionContext } from '../../../ExecutionContext';
+import { EvalStateResult } from '../../StateEvaluator';
+import { InteractionData, InteractionResult } from '../HandlerExecutorFactory';
 
 export class IvmHandlerApi<State> extends AbstractContractHandler<State> {
   constructor(
