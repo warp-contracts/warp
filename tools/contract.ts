@@ -1,11 +1,13 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import {defaultCacheOptions, LoggerFactory, WarpFactory} from '../src';
+import {defaultCacheOptions, LexicographicalInteractionsSorter, LoggerFactory, WarpFactory} from '../src';
 import * as fs from 'fs';
 import knex from 'knex';
 import os from 'os';
 import path from "path";
 import stringify from "safe-stable-stringify";
+import {WarpPlugin, WarpPluginType} from "../src/core/WarpPlugin";
+import {GQLNodeInterface} from "smartweave/lib/interfaces/gqlResult";
 
 const logger = LoggerFactory.INST.create('Contract');
 
@@ -31,18 +33,30 @@ async function main() {
     logging: false // Enable network request logging
   });
 
+  class ExamplePlugin implements WarpPlugin<GQLNodeInterface, boolean> {
+    process(input: GQLNodeInterface): boolean {
+      return false;
+    }
 
-  const warp = WarpFactory.forMainnet({...defaultCacheOptions, inMemory: true});
+    type(): WarpPluginType {
+      return 'evm-signature-verification';
+    }
+  }
+
+  const warp = WarpFactory
+    .forMainnet({...defaultCacheOptions, inMemory: true})
+    .use(new ExamplePlugin())
+
   try {
-    const contract = warp.contract("-8A6RexFkpfWwuyVO98wzSFZh0d6VJuI-buTJvlwOJQ");
-    const {sortKey, cachedValue} = await contract
+    const contract = warp.contract("Ws9hhYckc-zSnVmbBep6q_kZD5zmzYzDmgMC50nMiuE");
+    const cacheResult = await contract
       .setEvaluationOptions({
         useIVM: true,
         allowBigInt: true
       })
       .readState();
 
-    console.log(sortKey);
+    console.log(cacheResult.cachedValue.state);
   } catch (e) {
     console.error(e);
   }
@@ -87,6 +101,11 @@ function printTestInfo() {
   console.log('  ', 'CPU      ', cpus);
   console.log('  ', 'Memory   ', (os.totalmem() / 1024 / 1024 / 1024).toFixed(0), 'GB');
   console.log('===============');
+
+
+  const sorter = new LexicographicalInteractionsSorter(arweave);
+
+  warp.interactionsLoader.load(contractId, sorter.generateLastSortKey(666), sorter.generateLastSortKey(777));
 }
 
 main().catch((e) => console.error(e));

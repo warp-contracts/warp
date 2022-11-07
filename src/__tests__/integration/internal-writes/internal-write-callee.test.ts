@@ -2,14 +2,17 @@
 import fs from 'fs';
 
 import ArLocal from 'arlocal';
-import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, LoggerFactory, Warp, WarpFactory } from '@warp';
 import path from 'path';
 import { mineBlock } from '../_helpers';
+import { Contract } from '../../../contract/Contract';
+import { Warp } from '../../../core/Warp';
+import { WarpFactory } from '../../../core/WarpFactory';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
 
 interface ExampleContractState {
   counter: number;
+  errorCounter: number;
 }
 
 /**
@@ -46,13 +49,12 @@ describe('Testing internal writes', () => {
 
   let wallet: JWKInterface;
 
-  let arweave: Arweave;
   let arlocal: ArLocal;
   let warp: Warp;
   let calleeContract: Contract<ExampleContractState>;
   let calleeContractVM: Contract<ExampleContractState>;
-  let callingContract: Contract;
-  let callingContractVM: Contract;
+  let callingContract: Contract<ExampleContractState>;
+  let callingContractVM: Contract<ExampleContractState>;
   let calleeTxId;
   let callingTxId;
 
@@ -72,7 +74,7 @@ describe('Testing internal writes', () => {
 
   async function deployContracts() {
     warp = WarpFactory.forLocal(port);
-    wallet = await warp.testing.generateWallet();
+    ({ jwk: wallet } = await warp.testing.generateWallet());
 
     callingContractSrc = fs.readFileSync(path.join(__dirname, '../data/writing-contract.js'), 'utf8');
     callingContractInitialState = fs.readFileSync(path.join(__dirname, '../data/writing-contract-state.json'), 'utf8');
@@ -108,14 +110,14 @@ describe('Testing internal writes', () => {
       .connect(wallet);
 
     callingContract = warp
-      .contract(callingTxId)
+      .contract<ExampleContractState>(callingTxId)
       .setEvaluationOptions({
         internalWrites: true,
         mineArLocalBlocks: false
       })
       .connect(wallet);
     callingContractVM = warp
-      .contract(callingTxId)
+      .contract<ExampleContractState>(callingTxId)
       .setEvaluationOptions({
         internalWrites: true,
         useIVM: true,
@@ -274,6 +276,138 @@ describe('Testing internal writes', () => {
         });
       expect((await calleeContract2.readState()).cachedValue.state.counter).toEqual(634);
       expect((await calleeContract2VM.readState()).cachedValue.state.counter).toEqual(634);
+    });
+  });
+
+  describe('with internal writes throwing exceptions', () => {
+    beforeAll(async () => {
+      await deployContracts();
+    });
+
+    it('should auto throw on default settings', async () => {
+      const { originalTxId } = await callingContract.writeInteraction({
+        function: 'writeContractAutoThrow',
+        contractId: calleeTxId
+      });
+      await mineBlock(warp);
+
+      const result = await callingContract.readState();
+
+      // note: no calling contract code should be evaluated after internal write fails and auto throwing is on
+      expect(result.cachedValue.errorMessages[originalTxId]).toContain('Internal write auto error for call');
+      expect(result.cachedValue.state.errorCounter).toBeUndefined();
+    });
+
+    it('should auto throw on default settings during writeInteraction if strict', async () => {
+      await expect(
+        callingContract.writeInteraction(
+          {
+            function: 'writeContractAutoThrow',
+            contractId: calleeTxId
+          },
+          { strict: true }
+        )
+      ).rejects.toThrowError(/^Cannot create interaction: Internal write auto error for call/);
+    });
+
+    it('should not auto throw on default settings during writeInteraction if strict and IW call force to NOT throw an exception', async () => {
+      const { originalTxId } = await callingContract.writeInteraction(
+        {
+          function: 'writeContractForceNoAutoThrow',
+          contractId: calleeTxId
+        },
+        { strict: true }
+      );
+      expect(originalTxId.length).toEqual(43);
+    });
+
+    it('should not auto throw on default settings if IW call force to NOT throw an exception', async () => {
+      const { originalTxId } = await callingContract.writeInteraction({
+        function: 'writeContractForceNoAutoThrow',
+        contractId: calleeTxId
+      });
+      await mineBlock(warp);
+
+      const result = await callingContract.readState();
+
+      // note: in this case the calling contract "didn't notice" that the IW call failed
+      expect(result.cachedValue.errorMessages[originalTxId]).toBeUndefined();
+      expect(result.cachedValue.state.errorCounter).toEqual(2);
+    });
+
+    it('should not auto throw if evaluationOptions.throwOnInternalWriteError set to false', async () => {
+      callingContract.setEvaluationOptions({
+        throwOnInternalWriteError: false
+      });
+
+      const { originalTxId } = await callingContract.writeInteraction({
+        function: 'writeContractAutoThrow',
+        contractId: calleeTxId
+      });
+      await mineBlock(warp);
+
+      const result = await callingContract.readState();
+
+      // note: in this case the calling contract "didn't notice" that the IW call failed
+      expect(result.cachedValue.errorMessages[originalTxId]).toBeUndefined();
+      expect(result.cachedValue.state.errorCounter).toEqual(3);
+    });
+
+    it('should auto throw if evaluationOptions.throwOnInternalWriteError set to true', async () => {
+      callingContract.setEvaluationOptions({
+        throwOnInternalWriteError: true
+      });
+
+      const { originalTxId } = await callingContract.writeInteraction({
+        function: 'writeContractAutoThrow',
+        contractId: calleeTxId
+      });
+      await mineBlock(warp);
+
+      const result = await callingContract.readState();
+
+      // note: no calling contract code should be evaluated after internal write fails and auto throwing is on
+      expect(result.cachedValue.errorMessages[originalTxId]).toContain('Internal write auto error for call');
+
+      // this shouldn't change from the prev. test
+      expect(result.cachedValue.state.errorCounter).toEqual(3);
+    });
+
+    it('should auto throw if evaluationOptions.throwOnInternalWriteError set to false and IW call force to throw an exception', async () => {
+      callingContract.setEvaluationOptions({
+        throwOnInternalWriteError: false
+      });
+
+      const { originalTxId } = await callingContract.writeInteraction({
+        function: 'writeContractForceAutoThrow',
+        contractId: calleeTxId
+      });
+      await mineBlock(warp);
+
+      const result = await callingContract.readState();
+
+      // note: no calling contract code should be evaluated after internal write fails and auto throwing is on
+      expect(result.cachedValue.errorMessages[originalTxId]).toContain('Internal write auto error for call');
+
+      // this shouldn't change from the prev. test
+      expect(result.cachedValue.state.errorCounter).toEqual(3);
+    });
+
+    it('should not auto throw if evaluationOptions.throwOnInternalWriteError set to true and IW call force to NOT throw an exception', async () => {
+      callingContract.setEvaluationOptions({
+        throwOnInternalWriteError: true
+      });
+
+      const { originalTxId } = await callingContract.writeInteraction({
+        function: 'writeContractForceNoAutoThrow',
+        contractId: calleeTxId
+      });
+      await mineBlock(warp);
+
+      const result = await callingContract.readState();
+
+      expect(result.cachedValue.errorMessages[originalTxId]).toBeUndefined();
+      expect(result.cachedValue.state.errorCounter).toEqual(4);
     });
   });
 });

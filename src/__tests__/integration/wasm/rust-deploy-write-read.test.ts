@@ -3,10 +3,16 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { ArweaveWrapper, getTag, LoggerFactory, PstContract, PstState, SmartWeaveTags, Warp, WarpFactory } from '@warp';
 import path from 'path';
 import { mineBlock } from '../_helpers';
 import { WasmSrc } from '../../../core/modules/impl/wasm/WasmSrc';
+import { PstState, PstContract } from '../../../contract/PstContract';
+import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
+import { Warp } from '../../../core/Warp';
+import { WarpFactory } from '../../../core/WarpFactory';
+import { getTag } from '../../../legacy/utils';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { ArweaveWrapper } from '../../../utils/ArweaveWrapper';
 
 describe('Testing the Rust WASM Profit Sharing Token', () => {
   let wallet: JWKInterface;
@@ -38,7 +44,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     ({ arweave } = warp);
     arweaveWrapper = new ArweaveWrapper(arweave);
 
-    wallet = await warp.testing.generateWallet();
+    ({ jwk: wallet } = await warp.testing.generateWallet());
     walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
     const contractSrc = fs.readFileSync(path.join(__dirname, '../data/wasm/rust/rust-pst_bg.wasm'));

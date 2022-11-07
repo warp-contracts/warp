@@ -1,8 +1,10 @@
 import Arweave from 'arweave';
-import { GQLNodeInterface, GQLTagInterface, SigningFunction, SmartWeaveTags } from '@warp';
 import Transaction from 'arweave/node/lib/transaction';
 import { CreateTransactionInterface } from 'arweave/node/common';
 import { BlockData } from 'arweave/node/blocks';
+import { SmartWeaveTags } from '../core/SmartWeaveTags';
+import { GQLNodeInterface, GQLTagInterface } from './gqlResult';
+import { SigningFunction } from '../contract/Contract';
 
 export async function createInteractionTx(
   arweave: Arweave,
@@ -27,8 +29,8 @@ export async function createInteractionTx(
   }
 
   // both reward and last_tx are irrelevant in case of interactions
-  // that are bundled. So to speed up the procees (and prevent the arweave-js
-  // from calling /tx_anchor and /price endpoints) - we're presetting theses
+  // that are bundled. So to speed up the process (and prevent the arweave-js
+  // from calling /tx_anchor and /price endpoints) - we're presetting these
   // values here
   if (dummy) {
     options.reward = '72600854';

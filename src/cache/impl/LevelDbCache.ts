@@ -1,7 +1,8 @@
 import { SortKeyCache, CacheKey, SortKeyCacheResult } from '../SortKeyCache';
-import { CacheOptions, LoggerFactory } from '@warp';
 import { Level } from 'level';
 import { MemoryLevel } from 'memory-level';
+import { CacheOptions } from '../../core/WarpFactory';
+import { LoggerFactory } from '../../logging/LoggerFactory';
 
 /**
  * The LevelDB is a lexicographically sorted key-value database - so it's ideal for this use case
@@ -21,7 +22,7 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
    * and there doesn't seem to be any public interface/abstract type for all Level implementations
    * (the AbstractLevel is not exported from the package...)
    */
-  private db: MemoryLevel;
+  private readonly db: MemoryLevel;
 
   constructor(cacheOptions: CacheOptions) {
     if (cacheOptions.inMemory) {

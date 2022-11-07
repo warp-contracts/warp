@@ -3,9 +3,13 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { InteractionResult, LoggerFactory, PstContract, PstState, Warp, WarpFactory } from '@warp';
 import path from 'path';
 import { mineBlock } from '../_helpers';
+import { PstState, PstContract } from '../../../contract/PstContract';
+import { InteractionResult } from '../../../core/modules/impl/HandlerExecutorFactory';
+import { Warp } from '../../../core/Warp';
+import { WarpFactory } from '../../../core/WarpFactory';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
 
 describe('Testing the Profit Sharing Token', () => {
   let contractSrc: string;
@@ -31,8 +35,7 @@ describe('Testing the Profit Sharing Token', () => {
     warp = WarpFactory.forLocal(1820);
 
     ({ arweave } = warp);
-    wallet = await warp.testing.generateWallet();
-    walletAddress = await arweave.wallets.jwkToAddress(wallet);
+    ({ jwk: wallet, address: walletAddress } = await warp.testing.generateWallet());
 
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/token-pst.js'), 'utf8');
     const stateFromFile: PstState = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/token-pst.json'), 'utf8'));
@@ -129,8 +132,7 @@ describe('Testing the Profit Sharing Token', () => {
   });
 
   it('should properly perform dry write with overwritten caller', async () => {
-    const newWallet = await warp.testing.generateWallet();
-    const overwrittenCaller = await arweave.wallets.jwkToAddress(newWallet);
+    const { jwk: newWallet, address: overwrittenCaller } = await warp.testing.generateWallet();
     await pst.transfer({
       target: overwrittenCaller,
       qty: 1000

@@ -1,13 +1,14 @@
 /* eslint-disable */
-import cloneDeep from 'lodash/cloneDeep';
 import copy from 'fast-copy';
+import { Buffer } from 'redstone-isomorphic';
+import { randomUUID } from 'crypto';
 
 export const sleep = (ms: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
-export const deepCopy = (input: unknown, useFastCopy = false): any => {
-  return useFastCopy ? copy(input) : cloneDeep(input);
+export const deepCopy = (input: unknown): any => {
+  return copy(input);
 };
 
 export const mapReplacer = (key: unknown, value: unknown) => {
@@ -59,3 +60,28 @@ export function stripTrailingSlash(str: string) {
 export function indent(callDepth: number) {
   return ''.padEnd(callDepth * 2, ' ');
 }
+
+export function bufToBn(buf: Buffer) {
+  const hex = [];
+  const u8 = Uint8Array.from(buf);
+
+  u8.forEach(function (i) {
+    let h = i.toString(16);
+    if (h.length % 2) {
+      h = '0' + h;
+    }
+    hex.push(h);
+  });
+
+  return BigInt('0x' + hex.join(''));
+}
+
+export function isomorphicRandomUUID() {
+  if (isBrowser() && self.crypto) {
+    return self.crypto.randomUUID();
+  } else {
+    return randomUUID();
+  }
+}
+
+const isBrowser = new Function('try {return this===window;}catch(e){ return false;}');

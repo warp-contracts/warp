@@ -1,19 +1,10 @@
 /* eslint-disable */
-import {
-  ContractDefinition,
-  CurrentTx,
-  deepCopy,
-  EvalStateResult,
-  ExecutionContext,
-  GQLNodeInterface,
-  HandlerApi,
-  InteractionData,
-  InteractionResult,
-  LoggerFactory,
-  WarpLogger,
-  SmartWeaveGlobal
-} from '@warp';
+import { ContractDefinition } from '../../../../core/ContractDefinition';
+import { ExecutionContext } from '../../../../core/ExecutionContext';
+import { EvalStateResult } from '../../../../core/modules/StateEvaluator';
+import { SmartWeaveGlobal } from '../../../../legacy/smartweave-global';
 import stringify from 'safe-stable-stringify';
+import { InteractionData, InteractionResult } from '../HandlerExecutorFactory';
 import { AbstractContractHandler } from './AbstractContractHandler';
 
 export class WasmHandlerApi<State> extends AbstractContractHandler<State> {

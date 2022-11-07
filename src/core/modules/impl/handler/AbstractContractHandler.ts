@@ -1,16 +1,12 @@
-import {
-  ContractDefinition,
-  CurrentTx,
-  deepCopy,
-  EvalStateResult,
-  ExecutionContext,
-  GQLNodeInterface,
-  HandlerApi,
-  InteractionData,
-  InteractionResult,
-  LoggerFactory,
-  SmartWeaveGlobal
-} from '@warp';
+import { ContractError, CurrentTx } from '../../../../contract/Contract';
+import { ContractDefinition } from '../../../../core/ContractDefinition';
+import { ExecutionContext } from '../../../../core/ExecutionContext';
+import { EvalStateResult } from '../../../../core/modules/StateEvaluator';
+import { GQLNodeInterface } from '../../../../legacy/gqlResult';
+import { SmartWeaveGlobal } from '../../../../legacy/smartweave-global';
+import { LoggerFactory } from '../../../../logging/LoggerFactory';
+import { deepCopy } from '../../../../utils/utils';
+import { HandlerApi, InteractionData, InteractionResult } from '../HandlerExecutorFactory';
 
 export abstract class AbstractContractHandler<State> implements HandlerApi<State> {
   protected logger = LoggerFactory.INST.create('ContractHandler');
@@ -40,24 +36,29 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
   protected assignWrite(executionContext: ExecutionContext<State>, currentTx: CurrentTx[]) {
     this.swGlobal.contracts.write = async <Input = unknown>(
       contractTxId: string,
-      input: Input
+      input: Input,
+      throwOnError?: boolean
     ): Promise<InteractionResult<unknown, unknown>> => {
       if (!executionContext.evaluationOptions.internalWrites) {
         throw new Error("Internal writes feature switched off. Change EvaluationOptions.internalWrites flag to 'true'");
       }
 
-      this.logger.debug('swGlobal.write call:', {
+      const effectiveThrowOnError =
+        throwOnError == undefined ? executionContext.evaluationOptions.throwOnInternalWriteError : throwOnError;
+
+      const debugData = {
         from: this.contractDefinition.txId,
         to: contractTxId,
         input
-      });
+      };
+
+      this.logger.debug('swGlobal.write call:', debugData);
 
       // The contract that we want to call and modify its state
-      const calleeContract = executionContext.warp.contract(
-        contractTxId,
-        executionContext.contract,
-        this.swGlobal._activeTx
-      );
+      const calleeContract = executionContext.warp.contract(contractTxId, executionContext.contract, {
+        callingInteraction: this.swGlobal._activeTx,
+        callType: 'write'
+      });
 
       const result = await calleeContract.dryWriteFromTx<Input>(input, this.swGlobal._activeTx, [
         ...(currentTx || []),
@@ -68,6 +69,14 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
       ]);
 
       this.logger.debug('Cache result?:', !this.swGlobal._activeTx.dry);
+      const shouldAutoThrow =
+        result.type !== 'ok' &&
+        effectiveThrowOnError &&
+        (!this.swGlobal._activeTx.dry || (this.swGlobal._activeTx.dry && this.swGlobal._activeTx.strict));
+      const effectiveErrorMessage = shouldAutoThrow
+        ? `Internal write auto error for call [${JSON.stringify(debugData)}]: ${result.errorMessage}`
+        : result.errorMessage;
+
       await executionContext.warp.stateEvaluator.onInternalWriteStateUpdate(this.swGlobal._activeTx, contractTxId, {
         state: result.state as State,
         validity: {
@@ -76,9 +85,12 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         },
         errorMessages: {
           ...result.originalErrorMessages,
-          [this.swGlobal._activeTx.id]: result.errorMessage
+          [this.swGlobal._activeTx.id]: effectiveErrorMessage
         }
       });
+      if (shouldAutoThrow) {
+        throw new ContractError(effectiveErrorMessage);
+      }
 
       return result;
     };
@@ -91,11 +103,10 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         to: contractTxId,
         input
       });
-      const childContract = executionContext.warp.contract(
-        contractTxId,
-        executionContext.contract,
-        this.swGlobal._activeTx
-      );
+      const childContract = executionContext.warp.contract(contractTxId, executionContext.contract, {
+        callingInteraction: this.swGlobal._activeTx,
+        callType: 'view'
+      });
 
       return await childContract.viewStateForTx(input, this.swGlobal._activeTx);
     };
@@ -116,7 +127,10 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
       });
 
       const { stateEvaluator } = executionContext.warp;
-      const childContract = executionContext.warp.contract(contractTxId, executionContext.contract, interactionTx);
+      const childContract = executionContext.warp.contract(contractTxId, executionContext.contract, {
+        callingInteraction: interactionTx,
+        callType: 'read'
+      });
 
       await stateEvaluator.onContractCall(interactionTx, executionContext, currentResult);
 

@@ -1,8 +1,9 @@
-import { EvalStateResult, LexicographicalInteractionsSorter } from '@warp/core';
 import Arweave from 'arweave';
-import { LoggerFactory } from '@warp/logging';
-import { LevelDbCache } from '@warp';
+import { LexicographicalInteractionsSorter } from '../../core/modules/impl/LexicographicalInteractionsSorter';
+import { EvalStateResult } from '../../core/modules/StateEvaluator';
 import knex from 'knex';
+import { LoggerFactory } from '../../logging/LoggerFactory';
+import { LevelDbCache } from '../../cache/impl/LevelDbCache';
 
 export type MigrationResult = Array<{ contractTxId: string; height: number; sortKey: string }>;
 

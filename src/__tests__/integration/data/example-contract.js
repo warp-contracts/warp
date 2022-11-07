@@ -48,4 +48,7 @@ export async function handle(state, action) {
     const value = SmartWeave.contracts.readContractState(id);
     return { result: value };
   }
+  if (action.input.function === 'justThrow') {
+    throw new ContractError('Error from justThrow function');
+  }
 }

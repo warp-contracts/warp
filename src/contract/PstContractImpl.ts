@@ -1,12 +1,6 @@
-import {
-  BalanceResult,
-  HandlerBasedContract,
-  PstContract,
-  PstState,
-  TransferInput,
-  WriteInteractionOptions,
-  WriteInteractionResponse
-} from '@warp/contract';
+import { WriteInteractionOptions, WriteInteractionResponse } from './Contract';
+import { HandlerBasedContract } from './HandlerBasedContract';
+import { PstState, PstContract, BalanceResult, TransferInput } from './PstContract';
 
 interface BalanceInput {
   function: string;

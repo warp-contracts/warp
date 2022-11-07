@@ -1,11 +1,13 @@
 import fs from 'fs';
 
 import ArLocal from 'arlocal';
-import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, LoggerFactory, Warp, WarpFactory } from '@warp';
 import path from 'path';
 import { mineBlock } from '../_helpers';
+import { Contract } from '../../../contract/Contract';
+import { Warp } from '../../../core/Warp';
+import { WarpFactory } from '../../../core/WarpFactory';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
 
 let arlocal: ArLocal;
 let warp: Warp;
@@ -27,8 +29,7 @@ describe('Testing the Warp client', () => {
 
     warp = WarpFactory.forLocal(1800);
 
-    wallet = await warp.testing.generateWallet();
-
+    ({ jwk: wallet } = await warp.testing.generateWallet());
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/very-complicated-contract.js'), 'utf8');
 
     // deploying contract using the new SDK.

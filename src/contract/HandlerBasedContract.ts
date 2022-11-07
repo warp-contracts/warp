@@ -1,46 +1,41 @@
-import {
-  ArTransfer,
-  ArWallet,
-  ArweaveWrapper,
-  Benchmark,
-  BenchmarkStats,
-  Contract,
-  ContractCallStack,
-  ContractInteraction,
-  createDummyTx,
-  createInteractionTx,
-  CurrentTx,
-  DefaultEvaluationOptions,
-  emptyTransfer,
-  EvalStateResult,
-  EvaluationOptions,
-  Evolve,
-  ExecutionContext,
-  GQLNodeInterface,
-  HandlerApi,
-  InnerWritesEvaluator,
-  InteractionCall,
-  InteractionData,
-  InteractionResult,
-  InteractionsSorter,
-  LexicographicalInteractionsSorter,
-  LoggerFactory,
-  SigningFunction,
-  sleep,
-  SmartWeaveTags,
-  SortKeyCacheResult,
-  SourceData,
-  SourceImpl,
-  Tags,
-  Warp,
-  WriteInteractionOptions,
-  WriteInteractionResponse
-} from '@warp';
 import { TransactionStatusResponse } from 'arweave/node/transactions';
 import stringify from 'safe-stable-stringify';
 import * as crypto from 'crypto';
 import Transaction from 'arweave/node/lib/transaction';
-import { up } from 'arlocal/bin/db/initialize';
+import { SortKeyCacheResult } from '../cache/SortKeyCache';
+import { ContractCallRecord, InteractionCall } from '../core/ContractCallRecord';
+import { ExecutionContext } from '../core/ExecutionContext';
+import {
+  InteractionResult,
+  HandlerApi,
+  ContractInteraction,
+  InteractionData
+} from '../core/modules/impl/HandlerExecutorFactory';
+import { LexicographicalInteractionsSorter } from '../core/modules/impl/LexicographicalInteractionsSorter';
+import { InteractionsSorter } from '../core/modules/InteractionsSorter';
+import { EvaluationOptions, DefaultEvaluationOptions, EvalStateResult } from '../core/modules/StateEvaluator';
+import { SmartWeaveTags } from '../core/SmartWeaveTags';
+import { Warp } from '../core/Warp';
+import { createInteractionTx, createDummyTx } from '../legacy/create-interaction-tx';
+import { GQLNodeInterface } from '../legacy/gqlResult';
+import { Benchmark } from '../logging/Benchmark';
+import { LoggerFactory } from '../logging/LoggerFactory';
+import { Evolve } from '../plugins/Evolve';
+import { ArweaveWrapper } from '../utils/ArweaveWrapper';
+import { sleep } from '../utils/utils';
+import {
+  Contract,
+  BenchmarkStats,
+  CurrentTx,
+  WriteInteractionOptions,
+  WriteInteractionResponse,
+  InnerCallData,
+  Signature
+} from './Contract';
+import { Tags, ArTransfer, emptyTransfer, ArWallet } from './deploy/CreateContract';
+import { SourceData, SourceImpl } from './deploy/impl/SourceImpl';
+import { InnerWritesEvaluator } from './InnerWritesEvaluator';
+import { generateMockVrf } from '../utils/vrf';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -51,7 +46,7 @@ import { up } from 'arlocal/bin/db/initialize';
 export class HandlerBasedContract<State> implements Contract<State> {
   private readonly logger = LoggerFactory.INST.create('HandlerBasedContract');
 
-  private _callStack: ContractCallStack;
+  private _callStack: ContractCallRecord;
   private _evaluationOptions: EvaluationOptions = new DefaultEvaluationOptions();
   private readonly _innerWritesEvaluator = new InnerWritesEvaluator();
   private readonly _callDepth: number;
@@ -63,13 +58,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
   /**
    * wallet connected to this contract
    */
-  protected signer?: SigningFunction;
+  protected signature?: Signature;
 
   constructor(
     private readonly _contractTxId: string,
     protected readonly warp: Warp,
     private readonly _parentContract: Contract = null,
-    private readonly _callingInteraction: GQLNodeInterface = null
+    private readonly _innerCallData: InnerCallData = null
   ) {
     this.waitForConfirmation = this.waitForConfirmation.bind(this);
     this._arweaveWrapper = new ArweaveWrapper(warp.arweave);
@@ -77,25 +72,46 @@ export class HandlerBasedContract<State> implements Contract<State> {
     if (_parentContract != null) {
       this._evaluationOptions = _parentContract.evaluationOptions();
       this._callDepth = _parentContract.callDepth() + 1;
-      const interaction: InteractionCall = _parentContract.getCallStack().getInteraction(_callingInteraction.id);
+      const callingInteraction: InteractionCall = _parentContract
+        .getCallStack()
+        .getInteraction(_innerCallData.callingInteraction.id);
 
       if (this._callDepth > this._evaluationOptions.maxCallDepth) {
         throw Error(
           `Max call depth of ${this._evaluationOptions.maxCallDepth} has been exceeded for interaction ${JSON.stringify(
-            interaction.interactionInput
+            callingInteraction.interactionInput
           )}`
         );
       }
-      this.logger.debug('Calling interaction', { id: _callingInteraction.id, sortKey: _callingInteraction.sortKey });
-      const callStack = new ContractCallStack(_contractTxId, this._callDepth);
-      interaction.interactionInput.foreignContractCalls.set(_contractTxId, callStack);
+      this.logger.debug('Calling interaction', {
+        id: _innerCallData.callingInteraction.id,
+        sortKey: _innerCallData.callingInteraction.sortKey,
+        type: _innerCallData.callType
+      });
+
+      // if you're reading a state of the contract, on which you've just made a write - you're doing it wrong.
+      // the current state of the callee contract is always in the result of an internal write.
+      // following is a protection against naughty developers who might be doing such crazy things ;-)
+      if (
+        callingInteraction.interactionInput?.foreignContractCalls[_contractTxId]?.innerCallType === 'write' &&
+        _innerCallData.callType === 'read'
+      ) {
+        throw new Error(
+          'Calling a readContractState after performing an inner write is wrong - instead use a state from the result of an internal write.'
+        );
+      }
+
+      const callStack = new ContractCallRecord(_contractTxId, this._callDepth, _innerCallData?.callType);
+      callingInteraction.interactionInput.foreignContractCalls[_contractTxId] = callStack;
       this._callStack = callStack;
       this._rootSortKey = _parentContract.rootSortKey;
     } else {
       this._callDepth = 0;
-      this._callStack = new ContractCallStack(_contractTxId, 0);
+      this._callStack = new ContractCallRecord(_contractTxId, 0);
       this._rootSortKey = null;
     }
+
+    this.getCallStack = this.getCallStack.bind(this);
   }
 
   async readState(
@@ -191,10 +207,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
     options?: WriteInteractionOptions
   ): Promise<WriteInteractionResponse | null> {
     this.logger.info('Write interaction', { input, options });
-    if (!this.signer) {
+    if (!this.signature) {
       throw new Error("Wallet not connected. Use 'connect' method first.");
     }
-    const { arweave, interactionsLoader } = this.warp;
+    const { arweave, interactionsLoader, environment } = this.warp;
 
     const effectiveTags = options?.tags || [];
     const effectiveTransfer = options?.transfer || emptyTransfer;
@@ -205,6 +221,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     const bundleInteraction = interactionsLoader.type() == 'warp' && !effectiveDisableBundling;
 
+    if (this.signature.signatureType !== 'arweave' && !bundleInteraction) {
+      throw new Error(
+        `Unable to use signing function of type: ${this.signature.signatureType} when not in mainnet environment or bundling is disabled.`
+      );
+    }
+
     if (
       bundleInteraction &&
       effectiveTransfer.target != emptyTransfer.target &&
@@ -213,7 +235,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       throw new Error('Ar Transfers are not allowed for bundled interactions');
     }
 
-    if (effectiveVrf && !bundleInteraction) {
+    if (effectiveVrf && !bundleInteraction && environment === 'mainnet') {
       throw new Error('Vrf generation is only available for bundle interaction');
     }
 
@@ -230,7 +252,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
         effectiveTransfer,
         effectiveStrict,
         false,
-        false,
+        effectiveVrf && environment !== 'mainnet',
         effectiveReward
       );
       const response = await arweave.transactions.post(interactionTx);
@@ -317,11 +339,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
       // 3. Verify the callStack and search for any "internalWrites" transactions
       // 4. For each found "internalWrite" transaction - generate additional tag:
       // {name: 'InternalWrite', value: callingContractTxId}
-      const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer);
+      const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer, strict, vrf);
+
       if (strict && handlerResult.type !== 'ok') {
         throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
       }
-      const callStack: ContractCallStack = this.getCallStack();
+      const callStack: ContractCallRecord = this.getCallStack();
       const innerWrites = this._innerWritesEvaluator.eval(callStack);
       this.logger.debug('Input', input);
       this.logger.debug('Callstack', callStack.print());
@@ -336,7 +359,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       this.logger.debug('Tags with inner calls', tags);
     } else {
       if (strict) {
-        const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer);
+        const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer, strict, vrf);
         if (handlerResult.type !== 'ok') {
           throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
         }
@@ -352,7 +375,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     const interactionTx = await createInteractionTx(
       this.warp.arweave,
-      this.signer,
+      this.signature.signer,
       this._contractTxId,
       input,
       tags,
@@ -368,16 +391,31 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return this._contractTxId;
   }
 
-  getCallStack(): ContractCallStack {
+  getCallStack(): ContractCallRecord {
     return this._callStack;
   }
 
-  connect(signer: ArWallet | SigningFunction): Contract<State> {
-    if (typeof signer == 'function') {
-      this.signer = signer;
+  connect(signature: ArWallet | Signature): Contract<State> {
+    if (this.isSignatureType(signature)) {
+      if (
+        signature.signatureType !== 'arweave' &&
+        (!(this.warp.environment == 'mainnet') || !(this.warp.interactionsLoader.type() == 'warp'))
+      ) {
+        throw new Error(
+          `Unable to use signing function of type: ${signature.signatureType} when not in mainnet environment or bundling is disabled.`
+        );
+      } else {
+        this.signature = {
+          signer: signature.signer,
+          signatureType: signature.signatureType
+        };
+      }
     } else {
-      this.signer = async (tx: Transaction) => {
-        await this.warp.arweave.transactions.sign(tx, signer);
+      this.signature = {
+        signer: async (tx: Transaction) => {
+          await this.warp.arweave.transactions.sign(tx, signature);
+        },
+        signatureType: 'arweave'
       };
     }
     return this;
@@ -505,7 +543,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   private maybeResetRootContract() {
     if (this._parentContract == null) {
       this.logger.debug('Clearing call stack for the root contract');
-      this._callStack = new ContractCallStack(this.txId(), 0);
+      this._callStack = new ContractCallRecord(this.txId(), 0);
       this._rootSortKey = null;
       this.warp.interactionsLoader.clearCache();
     }
@@ -516,11 +554,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
     caller?: string,
     sortKey?: string,
     tags: Tags = [],
-    transfer: ArTransfer = emptyTransfer
+    transfer: ArTransfer = emptyTransfer,
+    strict = false,
+    vrf = false
   ): Promise<InteractionResult<State, View>> {
     this.logger.info('Call contract input', input);
     this.maybeResetRootContract();
-    if (!this.signer) {
+    if (!this.signature) {
       this.logger.warn('Wallet not set.');
     }
     const { arweave, stateEvaluator } = this.warp;
@@ -534,13 +574,15 @@ export class HandlerBasedContract<State> implements Contract<State> {
     let effectiveCaller;
     if (caller) {
       effectiveCaller = caller;
-    } else if (this.signer) {
+    } else if (this.signature) {
+      // we're creating this transaction just to call the signing function on it
+      // - and retrieve the caller/owner
       const dummyTx = await arweave.createTransaction({
         data: Math.random().toString().slice(-4),
         reward: '72600854',
         last_tx: 'p7vc1iSP6bvH_fCeUFa9LqoV5qiyW-jdEKouAT0XMoSwrNraB9mgpi29Q10waEpO'
       });
-      await this.signer(dummyTx);
+      await this.signature.signer(dummyTx);
       effectiveCaller = await arweave.wallets.ownerToAddress(dummyTx.owner);
     } else {
       effectiveCaller = '';
@@ -565,7 +607,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     this.logger.debug('interaction', interaction);
     const tx = await createInteractionTx(
       arweave,
-      this.signer,
+      this.signature?.signer,
       this._contractTxId,
       input,
       tags,
@@ -582,6 +624,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
     });
 
     dummyTx.sortKey = await this._sorter.createSortKey(dummyTx.block.id, dummyTx.id, dummyTx.block.height, true);
+    dummyTx.strict = strict;
+    if (vrf) {
+      dummyTx.vrf = generateMockVrf(dummyTx.sortKey, arweave);
+    }
 
     const handleResult = await this.evalInteraction<Input, View>(
       {
@@ -646,7 +692,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
     evalStateResult: EvalStateResult<State>
   ) {
     const interactionCall: InteractionCall = this.getCallStack().addInteractionData(interactionData);
-
     const benchmark = Benchmark.measure();
     const result = await executionContext.handler.handle<Input, View>(
       executionContext,
@@ -722,22 +767,22 @@ export class HandlerBasedContract<State> implements Contract<State> {
   }
 
   async save(sourceData: SourceData): Promise<any> {
-    if (!this.signer) {
+    if (!this.signature) {
       throw new Error("Wallet not connected. Use 'connect' method first.");
     }
     const { arweave } = this.warp;
     const source = new SourceImpl(arweave);
 
-    const srcTx = await source.save(sourceData, this.signer);
+    const srcTx = await source.save(sourceData, this.signature.signer);
 
     return srcTx.id;
   }
 
-  get callingInteraction(): GQLNodeInterface | null {
-    return this._callingInteraction;
-  }
-
   get rootSortKey(): string {
     return this._rootSortKey;
+  }
+
+  private isSignatureType(signature: ArWallet | Signature): signature is Signature {
+    return (signature as Signature).signer !== undefined;
   }
 }

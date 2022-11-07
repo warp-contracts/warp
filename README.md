@@ -1,12 +1,15 @@
 # Warp SDK
 
-> ⚠️ Following library has been renamed from **[redstone-smartweave](https://www.npmjs.com/package/redstone-smartweave)** to **warp-contracts** from version **1.0.0**! If you are using older version please read [README-LEGACY](README-LEGACY.md).
+> ⚠️ Following library has been renamed from **[redstone-smartweave](https://www.npmjs.com/package/redstone-smartweave)** to **warp-contracts** from version **1.0.0**! If you are using older version please read [README-LEGACY](https://github.com/warp-contracts/warp/blob/main/README-LEGACY.md).
 
-Warp SDK is the implementation of the SmartWeave [Protocol](./docs/SMARTWEAVE_PROTOCOL.md).
+Warp SDK is the implementation of the SmartWeave [Protocol](https://github.com/warp-contracts/warp/blob/main/docs/SMARTWEAVE_PROTOCOL.md).
 
 It works in both web and Node.js environment (requires Node.js 16.5+).
 
 If you are interested in the main assumptions for Warp ecosystem as well as its key features go visit [our website](https://warp.cc).
+
+⚠️ Do not use "Map" objects in the state of js/ts contracts - since maps by default are not serializable to JSON and won't be properly stored by the caching mechanism. Use "plain" objects instead.
+[More info](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map#objects_vs._maps) - the "Serialization and parsing" row.
 
 - [Development](#development)
   - [Installation](#installation)
@@ -32,17 +35,18 @@ If you are interested in the main assumptions for Warp ecosystem as well as its 
   - [VM2](#vm2)
   - [Internal writes](#internal-writes)
   - [UnsafeClient](#unsafeclient)
-  - [Performance - best practices](#performance---best-practices)
+  - [Cache](#cache)
+  - [CLI](#cli)
   - [Examples](#examples)
   - [Migrations](#migrations)
     - [Old factories to WarpFactory](#old-factories-to-warpfactory)
     - [Sqlite to LevelDB](#sqlite-to-leveldb)
-- [Examples](#examples)
+    - [Additional changes](#additional-changes)
 - [Warp transaction lifecycle](#warp-transaction-lifecycle)
 
 ## Development
 
-PRs are welcome! :-) Also, feel free to submit [issues](https://github.com/redstone-finance/warp/issues) - with both bugs and feature proposals.
+PRs are welcome! :-) Also, feel free to submit [issues](https://github.com/warp-contracts/warp/issues) - with both bugs and feature proposals.
 In case of creating a PR - please use [semantic commit messages](https://gist.github.com/joshbuchea/6f47e86d2510bce28f8e7f42ae84c716).
 
 ### Installation
@@ -130,7 +134,7 @@ Default parameters (each of them can be adjusted to your needs):
 
 #### forTestnet
 
-Creates a Warp instance suitable for testing with Warp testnet (https://testnet.redstone.tools/).
+Creates a Warp instance suitable for testing with [Warp testnet](https://testnet.redstone.tools/).
 
 ```typescript
 warp = WarpFactory.forTestnet();
@@ -144,7 +148,7 @@ Default parameters (each of them can be adjusted to your needs):
 #### forMainnet
 
 Creates a Warp instance suitable for use with mainnet.
-By default, the Warp gateway (https://github.com/warp-contracts/gateway#warp-gateway) is being used for:
+By default, the [Warp gateway](https://github.com/warp-contracts/gateway#warp-gateway) is being used for:
 
 1.  deploying contracts
 2.  writing new transactions through Warp Sequencer
@@ -280,7 +284,7 @@ const contract = warp.contract('YOUR_CONTRACT_TX_ID').connect(jwk);
 function setEvaluationOptions(options: Partial<EvaluationOptions>): Contract<State>;
 ```
 
-Allows to set [EvaluationOptions](https://github.com/warp-contracts/warp/blob/main/src/core/modules/StateEvaluator.ts#L123) that will overwrite current configuration.
+Allows to set [EvaluationOptions](https://github.com/warp-contracts/warp/blob/main/src/core/modules/StateEvaluator.ts#L98) that will overwrite current configuration.
 
 <details>
   <summary>Example</summary>
@@ -299,11 +303,11 @@ const contract = warp.contract('YOUR_CONTRACT_TX_ID').setEvaluationOptions({
 #### `readState`
 
 ```typescript
-import {SortKeyCacheResult} from "./SortKeyCache";
+import { SortKeyCacheResult } from './SortKeyCache';
 
 async function readState(
-        sortKeyOrBlockHeight?: string | number,
-        currentTx?: { contractTxId: string; interactionTxId: string }[]
+  sortKeyOrBlockHeight?: string | number,
+  currentTx?: { contractTxId: string; interactionTxId: string }[]
 ): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
 ```
 
@@ -396,10 +400,10 @@ async function writeInteraction<Input = unknown>(
 ): Promise<WriteInteractionResponse | null>;
 ```
 
-Writes a new "interaction" transaction - ie. such transaction that stores input for the contract.
+Writes a new "interaction" transaction - i.e. such transaction that stores input for the contract.
 
 - `input` the interaction input
-- `options` - an object with some custom options (see [WriteInteractionOptions](https://github.com/warp-contracts/warp/blob/src/contract/Contract.ts#L46))
+- `options` - an object with some custom options (see [WriteInteractionOptions](https://github.com/warp-contracts/warp/blob/main/src/contract/Contract.ts#L49))
 
 By default write interaction transactions are bundled and posted on Arweave using Warp Sequencer. If you want to post transactions directly to Arweave - disable bundling by setting `options.disableBundling` to `true`.
 
@@ -426,7 +430,7 @@ async function evolve(newSrcTxId: string, options?: WriteInteractionOptions): Pr
 Allows to change contract's source code, without having to deploy a new contract. This method effectively evolves the contract to the source. This requires the `save` method to be called first and its transaction to be confirmed by the network.
 
 - `newSrcTxId` - result of the `save` method call.
-- `options` - an object with some custom options (see [WriteInteractionOptions](https://github.com/warp-contracts/warp/blob/src/contract/Contract.ts#L46))
+- `options` - an object with some custom options (see [WriteInteractionOptions](https://github.com/warp-contracts/warp/blob/main/src/contract/Contract.ts#L49))
 
 By default evolve interaction transactions are bundled and posted on Arweave using Warp Sequencer. If you want to post transactions directly to Arweave - disable bundling by setting `options.disableBundling` to `true`.
 
@@ -488,21 +492,22 @@ contract = warp.contract(contractTxId).setEvaluationOptions({
 
 ### Internal writes
 
-SmartWeave protocol currently natively does not support writes between contract - contracts can only read each others' state. This lack of interoperability is a big limitation for real-life applications - especially if you want to implement features like staking/vesting, disputes - or even a standard approve/transferFrom flow from ERC-20 tokens.
+SmartWeave protocol currently natively does not support writes between contract - contracts can only read each others' state.
+This lack of interoperability is a big limitation for real-life applications - especially if you want to implement
+features like staking/vesting, disputes - or even a standard approve/transferFrom flow from ERC-20 tokens.
 
 SmartWeave protocol has been extended in Warp by adding internal writes feature.
 
 A new method has been added to SmartWeave global object. It allows to perform writes on other contracts.
 
-1. The method first evaluates the target (ie. specified by the contractTxId given in the first parameter) contract's state up to the "current" block height (ie. block height of the interaction that is calling the write method) and then applies the input (specified as the secon parameter of the write method). The result is memoized in cache.
-
-```
-await SmartWeave.contracts.write(contractTxId, { function: 'add' });
+```js
+const result = await SmartWeave.contracts.write(contractTxId, { function: 'add' });
 ```
 
-2. For each newly created interaction with given contract - a dry run is performed and the call report of the dry-run is analysed. A list of all inner-calls between contracts is generated. For each generated inner call - an additional tag is generated: {'interactWrite': contractTxId}- where contractTxId is the callee contract.
-
-3. When state is evaluated for the given contract ("Contract A") all the interactions - `direct` and `internalWrites`. If it is an `internalWrite` interaction - contract specified in the `internalWrite` ("Contract B") tag is loaded and its state is evaluate. This will cause the `write` method (described in p.1) to be called. After evaluating the "Contract B" contract state - the latest state of the "Contract A" is loaded from cache (it has been updated by the write method) and evaluation moves to next interaction.
+The `result` of the internal write contains the result type (`ok`, `error`, `exception`) and the most current state
+of the callee contract (i.e. after performing a write).
+If the function called by the `SmartWeave.contracts.write` throws an error, the parent transaction throws a `ContractError`
+by default - so there is no need to manually check the result of the internal write.
 
 In order for internal calls to work you need to set `evaluationOptions` to `true`:
 
@@ -515,13 +520,14 @@ const callingContract = smartweave
   .connect(wallet);
 ```
 
+A more detailed description of internal writes feature is available [here](https://github.com/warp-contracts/warp/blob/main/docs/INTERNAL_WRITES.md).  
+A list of real life examples are available [here](https://github.com/warp-contracts/warp/blob/main/docs/INTERNAL_WRITES.md#examples).
+
 You can also perform internal read to the contract (originally introduced by the protocol):
 
 ```
 await SmartWeave.contracts.readContractState(action.input.contractId);
 ```
-
-You can view some more examples in the [internal writes test directory](https://github.com/redstone-finance/redstone-smartcontracts/tree/main/src/__tests__/integration/internal-writes). If you would like to read whole specification and motivation which stands behind introducing internal writes feature, please read [following issue](https://github.com/redstone-finance/redstone-smartcontracts/issues/37).
 
 ### unsafeClient
 
@@ -548,11 +554,15 @@ In order to reduce the cache size, the oldest entries are automatically pruned.
 
 It is possible to use the in-memory cache instead by setting `cacheOptions.inMemory` to `true` while initializing Warp. `inMemory` cache is used by default in local environment.
 
+### CLI
+
+A dedicated CLI which eases the process of using main methods of the Warp SDK library has been created. Please refer to [`warp-contracts-cli` npm page](https://www.npmjs.com/package/warp-contracts-cli) for more details.
+
 ### Migrations
 
 #### old factories to WarpFactory
 
-1. Mainnet
+1. Mainnet  
    This is how you would intiialize Warp 'the old way':
 
 ```typescript
@@ -611,7 +621,7 @@ Remember that you are always allowed to initialize Warp depending on your needs 
 
 #### sqlite to levelDB
 
-If you've been using Knex based cache you can now easily migrate your sqlite database to levelDB. Just use our [migration tool](./tools/migrate.ts), set correct path to your sqlite database in this line:
+If you've been using Knex based cache you can now easily migrate your sqlite database to levelDB. Just use our [migration tool](https://github.com/warp-contracts/warp/blob/main/tools/migrate.ts), set correct path to your sqlite database in this line:
 
 ```typescript
 const result = await warp.migrationTool.migrateSqlite('./tools/sqlite/contracts-3008.sqlite');
@@ -623,20 +633,43 @@ const result = await warp.migrationTool.migrateSqlite('./tools/sqlite/contracts-
 yarn ts-node -r tsconfig-paths/register tools/migrate.ts
 ```
 
+#### Additional changes
+
+1. the type of the result of the readState has changed: https://github.com/warp-contracts/warp#readstate
+
+2. the `bundleInteraction` method has been removed. The SDK now decides automatically how the transaction should be posted (based on the environment - i.e. whether the warp instance has been created for mainnet, testnet or local env).
+
+3. the internalWrite, if the write itself fails, now throws the `ContractError` by default. There's no longer need to manually check the result of the write inside the contract code (and throw error manually if result.type != 'ok').
+   If you want to leave the check in the contract code - set the
+
+```
+.setEvaluationOptions({
+  throwOnInternalWriteError: true
+});
+```
+
+4. The warp instance now contains info about the environment - https://github.com/warp-contracts/warp#warpenvironment . This might be useful for writing deployment scripts, etc.
+5. if the `warp` instance was obtained via `WarpFactor.forLocal` (which should be used for local testing with ArLocal), then:
+
+- you can use `warp.testing.generateWallet()` for generating the wallet - it returns both the jwk and wallet address - [example](https://github.com/warp-contracts/warp/blob/main/src/__tests__/integration/internal-writes/internal-write-depth.test.ts#L89).
+- you can use `warp.testing.mineBlock()` to manually mine ArLocal blocks
+- the ArLocal blocks are mined automatically after calling `.writeInteraction`. This can be switched off by setting `evaluationOptions.mineArLocalBlocks` to `false` - [example](https://github.com/warp-contracts/warp/blob/main/src/__tests__/integration/internal-writes/internal-write-depth.test.ts#L118).
+
 ### Examples
 
-Usage examples can be found in
-a dedicated [repository](https://github.com/redstone-finance/redstone-smartweave-examples).
-Please follow instructions in its README.md (and detail-ish comments in the examples files) to learn more.
-There is also a separate repository with a web application [example](https://github.com/redstone-finance/redstone-smartcontracts-app).
+We've created an [academy](https://redstone.academy/) that introduces to the process of writing your own SmartWeave contract from scratch and describes how to interact with it using Warp SDK.
 
-We've also created an [academy](https://redstone.academy/) that introduces to the process of writing your own SmartWeave contract from scratch and describes how to interact with it using Warp SDK.
+The example usages with different web bundlers and in Node.js env are available [here](https://github.com/warp-contracts/bundlers).
 
 A community package - [arweave-jest-fuzzing](https://github.com/Hansa-Network/arweave-jest-fuzzing/blob/master/README.md) has been released thanks to Hansa Network to help SmartWeave developers write fuzzy tests.
 
+### Bundled interactions and bundled deployment
+
+Warp gateway bundles transactions underneath. Please refer to [Bundled contract](https://github.com/warp-contracts/warp/blob/main/docs/BUNDLED_CONTRACT.md) and [Bundled interaction](https://github.com/warp-contracts/warp/blob/main/docs/BUNDLED_INTERACTION.md) docs to read the specification.
+
 ## Warp transaction lifecycle
 
-![transactionLifecycle](docs/img/warp_transaction_lifecycle.svg)
+![transactionLifecycle](https://svgshare.com/i/n0S.svg)
 
 Warp SDK is just part of the whole Warp smart contracts platform. It makes transactions processing and evaluation easy and effective.
 

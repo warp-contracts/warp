@@ -16,16 +16,6 @@
     "resolveJsonModule": true,
     "baseUrl": "./src",
     "allowJs": true,
-    "paths": {
-      "@warp/cache": ["cache/index"],
-      "@warp/contract": ["contract/index"],
-      "@warp/core": ["core/index"],
-      "@warp/legacy": ["legacy/index"],
-      "@warp/plugins": ["plugins/index"],
-      "@warp/logging": ["logging/index"],
-      "@warp/utils": ["utils/index"],
-      "@warp": ["index"]
-    }
   },
   "include": ["src"],
   "exclude": [
@@ -33,8 +23,5 @@
     "tools",
     "**/__tests__/*",
     "_scripts"
-  ],
-  "tsc-alias": {
-    "verbose": true
-  }
+  ]
 }

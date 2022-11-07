@@ -1,6 +1,6 @@
-import { LoggerFactory } from '@warp';
 import { unzip } from 'unzipit';
 import { Buffer } from 'redstone-isomorphic';
+import { LoggerFactory } from '../../../../logging/LoggerFactory';
 
 export class WasmSrc {
   private readonly logger = LoggerFactory.INST.create('WasmSrc');

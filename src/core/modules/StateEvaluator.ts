@@ -1,4 +1,7 @@
-import { CurrentTx, ExecutionContext, GQLNodeInterface, SortKeyCacheResult } from '@warp';
+import { SortKeyCacheResult } from '../../cache/SortKeyCache';
+import { CurrentTx } from '../../contract/Contract';
+import { ExecutionContext } from '../../core/ExecutionContext';
+import { GQLNodeInterface } from '../../legacy/gqlResult';
 
 /**
  * Implementors of this class are responsible for evaluating contract's state
@@ -97,7 +100,7 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   // "false" may lead to some fairly simple attacks on contract, if the contract
   // does not properly validate input data.
   // "true" may lead to wrongly calculated state, even without noticing the problem
-  // (eg. when using unsafe client and Arweave does not respond properly for a while)
+  // (e.g. when using unsafe client and Arweave does not respond properly for a while)
   ignoreExceptions = true;
 
   waitForConfirmation = false;
@@ -118,8 +121,6 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
 
   gasLimit = Number.MAX_SAFE_INTEGER;
 
-  useFastCopy = true;
-
   useIVM = false;
 
   ivm = {
@@ -134,6 +135,8 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   walletBalanceUrl = 'http://nyc-1.dev.arweave.net:1984/';
 
   mineArLocalBlocks = true;
+
+  throwOnInternalWriteError = true;
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some features.
@@ -182,12 +185,6 @@ export interface EvaluationOptions {
 
   gasLimit: number;
 
-  // Whether fast-copy library should be used during the state evaluation
-  // https://github.com/planttheidea/fast-copy#isstrict
-  // it's much faster (e.g. almost twice for the SJ3l7474UHh3Dw6dWVT1bzsJ-8JvOewtGoDdOecWIZo contract)
-  // currently defaults to true
-  useFastCopy: boolean;
-
   // Whether js contracts' code should be run within isolated-vm sandbox
   // (https://github.com/laverdet/isolated-vm)
   // Whether js contracts' code should be run within vm2 sandbox (https://github.com/patriksimek/vm2#vm2-----)
@@ -218,4 +215,8 @@ export interface EvaluationOptions {
 
   // whether the local Warp instance should manually mine blocks in ArLocal. Defaults to true.
   mineArLocalBlocks: boolean;
+
+  // whether a contract should automatically throw if internal write fails.
+  // set to 'true' be default, can be set to false for backwards compatibility
+  throwOnInternalWriteError: boolean;
 }

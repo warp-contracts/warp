@@ -1,16 +1,14 @@
 import Arweave from 'arweave';
-import { CacheableExecutorFactory, Evolve } from '@warp/plugins';
-import {
-  CacheableStateEvaluator,
-  ConfirmationStatus,
-  EvalStateResult,
-  HandlerExecutorFactory,
-  SourceType,
-  Warp,
-  WarpBuilder,
-  WarpEnvironment
-} from '@warp/core';
-import { LevelDbCache, MemCache } from '@warp/cache';
+import { LevelDbCache } from '../cache/impl/LevelDbCache';
+import { MemCache } from '../cache/impl/MemCache';
+import { CacheableExecutorFactory } from '../plugins/CacheableExecutorFactory';
+import { Evolve } from '../plugins/Evolve';
+import { CacheableStateEvaluator } from './modules/impl/CacheableStateEvaluator';
+import { HandlerExecutorFactory } from './modules/impl/HandlerExecutorFactory';
+import { ConfirmationStatus, SourceType } from './modules/impl/WarpGatewayInteractionsLoader';
+import { EvalStateResult } from './modules/StateEvaluator';
+import { WarpEnvironment, Warp } from './Warp';
+import { WarpBuilder } from './WarpBuilder';
 
 export type GatewayOptions = {
   confirmationStatus: ConfirmationStatus;
@@ -104,7 +102,6 @@ export class WarpFactory {
     if (useArweaveGw) {
       return this.customArweaveGw(arweave, cacheOptions, 'mainnet');
     } else {
-      console.log(defaultWarpGwOptions);
       return this.customWarpGw(arweave, defaultWarpGwOptions, cacheOptions, 'mainnet');
     }
   }
@@ -141,6 +138,6 @@ export class WarpFactory {
     cacheOptions: CacheOptions = defaultCacheOptions,
     environment: WarpEnvironment
   ): Warp {
-    return this.custom(arweave, cacheOptions, environment).useWarpGateway(gatewayOptions).build();
+    return this.custom(arweave, cacheOptions, environment).useWarpGateway(gatewayOptions, cacheOptions).build();
   }
 }

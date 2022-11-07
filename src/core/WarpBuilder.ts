@@ -1,23 +1,19 @@
 import Arweave from 'arweave';
-import {
-  ArweaveGatewayInteractionsLoader,
-  CacheableInteractionsLoader,
-  ContractDefinitionLoader,
-  DebuggableExecutorFactory,
-  DefinitionLoader,
-  EvalStateResult,
-  ExecutorFactory,
-  GatewayOptions,
-  HandlerApi,
-  InteractionsLoader,
-  LevelDbCache,
-  MemCache,
-  StateEvaluator,
-  Warp,
-  WarpEnvironment,
-  WarpGatewayContractDefinitionLoader,
-  WarpGatewayInteractionsLoader
-} from '@warp';
+import { MemCache } from '../cache/impl/MemCache';
+import { LevelDbCache } from '../cache/impl/LevelDbCache';
+import { DebuggableExecutorFactory } from '../plugins/DebuggableExecutorFactor';
+import { DefinitionLoader } from './modules/DefinitionLoader';
+import { ExecutorFactory } from './modules/ExecutorFactory';
+import { ArweaveGatewayInteractionsLoader } from './modules/impl/ArweaveGatewayInteractionsLoader';
+import { CacheableInteractionsLoader } from './modules/impl/CacheableInteractionsLoader';
+import { ContractDefinitionLoader } from './modules/impl/ContractDefinitionLoader';
+import { HandlerApi } from './modules/impl/HandlerExecutorFactory';
+import { WarpGatewayContractDefinitionLoader } from './modules/impl/WarpGatewayContractDefinitionLoader';
+import { WarpGatewayInteractionsLoader } from './modules/impl/WarpGatewayInteractionsLoader';
+import { InteractionsLoader } from './modules/InteractionsLoader';
+import { StateEvaluator, EvalStateResult } from './modules/StateEvaluator';
+import { WarpEnvironment, Warp } from './Warp';
+import { CacheOptions, GatewayOptions } from './WarpFactory';
 
 export class WarpBuilder {
   private _definitionLoader?: DefinitionLoader;
@@ -59,7 +55,7 @@ export class WarpBuilder {
     return this.build();
   }
 
-  public useWarpGateway(gatewayOptions: GatewayOptions): WarpBuilder {
+  public useWarpGateway(gatewayOptions: GatewayOptions, cacheOptions: CacheOptions): WarpBuilder {
     this._interactionsLoader = new CacheableInteractionsLoader(
       new WarpGatewayInteractionsLoader(
         gatewayOptions.address,
@@ -70,14 +66,16 @@ export class WarpBuilder {
     this._definitionLoader = new WarpGatewayContractDefinitionLoader(
       gatewayOptions.address,
       this._arweave,
-      new MemCache()
+      cacheOptions
     );
     return this;
   }
 
   public useArweaveGateway(): WarpBuilder {
-    this._definitionLoader = new ContractDefinitionLoader(this._arweave, new MemCache());
-    this._interactionsLoader = new CacheableInteractionsLoader(new ArweaveGatewayInteractionsLoader(this._arweave));
+    this._definitionLoader = new ContractDefinitionLoader(this._arweave);
+    this._interactionsLoader = new CacheableInteractionsLoader(
+      new ArweaveGatewayInteractionsLoader(this._arweave, this._environment)
+    );
     return this;
   }
 

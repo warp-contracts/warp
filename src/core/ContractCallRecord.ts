@@ -1,13 +1,14 @@
-import { InteractionData, mapReplacer } from '@warp';
+import { InteractionData } from './modules/impl/HandlerExecutorFactory';
+import { InnerCallType } from '../contract/Contract';
+import { isomorphicRandomUUID } from '../utils/utils';
 
-export class ContractCallStack {
-  readonly interactions: Map<string, InteractionCall> = new Map();
+export class ContractCallRecord {
+  readonly interactions: { [key: string]: InteractionCall } = {};
+  readonly id: string;
 
-  constructor(
-    public readonly contractTxId: string,
-    public readonly depth: number,
-    public readonly label: string = ''
-  ) {}
+  constructor(readonly contractTxId: string, readonly depth: number, readonly innerCallType: InnerCallType = null) {
+    this.id = isomorphicRandomUUID();
+  }
 
   addInteractionData(interactionData: InteractionData<any>): InteractionCall {
     const { interaction, interactionTx } = interactionData;
@@ -22,26 +23,27 @@ export class ContractCallStack {
         interaction?.input.function,
         interaction?.input,
         interactionTx.dry,
-        new Map()
+        {}
       )
     );
 
-    this.interactions.set(interactionTx.id, interactionCall);
+    this.interactions[interactionTx.id] = interactionCall;
 
     return interactionCall;
   }
 
   getInteraction(txId: string): InteractionCall {
-    return this.interactions.get(txId);
+    return this.interactions[txId];
   }
 
   print(): string {
-    return JSON.stringify(this, mapReplacer);
+    return JSON.stringify(this, null, 2);
   }
 }
 
 export class InteractionCall {
   interactionOutput: InteractionOutput;
+
   private constructor(readonly interactionInput: InteractionInput) {}
 
   static create(interactionInput: InteractionInput): InteractionCall {
@@ -63,7 +65,7 @@ export class InteractionInput {
     public readonly functionName: string,
     public readonly functionArguments: [],
     public readonly dryWrite: boolean,
-    public readonly foreignContractCalls: Map<string, ContractCallStack> = new Map()
+    public readonly foreignContractCalls: { [key: string]: ContractCallRecord } = {}
   ) {}
 }
 

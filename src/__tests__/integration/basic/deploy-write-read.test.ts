@@ -2,9 +2,12 @@ import fs from 'fs';
 
 import ArLocal from 'arlocal';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { Contract, LoggerFactory, Warp, WarpFactory } from '@warp';
 import path from 'path';
 import { mineBlock } from '../_helpers';
+import { Contract } from '../../../contract/Contract';
+import { Warp } from '../../../core/Warp';
+import { WarpFactory } from '../../../core/WarpFactory';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
 
 interface ExampleContractState {
   counter: number;
@@ -39,7 +42,7 @@ describe('Testing the Warp client', () => {
 
     LoggerFactory.INST.logLevel('error');
     warp = WarpFactory.forLocal(1810);
-    wallet = await warp.testing.generateWallet();
+    ({ jwk: wallet } = await warp.testing.generateWallet());
 
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/example-contract.js'), 'utf8');
     initialState = fs.readFileSync(path.join(__dirname, '../data/example-contract-state.json'), 'utf8');

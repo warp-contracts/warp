@@ -1,13 +1,9 @@
-import {
-  ContractDefinition,
-  deepCopy,
-  EvalStateResult,
-  ExecutionContext,
-  InteractionData,
-  InteractionResult,
-  SmartWeaveGlobal,
-  timeout
-} from '@warp';
+import { ContractDefinition } from '../../../../core/ContractDefinition';
+import { ExecutionContext } from '../../../../core/ExecutionContext';
+import { EvalStateResult } from '../../../../core/modules/StateEvaluator';
+import { SmartWeaveGlobal } from '../../../../legacy/smartweave-global';
+import { timeout, deepCopy } from '../../../../utils/utils';
+import { InteractionData, InteractionResult } from '../HandlerExecutorFactory';
 import { AbstractContractHandler } from './AbstractContractHandler';
 
 export class JsHandlerApi<State> extends AbstractContractHandler<State> {
@@ -32,7 +28,7 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
     try {
       const { interaction, interactionTx, currentTx } = interactionData;
 
-      const stateCopy = deepCopy(currentResult.state, executionContext.evaluationOptions.useFastCopy);
+      const stateCopy = deepCopy(currentResult.state);
       this.swGlobal._activeTx = interactionTx;
       this.swGlobal.caller = interaction.caller; // either contract tx id (for internal writes) or transaction.owner
       this.assignReadContractState<Input>(executionContext, currentTx, currentResult, interactionTx);

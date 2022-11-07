@@ -1,27 +1,20 @@
-import {
-  Benchmark,
-  canBeCached,
-  ContractInteraction,
-  CurrentTx,
-  EvalStateResult,
-  ExecutionContext,
-  ExecutionContextModifier,
-  GQLNodeInterface,
-  GQLTagInterface,
-  HandlerApi,
-  indent,
-  InteractionCall,
-  InteractionResult,
-  LoggerFactory,
-  SortKeyCacheResult,
-  StateEvaluator,
-  TagsParser,
-  VrfData
-} from '@warp';
 import Arweave from 'arweave';
 
 import { ProofHoHash } from '@idena/vrf-js';
 import elliptic from 'elliptic';
+import { SortKeyCacheResult } from '../../../cache/SortKeyCache';
+import { CurrentTx } from '../../../contract/Contract';
+import { InteractionCall } from '../../ContractCallRecord';
+import { ExecutionContext } from '../../../core/ExecutionContext';
+import { ExecutionContextModifier } from '../../../core/ExecutionContextModifier';
+import { GQLNodeInterface, GQLTagInterface, VrfData } from '../../../legacy/gqlResult';
+import { Benchmark } from '../../../logging/Benchmark';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { indent } from '../../../utils/utils';
+import { EvalStateResult, StateEvaluator } from '../StateEvaluator';
+import { ContractInteraction, HandlerApi, InteractionResult } from './HandlerExecutorFactory';
+import { canBeCached } from './StateCache';
+import { TagsParser } from './TagsParser';
 
 const EC = new elliptic.ec('secp256k1');
 
@@ -61,7 +54,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     currentTx: CurrentTx[]
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
     const { ignoreExceptions, stackTrace, internalWrites } = executionContext.evaluationOptions;
-    const { contract, contractDefinition, sortedInteractions } = executionContext;
+    const { contract, contractDefinition, sortedInteractions, warp } = executionContext;
 
     let currentState = baseState.state;
     let currentSortKey = null;
@@ -84,6 +77,10 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     const missingInteractionsLength = missingInteractions.length;
     executionContext.handler.initState(currentState);
 
+    const evmSignatureVerificationPlugin = warp.hasPlugin('evm-signature-verification')
+      ? warp.loadPlugin<GQLNodeInterface, Promise<boolean>>('evm-signature-verification')
+      : null;
+
     for (let i = 0; i < missingInteractionsLength; i++) {
       const missingInteraction = missingInteractions[i];
       const singleInteractionBenchmark = Benchmark.measure();
@@ -92,6 +89,18 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       if (missingInteraction.vrf) {
         if (!this.verifyVrf(missingInteraction.vrf, missingInteraction.sortKey, this.arweave)) {
           throw new Error('Vrf verification failed.');
+        }
+      }
+
+      if (evmSignatureVerificationPlugin && this.tagsParser.isEvmSigned(missingInteraction)) {
+        try {
+          if (!(await evmSignatureVerificationPlugin.process(missingInteraction))) {
+            this.logger.warn(`Interaction ${missingInteraction.id} was not verified, skipping.`);
+            continue;
+          }
+        } catch (e) {
+          this.logger.error(e);
+          continue;
         }
       }
 
@@ -114,11 +123,10 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           .addInteractionData({ interaction: null, interactionTx: missingInteraction, currentTx });
 
         // creating a Contract instance for the "writing" contract
-        const writingContract = executionContext.warp.contract(
-          writingContractTxId,
-          executionContext.contract,
-          missingInteraction
-        );
+        const writingContract = executionContext.warp.contract(writingContractTxId, executionContext.contract, {
+          callingInteraction: missingInteraction,
+          callType: 'read'
+        });
 
         await this.onContractCall(
           missingInteraction,

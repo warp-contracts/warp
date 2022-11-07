@@ -3,23 +3,19 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import {
-  ArweaveGatewayInteractionsLoader,
-  defaultCacheOptions,
-  EvaluationOptions,
-  GQLNodeInterface,
-  InteractionsLoader,
-  LexicographicalInteractionsSorter,
-  LoggerFactory,
-  PstContract,
-  PstState,
-  Warp,
-  WarpFactory
-} from '@warp';
 import path from 'path';
 import { mineBlock } from '../_helpers';
 import { Evaluate } from '@idena/vrf-js';
 import elliptic from 'elliptic';
+import { PstContract, PstState } from '../../../contract/PstContract';
+import { InteractionsLoader } from '../../../core/modules/InteractionsLoader';
+import { EvaluationOptions } from '../../../core/modules/StateEvaluator';
+import { Warp } from '../../../core/Warp';
+import { defaultCacheOptions, WarpFactory } from '../../../core/WarpFactory';
+import { GQLNodeInterface } from '../../../legacy/gqlResult';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { ArweaveGatewayInteractionsLoader } from '../../../core/modules/impl/ArweaveGatewayInteractionsLoader';
+import { LexicographicalInteractionsSorter } from '../../../core/modules/impl/LexicographicalInteractionsSorter';
 
 const EC = new elliptic.ec('secp256k1');
 const key = EC.genKeyPair();
@@ -69,7 +65,7 @@ describe('Testing the Profit Sharing Token', () => {
       .setInteractionsLoader(loader)
       .build();
 
-    wallet = await warp.testing.generateWallet();
+    ({ jwk: wallet, address: walletAddress } = await warp.testing.generateWallet());
     walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/token-pst.js'), 'utf8');
@@ -142,11 +138,112 @@ describe('Testing the Profit Sharing Token', () => {
     await expect(pst.readState()).rejects.toThrow('Vrf verification failed.');
     useWrongProof.pop();
   });
+
+  it('should allow to test VRF on a standard forLocal Warp instance', async () => {
+    const localWarp = WarpFactory.forLocal(1823);
+
+    const { contractTxId: vrfContractTxId } = await localWarp.createContract.deploy({
+      wallet,
+      initState: JSON.stringify(initialState),
+      src: contractSrc
+    });
+
+    await mineBlock(localWarp);
+    const vrfContract = localWarp.contract(vrfContractTxId).connect(wallet);
+    await vrfContract.writeInteraction(
+      {
+        function: 'vrf'
+      },
+      { vrf: true }
+    );
+    const result = await vrfContract.readState();
+    const lastTxId = Object.keys(result.cachedValue.validity).pop();
+    const vrf = (result.cachedValue.state as any).vrf[lastTxId];
+
+    expect(vrf).not.toBeUndefined();
+    expect(vrf['random_6_1'] == vrf['random_6_2']).toBe(true);
+    expect(vrf['random_6_2'] == vrf['random_6_3']).toBe(true);
+    expect(vrf['random_12_1'] == vrf['random_12_2']).toBe(true);
+    expect(vrf['random_12_2'] == vrf['random_12_3']).toBe(true);
+    expect(vrf['random_46_1'] == vrf['random_46_2']).toBe(true);
+    expect(vrf['random_46_2'] == vrf['random_46_3']).toBe(true);
+    expect(vrf['random_99_1'] == vrf['random_99_2']).toBe(true);
+    expect(vrf['random_99_2'] == vrf['random_99_3']).toBe(true);
+  });
+
+  it('should allow to test VRF on a standard forLocal Warp instance in strict mode', async () => {
+    const localWarp = WarpFactory.forLocal(1823);
+
+    const { contractTxId: vrfContractTxId } = await localWarp.createContract.deploy({
+      wallet,
+      initState: JSON.stringify(initialState),
+      src: contractSrc
+    });
+
+    await mineBlock(localWarp);
+    const vrfContract = localWarp.contract(vrfContractTxId).connect(wallet);
+    await vrfContract.writeInteraction(
+      {
+        function: 'vrf'
+      },
+      { vrf: true, strict: true }
+    );
+    const result = await vrfContract.readState();
+    const lastTxId = Object.keys(result.cachedValue.validity).pop();
+    const vrf = (result.cachedValue.state as any).vrf[lastTxId];
+
+    expect(vrf).not.toBeUndefined();
+    expect(vrf['random_6_1'] == vrf['random_6_2']).toBe(true);
+    expect(vrf['random_6_2'] == vrf['random_6_3']).toBe(true);
+    expect(vrf['random_12_1'] == vrf['random_12_2']).toBe(true);
+    expect(vrf['random_12_2'] == vrf['random_12_3']).toBe(true);
+    expect(vrf['random_46_1'] == vrf['random_46_2']).toBe(true);
+    expect(vrf['random_46_2'] == vrf['random_46_3']).toBe(true);
+    expect(vrf['random_99_1'] == vrf['random_99_2']).toBe(true);
+    expect(vrf['random_99_2'] == vrf['random_99_3']).toBe(true);
+  });
+
+  it('should allow to test VRF on a standard forLocal Warp instance with internal writes', async () => {
+    const localWarp = WarpFactory.forLocal(1823);
+
+    const { contractTxId: vrfContractTxId } = await localWarp.createContract.deploy({
+      wallet,
+      initState: JSON.stringify(initialState),
+      src: contractSrc
+    });
+
+    await mineBlock(localWarp);
+    const vrfContract = localWarp
+      .contract(vrfContractTxId)
+      .setEvaluationOptions({
+        internalWrites: true
+      })
+      .connect(wallet);
+    const result2 = await vrfContract.writeInteraction(
+      {
+        function: 'vrf'
+      },
+      { vrf: true, strict: true }
+    );
+    const result = await vrfContract.readState();
+    const lastTxId = Object.keys(result.cachedValue.validity).pop();
+    const vrf = (result.cachedValue.state as any).vrf[lastTxId];
+
+    expect(vrf).not.toBeUndefined();
+    expect(vrf['random_6_1'] == vrf['random_6_2']).toBe(true);
+    expect(vrf['random_6_2'] == vrf['random_6_3']).toBe(true);
+    expect(vrf['random_12_1'] == vrf['random_12_2']).toBe(true);
+    expect(vrf['random_12_2'] == vrf['random_12_3']).toBe(true);
+    expect(vrf['random_46_1'] == vrf['random_46_2']).toBe(true);
+    expect(vrf['random_46_2'] == vrf['random_46_3']).toBe(true);
+    expect(vrf['random_99_1'] == vrf['random_99_2']).toBe(true);
+    expect(vrf['random_99_2'] == vrf['random_99_3']).toBe(true);
+  });
 });
 
 class VrfDecorator extends ArweaveGatewayInteractionsLoader {
   constructor(protected readonly arweave: Arweave) {
-    super(arweave);
+    super(arweave, 'local');
   }
 
   async load(

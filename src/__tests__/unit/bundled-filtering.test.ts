@@ -1,4 +1,5 @@
-import { bundledTxsFilter, GQLEdgeInterface } from '@warp';
+import { bundledTxsFilter } from '../../core/modules/impl/ArweaveGatewayInteractionsLoader';
+import { GQLEdgeInterface } from '../../legacy/gqlResult';
 
 describe('Bundled transactions filtering', () => {
   it('should properly filter bundled transaction if only "parent" field available', async () => {

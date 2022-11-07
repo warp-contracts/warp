@@ -1,29 +1,32 @@
 import Arweave from 'arweave';
-import {
-  Benchmark,
-  ContractDefinition,
-  EvalStateResult,
-  EvaluationOptions,
-  ExecutionContext,
-  ExecutorFactory,
-  GQLNodeInterface,
-  IvmHandlerApi,
-  JsHandlerApi,
-  LoggerFactory,
-  MemCache,
-  normalizeContractSource,
-  SmartWeaveGlobal,
-  WarpCache,
-  WasmHandlerApi
-} from '@warp';
 import loader from '@assemblyscript/loader';
 import { asWasmImports } from './wasm/as-wasm-imports';
 import { rustWasmImports } from './wasm/rust-wasm-imports';
 import { Go } from './wasm/go-wasm-imports';
-import BigNumber from 'bignumber.js';
-import * as Buffer from 'buffer';
+import { WarpCache } from '../../../cache/WarpCache';
+import { ContractDefinition } from '../../../core/ContractDefinition';
+import { ExecutionContext } from '../../../core/ExecutionContext';
+import { GQLNodeInterface } from '../../../legacy/gqlResult';
+import { SmartWeaveGlobal } from '../../../legacy/smartweave-global';
+import { Benchmark } from '../../../logging/Benchmark';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { ExecutorFactory } from '../ExecutorFactory';
+import { EvaluationOptions, EvalStateResult } from '../StateEvaluator';
+import { JsHandlerApi } from './handler/JsHandlerApi';
+import { WasmHandlerApi } from './handler/WasmHandlerApi';
+import { normalizeContractSource } from './normalize-source';
+import { MemCache } from '../../../cache/impl/MemCache';
+import BigNumber from '../../../legacy/bignumber';
 import { Context, Isolate, Reference } from 'isolated-vm';
 import { configureContext, configureSandbox } from './ivm/configure-ivm';
+import { IvmHandlerApi } from './handler/IvmHandlerApi';
+
+class ContractError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'ContractError';
+  }
+}
 
 /**
  * A factory that produces handlers that are compatible with the "current" style of

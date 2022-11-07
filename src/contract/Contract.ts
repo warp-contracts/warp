@@ -1,21 +1,23 @@
-import {
-  ArTransfer,
-  ArWallet,
-  ContractCallStack,
-  EvalStateResult,
-  EvaluationOptions,
-  GQLNodeInterface,
-  InteractionResult,
-  SortKeyCacheResult,
-  Tags
-} from '@warp';
 import Transaction from 'arweave/node/lib/transaction';
+import { SortKeyCacheResult } from '../cache/SortKeyCache';
+import { ContractCallRecord } from '../core/ContractCallRecord';
+import { InteractionResult } from '../core/modules/impl/HandlerExecutorFactory';
+import { EvaluationOptions, EvalStateResult } from '../core/modules/StateEvaluator';
+import { GQLNodeInterface } from '../legacy/gqlResult';
+import { ArTransfer, Tags, ArWallet } from './deploy/CreateContract';
 import { Source } from './deploy/Source';
 
 export type CurrentTx = { interactionTxId: string; contractTxId: string };
 export type BenchmarkStats = { gatewayCommunication: number; stateEvaluation: number; total: number };
 
 export type SigningFunction = (tx: Transaction) => Promise<void>;
+export type Signature = { signer: SigningFunction; signatureType: 'arweave' | 'ethereum' };
+export class ContractError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'ContractError';
+  }
+}
 
 interface BundlrResponse {
   id: string;
@@ -61,6 +63,10 @@ export interface EvolveState {
   evolve: string;
 }
 
+export type InnerCallType = 'read' | 'view' | 'write';
+
+export type InnerCallData = { callingInteraction: GQLNodeInterface; callType: InnerCallType };
+
 /**
  * A base interface to be implemented by SmartWeave Contracts clients
  * - contains "low-level" methods that allow to interact with any contract
@@ -79,7 +85,7 @@ export interface Contract<State = unknown> extends Source {
    *
    * @param signer - either {@link ArWallet} that will be connected to this contract or custom {@link SigningFunction}
    */
-  connect(signer: ArWallet | SigningFunction): Contract<State>;
+  connect(signature: ArWallet | Signature): Contract<State>;
 
   /**
    * Allows to set ({@link EvaluationOptions})
@@ -89,8 +95,7 @@ export interface Contract<State = unknown> extends Source {
   setEvaluationOptions(options: Partial<EvaluationOptions>): Contract<State>;
 
   /**
-   * Returns state of the contract at required blockHeight.
-   * Similar to {@link readContract} from the current version.
+   * Returns state of the contract at required sortKey or blockHeight.
    *
    * @param sortKeyOrBlockHeight - either a sortKey or block height at which the contract should be read
    *
@@ -177,7 +182,7 @@ export interface Contract<State = unknown> extends Source {
    * Returns the full call tree report the last
    * interaction with contract (eg. after reading state)
    */
-  getCallStack(): ContractCallStack;
+  getCallStack(): ContractCallRecord;
 
   /**
    * Gets the parent contract - ie. contract that called THIS contract during the

@@ -1,18 +1,15 @@
-import { SortKeyCacheResult, SortKeyCache, CacheKey } from '@warp/cache';
-import {
-  DefaultStateEvaluator,
-  EvalStateResult,
-  ExecutionContext,
-  ExecutionContextModifier,
-  genesisSortKey,
-  HandlerApi,
-  LexicographicalInteractionsSorter
-} from '@warp/core';
 import Arweave from 'arweave';
-import { GQLNodeInterface } from '@warp/legacy';
-import { LoggerFactory } from '@warp/logging';
-import { CurrentTx } from '@warp/contract';
-import { indent } from '@warp/utils';
+import { SortKeyCache, SortKeyCacheResult, CacheKey } from '../../../cache/SortKeyCache';
+import { CurrentTx } from '../../../contract/Contract';
+import { ExecutionContext } from '../../../core/ExecutionContext';
+import { ExecutionContextModifier } from '../../../core/ExecutionContextModifier';
+import { GQLNodeInterface } from '../../../legacy/gqlResult';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { indent } from '../../../utils/utils';
+import { EvalStateResult } from '../StateEvaluator';
+import { DefaultStateEvaluator } from './DefaultStateEvaluator';
+import { HandlerApi } from './HandlerExecutorFactory';
+import { genesisSortKey } from './LexicographicalInteractionsSorter';
 
 /**
  * An implementation of DefaultStateEvaluator that adds caching capabilities.

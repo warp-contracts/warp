@@ -1,12 +1,9 @@
-import {
-  Contract,
-  ContractDefinition,
-  EvalStateResult,
-  EvaluationOptions,
-  GQLNodeInterface,
-  Warp,
-  SortKeyCacheResult
-} from '@warp';
+import { SortKeyCacheResult } from '../cache/SortKeyCache';
+import { Contract } from '../contract/Contract';
+import { GQLNodeInterface } from '../legacy/gqlResult';
+import { ContractDefinition } from './ContractDefinition';
+import { EvaluationOptions, EvalStateResult } from './modules/StateEvaluator';
+import { Warp } from './Warp';
 
 /**
  * current execution context of the contract - contains all elements
