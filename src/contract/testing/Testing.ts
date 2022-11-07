@@ -1,5 +1,6 @@
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
+import { WarpEnvironment } from 'core/Warp';
 
 export type Wallet = {
   jwk: JWKInterface;
@@ -7,7 +8,7 @@ export type Wallet = {
 };
 
 export class Testing {
-  constructor(private readonly arweave: Arweave) {}
+  constructor(private readonly arweave: Arweave, private readonly environment: WarpEnvironment) {}
 
   async mineBlock(): Promise<void> {
     this.validateEnv();
@@ -31,7 +32,7 @@ export class Testing {
   }
 
   private validateEnv(): void {
-    if (this.arweave.api.getConfig().host.includes('arweave')) {
+    if (this.environment !== 'local') {
       throw new Error('Testing features are not available in a non testing environment');
     }
   }

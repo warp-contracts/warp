@@ -45,7 +45,7 @@ export class Warp {
   ) {
     this.createContract = new DefaultCreateContract(arweave, this);
     this.migrationTool = new MigrationTool(arweave, levelDb);
-    this.testing = new Testing(arweave);
+    this.testing = new Testing(arweave, environment);
   }
 
   static builder(

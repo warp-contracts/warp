@@ -59,7 +59,7 @@ describe('Testing the Profit Sharing Token', () => {
         ...defaultCacheOptions,
         inMemory: true
       },
-      'testnet'
+      'local'
     )
       .useArweaveGateway()
       .setInteractionsLoader(loader)
