@@ -15,6 +15,7 @@ import { HandlerApi } from './modules/impl/HandlerExecutorFactory';
 import { InteractionsLoader } from './modules/InteractionsLoader';
 import { EvalStateResult, StateEvaluator } from './modules/StateEvaluator';
 import { WarpBuilder } from './WarpBuilder';
+import { WarpPluginType, WarpPlugin, knownWarpPlugins } from './WarpPlugin';
 
 export type WarpEnvironment = 'local' | 'testnet' | 'mainnet' | 'custom';
 
@@ -30,6 +31,8 @@ export class Warp {
   readonly createContract: CreateContract;
   readonly migrationTool: MigrationTool;
   readonly testing: Testing;
+
+  private readonly plugins: Map<WarpPluginType, WarpPlugin<unknown, unknown>> = new Map();
 
   constructor(
     readonly arweave: Arweave,
@@ -68,5 +71,27 @@ export class Warp {
    */
   pst(contractTxId: string): PstContract {
     return new PstContractImpl(contractTxId, this);
+  }
+
+  use(plugin: WarpPlugin<unknown, unknown>): Warp {
+    const pluginType = plugin.type();
+    if (!knownWarpPlugins.some((p) => p == pluginType)) {
+      throw new Error(`Unknown plugin type ${pluginType}.`);
+    }
+    this.plugins.set(pluginType, plugin);
+
+    return this;
+  }
+
+  hasPlugin(type: WarpPluginType): boolean {
+    return this.plugins.has(type);
+  }
+
+  loadPlugin<P, Q>(type: WarpPluginType): WarpPlugin<P, Q> {
+    if (!this.hasPlugin(type)) {
+      throw new Error(`Plugin ${type} not registered.`);
+    }
+
+    return this.plugins.get(type) as WarpPlugin<P, Q>;
   }
 }

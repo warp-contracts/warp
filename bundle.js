@@ -1,5 +1,6 @@
 const { build } = require('esbuild');
 const rimraf = require('rimraf');
+const fs = require("fs");
 
 const clean = async () => {
   return new Promise((resolve) => {
@@ -20,17 +21,23 @@ const runBuild = async () => {
   };
 
   console.log('Building web bundle esm.');
-  build({
+  const result = await build({
     ...buildConfig,
     minify: true,
-    outfile: './bundles/web.bundle.min.js'
+    outfile: './bundles/web.bundle.min.js',
+    metafile: true
   }).catch((e) => {
     console.log(e);
     process.exit(1);
   });
 
+  fs.writeFileSync('metadata.json', JSON.stringify({
+    inputs: result.metafile.inputs,
+    outputs: result.metafile.outputs
+  }));
+
   console.log('Building web bundle iife.');
-  build({
+  await build({
     ...buildConfig,
     minify: true,
     target: ['esnext'],

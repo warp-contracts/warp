@@ -70,7 +70,6 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
           .build()
           .contract(contractTxId)
           .setEvaluationOptions({
-            useFastCopy: true,
             allowUnsafeClient: true,
             allowBigInt: true
           })
@@ -113,7 +112,6 @@ describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
         .build()
         .contract(contractTxId)
         .setEvaluationOptions({
-          useFastCopy: true,
           useVM2: true,
           allowUnsafeClient: true,
           allowBigInt: true
@@ -153,7 +151,6 @@ describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
       const result = await warpR
         .contract(contractTxId)
         .setEvaluationOptions({
-          useFastCopy: true,
           allowUnsafeClient: true,
           allowBigInt: true
         })
@@ -173,7 +170,6 @@ describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
         .build()
         .contract(contractTxId)
         .setEvaluationOptions({
-          useFastCopy: true,
           allowUnsafeClient: true,
           allowBigInt: true
         })

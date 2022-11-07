@@ -11,7 +11,6 @@ import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { ArweaveWrapper } from '../../../utils/ArweaveWrapper';
 import { stripTrailingSlash } from '../../../utils/utils';
 import { DefinitionLoader } from '../DefinitionLoader';
-import { WarpCache } from '../../../cache/WarpCache';
 import { WasmSrc } from './wasm/WasmSrc';
 import { CacheOptions } from '../../WarpFactory';
 import { MemoryLevel } from 'memory-level';

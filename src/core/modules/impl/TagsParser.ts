@@ -69,6 +69,12 @@ export class TagsParser {
     return result;
   }
 
+  isEvmSigned(interactionTransaction: GQLNodeInterface): boolean {
+    return interactionTransaction.tags.some(
+      (tag) => tag.name === SmartWeaveTags.SIGNATURE_TYPE && tag.value === 'ethereum'
+    );
+  }
+
   static hasMultipleInteractions(interactionTransaction: GQLNodeInterface): boolean {
     return interactionTransaction.tags.filter((tag) => tag.name === SmartWeaveTags.CONTRACT_TX_ID).length > 1;
   }
