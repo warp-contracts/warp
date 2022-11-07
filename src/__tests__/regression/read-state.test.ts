@@ -193,28 +193,28 @@ describe('readState', () => {
       const result = await readContract(arweave, contractTxId, blockHeight);
       const resultString = stringify(result).trim();
 
-    const result2 = await WarpFactory.custom(
-      arweave,
-      {
-        ...defaultCacheOptions,
-        inMemory: true
-      },
-      'mainnet'
-    )
-      .useWarpGateway(
-        { ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null },
+      const result2 = await WarpFactory.custom(
+        arweave,
         {
           ...defaultCacheOptions,
           inMemory: true
-        }
+        },
+        'mainnet'
       )
-      .build()
-      .contract(contractTxId)
-      .setEvaluationOptions({
-        allowUnsafeClient: true
-      })
-      .readState(blockHeight);
-    const result2String = stringify(result2.cachedValue.state).trim();
+        .useWarpGateway(
+          { ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null },
+          {
+            ...defaultCacheOptions,
+            inMemory: true
+          }
+        )
+        .build()
+        .contract(contractTxId)
+        .setEvaluationOptions({
+          allowUnsafeClient: true
+        })
+        .readState(blockHeight);
+      const result2String = stringify(result2.cachedValue.state).trim();
 
       expect(result2String).toEqual(resultString);
     },
@@ -231,28 +231,28 @@ describe('readState', () => {
         target: '6Z-ifqgVi1jOwMvSNwKWs6ewUEQ0gU9eo4aHYC3rN1M'
       });
 
-    const v2Result = await WarpFactory.custom(
-      arweave,
-      {
-        ...defaultCacheOptions,
-        inMemory: true
-      },
-      'mainnet'
-    )
-      .useWarpGateway(
-        { ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null },
+      const v2Result = await WarpFactory.custom(
+        arweave,
         {
           ...defaultCacheOptions,
           inMemory: true
-        }
+        },
+        'mainnet'
       )
-      .build()
-      .contract(contractTxId)
-      .connect(jwk)
-      .viewState({
-        function: 'balance',
-        target: '6Z-ifqgVi1jOwMvSNwKWs6ewUEQ0gU9eo4aHYC3rN1M'
-      });
+        .useWarpGateway(
+          { ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null },
+          {
+            ...defaultCacheOptions,
+            inMemory: true
+          }
+        )
+        .build()
+        .contract(contractTxId)
+        .connect(jwk)
+        .viewState({
+          function: 'balance',
+          target: '6Z-ifqgVi1jOwMvSNwKWs6ewUEQ0gU9eo4aHYC3rN1M'
+        });
 
       expect(v1Result).toEqual(v2Result.result);
     },
