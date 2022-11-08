@@ -44,7 +44,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     ({ arweave } = warp);
     arweaveWrapper = new ArweaveWrapper(arweave);
 
-    ({ jwk: wallet } = await warp.testing.generateWallet());
+    ({ jwk: wallet } = await warp.generateWallet());
     walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
     const contractSrc = fs.readFileSync(path.join(__dirname, '../data/wasm/rust/rust-pst_bg.wasm'));

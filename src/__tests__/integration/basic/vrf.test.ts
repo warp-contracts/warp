@@ -65,7 +65,7 @@ describe('Testing the Profit Sharing Token', () => {
       .setInteractionsLoader(loader)
       .build();
 
-    ({ jwk: wallet, address: walletAddress } = await warp.testing.generateWallet());
+    ({ jwk: wallet, address: walletAddress } = await warp.generateWallet());
     walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/token-pst.js'), 'utf8');

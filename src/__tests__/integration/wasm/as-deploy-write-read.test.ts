@@ -41,7 +41,7 @@ describe('Testing the Warp client for AssemblyScript WASM contract', () => {
     warp = WarpFactory.forLocal(1300);
     ({ arweave } = warp);
 
-    ({ jwk: wallet } = await warp.testing.generateWallet());
+    ({ jwk: wallet } = await warp.generateWallet());
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/wasm/as/assemblyscript-counter.wasm'));
     initialState = fs.readFileSync(path.join(__dirname, '../data/wasm/counter-init-state.json'), 'utf8');
 

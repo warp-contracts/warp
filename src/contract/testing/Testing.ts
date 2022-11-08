@@ -1,6 +1,5 @@
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { WarpEnvironment } from 'core/Warp';
 
 export type Wallet = {
   jwk: JWKInterface;
@@ -8,32 +7,35 @@ export type Wallet = {
 };
 
 export class Testing {
-  constructor(private readonly arweave: Arweave, private readonly environment: WarpEnvironment) {}
+  constructor(private readonly arweave: Arweave) {}
 
   async mineBlock(): Promise<void> {
     this.validateEnv();
     await this.arweave.api.get('mine');
   }
 
-  async generateWallet(): Promise<Wallet> {
-    this.validateEnv();
-    const wallet = await this.arweave.wallets.generate();
-    await this.addFunds(wallet);
-
-    return {
-      jwk: wallet,
-      address: await this.arweave.wallets.jwkToAddress(wallet)
-    };
-  }
-
-  private async addFunds(wallet: JWKInterface) {
+  async addFunds(wallet: JWKInterface) {
     const walletAddress = await this.arweave.wallets.getAddress(wallet);
     await this.arweave.api.get(`/mint/${walletAddress}/1000000000000000`);
   }
 
-  private validateEnv(): void {
-    if (this.environment !== 'local') {
+  async validateEnv(): Promise<void> {
+    if (!this.isArlocal) {
       throw new Error('Testing features are not available in a non testing environment');
     }
+  }
+
+  async isArlocal(): Promise<boolean> {
+    const response = await fetch(
+      `${this.arweave.api.config.protocol}://${this.arweave.api.config.host}:${this.arweave.api.config.port}/info`
+    )
+      .then((res) => {
+        return res.ok ? res.json() : Promise.reject();
+      })
+      .catch((e) => {
+        throw new Error(`Unable to get network info: ${e.message}`);
+      });
+
+    return response.network.includes('arlocal');
   }
 }

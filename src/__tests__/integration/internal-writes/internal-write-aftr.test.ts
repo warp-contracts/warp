@@ -51,7 +51,7 @@ describe('Testing internal writes', () => {
 
   async function deployContracts() {
     warp = WarpFactory.forLocal(port);
-    ({ jwk: wallet, address: walletAddress } = await warp.testing.generateWallet());
+    ({ jwk: wallet, address: walletAddress } = await warp.generateWallet());
 
     aftrContractSrc = fs.readFileSync(path.join(__dirname, '../data/aftr/sampleContractSrc.js'), 'utf8');
     aftrContractInitialState = fs.readFileSync(
@@ -262,7 +262,7 @@ describe('Testing internal writes', () => {
   describe('AFTR test case - with an illegal read state after an internal write', () => {
     it('should throw an Error if contract makes readContractState after write on the same contract', async () => {
       const newWarpInstance = WarpFactory.forLocal(port);
-      const { jwk: wallet2 } = await newWarpInstance.testing.generateWallet();
+      const { jwk: wallet2 } = await newWarpInstance.generateWallet();
 
       const aftrBrokenContractSrc = fs.readFileSync(
         path.join(__dirname, '../data/aftr/sampleContractSrc_broken.js'),

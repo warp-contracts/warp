@@ -39,7 +39,7 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
     warp = WarpFactory.forLocal(1150);
     ({ arweave } = warp);
 
-    ({ jwk: wallet } = await warp.testing.generateWallet());
+    ({ jwk: wallet } = await warp.generateWallet());
     walletAddress = await arweave.wallets.jwkToAddress(wallet);
 
     const contractSrc = fs.readFileSync(path.join(__dirname, '../data/wasm/go/go-pst.wasm'));

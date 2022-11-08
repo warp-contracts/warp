@@ -42,7 +42,7 @@ describe('Testing the Warp client', () => {
 
     LoggerFactory.INST.logLevel('error');
     warp = WarpFactory.forLocal(1810);
-    ({ jwk: wallet } = await warp.testing.generateWallet());
+    ({ jwk: wallet } = await warp.generateWallet());
 
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/example-contract.js'), 'utf8');
     initialState = fs.readFileSync(path.join(__dirname, '../data/example-contract-state.json'), 'utf8');

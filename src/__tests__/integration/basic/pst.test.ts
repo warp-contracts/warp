@@ -35,7 +35,7 @@ describe('Testing the Profit Sharing Token', () => {
     warp = WarpFactory.forLocal(1820);
 
     ({ arweave } = warp);
-    ({ jwk: wallet, address: walletAddress } = await warp.testing.generateWallet());
+    ({ jwk: wallet, address: walletAddress } = await warp.generateWallet());
 
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/token-pst.js'), 'utf8');
     const stateFromFile: PstState = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/token-pst.json'), 'utf8'));
@@ -132,7 +132,7 @@ describe('Testing the Profit Sharing Token', () => {
   });
 
   it('should properly perform dry write with overwritten caller', async () => {
-    const { jwk: newWallet, address: overwrittenCaller } = await warp.testing.generateWallet();
+    const { jwk: newWallet, address: overwrittenCaller } = await warp.generateWallet();
     await pst.transfer({
       target: overwrittenCaller,
       qty: 1000
