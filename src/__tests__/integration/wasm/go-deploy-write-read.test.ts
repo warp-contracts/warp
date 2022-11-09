@@ -9,8 +9,8 @@ import { PstState, PstContract } from '../../../contract/PstContract';
 import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
 import { Warp } from '../../../core/Warp';
 import { WarpFactory } from '../../../core/WarpFactory';
-import { getTag } from '../../../legacy/utils';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { TagsParser } from '../../../core/modules/impl/TagsParser';
 
 describe('Testing the Go WASM Profit Sharing Token', () => {
   let wallet: JWKInterface;
@@ -22,6 +22,7 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
   let arlocal: ArLocal;
   let warp: Warp;
   let pst: PstContract;
+  let tagsParser: TagsParser;
 
   let contractTxId: string;
 
@@ -35,6 +36,7 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
     await arlocal.start();
 
     LoggerFactory.INST.logLevel('error');
+    tagsParser = new TagsParser();
 
     warp = WarpFactory.forLocal(1150);
     ({ arweave } = warp);
@@ -108,9 +110,11 @@ describe('Testing the Go WASM Profit Sharing Token', () => {
 
     expect(contractTx).not.toBeNull();
 
-    const contractSrcTx = await arweave.transactions.get(getTag(contractTx, SmartWeaveTags.CONTRACT_SRC_TX_ID));
-    expect(getTag(contractSrcTx, SmartWeaveTags.CONTENT_TYPE)).toEqual('application/wasm');
-    expect(getTag(contractSrcTx, SmartWeaveTags.WASM_LANG)).toEqual('go');
+    const contractSrcTx = await arweave.transactions.get(
+      tagsParser.getTag(contractTx, SmartWeaveTags.CONTRACT_SRC_TX_ID)
+    );
+    expect(tagsParser.getTag(contractSrcTx, SmartWeaveTags.CONTENT_TYPE)).toEqual('application/wasm');
+    expect(tagsParser.getTag(contractSrcTx, SmartWeaveTags.WASM_LANG)).toEqual('go');
   });
 
   it('should read pst state and balance data', async () => {

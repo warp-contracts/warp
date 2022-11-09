@@ -9,8 +9,8 @@ import { Contract } from '../../../contract/Contract';
 import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
 import { Warp } from '../../../core/Warp';
 import { WarpFactory } from '../../../core/WarpFactory';
-import { getTag } from '../../../legacy/utils';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { TagsParser } from '../../../core/modules/impl/TagsParser';
 
 interface ExampleContractState {
   counter: number;
@@ -29,6 +29,7 @@ describe('Testing the Warp client for AssemblyScript WASM contract', () => {
   let arlocal: ArLocal;
   let warp: Warp;
   let contract: Contract<ExampleContractState>;
+  let tagsParser: TagsParser;
 
   beforeAll(async () => {
     // note: each tests suit (i.e. file with tests that Jest is running concurrently
@@ -37,6 +38,7 @@ describe('Testing the Warp client for AssemblyScript WASM contract', () => {
     await arlocal.start();
 
     LoggerFactory.INST.logLevel('error');
+    tagsParser = new TagsParser();
 
     warp = WarpFactory.forLocal(1300);
     ({ arweave } = warp);
@@ -71,9 +73,11 @@ describe('Testing the Warp client for AssemblyScript WASM contract', () => {
 
     expect(contractTx).not.toBeNull();
 
-    const contractSrcTx = await arweave.transactions.get(getTag(contractTx, SmartWeaveTags.CONTRACT_SRC_TX_ID));
-    expect(getTag(contractSrcTx, SmartWeaveTags.CONTENT_TYPE)).toEqual('application/wasm');
-    expect(getTag(contractSrcTx, SmartWeaveTags.WASM_LANG)).toEqual('assemblyscript');
+    const contractSrcTx = await arweave.transactions.get(
+      tagsParser.getTag(contractTx, SmartWeaveTags.CONTRACT_SRC_TX_ID)
+    );
+    expect(tagsParser.getTag(contractSrcTx, SmartWeaveTags.CONTENT_TYPE)).toEqual('application/wasm');
+    expect(tagsParser.getTag(contractSrcTx, SmartWeaveTags.WASM_LANG)).toEqual('assemblyscript');
   });
 
   it('should properly read initial state', async () => {

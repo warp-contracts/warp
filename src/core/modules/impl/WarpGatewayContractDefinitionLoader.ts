@@ -5,7 +5,6 @@ import Transaction from 'arweave/node/lib/transaction';
 import { GW_TYPE } from '../InteractionsLoader';
 import { ContractDefinition, ContractSource } from '../../../core/ContractDefinition';
 import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
-import { getTag } from '../../../legacy/utils';
 import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { ArweaveWrapper } from '../../../utils/ArweaveWrapper';
@@ -16,6 +15,7 @@ import { CacheOptions } from '../../WarpFactory';
 import { MemoryLevel } from 'memory-level';
 import { Level } from 'level';
 import { WarpEnvironment } from '../../Warp';
+import { TagsParser } from './TagsParser';
 
 /**
  * An extension to {@link ContractDefinitionLoader} that makes use of
@@ -30,6 +30,7 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
   private contractDefinitionLoader: ContractDefinitionLoader;
   private arweaveWrapper: ArweaveWrapper;
   private readonly db: MemoryLevel<string, ContractDefinition<unknown>>;
+  private readonly tagsParser: TagsParser;
 
   constructor(
     private readonly baseUrl: string,
@@ -40,6 +41,7 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
     this.baseUrl = stripTrailingSlash(baseUrl);
     this.contractDefinitionLoader = new ContractDefinitionLoader(arweave, env);
     this.arweaveWrapper = new ArweaveWrapper(arweave);
+    this.tagsParser = new TagsParser();
 
     if (cacheOptions.inMemory) {
       this.db = new MemoryLevel<string, ContractDefinition<unknown>>({ valueEncoding: 'json' });
@@ -113,7 +115,7 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
         } else {
           sourceTx = await this.arweaveWrapper.tx(result.srcTxId);
         }
-        const srcMetaData = JSON.parse(getTag(sourceTx, SmartWeaveTags.WASM_META));
+        const srcMetaData = JSON.parse(this.tagsParser.getTag(sourceTx, SmartWeaveTags.WASM_META));
         result.metadata = srcMetaData;
       }
       result.contractType = result.src ? 'js' : 'wasm';

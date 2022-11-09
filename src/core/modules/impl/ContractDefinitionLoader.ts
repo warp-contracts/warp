@@ -3,12 +3,12 @@ import Transaction from 'arweave/node/lib/transaction';
 import { ContractType } from '../../../contract/deploy/CreateContract';
 import { ContractDefinition, ContractSource } from '../../../core/ContractDefinition';
 import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
-import { getTag } from '../../../legacy/utils';
 import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { ArweaveWrapper } from '../../../utils/ArweaveWrapper';
 import { DefinitionLoader } from '../DefinitionLoader';
 import { GW_TYPE } from '../InteractionsLoader';
+import { TagsParser } from './TagsParser';
 import { WasmSrc } from './wasm/WasmSrc';
 import { WarpEnvironment } from '../../Warp';
 
@@ -18,9 +18,11 @@ export class ContractDefinitionLoader implements DefinitionLoader {
   private readonly logger = LoggerFactory.INST.create('ContractDefinitionLoader');
 
   protected arweaveWrapper: ArweaveWrapper;
+  private readonly tagsParser: TagsParser;
 
   constructor(private readonly arweave: Arweave, private readonly env: WarpEnvironment) {
     this.arweaveWrapper = new ArweaveWrapper(arweave);
+    this.tagsParser = new TagsParser();
   }
 
   async load<State>(contractTxId: string, evolvedSrcTxId?: string): Promise<ContractDefinition<State>> {
@@ -39,15 +41,17 @@ export class ContractDefinitionLoader implements DefinitionLoader {
     this.logger.debug('Contract tx and owner', benchmark.elapsed());
     benchmark.reset();
 
-    const contractSrcTxId = forcedSrcTxId ? forcedSrcTxId : getTag(contractTx, SmartWeaveTags.CONTRACT_SRC_TX_ID);
-    const testnet = getTag(contractTx, SmartWeaveTags.WARP_TESTNET) || null;
+    const contractSrcTxId = forcedSrcTxId
+      ? forcedSrcTxId
+      : this.tagsParser.getTag(contractTx, SmartWeaveTags.CONTRACT_SRC_TX_ID);
+    const testnet = this.tagsParser.getTag(contractTx, SmartWeaveTags.WARP_TESTNET) || null;
     if (testnet && this.env !== 'testnet') {
       throw new Error('Trying to use testnet contract in a non-testnet env. Use the "forTestnet" factory method.');
     }
     if (!testnet && this.env === 'testnet') {
       throw new Error('Trying to use non-testnet contract in a testnet env.');
     }
-    const minFee = getTag(contractTx, SmartWeaveTags.MIN_FEE);
+    const minFee = this.tagsParser.getTag(contractTx, SmartWeaveTags.MIN_FEE);
     this.logger.debug('Tags decoding', benchmark.elapsed());
     benchmark.reset();
     const s = await this.evalInitialState(contractTx);
@@ -80,7 +84,7 @@ export class ContractDefinitionLoader implements DefinitionLoader {
     const benchmark = Benchmark.measure();
 
     const contractSrcTx = await this.arweaveWrapper.tx(contractSrcTxId);
-    const srcContentType = getTag(contractSrcTx, SmartWeaveTags.CONTENT_TYPE);
+    const srcContentType = this.tagsParser.getTag(contractSrcTx, SmartWeaveTags.CONTENT_TYPE);
     if (!supportedSrcContentTypes.includes(srcContentType)) {
       throw new Error(`Contract source content type ${srcContentType} not supported`);
     }
@@ -96,11 +100,11 @@ export class ContractDefinitionLoader implements DefinitionLoader {
     let srcMetaData;
     if (contractType == 'wasm') {
       wasmSrc = new WasmSrc(src as Buffer);
-      srcWasmLang = getTag(contractSrcTx, SmartWeaveTags.WASM_LANG);
+      srcWasmLang = this.tagsParser.getTag(contractSrcTx, SmartWeaveTags.WASM_LANG);
       if (!srcWasmLang) {
         throw new Error(`Wasm lang not set for wasm contract src ${contractSrcTxId}`);
       }
-      srcMetaData = JSON.parse(getTag(contractSrcTx, SmartWeaveTags.WASM_META));
+      srcMetaData = JSON.parse(this.tagsParser.getTag(contractSrcTx, SmartWeaveTags.WASM_META));
     }
 
     this.logger.debug('Contract src tx load', benchmark.elapsed());
@@ -117,10 +121,10 @@ export class ContractDefinitionLoader implements DefinitionLoader {
   }
 
   private async evalInitialState(contractTx: Transaction): Promise<string> {
-    if (getTag(contractTx, SmartWeaveTags.INIT_STATE)) {
-      return getTag(contractTx, SmartWeaveTags.INIT_STATE);
-    } else if (getTag(contractTx, SmartWeaveTags.INIT_STATE_TX)) {
-      const stateTX = getTag(contractTx, SmartWeaveTags.INIT_STATE_TX);
+    if (this.tagsParser.getTag(contractTx, SmartWeaveTags.INIT_STATE)) {
+      return this.tagsParser.getTag(contractTx, SmartWeaveTags.INIT_STATE);
+    } else if (this.tagsParser.getTag(contractTx, SmartWeaveTags.INIT_STATE_TX)) {
+      const stateTX = this.tagsParser.getTag(contractTx, SmartWeaveTags.INIT_STATE_TX);
       return this.arweaveWrapper.txDataString(stateTX);
     } else {
       return this.arweaveWrapper.txDataString(contractTx.id);
