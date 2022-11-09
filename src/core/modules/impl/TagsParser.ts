@@ -1,3 +1,4 @@
+import Transaction from 'arweave/node/lib/transaction';
 import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
 import { GQLNodeInterface, GQLTagInterface } from '../../../legacy/gqlResult';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
@@ -77,5 +78,38 @@ export class TagsParser {
 
   static hasMultipleInteractions(interactionTransaction: GQLNodeInterface): boolean {
     return interactionTransaction.tags.filter((tag) => tag.name === SmartWeaveTags.CONTRACT_TX_ID).length > 1;
+  }
+
+  decodeTags(tx: Transaction): GQLTagInterface[] {
+    const tags = tx.get('tags') as any;
+    const result: GQLTagInterface[] = [];
+
+    for (const tag of tags) {
+      try {
+        const name = tag.get('name', { decode: true, string: true });
+        const value = tag.get('value', { decode: true, string: true });
+
+        result.push({ name, value });
+      } catch (e) {
+        // ignore tags with invalid utf-8 strings in key or value.
+      }
+    }
+    return result;
+  }
+
+  getTag(tx: Transaction, name: string) {
+    const tags = tx.get('tags') as any;
+
+    for (const tag of tags) {
+      try {
+        if (tag.get('name', { decode: true, string: true }) === name) {
+          return tag.get('value', { decode: true, string: true });
+        }
+      } catch (e) {
+        // ignore tags with invalid utf-8 strings in key or value.
+      }
+    }
+
+    return false;
   }
 }

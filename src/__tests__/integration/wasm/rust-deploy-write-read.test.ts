@@ -10,9 +10,9 @@ import { PstState, PstContract } from '../../../contract/PstContract';
 import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
 import { Warp } from '../../../core/Warp';
 import { WarpFactory } from '../../../core/WarpFactory';
-import { getTag } from '../../../legacy/utils';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { ArweaveWrapper } from '../../../utils/ArweaveWrapper';
+import { TagsParser } from '../../../core/modules/impl/TagsParser';
 
 describe('Testing the Rust WASM Profit Sharing Token', () => {
   let wallet: JWKInterface;
@@ -31,6 +31,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
   let wrongForeignContractTxId: string;
 
   let arweaveWrapper;
+  let tagsParser: TagsParser;
 
   beforeAll(async () => {
     // note: each tests suit (i.e. file with tests that Jest is running concurrently
@@ -39,6 +40,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     await arlocal.start();
 
     LoggerFactory.INST.logLevel('error');
+    tagsParser = new TagsParser();
 
     warp = WarpFactory.forLocal(1201);
     ({ arweave } = warp);
@@ -115,11 +117,11 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     const contractTx = await arweave.transactions.get(contractTxId);
     expect(contractTx).not.toBeNull();
 
-    const contractSrcTxId = getTag(contractTx, SmartWeaveTags.CONTRACT_SRC_TX_ID);
+    const contractSrcTxId = tagsParser.getTag(contractTx, SmartWeaveTags.CONTRACT_SRC_TX_ID);
     const contractSrcTx = await arweave.transactions.get(contractSrcTxId);
-    expect(getTag(contractSrcTx, SmartWeaveTags.CONTENT_TYPE)).toEqual('application/wasm');
-    expect(getTag(contractSrcTx, SmartWeaveTags.WASM_LANG)).toEqual('rust');
-    expect(getTag(contractSrcTx, SmartWeaveTags.WASM_META)).toEqual(JSON.stringify({ dtor: 74 }));
+    expect(tagsParser.getTag(contractSrcTx, SmartWeaveTags.CONTENT_TYPE)).toEqual('application/wasm');
+    expect(tagsParser.getTag(contractSrcTx, SmartWeaveTags.WASM_LANG)).toEqual('rust');
+    expect(tagsParser.getTag(contractSrcTx, SmartWeaveTags.WASM_META)).toEqual(JSON.stringify({ dtor: 74 }));
 
     const srcTxData = await arweaveWrapper.txData(contractSrcTxId);
     const wasmSrc = new WasmSrc(srcTxData);
