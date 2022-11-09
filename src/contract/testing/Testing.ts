@@ -19,12 +19,6 @@ export class Testing {
     await this.arweave.api.get(`/mint/${walletAddress}/1000000000000000`);
   }
 
-  async validateEnv(): Promise<void> {
-    if (!this.isArlocal) {
-      throw new Error('Testing features are not available in a non testing environment');
-    }
-  }
-
   async isArlocal(): Promise<boolean> {
     const response = await fetch(
       `${this.arweave.api.config.protocol}://${this.arweave.api.config.host}:${this.arweave.api.config.port}/info`
@@ -37,5 +31,11 @@ export class Testing {
       });
 
     return response.network.includes('arlocal');
+  }
+
+  private async validateEnv(): Promise<void> {
+    if (!(await this.isArlocal())) {
+      throw new Error('Testing features are not available in a non testing environment');
+    }
   }
 }

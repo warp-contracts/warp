@@ -97,7 +97,7 @@ export class Warp {
   async generateWallet(): Promise<Wallet> {
     const wallet = await this.arweave.wallets.generate();
 
-    if (this.testing.isArlocal()) {
+    if (await this.testing.isArlocal()) {
       await this.testing.addFunds(wallet);
     }
 
