@@ -15,6 +15,7 @@ export async function createInteractionTx(
   target = '',
   winstonQty = '0',
   dummy = false,
+  isTestnet: boolean,
   reward?: string
 ): Promise<Transaction> {
   const options: Partial<CreateTransactionInterface> = {
@@ -57,6 +58,9 @@ export async function createInteractionTx(
   interactionTx.addTag(SmartWeaveTags.SDK, 'Warp');
   interactionTx.addTag(SmartWeaveTags.CONTRACT_TX_ID, contractId);
   interactionTx.addTag(SmartWeaveTags.INPUT, JSON.stringify(input));
+  if (isTestnet) {
+    interactionTx.addTag(SmartWeaveTags.WARP_TESTNET, '1.0.0');
+  }
 
   if (signer) {
     await signer(interactionTx);

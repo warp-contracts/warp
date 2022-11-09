@@ -67,14 +67,19 @@ export class WarpFactory {
    * with Warp testnet (https://testnet.redstone.tools/)
    */
   static forTestnet(
+    cacheOptions = defaultCacheOptions,
+    useArweaveGw = false,
     arweave = Arweave.init({
-      host: 'testnet.redstone.tools',
+      host: 'arweave.net',
       port: 443,
       protocol: 'https'
-    }),
-    cacheOptions = defaultCacheOptions
+    })
   ) {
-    return this.customArweaveGw(arweave, cacheOptions, 'testnet');
+    if (useArweaveGw) {
+      return this.customArweaveGw(arweave, cacheOptions, 'testnet');
+    } else {
+      return this.customWarpGw(arweave, defaultWarpGwOptions, cacheOptions, 'testnet');
+    }
   }
 
   /**

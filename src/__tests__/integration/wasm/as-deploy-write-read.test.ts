@@ -41,7 +41,7 @@ describe('Testing the Warp client for AssemblyScript WASM contract', () => {
     warp = WarpFactory.forLocal(1300);
     ({ arweave } = warp);
 
-    ({ jwk: wallet } = await warp.testing.generateWallet());
+    ({ jwk: wallet } = await warp.generateWallet());
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/wasm/as/assemblyscript-counter.wasm'));
     initialState = fs.readFileSync(path.join(__dirname, '../data/wasm/counter-init-state.json'), 'utf8');
 
@@ -155,10 +155,13 @@ describe('Testing the Warp client for AssemblyScript WASM contract', () => {
 
     const newContractSrc = fs.readFileSync(path.join(__dirname, '../data/wasm/as/assemblyscript-counter-evolve.wasm'));
 
-    const newSrcTxId = await contract.save({
-      src: newContractSrc,
-      wasmSrcCodeDir: path.join(__dirname, '../data/wasm/as/assembly-evolve')
-    });
+    const newSrcTxId = await contract.save(
+      {
+        src: newContractSrc,
+        wasmSrcCodeDir: path.join(__dirname, '../data/wasm/as/assembly-evolve')
+      },
+      warp.environment
+    );
     await mineBlock(warp);
 
     await contract.evolve(newSrcTxId);

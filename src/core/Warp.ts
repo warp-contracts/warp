@@ -1,14 +1,13 @@
 import Arweave from 'arweave';
 import { LevelDbCache } from '../cache/impl/LevelDbCache';
-import { Contract, InnerCallData, InnerCallType } from '../contract/Contract';
+import { Contract, InnerCallData } from '../contract/Contract';
 import { CreateContract } from '../contract/deploy/CreateContract';
 import { DefaultCreateContract } from '../contract/deploy/impl/DefaultCreateContract';
 import { HandlerBasedContract } from '../contract/HandlerBasedContract';
 import { PstContract } from '../contract/PstContract';
 import { PstContractImpl } from '../contract/PstContractImpl';
-import { GQLNodeInterface } from '../legacy/gqlResult';
 import { MigrationTool } from '../contract/migration/MigrationTool';
-import { Testing } from '../contract/testing/Testing';
+import { Testing, Wallet } from '../contract/testing/Testing';
 import { DefinitionLoader } from './modules/DefinitionLoader';
 import { ExecutorFactory } from './modules/ExecutorFactory';
 import { HandlerApi } from './modules/impl/HandlerExecutorFactory';
@@ -93,5 +92,18 @@ export class Warp {
     }
 
     return this.plugins.get(type) as WarpPlugin<P, Q>;
+  }
+
+  async generateWallet(): Promise<Wallet> {
+    const wallet = await this.arweave.wallets.generate();
+
+    if (await this.testing.isArlocal()) {
+      await this.testing.addFunds(wallet);
+    }
+
+    return {
+      jwk: wallet,
+      address: await this.arweave.wallets.jwkToAddress(wallet)
+    };
   }
 }
