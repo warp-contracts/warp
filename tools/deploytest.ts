@@ -17,7 +17,7 @@ async function main() {
   });
 
   try {
-    const warp = WarpFactory.forMainnet({...defaultCacheOptions, inMemory: false});
+    const warp = WarpFactory.forMainnet({...defaultCacheOptions, inMemory: true});
     /*const warp = WarpFactory
       .custom(arweave, {
         ...defaultCacheOptions,
@@ -67,15 +67,12 @@ async function main() {
 
     const contract = warp.contract(contractTxId)
       .setEvaluationOptions({
-        bundlerUrl: "http://localhost:5666/"
       })
       .connect(wallet);
 
     await contract.writeInteraction<any>({
-      function: "transfer",
-      target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
-      qty: 10000
-    }, {tags: [{name: 'Signature-Type', value: 'ethereum'}]});
+      function: "require",
+    });
 
     /*await contract.writeInteraction<any>({
       function: "storeBalance",
