@@ -4,6 +4,11 @@ export async function handle(state, action) {
   const input = action.input;
   const caller = action.caller;
 
+  if (input.function === 'require') {
+    const fs = require('fs');
+    console.log(fs);
+  }
+
   if (input.function === 'train') {
     const manager = new SmartWeave.extensions.NlpManager({languages: ['en'], forceNER: true});
     manager.addDocument('en', 'goodbye for now', 'greetings.bye');
