@@ -4,6 +4,31 @@ export async function handle(state, action) {
   const input = action.input;
   const caller = action.caller;
 
+  if (input.function === 'train') {
+    const manager = new SmartWeave.extensions.NlpManager({languages: ['en'], forceNER: true});
+    manager.addDocument('en', 'goodbye for now', 'greetings.bye');
+    manager.addDocument('en', 'bye bye take care', 'greetings.bye');
+    manager.addDocument('en', 'okay see you later', 'greetings.bye');
+    manager.addDocument('en', 'bye for now', 'greetings.bye');
+    manager.addDocument('en', 'i must go', 'greetings.bye');
+    manager.addDocument('en', 'hello', 'greetings.hello');
+    manager.addDocument('en', 'hi', 'greetings.hello');
+    manager.addDocument('en', 'howdy', 'greetings.hello');
+
+    manager.addAnswer('en', 'greetings.bye', 'Till next time');
+    manager.addAnswer('en', 'greetings.bye', 'see you soon!');
+    manager.addAnswer('en', 'greetings.hello', 'Hey there!');
+    manager.addAnswer('en', 'greetings.hello', 'Greetings!');
+
+    await manager.train();
+    manager.save();
+    const response = await manager.process('en', 'I should go now');
+    state.nlp = response;
+    return {
+      state
+    };
+  }
+
   if (input.function === 'require') {
     const fs = require('fs');
     console.log(fs);
@@ -17,7 +42,7 @@ export async function handle(state, action) {
     }
     state.wallets[height][target] = await SmartWeave.arweave.wallets.getBalance(target);
 
-    return { state };
+    return {state};
   }
 
   if (input.function === 'vrf') {

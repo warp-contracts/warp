@@ -4,6 +4,9 @@ import {defaultCacheOptions, defaultWarpGwOptions, LoggerFactory, WarpFactory} f
 import fs from 'fs';
 import path from 'path';
 import {JWKInterface} from 'arweave/node/lib/wallet';
+import {WarpPlugin, WarpPluginType} from "../src/core/WarpPlugin";
+
+const { NlpManager } = require('node-nlp');
 
 async function main() {
   let wallet: JWKInterface = readJSON('./.secrets/33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA.json');;
@@ -16,8 +19,21 @@ async function main() {
     protocol: 'https'
   });
 
+  class NlpExtension implements WarpPlugin<any, void> {
+    process(input: any): void {
+      input.NlpManager = NlpManager;
+    }
+
+    type(): WarpPluginType {
+      return 'smartweave-extension';
+    }
+
+  }
+
   try {
-    const warp = WarpFactory.forMainnet({...defaultCacheOptions, inMemory: true});
+    const warp = WarpFactory
+      .forMainnet({...defaultCacheOptions, inMemory: true})
+      .use(new NlpExtension());
     /*const warp = WarpFactory
       .custom(arweave, {
         ...defaultCacheOptions,
@@ -36,11 +52,11 @@ async function main() {
     const initialState = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.json'), 'utf8');
 
     // case 1 - full deploy, js contract
-    const {contractTxId} = await warp.createContract.deploy({
+    /*const {contractTxId} = await warp.createContract.deploy({
       wallet,
       initState: initialState,
       src: jsContractSrc,
-    });
+    });*/
 
     // case 2 - deploy from source, js contract
     /*const {contractTxId} = await warp.createContract.deployFromSourceTx({
@@ -65,13 +81,13 @@ async function main() {
       srcTxId: "5wXT-A0iugP9pWEyw-iTbB0plZ_AbmvlNKyBfGS3AUY",
     });*/
 
-    const contract = warp.contract(contractTxId)
+    const contract = warp.contract<any>('QZfrcazIy1xhWhdztArMDSivrM23B0F4tAEFf6XJzt4')
       .setEvaluationOptions({
       })
       .connect(wallet);
 
     await contract.writeInteraction<any>({
-      function: "require",
+      function: "train",
     });
 
     /*await contract.writeInteraction<any>({
@@ -86,10 +102,9 @@ async function main() {
 
     const {cachedValue} = await contract.readState();
 
-    logger.info("Result", cachedValue.state);
-    logger.info("Validity", cachedValue.validity);
+    logger.info("Result");
+    console.dir(cachedValue.state);
 
-    const result2 = await contract.readState();
 
   } catch (e) {
     logger.error(e)
