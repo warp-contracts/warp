@@ -4,6 +4,7 @@ import {defaultCacheOptions, defaultWarpGwOptions, LoggerFactory, WarpFactory} f
 import fs from 'fs';
 import path from 'path';
 import {JWKInterface} from 'arweave/node/lib/wallet';
+import {LmdbCache} from "warp-contracts-lmdb";
 
 async function main() {
   let wallet: JWKInterface = readJSON('./.secrets/33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA.json');;
@@ -18,8 +19,16 @@ async function main() {
 
   try {
     const warp = WarpFactory
-      .forMainnet({...defaultCacheOptions, inMemory: true})
-      .useStateCache(new LmdbCache());
+      .forMainnet({...defaultCacheOptions, inMemory: false})
+      .useStateCache(new LmdbCache({
+          ...defaultCacheOptions,
+          dbLocation: `./cache/warp/state`
+        }
+      ))
+      .useContractCache(new LmdbCache({
+        ...defaultCacheOptions,
+        dbLocation: `./cache/warp/contracts`
+      }));
     /*const warp = WarpFactory
       .custom(arweave, {
         ...defaultCacheOptions,
@@ -38,11 +47,11 @@ async function main() {
     const initialState = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.json'), 'utf8');
 
     // case 1 - full deploy, js contract
-    /*const {contractTxId} = await warp.createContract.deploy({
+    const {contractTxId} = await warp.createContract.deploy({
       wallet,
       initState: initialState,
       src: jsContractSrc,
-    });*/
+    });
     // case 2 - deploy from source, js contract
     /*const {contractTxId} = await warp.createContract.deployFromSourceTx({
       wallet,
@@ -66,34 +75,34 @@ async function main() {
       srcTxId: "5wXT-A0iugP9pWEyw-iTbB0plZ_AbmvlNKyBfGS3AUY",
     });*/
 
-    const contract = warp.contract("RpyfKrvw7pCRgdJ-EML8jaZUH6eidDlhHACsShNYhEo")
-      .setEvaluationOptions({
-        bundlerUrl: "http://localhost:5666/"
-      })
+    const contract = warp.contract('hYZBzN5FsC7P90cmfNZ0eokOUyiIvPve6JUd-9EdPAQ')
       .connect(wallet);
 
-    await contract.writeInteraction({
+    /*await contract.writeInteraction({
       function: 'transfer',
-      target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M',
+      target: 'fffAfVHv6-qJmB9EISNLno6Tqcjp2-MS3R-m7d3hpOc',
       qty: 55555
     });
-
-   /* await contract.writeInteraction({
-      function: 'transfer',
-      target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M',
-      qty: 55555
-    });
-
     await contract.writeInteraction({
       function: 'transfer',
-      target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M',
+      target: 'fffAfVHv6-qJmB9EISNLno6Tqcjp2-MS3R-m7d3hpOc',
+      qty: 55555
+    });
+    await contract.writeInteraction({
+      function: 'transfer',
+      target: 'fffAfVHv6-qJmB9EISNLno6Tqcjp2-MS3R-m7d3hpOc',
+      qty: 55555
+    });
+    await contract.writeInteraction({
+      function: 'transfer',
+      target: 'fffAfVHv6-qJmB9EISNLno6Tqcjp2-MS3R-m7d3hpOc',
       qty: 55555
     });*/
 
-    /*const {cachedValue} = await contract.readState();
+    const {cachedValue} = await contract.readState();
 
     logger.info("Result", cachedValue.state);
-    logger.info("Validity", cachedValue.validity);*/
+    logger.info("errors", cachedValue.errorMessages);
   } catch (e) {
     logger.error(e)
 

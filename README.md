@@ -554,6 +554,10 @@ In order to reduce the cache size, the oldest entries are automatically pruned.
 
 It is possible to use the in-memory cache instead by setting `cacheOptions.inMemory` to `true` while initializing Warp. `inMemory` cache is used by default in local environment.
 
+You can also supply your own implementation of the `SortKeyCache` interface and use them as a state and contracts cache.
+In order to use custom implementation call either `useStateCache` or `useContractCache` on `warp` instance.
+An example - LMDB - implementation is available [here](https://github.com/warp-contracts/warp-contracts-lmdb#warp-contracts-lmdb-cache).
+
 ### CLI
 
 A dedicated CLI which eases the process of using main methods of the Warp SDK library has been created. Please refer to [`warp-contracts-cli` npm page](https://www.npmjs.com/package/warp-contracts-cli) for more details.
