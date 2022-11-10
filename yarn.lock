@@ -3645,11 +3645,6 @@ external-editor@^3.0.3:
     iconv-lite "^0.4.24"
     tmp "^0.0.33"
 
-fast-copy@^2.1.1:
-  version "2.1.7"
-  resolved "https://registry.yarnpkg.com/fast-copy/-/fast-copy-2.1.7.tgz#affc9475cb4b555fb488572b2a44231d0c9fa39e"
-  integrity sha512-ozrGwyuCTAy7YgFCua8rmqmytECYk/JYAMXcswOcm0qvGoE3tPb7ivBeIHTOK2DiapBhDZgacIhzhQIKU5TCfA==
-
 fast-copy@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/fast-copy/-/fast-copy-3.0.0.tgz#875ebf33b13948ae012b6e51d33da5e6e7571ab8"
@@ -4999,7 +4994,7 @@ kleur@^3.0.3:
   resolved "https://registry.yarnpkg.com/kleur/-/kleur-3.0.3.tgz#a79c9ecc86ee1ce3fa6206d1216c501f147fc07e"
   integrity sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==
 
-knex@^0.95.14, knex@^0.95.6:
+knex@^0.95.6:
   version "0.95.15"
   resolved "https://registry.yarnpkg.com/knex/-/knex-0.95.15.tgz#39d7e7110a6e2ad7de5d673d2dea94143015e0e7"
   integrity sha512-Loq6WgHaWlmL2bfZGWPsy4l8xw4pOE+tmLGkPG0auBppxpI0UcK+GYCycJcqz9W54f2LiGewkCVLBm3Wq4ur/w==
@@ -6303,11 +6298,6 @@ safe-buffer@~5.1.0, safe-buffer@~5.1.1:
   resolved "https://registry.yarnpkg.com/safe-buffer/-/safe-buffer-5.1.2.tgz#991ec69d296e0313747d59bdfd2b745c35f8828d"
   integrity sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g==
 
-safe-stable-stringify@2.3.1:
-  version "2.3.1"
-  resolved "https://registry.yarnpkg.com/safe-stable-stringify/-/safe-stable-stringify-2.3.1.tgz#ab67cbe1fe7d40603ca641c5e765cb942d04fc73"
-  integrity sha512-kYBSfT+troD9cDA85VDnHZ1rpHC50O0g1e6WlGHVCz/g+JS+9WKLj+XwFYyR8UbrZN8ll9HUpDAAddY58MGisg==
-
 safe-stable-stringify@2.4.1:
   version "2.4.1"
   resolved "https://registry.yarnpkg.com/safe-stable-stringify/-/safe-stable-stringify-2.4.1.tgz#34694bd8a30575b7f94792aa51527551bd733d61"
@@ -7116,14 +7106,6 @@ vm2@3.9.11:
     acorn "^8.7.0"
     acorn-walk "^8.2.0"
 
-vm2@3.9.9:
-  version "3.9.9"
-  resolved "https://registry.yarnpkg.com/vm2/-/vm2-3.9.9.tgz#c0507bc5fbb99388fad837d228badaaeb499ddc5"
-  integrity sha512-xwTm7NLh/uOjARRBs8/95H0e8fT3Ukw5D/JJWhxMbhKzNh1Nu981jQKvkep9iKYNxzlVrdzD0mlBGkDKZWprlw==
-  dependencies:
-    acorn "^8.7.0"
-    acorn-walk "^8.2.0"
-
 walker@^1.0.8:
   version "1.0.8"
   resolved "https://registry.yarnpkg.com/walker/-/walker-1.0.8.tgz#bd498db477afe573dc04185f011d3ab8a8d7653f"
@@ -7131,38 +7113,34 @@ walker@^1.0.8:
   dependencies:
     makeerror "1.0.12"
 
-warp-contracts-lmdb@^1.0.4:
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/warp-contracts-lmdb/-/warp-contracts-lmdb-1.0.4.tgz#49350b5e11e5b49564a839529365149b3c0c01e5"
-  integrity sha512-8olZXkOJpE2+In2Td0SAoMjbB8PZqk7FE6jGHaoRh1yVACo6nYdfSGMFEU5ZAX0ZnfKeroCiou85TRPF6Zs59A==
+warp-contracts-lmdb@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/warp-contracts-lmdb/-/warp-contracts-lmdb-1.1.0.tgz#41c6abeb1f40cf4faf07e8b009229eca4ea16074"
+  integrity sha512-pX1qzn79FZmrlUxES+imkPi8BavsJApaOP9CX7aKYBzkHaTHCtytzCGsHthOm6UXD+eSNyQ+ELs/tWBrYPJhOg==
   dependencies:
     lmdb "^2.6.9"
-    warp-contracts "1.2.14-lambda.6"
+    warp-contracts "1.2.17-beta.0"
 
-warp-contracts@1.2.14-lambda.6:
-  version "1.2.14-lambda.6"
-  resolved "https://registry.yarnpkg.com/warp-contracts/-/warp-contracts-1.2.14-lambda.6.tgz#5f709b537e6dd27401c38a981dd11fd34b73ab82"
-  integrity sha512-DnwKhorbJGKGwqunCleVJoPLhYwsopK3QtqjwT6bXGpNo2jxEOWaMrYzAoihFnkWKfNRpADnrlJVcCb0ExP0gA==
+warp-contracts@1.2.17-beta.0:
+  version "1.2.17-beta.0"
+  resolved "https://registry.yarnpkg.com/warp-contracts/-/warp-contracts-1.2.17-beta.0.tgz#0c101a09fb150a680ad385b7f56d7be27e6fe6d6"
+  integrity sha512-WwTklwLFMea4Mr/agP5BlDfCFOIolF2Cl1LyK6JsEN2fHpEJEcwV0DXJ20W1oYfoH6Fj0Uva9hut9KlYNeRCtQ==
   dependencies:
     "@assemblyscript/loader" "^0.19.23"
     "@idena/vrf-js" "^1.0.1"
     archiver "^5.3.0"
     arweave "1.11.6"
-    bignumber.js "^9.0.1"
     elliptic "^6.5.4"
     events "3.3.0"
-    fast-copy "^2.1.1"
-    knex "^0.95.14"
+    fast-copy "^3.0.0"
     level "^8.0.0"
-    lmdb "^2.6.9"
-    lodash "^4.17.21"
     memory-level "^1.0.0"
     redstone-isomorphic "1.1.8"
     redstone-wasm-metering "1.0.3"
-    safe-stable-stringify "2.3.1"
+    safe-stable-stringify "2.4.1"
     stream-buffers "^3.0.2"
     unzipit "^1.4.0"
-    vm2 "3.9.9"
+    vm2 "3.9.11"
 
 wcwidth@^1.0.1:
   version "1.0.1"
