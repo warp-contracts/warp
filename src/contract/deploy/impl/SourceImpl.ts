@@ -10,7 +10,7 @@ import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { Source } from '../Source';
 import { Buffer } from 'redstone-isomorphic';
-import {WarpEnvironment} from "../../../core/Warp";
+import { WarpEnvironment } from '../../../core/Warp';
 
 const wasmTypeMapping: Map<number, string> = new Map([
   [1, 'assemblyscript'],
@@ -30,7 +30,12 @@ export class SourceImpl implements Source {
   private readonly logger = LoggerFactory.INST.create('Source');
   constructor(private readonly arweave: Arweave) {}
 
-  async save(contractData: SourceData, env: WarpEnvironment, signer: ArWallet | SigningFunction, useBundler = false): Promise<any> {
+  async save(
+    contractData: SourceData,
+    env: WarpEnvironment,
+    signer: ArWallet | SigningFunction,
+    useBundler = false
+  ): Promise<any> {
     this.logger.debug('Creating new contract source');
 
     const { src, wasmSrcCodeDir, wasmGlueCode } = contractData;
