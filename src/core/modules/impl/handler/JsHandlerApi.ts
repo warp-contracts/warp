@@ -36,6 +36,12 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
       this.assignWrite(executionContext, currentTx);
       this.assignRefreshState(executionContext);
 
+      const { warp } = executionContext;
+      if (warp.hasPlugin('smartweave-extension')) {
+        const extension = warp.loadPlugin<any, void>('smartweave-extension');
+        extension.process(this.swGlobal.extensions);
+      }
+
       const handlerResult = await Promise.race([timeoutPromise, this.contractFunction(stateCopy, interaction)]);
 
       if (handlerResult && (handlerResult.state !== undefined || handlerResult.result !== undefined)) {

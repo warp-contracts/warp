@@ -50,6 +50,8 @@ export class SmartWeaveGlobal {
     refreshState: () => Promise<any>;
   };
 
+  extensions: any;
+
   _activeTx?: GQLNodeInterface;
 
   caller?: string;
@@ -91,6 +93,8 @@ export class SmartWeaveGlobal {
 
     this.useGas = this.useGas.bind(this);
     this.getBalance = this.getBalance.bind(this);
+
+    this.extensions = {};
   }
 
   useGas(gas: number) {
