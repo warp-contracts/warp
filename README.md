@@ -588,6 +588,25 @@ An example - LMDB - implementation is available [here](https://github.com/warp-c
 
 A dedicated CLI which eases the process of using main methods of the Warp SDK library has been created. Please refer to [`warp-contracts-cli` npm page](https://www.npmjs.com/package/warp-contracts-cli) for more details.
 
+### Customize `fetch` options
+
+It is possible to customize `fetch` options using dedicated plugin. In order to change `fetch` options one needs to create an implementation of [WarpPlugin](https://github.com/warp-contracts/warp/blob/main/src/core/WarpPlugin.ts) interface. `process` method will receive following properties:
+
+```ts
+interface FetchRequest {
+  input: RequestInfo | URL;
+  init: Partial<RequestInit>;
+}
+```
+
+...and it should return updated `fetch` options (by returning updated `init` object). An example of such implementation in [src/tools/fetch-options-plugin.ts](https://github.com/warp-contracts/warp/tree/main/tools/fetch-options-plugin.ts).
+
+In order to use this plugin, it needs to be attached while creating `Warp` instance, e.g.:
+
+```ts
+const warp = WarpFactory.forMainnet().use(new FetchOptionsPlugin());
+```
+
 ### Migrations
 
 #### old factories to WarpFactory

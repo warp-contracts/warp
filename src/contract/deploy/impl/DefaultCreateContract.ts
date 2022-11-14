@@ -2,11 +2,20 @@
 import Arweave from 'arweave';
 import Transaction from 'arweave/node/lib/transaction';
 import { Signature, SignatureType } from '../../../contract/Signature';
+import { WarpFetchWrapper } from '../../../core/WarpFetchWrapper';
 import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
 import { Warp } from '../../../core/Warp';
 import { WARP_GW_URL } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
-import { CreateContract, ContractData, ContractDeploy, FromSrcTxContractData, ArWallet, BundlrNodeType, BUNDLR_NODES } from '../CreateContract';
+import {
+  CreateContract,
+  ContractData,
+  ContractDeploy,
+  FromSrcTxContractData,
+  ArWallet,
+  BundlrNodeType,
+  BUNDLR_NODES
+} from '../CreateContract';
 import { SourceData, SourceImpl } from './SourceImpl';
 import { Buffer } from 'redstone-isomorphic';
 
@@ -15,10 +24,12 @@ export class DefaultCreateContract implements CreateContract {
   private readonly source: SourceImpl;
 
   private signature: Signature;
+  private readonly warpFetchWrapper: WarpFetchWrapper;
 
   constructor(private readonly arweave: Arweave, private warp: Warp) {
     this.deployFromSourceTx = this.deployFromSourceTx.bind(this);
     this.source = new SourceImpl(this.warp);
+    this.warpFetchWrapper = new WarpFetchWrapper(this.warp);
   }
 
   async deploy(contractData: ContractData, disableBundling?: boolean): Promise<ContractDeploy> {
@@ -190,7 +201,7 @@ export class DefaultCreateContract implements CreateContract {
       };
     }
 
-    const response = await fetch(`${WARP_GW_URL}/gateway/contracts/deploy`, {
+    const response = await this.warpFetchWrapper.fetch(`${WARP_GW_URL}/gateway/contracts/deploy`, {
       method: 'POST',
       body: JSON.stringify(body),
       headers: {
