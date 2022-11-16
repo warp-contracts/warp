@@ -1,6 +1,6 @@
 {
   "name": "warp-contracts",
-  "version": "1.2.19",
+  "version": "1.2.20",
   "description": "An implementation of the SmartWeave smart contract protocol.",
   "types": "./lib/types/index.d.ts",
   "main": "./lib/cjs/index.js",
@@ -101,8 +101,8 @@
     "ts-node": "^10.2.1",
     "typescript": "^4.7.4",
     "warp-contracts-pubsub": "1.0.3",
-    "ws": "^8.11.0",
-    "warp-contracts-subscription-plugin": "1.0.2"
+    "warp-contracts-subscription-plugin": "1.0.2",
+    "ws": "^8.11.0"
   },
   "browser": {
     "fs": false,
