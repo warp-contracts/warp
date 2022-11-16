@@ -81,7 +81,7 @@ async function main() {
       srcTxId: "5wXT-A0iugP9pWEyw-iTbB0plZ_AbmvlNKyBfGS3AUY",
     });*/
 
-          const contract = warp.contract<any>('OZBvm55O2fmoeotAphv0_4mhcrBspaTyBSDQ-ZmAWwA')
+          /*const contract = warp.contract<any>('OZBvm55O2fmoeotAphv0_4mhcrBspaTyBSDQ-ZmAWwA')
             .setEvaluationOptions({
             })
             .connect(wallet);
@@ -102,7 +102,7 @@ async function main() {
               target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
               qty: 100
             })
-    ]);
+    ]);*/
 
     /*const {cachedValue} = await contract.readState();
 

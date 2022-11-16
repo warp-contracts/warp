@@ -39,6 +39,7 @@ export * from './core/ContractCallRecord';
 export * from './core/WarpFactory';
 export * from './core/Warp';
 export * from './core/WarpBuilder';
+export * from './core/WarpPlugin';
 
 export * from './contract/Contract';
 export * from './contract/HandlerBasedContract';
