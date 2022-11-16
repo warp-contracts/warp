@@ -1,4 +1,4 @@
-import { SigningFunction } from '../../contract/Contract';
+import { Signature, SigningFunction } from '../../contract/Contract';
 import { ArWallet } from './CreateContract';
 import { SourceData } from './impl/SourceImpl';
 import { WarpEnvironment } from '../../core/Warp';
@@ -11,7 +11,7 @@ export interface Source {
   save(
     contractSource: SourceData,
     env: WarpEnvironment,
-    signer?: ArWallet | SigningFunction,
+    signer?: ArWallet | Signature,
     useBundler?: boolean
   ): Promise<string | null>;
 }
