@@ -166,6 +166,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return result;
   }
 
+  async readStateFor(interactions?: GQLNodeInterface[]): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
+    return this.readState(undefined, undefined, interactions);
+  }
+
   async viewState<Input, View>(
     input: Input,
     tags: Tags = [],
