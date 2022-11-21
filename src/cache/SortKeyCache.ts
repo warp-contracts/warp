@@ -47,6 +47,23 @@ export interface SortKeyCache<V> {
    * - useful for performing low-level operations
    */
   storage<S>(): S;
+
+
+  /**
+   * leaves n-latest (i.e. with latest (in lexicographic order) sort keys)
+   * entries for each cached contract
+   *
+   * @param entriesStored - how many latest entries should be left
+   * for each cached contract
+   */
+  prune(entriesStored: number): Promise<PruneStats>;
+}
+
+export interface PruneStats {
+  entriesBefore: number;
+  entriesAfter: number;
+  sizeBefore: number;
+  sizeAfter: number;
 }
 
 export class CacheKey {
