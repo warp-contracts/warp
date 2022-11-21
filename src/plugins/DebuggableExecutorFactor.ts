@@ -1,6 +1,7 @@
 import { ContractDefinition } from '../core/ContractDefinition';
 import { ExecutorFactory } from '../core/modules/ExecutorFactory';
 import { EvaluationOptions } from '../core/modules/StateEvaluator';
+import { Warp } from '../core/Warp';
 
 /**
  * An ExecutorFactory that allows to substitute original contract's source code.
@@ -18,7 +19,8 @@ export class DebuggableExecutorFactory<Api> implements ExecutorFactory<Api> {
 
   async create<State>(
     contractDefinition: ContractDefinition<State>,
-    evaluationOptions: EvaluationOptions
+    evaluationOptions: EvaluationOptions,
+    warp: Warp
   ): Promise<Api> {
     if (Object.prototype.hasOwnProperty.call(this.sourceCode, contractDefinition.txId)) {
       contractDefinition = {
@@ -27,6 +29,6 @@ export class DebuggableExecutorFactory<Api> implements ExecutorFactory<Api> {
       };
     }
 
-    return await this.baseImplementation.create(contractDefinition, evaluationOptions);
+    return await this.baseImplementation.create(contractDefinition, evaluationOptions, warp);
   }
 }

@@ -45,7 +45,8 @@ export class Evolve implements ExecutionContextModifier {
           const newContractDefinition = await definitionLoader.load<State>(contractTxId, evolvedSrcTxId);
           const newHandler = (await executorFactory.create<State>(
             newContractDefinition,
-            executionContext.evaluationOptions
+            executionContext.evaluationOptions,
+            executionContext.warp
           )) as HandlerApi<State>;
 
           //FIXME: side-effect...
