@@ -48,7 +48,6 @@ export interface SortKeyCache<V> {
    */
   storage<S>(): S;
 
-
   /**
    * leaves n-latest (i.e. with latest (in lexicographic order) sort keys)
    * entries for each cached contract

@@ -1,4 +1,4 @@
-import {SortKeyCache, CacheKey, SortKeyCacheResult, PruneStats} from '../SortKeyCache';
+import { SortKeyCache, CacheKey, SortKeyCacheResult, PruneStats } from '../SortKeyCache';
 import { Level } from 'level';
 import { MemoryLevel } from 'memory-level';
 import { CacheOptions } from '../../core/WarpFactory';
