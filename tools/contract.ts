@@ -33,22 +33,12 @@ async function main() {
     logging: false // Enable network request logging
   });
 
-  class ExamplePlugin implements WarpPlugin<GQLNodeInterface, boolean> {
-    process(input: GQLNodeInterface): boolean {
-      return false;
-    }
-
-    type(): WarpPluginType {
-      return 'evm-signature-verification';
-    }
-  }
 
   const warp = WarpFactory
     .forMainnet({...defaultCacheOptions, inMemory: true})
-    .use(new ExamplePlugin())
 
   try {
-    const contract = warp.contract("Ws9hhYckc-zSnVmbBep6q_kZD5zmzYzDmgMC50nMiuE");
+    const contract = warp.contract("9aetS5_kSsCdDI14y9e1TlL9CF6xjI2sLeZOnMHgwPc");
     const cacheResult = await contract
       .setEvaluationOptions({
         useIVM: true,
@@ -103,9 +93,6 @@ function printTestInfo() {
   console.log('===============');
 
 
-  const sorter = new LexicographicalInteractionsSorter(arweave);
-
-  warp.interactionsLoader.load(contractId, sorter.generateLastSortKey(666), sorter.generateLastSortKey(777));
 }
 
 main().catch((e) => console.error(e));
