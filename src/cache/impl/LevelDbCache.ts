@@ -1,4 +1,4 @@
-import { SortKeyCache, CacheKey, SortKeyCacheResult } from '../SortKeyCache';
+import {SortKeyCache, CacheKey, SortKeyCacheResult, PruneStats} from '../SortKeyCache';
 import { Level } from 'level';
 import { MemoryLevel } from 'memory-level';
 import { CacheOptions } from '../../core/WarpFactory';
@@ -134,5 +134,9 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
 
   storage<S>(): S {
     return this.db as S;
+  }
+
+  async prune(entriesStored = 5): Promise<PruneStats> {
+    throw new Error('Not implemented yet');
   }
 }
