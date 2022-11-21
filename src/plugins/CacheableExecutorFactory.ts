@@ -4,6 +4,7 @@ import { WarpCache } from '../cache/WarpCache';
 import { ContractDefinition } from '../core/ContractDefinition';
 import { ExecutorFactory } from '../core/modules/ExecutorFactory';
 import { EvaluationOptions } from '../core/modules/StateEvaluator';
+import { Warp } from '../core/Warp';
 
 /**
  * An implementation of ExecutorFactory that adds caching capabilities
@@ -19,9 +20,10 @@ export class CacheableExecutorFactory<Api> implements ExecutorFactory<Api> {
 
   async create<State>(
     contractDefinition: ContractDefinition<State>,
-    evaluationOptions: EvaluationOptions
+    evaluationOptions: EvaluationOptions,
+    warp: Warp
   ): Promise<Api> {
-    return await this.baseImplementation.create(contractDefinition, evaluationOptions);
+    return await this.baseImplementation.create(contractDefinition, evaluationOptions, warp);
 
     // warn: do not cache on the contractDefinition.srcTxId. This might look like a good optimisation
     // (as many contracts share the same source code), but unfortunately this is causing issues

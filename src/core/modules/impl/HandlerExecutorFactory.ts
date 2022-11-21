@@ -12,12 +12,13 @@ import { SmartWeaveGlobal } from '../../../legacy/smartweave-global';
 import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { ExecutorFactory } from '../ExecutorFactory';
-import { EvaluationOptions, EvalStateResult } from '../StateEvaluator';
+import { EvalStateResult, EvaluationOptions } from '../StateEvaluator';
 import { JsHandlerApi } from './handler/JsHandlerApi';
 import { WasmHandlerApi } from './handler/WasmHandlerApi';
 import { normalizeContractSource } from './normalize-source';
 import { MemCache } from '../../../cache/impl/MemCache';
 import BigNumber from '../../../legacy/bignumber';
+import { Warp } from '../../Warp';
 
 class ContractError extends Error {
   constructor(message) {
@@ -40,7 +41,8 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
 
   async create<State>(
     contractDefinition: ContractDefinition<State>,
-    evaluationOptions: EvaluationOptions
+    evaluationOptions: EvaluationOptions,
+    warp: Warp
   ): Promise<HandlerApi<State>> {
     const swGlobal = new SmartWeaveGlobal(
       this.arweave,
@@ -190,6 +192,15 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
         });
 
         return new JsHandlerApi(swGlobal, contractDefinition, vm.run(vmScript));
+      } else if (warp.hasPlugin('ivm-handler-api')) {
+        const ivmPlugin = warp.loadPlugin<IvmPluginInput, HandlerApi<State>>('ivm-handler-api');
+        return ivmPlugin.process({
+          contractSource: contractDefinition.src,
+          evaluationOptions,
+          arweave: this.arweave,
+          swGlobal: swGlobal,
+          contractDefinition
+        });
       } else {
         const contractFunction = new Function(normalizedSource);
         const handler = contractFunction(swGlobal, BigNumber, LoggerFactory.INST.create(swGlobal.contract.id));
@@ -256,3 +267,19 @@ export type ContractInteraction<Input> = {
 };
 
 export type InteractionResultType = 'ok' | 'error' | 'exception';
+
+export interface IvmOptions {
+  // Options for isolated-vm:
+  // memory limit - defaults to 100MB
+  // timeout (script time evaluation limit) - defaults to 60s
+  memoryLimit?: number;
+  timeout?: number;
+}
+
+export interface IvmPluginInput {
+  contractSource: string;
+  evaluationOptions: EvaluationOptions;
+  arweave: Arweave;
+  swGlobal: SmartWeaveGlobal;
+  contractDefinition: ContractDefinition<any>;
+}

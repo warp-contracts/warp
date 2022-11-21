@@ -476,7 +476,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
       this.logger.debug('State fully cached, not loading interactions.');
       if (forceDefinitionLoad || evolvedSrcTxId) {
         contractDefinition = await definitionLoader.load<State>(contractTxId, evolvedSrcTxId);
-        handler = (await executorFactory.create(contractDefinition, this._evaluationOptions)) as HandlerApi<State>;
+        handler = (await executorFactory.create(
+          contractDefinition,
+          this._evaluationOptions,
+          this.warp
+        )) as HandlerApi<State>;
       }
     } else {
       [contractDefinition, sortedInteractions] = await Promise.all([
@@ -506,7 +510,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
         // - as no other contracts will be called.
         this._rootSortKey = sortedInteractions[sortedInteractions.length - 1].sortKey;
       }
-      handler = (await executorFactory.create(contractDefinition, this._evaluationOptions)) as HandlerApi<State>;
+      handler = (await executorFactory.create(
+        contractDefinition,
+        this._evaluationOptions,
+        this.warp
+      )) as HandlerApi<State>;
     }
 
     return {
