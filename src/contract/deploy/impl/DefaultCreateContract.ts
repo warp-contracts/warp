@@ -7,6 +7,7 @@ import { WARP_GW_URL } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { CreateContract, ContractData, ContractDeploy, FromSrcTxContractData } from '../CreateContract';
 import { SourceImpl } from './SourceImpl';
+import { Buffer } from 'redstone-isomorphic';
 
 export class DefaultCreateContract implements CreateContract {
   private readonly logger = LoggerFactory.INST.create('DefaultCreateContract');
@@ -103,6 +104,31 @@ export class DefaultCreateContract implements CreateContract {
     } else {
       throw new Error(
         `Unable to write Contract. Arweave responded with status ${response.status}: ${response.statusText}`
+      );
+    }
+  }
+
+  async deployBundled(rawDataItem: Buffer): Promise<ContractDeploy> {
+    const response = await fetch(`${WARP_GW_URL}/gateway/contracts/deploy-bundled`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        Accept: 'application/json'
+      },
+      body: rawDataItem
+    });
+    if (response.ok) {
+      return response.json();
+    } else {
+      if (typeof response.json === 'function') {
+        response.json().then((responseError) => {
+          if (responseError.message) {
+            this.logger.error(responseError.message);
+          }
+        });
+      }
+      throw new Error(
+        `Error while deploying data item. Warp Gateway responded with status ${response.status} ${response.statusText}`
       );
     }
   }

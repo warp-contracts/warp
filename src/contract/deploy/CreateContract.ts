@@ -39,10 +39,13 @@ export interface FromSrcTxContractData extends CommonContractData {
 
 export interface ContractDeploy {
   contractTxId: string;
-  srcTxId: string;
+  srcTxId?: string;
 }
+
 export interface CreateContract {
   deploy(contractData: ContractData, disableBundling?: boolean): Promise<ContractDeploy>;
 
   deployFromSourceTx(contractData: FromSrcTxContractData, disableBundling?: boolean): Promise<ContractDeploy>;
+
+  deployBundled(rawDataItem: Buffer): Promise<ContractDeploy>;
 }
