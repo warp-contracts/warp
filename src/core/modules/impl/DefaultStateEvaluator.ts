@@ -204,8 +204,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           currentTx
         };
 
-        this.logger.debug(`${indent(depth)}Interaction:`, interaction);
-
         const interactionCall: InteractionCall = contract.getCallStack().addInteractionData(interactionData);
 
         const result = await executionContext.handler.handle(
