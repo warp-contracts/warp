@@ -3,6 +3,8 @@ import Arweave from 'arweave';
 import { bigNumberLib } from './bigNumber-ivm';
 import { SmartWeaveGlobal } from '../../../../legacy/smartweave-global';
 import { LoggerFactory } from '../../../../logging/LoggerFactory';
+import fs from "fs";
+import path from "path";
 
 class ContractError extends Error {
   constructor(message) {
@@ -16,6 +18,8 @@ export function configureSandbox(
   arweave: Arweave,
   swGlobal: SmartWeaveGlobal
 ) {
+
+
   // ContractAssert
   sandbox.setSync('ContractAssert', function (cond, message) {
     if (!cond) throw new ContractError(message);
@@ -232,12 +236,28 @@ export function configureSandbox(
       return new ivm.ExternalCopy(result);
     })
   );
+
+  // Buffer - for the weaveDb contracts...
+  // not sure if that's a good idea - https://github.com/laverdet/isolated-vm/issues/329
+  sandbox.setSync('__host__buffer_from', function (...args) {
+    return Buffer.from(args);
+  });
+  sandbox.setSync('__host__buffer_allocUnsafe', function (...args) {
+    return Buffer.allocUnsafe(args[0]);
+  });
+  sandbox.setSync('__host__buffer_isBuffer', function (...args) {
+    return Buffer.isBuffer(args);
+  });
+  sandbox.setSync('__host__buffer_concat', function (...args) {
+    return Buffer.concat(args);
+  });
 }
 
 export function configureContext(context: Context) {
   context.evalSync(bigNumberLib);
+  console.log(__dirname);
+  context.evalSync(fs.readFileSync(__dirname + '/buffer-bundle.js', 'utf-8'));
   context.evalSync(`
-  
   class BaseObject {
       get(field, options) {
           if (!Object.getOwnPropertyNames(this).includes(field)) {
@@ -344,6 +364,13 @@ export function configureContext(context: Context) {
     warn: __host__logger_warn,
     error: __host__logger_error,
   };
+  
+  const Buffer = {
+    from: __host__buffer_from,
+    allocUnsafe: __host__buffer_allocUnsafe,
+    isBuffer: __host__buffer_isBuffer,
+    concat: __host__buffer_concat
+  }
   
   const SmartWeave = {
     contract: __host__smartweave__contract.copy(),
@@ -529,6 +556,26 @@ export function configureContext(context: Context) {
         ownerToAddress: function(...args) {
           return __host__smartweave__arweave__wallets_ownerToAddress.applySyncPromise(undefined, args);
         },
+        crypto: {
+          generateJWK: function(...args) {
+            return __host__smartweave__arweave__crypto_generateJWK.applySyncPromise(undefined, args).copy();
+          },
+          sign: function(...args) {
+            return __host__smartweave__arweave__crypto_sign.applySyncPromise(undefined, args, {arguments: {copy: true}}).copy();
+          },
+          verify: function(...args) {
+            return __host__smartweave__arweave__crypto_verify.applySyncPromise(undefined, args, {arguments: {copy: true}});
+          },
+          encrypt: function(...args) {
+            return __host__smartweave__arweave__crypto_encrypt.applySyncPromise(undefined, args, {arguments: {copy: true}}).copy();
+          },
+          decrypt: function(...args) {
+            return __host__smartweave__arweave__crypto_decrypt.applySyncPromise(undefined, args, {arguments: {copy: true}}).copy();
+          },
+          hash: function(...args) {
+            return __host__smartweave__arweave__crypto_hash.applySyncPromise(undefined, args, {arguments: {copy: true}}).copy();
+          }
+        }
       },
       
       crypto: {

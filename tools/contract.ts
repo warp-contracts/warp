@@ -12,8 +12,7 @@ import {GQLNodeInterface} from "smartweave/lib/interfaces/gqlResult";
 const logger = LoggerFactory.INST.create('Contract');
 
 //LoggerFactory.use(new TsLogFactory());
-LoggerFactory.INST.logLevel('debug');
-LoggerFactory.INST.logLevel('debug', 'ArweaveGatewayInteractionsLoader');
+LoggerFactory.INST.logLevel('info');
 LoggerFactory.INST.logLevel('info', 'CacheableStateEvaluator');
 LoggerFactory.INST.logLevel('info', 'WASM:Rust');
 //LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
@@ -41,8 +40,8 @@ async function main() {
     const contract = warp.contract("9aetS5_kSsCdDI14y9e1TlL9CF6xjI2sLeZOnMHgwPc");
     const cacheResult = await contract
       .setEvaluationOptions({
-        useIVM: true,
-        allowBigInt: true
+        allowBigInt: true,
+        useIVM: true
       })
       .readState();
 
