@@ -4,8 +4,8 @@ import { CreateTransactionInterface } from 'arweave/node/common';
 import { BlockData } from 'arweave/node/blocks';
 import { SmartWeaveTags } from '../core/SmartWeaveTags';
 import { GQLNodeInterface } from './gqlResult';
-import { SigningFunction } from '../contract/Contract';
 import { TagsParser } from '../core/modules/impl/TagsParser';
+import { SigningFunction } from '../contract/Signature';
 
 export async function createInteractionTx(
   arweave: Arweave,

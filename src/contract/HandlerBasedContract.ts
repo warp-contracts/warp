@@ -28,14 +28,13 @@ import {
   CurrentTx,
   WriteInteractionOptions,
   WriteInteractionResponse,
-  InnerCallData,
-  Signature
+  InnerCallData
 } from './Contract';
 import { Tags, ArTransfer, emptyTransfer, ArWallet } from './deploy/CreateContract';
 import { SourceData, SourceImpl } from './deploy/impl/SourceImpl';
 import { InnerWritesEvaluator } from './InnerWritesEvaluator';
 import { generateMockVrf } from '../utils/vrf';
-import { Wallet } from './Wallet';
+import { Signature, SignatureType } from './Signature';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -54,7 +53,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   private readonly _arweaveWrapper: ArweaveWrapper;
   private _sorter: InteractionsSorter;
   private _rootSortKey: string;
-  private readonly wallet: Wallet;
+  private signature: Signature;
 
   constructor(
     private readonly _contractTxId: string,
@@ -108,7 +107,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
 
     this.getCallStack = this.getCallStack.bind(this);
-    this.wallet = new Wallet(this.warp);
   }
 
   async readState(
@@ -208,7 +206,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     options?: WriteInteractionOptions
   ): Promise<WriteInteractionResponse | null> {
     this.logger.info('Write interaction', { input, options });
-    if (!this.wallet.signature) {
+    if (!this.signature) {
       throw new Error("Wallet not connected. Use 'connect' method first.");
     }
     const { arweave, interactionsLoader, environment } = this.warp;
@@ -226,11 +224,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     const bundleInteraction = interactionsLoader.type() == 'warp' && !effectiveDisableBundling;
 
-    if (this.wallet.signature.signatureType !== 'arweave' && !bundleInteraction) {
-      throw new Error(
-        `Unable to use signing function of type: ${this.wallet.signature.signatureType} when not in mainnet environment or bundling is disabled.`
-      );
-    }
+    this.signature.checkNonArweaveSigningAvailability(bundleInteraction);
 
     if (
       bundleInteraction &&
@@ -380,7 +374,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     const interactionTx = await createInteractionTx(
       this.warp.arweave,
-      this.wallet.signature.signer,
+      this.signature.signer,
       this._contractTxId,
       input,
       tags,
@@ -401,8 +395,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return this._callStack;
   }
 
-  connect(signature: ArWallet | Signature): Contract<State> {
-    this.wallet.getSignature(signature);
+  connect(signature: ArWallet | SignatureType): Contract<State> {
+    this.signature = new Signature(this.warp, signature);
     return this;
   }
 
@@ -545,7 +539,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   ): Promise<InteractionResult<State, View>> {
     this.logger.info('Call contract input', input);
     this.maybeResetRootContract();
-    if (!this.wallet.signature) {
+    if (!this.signature) {
       this.logger.warn('Wallet not set.');
     }
     const { arweave, stateEvaluator } = this.warp;
@@ -559,7 +553,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     let effectiveCaller;
     if (caller) {
       effectiveCaller = caller;
-    } else if (this.wallet.signature) {
+    } else if (this.signature) {
       // we're creating this transaction just to call the signing function on it
       // - and retrieve the caller/owner
       const dummyTx = await arweave.createTransaction({
@@ -567,7 +561,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
         reward: '72600854',
         last_tx: 'p7vc1iSP6bvH_fCeUFa9LqoV5qiyW-jdEKouAT0XMoSwrNraB9mgpi29Q10waEpO'
       });
-      await this.wallet.signature.signer(dummyTx);
+      await this.signature.signer(dummyTx);
       effectiveCaller = await arweave.wallets.ownerToAddress(dummyTx.owner);
     } else {
       effectiveCaller = '';
@@ -592,7 +586,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     this.logger.debug('interaction', interaction);
     const tx = await createInteractionTx(
       arweave,
-      this.wallet.signature?.signer,
+      this.signature?.signer,
       this._contractTxId,
       input,
       tags,
@@ -753,12 +747,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
   }
 
   async save(sourceData: SourceData): Promise<any> {
-    if (!this.wallet.signature) {
+    if (!this.signature) {
       throw new Error("Wallet not connected. Use 'connect' method first.");
     }
     const source = new SourceImpl(this.warp);
 
-    const srcTx = await source.save(sourceData, this.warp.environment, this.wallet.signature);
+    const srcTx = await source.save(sourceData, this.warp.environment, this.signature);
 
     return srcTx.id;
   }

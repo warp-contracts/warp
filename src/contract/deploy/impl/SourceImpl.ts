@@ -4,13 +4,12 @@ import { Go } from '../../../core/modules/impl/wasm/go-wasm-imports';
 import fs, { PathOrFileDescriptor } from 'fs';
 import { matchMutClosureDtor } from '../../../core/modules/impl/wasm/wasm-bindgen-tools';
 import { ArWallet, ContractType } from '../CreateContract';
-import { Signature, SigningFunction } from '../../../contract/Contract';
 import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { Source } from '../Source';
 import { Buffer } from 'redstone-isomorphic';
 import { Warp, WarpEnvironment } from '../../../core/Warp';
-import { Wallet } from '../../../contract/Wallet';
+import { Signature, SignatureType } from '../../../contract/Signature';
 
 const wasmTypeMapping: Map<number, string> = new Map([
   [1, 'assemblyscript'],
@@ -28,30 +27,24 @@ export interface SourceData {
 
 export class SourceImpl implements Source {
   private readonly logger = LoggerFactory.INST.create('Source');
-  private readonly wallet: Wallet;
+  private signature: Signature;
 
-  constructor(private readonly warp: Warp) {
-    this.wallet = new Wallet(this.warp);
-  }
+  constructor(private readonly warp: Warp) {}
 
   async save(
     contractData: SourceData,
     env: WarpEnvironment,
-    wallet: ArWallet | Signature,
+    signature: ArWallet | SignatureType,
     useBundler = false
   ): Promise<any> {
     this.logger.debug('Creating new contract source');
 
     const { src, wasmSrcCodeDir, wasmGlueCode } = contractData;
 
-    this.wallet.getSignature(wallet);
-    const signer = this.wallet.signature.signer;
+    this.signature = new Signature(this.warp, signature);
+    const signer = this.signature.signer;
 
-    if (this.wallet.signature.signatureType !== 'arweave' && !useBundler) {
-      throw new Error(
-        `Unable to use signing function of type: ${this.wallet.signature.signatureType} when bundling is disabled.`
-      );
-    }
+    this.signature.checkNonArweaveSigningAvailability(useBundler);
 
     const contractType: ContractType = src instanceof Buffer ? 'wasm' : 'js';
     let srcTx;

@@ -1,21 +1,20 @@
 /* eslint-disable */
 import Arweave from 'arweave';
 import Transaction from 'arweave/node/lib/transaction';
-import { Wallet } from '../../../contract/Wallet';
+import { Signature } from '../../../contract/Signature';
 import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
 import { Warp } from '../../../core/Warp';
 import { WARP_GW_URL } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
-import { CreateContract, ContractData, ContractDeploy, FromSrcTxContractData, ArWallet } from '../CreateContract';
+import { CreateContract, ContractData, ContractDeploy, FromSrcTxContractData } from '../CreateContract';
 import { SourceImpl } from './SourceImpl';
 
 export class DefaultCreateContract implements CreateContract {
   private readonly logger = LoggerFactory.INST.create('DefaultCreateContract');
-  private readonly wallet: Wallet;
+  private signature: Signature;
 
   constructor(private readonly arweave: Arweave, private warp: Warp) {
     this.deployFromSourceTx = this.deployFromSourceTx.bind(this);
-    this.wallet = new Wallet(this.warp);
   }
 
   async deploy(contractData: ContractData, disableBundling?: boolean): Promise<ContractDeploy> {
@@ -50,17 +49,13 @@ export class DefaultCreateContract implements CreateContract {
   ): Promise<ContractDeploy> {
     this.logger.debug('Creating new contract from src tx');
     const { wallet, srcTxId, initState, tags, transfer, data } = contractData;
-    this.wallet.getSignature(wallet);
-    const signer = this.wallet.signature.signer;
+    this.signature = new Signature(this.warp, wallet);
+    const signer = this.signature.signer;
 
     const effectiveUseBundler =
       disableBundling == undefined ? this.warp.definitionLoader.type() == 'warp' : !disableBundling;
 
-    if (this.wallet.signature.signatureType !== 'arweave' && !effectiveUseBundler) {
-      throw new Error(
-        `Unable to use signing function of type: ${this.wallet.signature.signatureType} when bundling is disabled.`
-      );
-    }
+    this.signature.checkNonArweaveSigningAvailability(effectiveUseBundler);
 
     let contractTX = await this.arweave.createTransaction({ data: data?.body || initState });
 
