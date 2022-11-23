@@ -129,16 +129,18 @@
         throw new ContractError("Price must be positive integer!");
       }
     }
+    
+    let {orderQuantity, updatedState} = await checkOrderQuantity(state, action);
     const newOrder = {
       creator: action.caller,
       orderId: SmartWeave.transaction.id,
       direction: param.direction,
-      quantity: await checkOrderQuantity(state, action),
+      quantity: orderQuantity,
       price: param.price
     };
     let selectedFeeRecvr = void 0;
     try {
-      selectedFeeRecvr = await selectWeightedTokenHolder(await tokenBalances(state.thetarTokenAddress));
+      selectedFeeRecvr = await selectWeightedTokenHolder(tokenBalances(updatedState));
     } catch {
     }
     const { newOrderbook, newUserOrders, transactions, currentPrice } = await matchOrder(newOrder, state.orderInfos[param.pairId].orders, state.userOrders, param.pairId, action.caller, state.feeRatio, selectedFeeRecvr);
@@ -154,23 +156,26 @@
     }
     return { state };
   };
-  var tokenBalances = async (tokenAddress) => {
-    return (await SmartWeave.contracts.readContractState(tokenAddress)).balances;
+  var tokenBalances = (updatedState) => {
+    return updatedState.balances;
   };
   var checkOrderQuantity = async (state, action) => {
     const param = action.input.params;
     let pairInfo2 = state.pairInfos.find((pair) => pair.pairId === param.pairId);
     const tokenAddress = param.direction === "buy" ? state.thetarTokenAddress : pairInfo2.tokenAddress;
     const tokenState = await SmartWeave.contracts.readContractState(tokenAddress);
+    //let orderQuantity = param.price;
     let orderQuantity = tokenState.allowances[action.caller][SmartWeave.contract.id];
+    //WASM version
     //await SmartWeave.contracts.write(tokenAddress, { function: "transferFrom", from: action.caller, to: SmartWeave.contract.id, amount: orderQuantity });
     //JS version
     logger.error("CREATE Taking tokens: " + orderQuantity);
-    await SmartWeave.contracts.write(tokenAddress, { function: "transferFrom", sender: action.caller, recipient: SmartWeave.contract.id, amount: orderQuantity });
+    updatedState = (await SmartWeave.contracts.write(tokenAddress, { function: "transferFrom", sender: action.caller, recipient: SmartWeave.contract.id, amount: orderQuantity })).state;
+    logger.error("STATE:", updatedState);
     if (param.direction === "buy" && param.price) {
       orderQuantity = Math.floor(orderQuantity / param.price);
     }
-    return orderQuantity;
+    return {orderQuantity, updatedState};
   };
   var matchOrder = async (newOrder, orderbook, userOrders, newOrderPairId, caller, feeRatio, selectedFeeRecvr) => {
     let transactions = Array();
