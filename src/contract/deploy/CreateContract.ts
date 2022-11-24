@@ -1,4 +1,5 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
+import { SignatureType } from '../../contract/Signature';
 
 export type Tags = { name: string; value: string }[];
 
@@ -17,7 +18,7 @@ export const emptyTransfer: ArTransfer = {
 };
 
 export interface CommonContractData {
-  wallet: ArWallet;
+  wallet: ArWallet | SignatureType;
   initState: string;
   tags?: Tags;
   transfer?: ArTransfer;

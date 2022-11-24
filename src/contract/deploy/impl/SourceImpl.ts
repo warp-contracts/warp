@@ -1,16 +1,15 @@
 /* eslint-disable */
 import metering from 'redstone-wasm-metering';
-import Arweave from 'arweave';
 import { Go } from '../../../core/modules/impl/wasm/go-wasm-imports';
 import fs, { PathOrFileDescriptor } from 'fs';
 import { matchMutClosureDtor } from '../../../core/modules/impl/wasm/wasm-bindgen-tools';
 import { ArWallet, ContractType } from '../CreateContract';
-import { SigningFunction } from '../../../contract/Contract';
 import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { Source } from '../Source';
 import { Buffer } from 'redstone-isomorphic';
-import { WarpEnvironment } from '../../../core/Warp';
+import { Warp, WarpEnvironment } from '../../../core/Warp';
+import { Signature, SignatureType } from '../../../contract/Signature';
 
 const wasmTypeMapping: Map<number, string> = new Map([
   [1, 'assemblyscript'],
@@ -28,17 +27,24 @@ export interface SourceData {
 
 export class SourceImpl implements Source {
   private readonly logger = LoggerFactory.INST.create('Source');
-  constructor(private readonly arweave: Arweave) {}
+  private signature: Signature;
+
+  constructor(private readonly warp: Warp) {}
 
   async save(
     contractData: SourceData,
     env: WarpEnvironment,
-    signer: ArWallet | SigningFunction,
+    signature: ArWallet | SignatureType,
     useBundler = false
   ): Promise<any> {
     this.logger.debug('Creating new contract source');
 
     const { src, wasmSrcCodeDir, wasmGlueCode } = contractData;
+
+    this.signature = new Signature(this.warp, signature);
+    const signer = this.signature.signer;
+
+    this.signature.checkNonArweaveSigningAvailability(useBundler);
 
     const contractType: ContractType = src instanceof Buffer ? 'wasm' : 'js';
     let srcTx;
@@ -102,11 +108,7 @@ export class SourceImpl implements Source {
 
     const allData = contractType == 'wasm' ? this.joinBuffers(data) : src;
 
-    if (typeof signer == 'function') {
-      srcTx = await this.arweave.createTransaction({ data: allData });
-    } else {
-      srcTx = await this.arweave.createTransaction({ data: allData }, signer);
-    }
+    srcTx = await this.warp.arweave.createTransaction({ data: allData });
 
     srcTx.addTag(SmartWeaveTags.APP_NAME, 'SmartWeaveContractSource');
     // TODO: version should be taken from the current package.json version.
@@ -124,11 +126,8 @@ export class SourceImpl implements Source {
       srcTx.addTag(SmartWeaveTags.WARP_TESTNET, '1.0.0');
     }
 
-    if (typeof signer == 'function') {
-      await signer(srcTx);
-    } else {
-      await this.arweave.transactions.sign(srcTx, signer);
-    }
+    await signer(srcTx);
+
     this.logger.debug('Posting transaction with source');
 
     // note: in case of useBundler = true, we're posting both
@@ -136,7 +135,7 @@ export class SourceImpl implements Source {
     let responseOk = true;
     let response: { status: number; statusText: string; data: any };
     if (!useBundler) {
-      response = await this.arweave.transactions.post(srcTx);
+      response = await this.warp.arweave.transactions.post(srcTx);
       responseOk = response.status === 200 || response.status === 208;
     }
 

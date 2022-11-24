@@ -1,6 +1,7 @@
 /* eslint-disable */
 import Arweave from 'arweave';
 import Transaction from 'arweave/node/lib/transaction';
+import { Signature } from '../../../contract/Signature';
 import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
 import { Warp } from '../../../core/Warp';
 import { WARP_GW_URL } from '../../../core/WarpFactory';
@@ -11,6 +12,7 @@ import { Buffer } from 'redstone-isomorphic';
 
 export class DefaultCreateContract implements CreateContract {
   private readonly logger = LoggerFactory.INST.create('DefaultCreateContract');
+  private signature: Signature;
 
   constructor(private readonly arweave: Arweave, private warp: Warp) {
     this.deployFromSourceTx = this.deployFromSourceTx.bind(this);
@@ -22,7 +24,7 @@ export class DefaultCreateContract implements CreateContract {
     const effectiveUseBundler =
       disableBundling == undefined ? this.warp.definitionLoader.type() == 'warp' : !disableBundling;
 
-    const source = new SourceImpl(this.arweave);
+    const source = new SourceImpl(this.warp);
 
     const srcTx = await source.save(contractData, this.warp.environment, wallet, effectiveUseBundler);
     this.logger.debug('Creating new contract');
@@ -48,22 +50,23 @@ export class DefaultCreateContract implements CreateContract {
   ): Promise<ContractDeploy> {
     this.logger.debug('Creating new contract from src tx');
     const { wallet, srcTxId, initState, tags, transfer, data } = contractData;
+    this.signature = new Signature(this.warp, wallet);
+    const signer = this.signature.signer;
 
     const effectiveUseBundler =
       disableBundling == undefined ? this.warp.definitionLoader.type() == 'warp' : !disableBundling;
 
-    let contractTX = await this.arweave.createTransaction({ data: data?.body || initState }, wallet);
+    this.signature.checkNonArweaveSigningAvailability(effectiveUseBundler);
+
+    let contractTX = await this.arweave.createTransaction({ data: data?.body || initState });
 
     if (+transfer?.winstonQty > 0 && transfer.target.length) {
       this.logger.debug('Creating additional transaction with AR transfer', transfer);
-      contractTX = await this.arweave.createTransaction(
-        {
-          data: data?.body || initState,
-          target: transfer.target,
-          quantity: transfer.winstonQty
-        },
-        wallet
-      );
+      contractTX = await this.arweave.createTransaction({
+        data: data?.body || initState,
+        target: transfer.target,
+        quantity: transfer.winstonQty
+      });
     }
 
     if (tags?.length) {
@@ -86,7 +89,7 @@ export class DefaultCreateContract implements CreateContract {
       contractTX.addTag(SmartWeaveTags.WARP_TESTNET, '1.0.0');
     }
 
-    await this.arweave.transactions.sign(contractTX, wallet);
+    await signer(contractTX);
 
     let responseOk: boolean;
     let response: { status: number; statusText: string; data: any };
