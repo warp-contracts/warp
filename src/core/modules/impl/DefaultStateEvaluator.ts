@@ -10,7 +10,7 @@ import { ExecutionContextModifier } from '../../../core/ExecutionContextModifier
 import { GQLNodeInterface, GQLTagInterface, VrfData } from '../../../legacy/gqlResult';
 import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
-import { indent } from '../../../utils/utils';
+import {deepCopy, indent} from '../../../utils/utils';
 import { EvalStateResult, StateEvaluator } from '../StateEvaluator';
 import { ContractInteraction, HandlerApi, InteractionResult } from './HandlerExecutorFactory';
 import { canBeCached } from './StateCache';
@@ -83,6 +83,10 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
     for (let i = 0; i < missingInteractionsLength; i++) {
       const missingInteraction = missingInteractions[i];
+      //TODO: not sure about setting validity - it should be probably initialized to true for this interaction
+      //TODO: WASM will be problematic here...the changes made inside the function in the WASM module
+      // won't be immediately reflected here...(as it is a case for js contracts)
+      contract.uncommittedState = new EvalStateResult<State>(deepCopy(currentState), validity, errorMessages);
       const singleInteractionBenchmark = Benchmark.measure();
       currentSortKey = missingInteraction.sortKey;
 
@@ -128,11 +132,12 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           callType: 'read'
         });
 
-        await this.onContractCall(
+        // this should be no longer needed with the 'uncommitted' state feature
+        /*await this.onContractCall(
           missingInteraction,
           executionContext,
           new EvalStateResult<State>(currentState, validity, errorMessages)
-        );
+        );*/
 
         this.logger.debug(`${indent(depth)}Reading state of the calling contract at`, missingInteraction.sortKey);
         /**
@@ -148,19 +153,20 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           }
         ]);
 
-        // loading latest state of THIS contract from cache
-        const newState = await this.internalWriteState<State>(contractDefinition.txId, missingInteraction.sortKey);
-        if (newState !== null) {
-          currentState = newState.cachedValue.state;
+        // note: with this new version - the {@link ContractHandlerApi.assignWrite}
+        // should update it's parent contract uncommitted state.
+        // TODO: check if it is the exact same state that was set in the assignWrite!!!
+        const newState = contract.uncommittedState;
+        if (newState.state !== null) {
           // we need to update the state in the wasm module
-          executionContext?.handler.initState(currentState);
+          executionContext?.handler.initState(newState.state);
 
-          validity[missingInteraction.id] = newState.cachedValue.validity[missingInteraction.id];
-          if (newState.cachedValue.errorMessages?.[missingInteraction.id]) {
-            errorMessages[missingInteraction.id] = newState.cachedValue.errorMessages[missingInteraction.id];
+          validity[missingInteraction.id] = newState.validity[missingInteraction.id];
+          if (newState.errorMessages?.[missingInteraction.id]) {
+            errorMessages[missingInteraction.id] = newState.errorMessages[missingInteraction.id];
           }
 
-          const toCache = new EvalStateResult(currentState, validity, errorMessages);
+          const toCache = new EvalStateResult(newState.state, validity, errorMessages);
           await this.onStateUpdate<State>(missingInteraction, executionContext, toCache);
           if (canBeCached(missingInteraction)) {
             lastConfirmedTxState = {

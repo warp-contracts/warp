@@ -60,6 +60,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
    */
   protected signature?: Signature;
 
+  // a state that is being evaluated for the current interaction
+  // if the interaction is properly evaluated - it is considered as 'committed'
+  // and can be safely cached.
+  uncommittedState: EvalStateResult<State>;
+
   constructor(
     private readonly _contractTxId: string,
     protected readonly warp: Warp,
@@ -105,6 +110,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       callingInteraction.interactionInput.foreignContractCalls[_contractTxId] = callStack;
       this._callStack = callStack;
       this._rootSortKey = _parentContract.rootSortKey;
+      this.uncommittedState = this.uncommittedStateInCallTree(_contractTxId);
     } else {
       this._callDepth = 0;
       this._callStack = new ContractCallRecord(_contractTxId, 0);
@@ -138,15 +144,27 @@ export class HandlerBasedContract<State> implements Contract<State> {
         : sortKeyOrBlockHeight;
 
     const executionContext = await this.createExecutionContext(this._contractTxId, sortKey, false, interactions);
+    const uncommittedState = this.uncommittedStateInCallTree(this._contractTxId);
+    initBenchmark.stop();
 
-    console.log(executionContext.sortedInteractions)
+    if (uncommittedState) {
+      // sanity check
+      if (sortKeyOrBlockHeight == null) {
+        throw new Error('Uncommitted state can be only used for inner contract calls');
+      }
+      this.logger.info('Using uncommitted state');
+      return {
+        sortKey: sortKey,
+        cachedValue: uncommittedState
+      }
+    }
 
     this.logger.info('Execution Context', {
       srcTxId: executionContext.contractDefinition?.srcTxId,
       missingInteractions: executionContext.sortedInteractions?.length,
       cachedSortKey: executionContext.cachedState?.sortKey
     });
-    initBenchmark.stop();
+
 
     const stateBenchmark = Benchmark.measure();
     const result = await stateEvaluator.eval(executionContext, currentTx || []);
@@ -678,11 +696,22 @@ export class HandlerBasedContract<State> implements Contract<State> {
     this.maybeResetRootContract();
 
     const executionContext = await this.createExecutionContextFromTx(this._contractTxId, interactionTx);
+    const uncommittedState = this.uncommittedStateInCallTree(this._contractTxId);
 
-    const evalStateResult = await this.warp.stateEvaluator.eval<State>(executionContext, currentTx);
+    // in case Contract A calls Contract B, and then Contract B calls again Contract A
+    // - the Contract B should get the Contract A state from the "uncommitted" state of its parent contract
+    // this also prevents from falling into infinite call loop
+    // AND it allows us to get us the MOST recent state (that is not yet commited)
+    // - as it was exactly before making a read/write on a contract.
+    // Before we could only get the state before the "current" interaction.
+    const baseState = uncommittedState
+      ? uncommittedState
+      : (await this.warp.stateEvaluator.eval<State>(executionContext, currentTx)).cachedValue;
+
+    this.uncommittedState = baseState;
 
     this.logger.debug('callContractForTx - evalStateResult', {
-      result: evalStateResult.cachedValue.state,
+      result: baseState,
       txId: this._contractTxId
     });
 
@@ -700,12 +729,30 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const result = await this.evalInteraction<Input, View>(
       interactionData,
       executionContext,
-      evalStateResult.cachedValue
+      baseState
     );
-    result.originalValidity = evalStateResult.cachedValue.validity;
-    result.originalErrorMessages = evalStateResult.cachedValue.errorMessages;
+    result.originalValidity = baseState.validity;
+    result.originalErrorMessages = baseState.errorMessages;
 
     return result;
+  }
+
+  private uncommittedStateInCallTree(contractTxId: string): EvalStateResult<State> | null {
+    console.debug('uncommittedStateInCallTree', contractTxId);
+    let state = null;
+    let currentParent = this.parent();
+    while (state == null && currentParent != null) {
+      if (currentParent.txId() == contractTxId) {
+        if (currentParent.uncommittedState == null) {
+          // sanity check.
+          throw new Error(`Uncommitted state should be set for ${currentParent.txId()}`);
+        }
+        state = currentParent.uncommittedState;
+      } else {
+        currentParent = currentParent.parent();
+      }
+    }
+    return state;
   }
 
   private async evalInteraction<Input, View = unknown>(

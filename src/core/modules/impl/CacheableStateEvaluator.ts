@@ -53,21 +53,23 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     if (!contractTxId) {
       throw new Error('Contract tx id not set in the execution context');
     }
-    for (const entry of currentTx || []) {
+    // with the 'uncommittedState' fix - this crap below should be no longer needed
+    /*for (const entry of currentTx || []) {
       if (entry.contractTxId === executionContext.contractDefinition.txId) {
         const index = missingInteractions.findIndex((tx) => tx.id === entry.interactionTxId);
         if (index !== -1) {
-          this.cLogger.debug('Inf. Loop fix - removing interaction', {
+          console.error('Inf. Loop fix - removing interaction', {
             height: missingInteractions[index].block.height,
             contractTxId: entry.contractTxId,
             interactionTxId: entry.interactionTxId,
-            sortKey: missingInteractions[index].sortKey
+            sortKey: missingInteractions[index].sortKey,
+            tags: JSON.stringify(missingInteractions[index].tags, null, 2)
           });
           missingInteractions.splice(index);
         }
       }
     }
-
+*/
     if (missingInteractions.length == 0) {
       this.cLogger.info(`No missing interactions ${contractTxId}`);
       if (cachedState) {
@@ -90,7 +92,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     const baseValidity = cachedState == null ? {} : cachedState.cachedValue.validity;
     const baseErrorMessages = cachedState == null ? {} : cachedState.cachedValue.errorMessages;
 
-    this.cLogger.debug('Base state', baseState);
+    this.cLogger.debug('Base state', JSON.stringify(baseState, null, 4));
 
     // eval state for the missing transactions - starting from the latest value from cache.
     return await this.doReadState(

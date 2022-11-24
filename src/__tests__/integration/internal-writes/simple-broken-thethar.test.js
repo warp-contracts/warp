@@ -20,6 +20,8 @@ describe('flow with broken behaviour', () => {
     arlocal = new ArLocal(PORT, false);
     await arlocal.start();
     LoggerFactory.INST.logLevel('error');
+    LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
+    LoggerFactory.INST.logLevel('debug', 'DefaultStateEvaluator');
 
     warp = WarpFactory.forLocal(PORT);
     ({jwk: walletJwk} = await warp.generateWallet());
@@ -130,7 +132,7 @@ describe('flow with broken behaviour', () => {
       internalWrites: true,
       allowUnsafeClient: true,
       allowBigInt: true,
-      updateCacheForEachInteraction: true
+      updateCacheForEachInteraction: false
     }).connect(walletJwk);
 
     console.log('Contract: ', JSON.stringify(await contract.readState(), null, "  "));

@@ -27,8 +27,9 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
 
     try {
       const { interaction, interactionTx, currentTx } = interactionData;
-
-      const stateCopy = deepCopy(currentResult.state);
+      // the copy is now being made while setting the uncommitted state for the new interaction
+      // - in DefaultStateEvaluator
+      //const stateCopy = deepCopy(currentResult.state);
       this.swGlobal._activeTx = interactionTx;
       this.swGlobal.caller = interaction.caller; // either contract tx id (for internal writes) or transaction.owner
       this.assignReadContractState<Input>(executionContext, currentTx, currentResult, interactionTx);
@@ -42,7 +43,7 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
         extension.process(this.swGlobal.extensions);
       }
 
-      const handlerResult = await Promise.race([timeoutPromise, this.contractFunction(stateCopy, interaction)]);
+      const handlerResult = await Promise.race([timeoutPromise, this.contractFunction(currentResult.state, interaction)]);
 
       if (handlerResult && (handlerResult.state !== undefined || handlerResult.result !== undefined)) {
         return {

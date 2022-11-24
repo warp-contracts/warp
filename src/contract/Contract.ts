@@ -237,4 +237,8 @@ export interface Contract<State = unknown> extends Source {
   evolve(newSrcTxId: string, options?: WriteInteractionOptions): Promise<WriteInteractionResponse | null>;
 
   rootSortKey: string;
+
+  set uncommittedState(state: EvalStateResult<State>);
+
+  get uncommittedState(): EvalStateResult<State>
 }

@@ -54,6 +54,9 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
 
       console.error('swGlobal.write call:', debugData);
 
+      // the calling contract current state should be put here into cache.
+      // note - the above should be now fixed by the uncommitted state feature
+
       // The contract that we want to call and modify its state
       const calleeContract = executionContext.warp.contract(contractTxId, executionContext.contract, {
         callingInteraction: this.swGlobal._activeTx,
@@ -67,6 +70,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
           interactionTxId: this.swGlobal.transaction.id
         }
       ]);
+      console.dir(result, {depth: null});
 
       this.logger.debug('Cache result?:', !this.swGlobal._activeTx.dry);
       const shouldAutoThrow =
@@ -77,7 +81,11 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         ? `Internal write auto error for call [${JSON.stringify(debugData)}]: ${result.errorMessage}`
         : result.errorMessage;
 
-      await executionContext.warp.stateEvaluator.onInternalWriteStateUpdate(this.swGlobal._activeTx, contractTxId, {
+      // instead of this 'onInternalWriteStateUpdate',
+      // we should update the "uncommitted state" of the calling in the contracts call tree
+      // - i.e. the uncommitted state of the contract.parent()
+      // TODO: make sure if it always is a "direct" parent.
+      calleeContract.parent().uncommittedState = {
         state: result.state as State,
         validity: {
           ...result.originalValidity,
@@ -87,7 +95,18 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
           ...result.originalErrorMessages,
           [this.swGlobal._activeTx.id]: effectiveErrorMessage
         }
-      });
+      };
+      /*await executionContext.warp.stateEvaluator.onInternalWriteStateUpdate(this.swGlobal._activeTx, contractTxId, {
+        state: result.state as State,
+        validity: {
+          ...result.originalValidity,
+          [this.swGlobal._activeTx.id]: result.type == 'ok'
+        },
+        errorMessages: {
+          ...result.originalErrorMessages,
+          [this.swGlobal._activeTx.id]: effectiveErrorMessage
+        }
+      });*/
       if (shouldAutoThrow) {
         throw new ContractError(effectiveErrorMessage);
       }
