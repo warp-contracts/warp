@@ -136,7 +136,45 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
     return this.db as S;
   }
 
-  async prune(entriesStored = 5): Promise<PruneStats> {
-    throw new Error('Not implemented yet');
+  async getNumEntries(): Promise<number> {
+    const keys = await this.db.keys().all();
+    return keys.length
+  }
+
+  /**
+   Let's assume that given contract cache contains these sortKeys: [a, b, c, d, e, f]
+   Let's assume entriesStored = 2
+   After pruning, the cache should be left with these keys: [e,f].
+
+   const entries = await contractCache.keys({ reverse: true, limit: entriesStored }).all();
+   This would return in this case entries [f, e] (notice the "reverse: true").
+
+   await contractCache.clear({ lt: entries[entries.length - 1] });
+   This effectively means: await contractCache.clear({ lt: e });
+   -> hence the entries [a,b,c,d] are removed and left are the [e,f]
+  */
+  async prune(entriesStored = 5): Promise<null> {
+    if (!entriesStored || entriesStored <= 0) {
+      entriesStored = 1
+    }
+
+    const contracts = await this.allContracts();
+    for (let i = 0; i < contracts.length; i++) {
+
+      const contractCache = this.db.sublevel<string, any>(contracts[i], { valueEncoding: 'json' });
+
+      // manually opening to fix https://github.com/Level/level/issues/221
+      await contractCache.open();
+
+      // Get keys that will be left, just to get the last one of them
+      const entries = await contractCache.keys({ reverse: true, limit: entriesStored }).all();
+      if (!entries || entries.length < entriesStored) {
+        continue
+      }
+      await contractCache.clear({ lt: entries[entries.length - 1] })
+      await contractCache.close()
+    }
+
+    return null
   }
 }
