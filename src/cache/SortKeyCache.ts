@@ -54,8 +54,10 @@ export interface SortKeyCache<V> {
    *
    * @param entriesStored - how many latest entries should be left
    * for each cached contract
+   *
+   * @retun PruneStats if getting them doesn't introduce a delay, null otherwise
    */
-  prune(entriesStored: number): Promise<PruneStats>;
+  prune(entriesStored: number): Promise<PruneStats | null>;
 }
 
 export interface PruneStats {
@@ -66,10 +68,10 @@ export interface PruneStats {
 }
 
 export class CacheKey {
-  constructor(readonly contractTxId: string, readonly sortKey: string) {}
+  constructor(readonly contractTxId: string, readonly sortKey: string) { }
 }
 
 // tslint:disable-next-line:max-classes-per-file
 export class SortKeyCacheResult<V> {
-  constructor(readonly sortKey: string, readonly cachedValue: V) {}
+  constructor(readonly sortKey: string, readonly cachedValue: V) { }
 }
