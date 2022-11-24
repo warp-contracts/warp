@@ -138,6 +138,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
         : sortKeyOrBlockHeight;
 
     const executionContext = await this.createExecutionContext(this._contractTxId, sortKey, false, interactions);
+
+    console.log(executionContext.sortedInteractions)
+
     this.logger.info('Execution Context', {
       srcTxId: executionContext.contractDefinition?.srcTxId,
       missingInteractions: executionContext.sortedInteractions?.length,
@@ -675,6 +678,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     this.maybeResetRootContract();
 
     const executionContext = await this.createExecutionContextFromTx(this._contractTxId, interactionTx);
+
     const evalStateResult = await this.warp.stateEvaluator.eval<State>(executionContext, currentTx);
 
     this.logger.debug('callContractForTx - evalStateResult', {

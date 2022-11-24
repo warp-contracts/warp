@@ -43,4 +43,5 @@ export type ExecutionContext<State, Api = unknown> = {
   caller?: string; // note: this is only set for "viewState" operations
   cachedState?: SortKeyCacheResult<EvalStateResult<State>>;
   requestedSortKey?: string;
+  //interactionStateCache: Map<string, State>;
 };

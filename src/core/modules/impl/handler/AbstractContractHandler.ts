@@ -52,7 +52,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         input
       };
 
-      this.logger.debug('swGlobal.write call:', debugData);
+      console.error('swGlobal.write call:', debugData);
 
       // The contract that we want to call and modify its state
       const calleeContract = executionContext.warp.contract(contractTxId, executionContext.contract, {

@@ -1,10 +1,8 @@
 /* eslint-disable */
-import Arweave from 'arweave';
-import {defaultCacheOptions, defaultWarpGwOptions, LoggerFactory, WarpFactory} from '../src';
+import {defaultCacheOptions, LoggerFactory, WarpFactory} from '../src';
 import fs from 'fs';
 import path from 'path';
 import {JWKInterface} from 'arweave/node/lib/wallet';
-import {WarpPlugin, WarpPluginType} from "../src/core/WarpPlugin";
 
 const { NlpManager } = require('node-nlp');
 
@@ -13,38 +11,9 @@ async function main() {
   LoggerFactory.INST.logLevel('debug');
   const logger = LoggerFactory.INST.create('deploy');
 
-  const arweave = Arweave.init({
-    host: 'arweave.net',
-    port: 443,
-    protocol: 'https'
-  });
-
-  class NlpExtension implements WarpPlugin<any, void> {
-    process(input: any): void {
-      input.NlpManager = NlpManager;
-    }
-
-    type(): WarpPluginType {
-      return 'smartweave-extension';
-    }
-
-  }
-
   try {
     const warp = WarpFactory
       .forMainnet({...defaultCacheOptions, inMemory: true});
-    /*const warp = WarpFactory
-      .custom(arweave, {
-        ...defaultCacheOptions,
-        inMemory: true
-      }, "mainnet")
-      .useWarpGateway({
-        ...defaultWarpGwOptions,
-        address: "http://13.53.39.138:5666"
-      })
-      .build()*/
-    //const contract = warp.contract("qx1z1YInqcp4Vf5amJER2R8E_SEyY6pmHS1912VSUAs");
-
 
     const jsContractSrc = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.js'), 'utf8');
     const wasmContractSrc = fs.readFileSync(path.join(__dirname, 'data/rust/rust-pst_bg.wasm'));
@@ -81,28 +50,27 @@ async function main() {
       srcTxId: "5wXT-A0iugP9pWEyw-iTbB0plZ_AbmvlNKyBfGS3AUY",
     });*/
 
-          /*const contract = warp.contract<any>('OZBvm55O2fmoeotAphv0_4mhcrBspaTyBSDQ-ZmAWwA')
-            .setEvaluationOptions({
-            })
-            .connect(wallet);
+    const contract = warp.contract<any>(contractTxId)
+      .setEvaluationOptions({})
+      .connect(wallet);
 
-          await Promise.all([
-           contract.writeInteraction<any>({
-              function: "transfer",
-              target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
-              qty: 100
-            }),
-           contract.writeInteraction<any>({
-              function: "transfer",
-              target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
-              qty: 100
-            }),
-            contract.writeInteraction<any>({
-              function: "transfer",
-              target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
-              qty: 100
-            })
-    ]);*/
+    await Promise.all([
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      })
+    ]);
 
     /*const {cachedValue} = await contract.readState();
 
