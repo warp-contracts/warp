@@ -6,6 +6,9 @@ export * from './logging/LoggerSettings';
 export * from './logging/Benchmark';
 
 export * from './cache/SortKeyCache';
+export * from './cache/WarpCache';
+export * from './cache/impl/LevelDbCache';
+export * from './cache/impl/MemCache';
 
 export * from './core/modules/DefinitionLoader';
 export * from './core/modules/ExecutorFactory';
@@ -46,6 +49,7 @@ export * from './contract/HandlerBasedContract';
 export * from './contract/PstContract';
 export * from './contract/PstContractImpl';
 export * from './contract/InnerWritesEvaluator';
+export * from './contract/Signature';
 export * from './contract/deploy/Source';
 export * from './contract/deploy/impl/SourceImpl';
 export * from './contract/deploy/impl/DefaultCreateContract';
