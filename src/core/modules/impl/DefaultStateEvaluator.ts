@@ -53,7 +53,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     executionContext: ExecutionContext<State, HandlerApi<State>>,
     currentTx: CurrentTx[]
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
-    const { ignoreExceptions, stackTrace, internalWrites } = executionContext.evaluationOptions;
+    const { ignoreExceptions, stackTrace, internalWrites, cacheEveryNInteractions } =
+      executionContext.evaluationOptions;
     const { contract, contractDefinition, sortedInteractions, warp } = executionContext;
 
     let currentState = baseState.state;
@@ -79,6 +80,18 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
     const evmSignatureVerificationPlugin = warp.hasPlugin('evm-signature-verification')
       ? warp.loadPlugin<GQLNodeInterface, Promise<boolean>>('evm-signature-verification')
+      : null;
+
+    const progressPlugin = warp.hasPlugin('evaluation-progress')
+      ? warp.loadPlugin<
+          {
+            contractTxId: string;
+            currentInteraction: number;
+            allInteractions: number;
+            lastInteractionProcessingTime: string;
+          },
+          void
+        >('evaluation-progress')
       : null;
 
     for (let i = 0; i < missingInteractionsLength; i++) {
@@ -243,7 +256,21 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
             state: toCache
           };
         }
-        await this.onStateUpdate<State>(missingInteraction, executionContext, toCache);
+        await this.onStateUpdate<State>(
+          missingInteraction,
+          executionContext,
+          toCache,
+          cacheEveryNInteractions % i == 0
+        );
+      }
+
+      if (progressPlugin) {
+        progressPlugin.process({
+          contractTxId: contractDefinition.txId,
+          allInteractions: missingInteractionsLength,
+          currentInteraction: i,
+          lastInteractionProcessingTime: singleInteractionBenchmark.elapsed() as string
+        });
       }
 
       for (const { modify } of this.executionContextModifiers) {

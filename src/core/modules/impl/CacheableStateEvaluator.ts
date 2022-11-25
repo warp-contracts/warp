@@ -113,8 +113,6 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       }]`
     );
 
-    // this will be problematic if we decide to cache only "onStateEvaluated" and containsInteractionsFromSequencer = true
-    // as a workaround, we're now caching every 100 interactions
     await this.putInCache(contractTxId, transaction, state);
   }
 
