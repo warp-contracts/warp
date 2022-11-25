@@ -136,6 +136,8 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   mineArLocalBlocks = true;
 
   throwOnInternalWriteError = true;
+
+  cacheEveryNInteractions = -1;
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some features.
@@ -208,4 +210,8 @@ export interface EvaluationOptions {
   // whether a contract should automatically throw if internal write fails.
   // set to 'true' be default, can be set to false for backwards compatibility
   throwOnInternalWriteError: boolean;
+
+  // force SDK to cache the state after evaluating each N interactions
+  // defaults to -1, which effectively turns off this feature
+  cacheEveryNInteractions: number;
 }

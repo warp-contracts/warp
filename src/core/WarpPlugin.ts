@@ -2,7 +2,8 @@ export const knownWarpPlugins = [
   'evm-signature-verification',
   'smartweave-extension',
   'subscription',
-  'ivm-handler-api'
+  'ivm-handler-api',
+  'evaluation-progress'
 ] as const;
 export type WarpPluginType = typeof knownWarpPlugins[number];
 
