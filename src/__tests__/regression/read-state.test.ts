@@ -124,7 +124,7 @@ describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
   );
 });
 
-describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
+/*describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
   // note: concurrent doesn't seem to be working here, duh...
   // will probably need to manually split all the test cases to separate test files
   it.concurrent.each(contracts)(
@@ -179,7 +179,7 @@ describe.each(chunkedGw)('gateways compare.suite %#', (contracts: string[]) => {
     },
     800000
   );
-});
+});*/
 
 describe('readState', () => {
   it('should properly read state at requested block height', async () => {
