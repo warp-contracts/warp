@@ -121,7 +121,7 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
     saveState: false
   };
 
-  bundlerUrl = `https://d1o5nlqr4okus2.cloudfront.net/`;
+  bundlerUrl = `https://gateway.redstone.finance/`;
 
   gasLimit = Number.MAX_SAFE_INTEGER;
 
