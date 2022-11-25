@@ -110,7 +110,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
       callingInteraction.interactionInput.foreignContractCalls[_contractTxId] = callStack;
       this._callStack = callStack;
       this._rootSortKey = _parentContract.rootSortKey;
-      this.uncommittedState = this.uncommittedStateInCallTree(_contractTxId);
+
+      // if a contract with this contractTxId was already evaluated in a call tree
+      // - load its uncommitted state.
+      this.uncommittedState = this.loadUncommittedStateFromCallTree(_contractTxId);
     } else {
       this._callDepth = 0;
       this._callStack = new ContractCallRecord(_contractTxId, 0);
@@ -118,6 +121,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
 
     this.getCallStack = this.getCallStack.bind(this);
+    this.updateUncommittedStateInTree = this.updateUncommittedStateInTree.bind(this);
   }
 
   async readState(
@@ -132,7 +136,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     });
     const initBenchmark = Benchmark.measure();
     this.maybeResetRootContract();
-    if (this._parentContract != null && sortKeyOrBlockHeight == null) {
+    if (this.parent() != null && sortKeyOrBlockHeight == null) {
       throw new Error('SortKey MUST be always set for non-root contract calls');
     }
 
@@ -143,19 +147,18 @@ export class HandlerBasedContract<State> implements Contract<State> {
         ? this._sorter.generateLastSortKey(sortKeyOrBlockHeight)
         : sortKeyOrBlockHeight;
 
-    const executionContext = await this.createExecutionContext(this._contractTxId, sortKey, false, interactions);
-    const uncommittedState = this.uncommittedStateInCallTree(this._contractTxId);
+    const executionContext = await this.createExecutionContext(this.txId(), sortKey, false, interactions);
     initBenchmark.stop();
 
-    if (uncommittedState) {
+    if (this.uncommittedState) {
       // sanity check
-      if (sortKeyOrBlockHeight == null) {
+      if (this.parent() == null) {
         throw new Error('Uncommitted state can be only used for inner contract calls');
       }
-      this.logger.info('Using uncommitted state');
+      this.logger.info('Using uncommitted state for', this.txId());
       return {
         sortKey: sortKey,
-        cachedValue: uncommittedState
+        cachedValue: this.uncommittedState
       }
     }
 
@@ -165,9 +168,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
       cachedSortKey: executionContext.cachedState?.sortKey
     });
 
-
     const stateBenchmark = Benchmark.measure();
-    const result = await stateEvaluator.eval(executionContext, currentTx || []);
+    const result = await stateEvaluator.eval(executionContext);
     stateBenchmark.stop();
 
     const total = (initBenchmark.elapsed(true) as number) + (stateBenchmark.elapsed(true) as number);
@@ -183,6 +185,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
       'Contract evaluation    ': stateBenchmark.elapsed(),
       'Total:                 ': `${total.toFixed(0)}ms`
     });
+
+    // set the uncommitted state to make available for possible future calls on this contract
+    this.updateUncommittedStateInTree(result.cachedValue, this.txId());
 
     return result;
   }
@@ -696,23 +701,21 @@ export class HandlerBasedContract<State> implements Contract<State> {
     this.maybeResetRootContract();
 
     const executionContext = await this.createExecutionContextFromTx(this._contractTxId, interactionTx);
-    const uncommittedState = this.uncommittedStateInCallTree(this._contractTxId);
 
     // in case Contract A calls Contract B, and then Contract B calls again Contract A
     // - the Contract B should get the Contract A state from the "uncommitted" state of its parent contract
     // this also prevents from falling into infinite call loop
-    // AND it allows us to get us the MOST recent state (that is not yet commited)
+    // AND it allows us to get us the MOST recent state (that is not yet committed)
     // - as it was exactly before making a read/write on a contract.
-    // Before we could only get the state before the "current" interaction.
-    const baseState = uncommittedState
-      ? uncommittedState
+    const baseState = this.uncommittedState
+      ? this.uncommittedState
       : (await this.warp.stateEvaluator.eval<State>(executionContext, currentTx)).cachedValue;
 
     this.uncommittedState = baseState;
 
     this.logger.debug('callContractForTx - evalStateResult', {
       result: baseState,
-      txId: this._contractTxId
+      txId: this.txId()
     });
 
     const interaction: ContractInteraction<Input> = {
@@ -734,10 +737,15 @@ export class HandlerBasedContract<State> implements Contract<State> {
     result.originalValidity = baseState.validity;
     result.originalErrorMessages = baseState.errorMessages;
 
+    this.updateUncommittedStateInTree({
+      state: result.state,
+
+    }, this.txId())
+
     return result;
   }
 
-  private uncommittedStateInCallTree(contractTxId: string): EvalStateResult<State> | null {
+  private loadUncommittedStateFromCallTree(contractTxId: string): EvalStateResult<State> | null {
     console.debug('uncommittedStateInCallTree', contractTxId);
     let state = null;
     let currentParent = this.parent();
@@ -854,4 +862,15 @@ export class HandlerBasedContract<State> implements Contract<State> {
   private isSignatureType(signature: ArWallet | Signature): signature is Signature {
     return (signature as Signature).signer !== undefined;
   }
+
+  updateUncommittedStateInTree(state: EvalStateResult<State>, contractTxId: string): void {
+    let current: Contract = this;
+    while (current.parent() != null) {
+      if (current.txId() === contractTxId) {
+        current.uncommittedState = state
+      }
+      current = current.parent();
+    }
+  }
+
 }

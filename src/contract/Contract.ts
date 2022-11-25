@@ -238,6 +238,8 @@ export interface Contract<State = unknown> extends Source {
 
   rootSortKey: string;
 
+  updateUncommittedStateInTree(state: EvalStateResult<State>, contractTxId: string);
+
   set uncommittedState(state: EvalStateResult<State>);
 
   get uncommittedState(): EvalStateResult<State>

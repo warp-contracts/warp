@@ -143,7 +143,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         /**
          Reading the state of the writing contract.
          This in turn will cause the state of THIS contract to be
-         updated in cache - see {@link ContractHandlerApi.assignWrite}
+         updated in uncommittedState - see {@link ContractHandlerApi.assignWrite}
          */
         await writingContract.readState(missingInteraction.sortKey, [
           ...(currentTx || []),
@@ -186,7 +186,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           errorMessage: errorMessage,
           gasUsed: 0 // TODO...
         });
-      } else {
+      }
+      else {
         // "direct" interaction with this contract - "standard" processing
         const inputTag = this.tagsParser.getInputTag(missingInteraction, executionContext.contractDefinition.txId);
         if (!inputTag) {

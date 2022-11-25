@@ -45,15 +45,15 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
 
     const missingInteractions = executionContext.sortedInteractions;
 
-    // TODO: this is tricky part, needs proper description
-    // for now: it prevents from infinite loop calls between calls that are making
-    // internal interact writes.
     const contractTxId = executionContext.contractDefinition.txId;
     // sanity check...
     if (!contractTxId) {
       throw new Error('Contract tx id not set in the execution context');
     }
     // with the 'uncommittedState' fix - this crap below should be no longer needed
+    // TODO: this is tricky part, needs proper description
+    // for now: it prevents from infinite loop calls between calls that are making
+    // internal interact writes.
     /*for (const entry of currentTx || []) {
       if (entry.contractTxId === executionContext.contractDefinition.txId) {
         const index = missingInteractions.findIndex((tx) => tx.id === entry.interactionTxId);
