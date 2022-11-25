@@ -182,7 +182,9 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
             ContractError: ContractError,
             ContractAssert: function (cond, message) {
               if (!cond) throw new ContractError(message);
-            }
+            },
+            //https://github.com/patriksimek/vm2/issues/484#issuecomment-1327479592
+            Uint8Array: Uint8Array
           },
           compiler: 'javascript',
           eval: false,
