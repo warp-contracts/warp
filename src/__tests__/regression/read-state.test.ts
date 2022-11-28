@@ -70,7 +70,7 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
           .build()
           .contract(contractTxId)
           .setEvaluationOptions({
-            allowUnsafeClient: true,
+            unsafeClient: 'allow',
             allowBigInt: true
           })
           .readState(blockHeight);
@@ -113,7 +113,7 @@ describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
         .contract(contractTxId)
         .setEvaluationOptions({
           useVM2: true,
-          allowUnsafeClient: true,
+          unsafeClient: 'allow',
           allowBigInt: true
         })
         .readState(blockHeight);
@@ -151,7 +151,7 @@ describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
       const result = await warpR
         .contract(contractTxId)
         .setEvaluationOptions({
-          allowUnsafeClient: true,
+          unsafeClient: 'allow',
           allowBigInt: true
         })
         .readState(blockHeight);
@@ -170,7 +170,7 @@ describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
         .build()
         .contract(contractTxId)
         .setEvaluationOptions({
-          allowUnsafeClient: true,
+          unsafeClient: 'allow',
           allowBigInt: true
         })
         .readState(blockHeight);
@@ -206,7 +206,7 @@ describe('readState', () => {
       .build()
       .contract(contractTxId)
       .setEvaluationOptions({
-        allowUnsafeClient: true
+        unsafeClient: 'allow'
       })
       .readState(blockHeight);
     const result2String = stringify(result2.cachedValue.state).trim();

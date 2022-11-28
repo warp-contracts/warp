@@ -92,6 +92,14 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
 
     this.cLogger.debug('Base state', baseState);
 
+    if (executionContext.handler == null) {
+      // nothing to do - null was set by the 'createExecutionContext', so we're returning immediately
+      return new SortKeyCacheResult<EvalStateResult<State>>(
+        cachedState == null ? genesisSortKey : cachedState.sortKey,
+        new EvalStateResult(baseState, baseValidity, baseErrorMessages || {})
+      );
+    }
+
     // eval state for the missing transactions - starting from the latest value from cache.
     return await this.doReadState(
       missingInteractions,

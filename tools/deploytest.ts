@@ -19,31 +19,19 @@ async function main() {
   try {
     const warp = WarpFactory
       .forMainnet({...defaultCacheOptions, inMemory: true});
-    /*const warp = WarpFactory
-      .custom(arweave, {
-        ...defaultCacheOptions,
-        inMemory: true
-      }, "mainnet")
-      .useWarpGateway({
-        ...defaultWarpGwOptions,
-        address: "http://13.53.39.138:5666"
-      })
-      .build()*/
-    //const contract = warp.contract("qx1z1YInqcp4Vf5amJER2R8E_SEyY6pmHS1912VSUAs");
-
 
     const jsContractSrc = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.js'), 'utf8');
-    const wasmContractSrc = fs.readFileSync(path.join(__dirname, 'data/rust/rust-pst_bg.wasm'));
     const initialState = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.json'), 'utf8');
 
     // case 1 - full deploy, js contract
-    const {contractTxId} = await warp.createContract.deploy({
+    const {contractTxId, srcTxId} = await warp.createContract.deploy({
       wallet,
       initState: initialState,
       src: jsContractSrc,
     });
 
-    console.log(contractTxId);
+    console.log('contractTxId:', contractTxId);
+    console.log('srcTxId:', srcTxId);
     // case 2 - deploy from source, js contract
     /*const {contractTxId} = await warp.createContract.deployFromSourceTx({
       wallet,
