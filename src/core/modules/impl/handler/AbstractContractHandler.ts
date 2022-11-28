@@ -1,4 +1,4 @@
-import { ContractError, CurrentTx } from '../../../../contract/Contract';
+import { CurrentTx } from '../../../../contract/Contract';
 import { ContractDefinition } from '../../../../core/ContractDefinition';
 import { ExecutionContext } from '../../../../core/ExecutionContext';
 import { EvalStateResult } from '../../../../core/modules/StateEvaluator';
@@ -6,7 +6,7 @@ import { GQLNodeInterface } from '../../../../legacy/gqlResult';
 import { SmartWeaveGlobal } from '../../../../legacy/smartweave-global';
 import { LoggerFactory } from '../../../../logging/LoggerFactory';
 import { deepCopy } from '../../../../utils/utils';
-import { HandlerApi, InteractionData, InteractionResult } from '../HandlerExecutorFactory';
+import { ContractError, HandlerApi, InteractionData, InteractionResult } from '../HandlerExecutorFactory';
 
 export abstract class AbstractContractHandler<State> implements HandlerApi<State> {
   protected logger = LoggerFactory.INST.create('ContractHandler');
@@ -141,11 +141,28 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
           interactionTxId: this.swGlobal.transaction.id
         }
       ]);
+
+      if (stateWithValidity?.cachedValue?.errorMessages) {
+        const errorKeys = Reflect.ownKeys(stateWithValidity?.cachedValue?.errorMessages);
+        if (errorKeys.length) {
+          const lastErrorKey = errorKeys[errorKeys.length - 1] as string;
+          const lastErrorMessage = stateWithValidity?.cachedValue?.errorMessages[lastErrorKey];
+          // don't judge me..
+          if (lastErrorMessage.startsWith('[SkipUnsafeError]')) {
+            throw new ContractError(lastErrorMessage);
+          }
+        }
+      }
+
       // TODO: it should be up to the client's code to decide which part of the result to use
       // (by simply using destructuring operator)...
       // but this (i.e. returning always stateWithValidity from here) would break backwards compatibility
       // in current contract's source code..:/
-      return returnValidity ? deepCopy(stateWithValidity) : deepCopy(stateWithValidity.cachedValue.state);
+      return returnValidity ? {
+        state: deepCopy(stateWithValidity.cachedValue.state),
+        validity: stateWithValidity.cachedValue.validity,
+        errorMessages: stateWithValidity.cachedValue.errorMessages
+      } : deepCopy(stateWithValidity.cachedValue.state);
     };
   }
 

@@ -4,9 +4,12 @@ export async function handle(state, action) {
   const input = action.input;
   const caller = action.caller;
 
-  if (input.function === 'transfer') {
+  if (input.function === 'testUnsafe') {
     await SmartWeave.unsafeClient.transactions.getData("some_id");
+    return {state};
+  }
 
+  if (input.function === 'transfer') {
     const target = input.target;
     const qty = input.qty;
 
@@ -62,6 +65,13 @@ export async function handle(state, action) {
     state.evolve = input.value;
 
     return { state };
+  }
+
+  if (input.function === 'writeForeign') {
+    const result = await SmartWeave.contracts.write(input.contractTxId, {
+      function: "callFromForeign"
+    });
+    return {state};
   }
 
   throw new ContractError(`No function supplied or function not recognised: "${input.function}"`);

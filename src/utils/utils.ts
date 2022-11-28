@@ -58,7 +58,7 @@ export function stripTrailingSlash(str: string) {
 }
 
 export function indent(callDepth: number) {
-  return ''.padEnd(callDepth * 2, ' ');
+  return `[d:${callDepth}]`.padEnd(callDepth * 2, '-').concat('> ');
 }
 
 export function bufToBn(buf: Buffer) {
