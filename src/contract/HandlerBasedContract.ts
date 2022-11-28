@@ -8,7 +8,8 @@ import {
   InteractionResult,
   HandlerApi,
   ContractInteraction,
-  InteractionData
+  InteractionData,
+  ContractError
 } from '../core/modules/impl/HandlerExecutorFactory';
 import { LexicographicalInteractionsSorter } from '../core/modules/impl/LexicographicalInteractionsSorter';
 import { InteractionsSorter } from '../core/modules/InteractionsSorter';
@@ -35,6 +36,7 @@ import { SourceData, SourceImpl } from './deploy/impl/SourceImpl';
 import { InnerWritesEvaluator } from './InnerWritesEvaluator';
 import { generateMockVrf } from '../utils/vrf';
 import { Signature, SignatureType } from './Signature';
+import { ContractDefinition } from '../core/ContractDefinition';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -295,7 +297,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       options.vrf
     );
 
-    const response = await fetch(`${this._evaluationOptions.bundlerUrl}gateway/sequencer/register`, {
+    const response = await fetch(`${this._evaluationOptions.sequencerUrl}gateway/sequencer/register`, {
       method: 'POST',
       body: JSON.stringify(interactionTx),
       headers: {
@@ -429,7 +431,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     forceDefinitionLoad = false,
     interactions?: GQLNodeInterface[]
   ): Promise<ExecutionContext<State, HandlerApi<State>>> {
-    const { definitionLoader, interactionsLoader, executorFactory, stateEvaluator } = this.warp;
+    const { definitionLoader, interactionsLoader, stateEvaluator } = this.warp;
 
     const benchmark = Benchmark.measure();
     const cachedState = await stateEvaluator.latestAvailableState<State>(contractTxId, upToSortKey);
@@ -446,11 +448,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       this.logger.debug('State fully cached, not loading interactions.');
       if (forceDefinitionLoad || evolvedSrcTxId) {
         contractDefinition = await definitionLoader.load<State>(contractTxId, evolvedSrcTxId);
-        handler = (await executorFactory.create(
-          contractDefinition,
-          this._evaluationOptions,
-          this.warp
-        )) as HandlerApi<State>;
+        handler = await this.safeGetHandler(contractDefinition);
       }
     } else {
       [contractDefinition, sortedInteractions] = await Promise.all([
@@ -480,11 +478,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
         // - as no other contracts will be called.
         this._rootSortKey = sortedInteractions[sortedInteractions.length - 1].sortKey;
       }
-      handler = (await executorFactory.create(
-        contractDefinition,
-        this._evaluationOptions,
-        this.warp
-      )) as HandlerApi<State>;
+      handler = await this.safeGetHandler(contractDefinition);
     }
 
     return {
@@ -497,6 +491,37 @@ export class HandlerBasedContract<State> implements Contract<State> {
       cachedState,
       requestedSortKey: upToSortKey
     };
+  }
+
+  private async safeGetHandler(contractDefinition: ContractDefinition<any>): Promise<HandlerApi<State> | null> {
+    const { executorFactory } = this.warp;
+    try {
+      return (await executorFactory.create(contractDefinition, this._evaluationOptions, this.warp)) as HandlerApi<State>;
+    } catch (e) {
+      if (e.name == 'ContractError' && e.subtype == 'unsafeClientSkip') {
+        if (this._parentContract == null) {
+          return null;
+        } else {
+          console.info('Rethrowing ContractError with trace data');
+          throw new ContractError(
+            e.message,
+            e.subtype,
+            e.uuid,
+            JSON.stringify(
+              {
+                contract: contractDefinition.txId,
+                parentContract: this._parentContract?.txId(),
+                callingTx: JSON.stringify(this._innerCallData.callingInteraction)
+              },
+              null,
+              2
+            )
+          );
+        }
+      } else {
+        throw e;
+      }
+    }
   }
 
   private getToSortKey(upToSortKey?: string) {

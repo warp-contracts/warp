@@ -9,13 +9,6 @@ import { SignatureType } from './Signature';
 export type CurrentTx = { interactionTxId: string; contractTxId: string };
 export type BenchmarkStats = { gatewayCommunication: number; stateEvaluation: number; total: number };
 
-export class ContractError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = 'ContractError';
-  }
-}
-
 interface BundlrResponse {
   id: string;
   public: string;
