@@ -3,7 +3,6 @@ import {defaultCacheOptions, LoggerFactory, Warp, WarpFactory} from '../src';
 import os from 'os';
 import {JWKInterface} from "arweave/web/lib/wallet";
 import fs from "fs";
-import {StateUpdatePlugin} from "warp-contracts-subscription-plugin";
 
 const logger = LoggerFactory.INST.create('Contract');
 

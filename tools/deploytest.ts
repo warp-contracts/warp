@@ -4,9 +4,6 @@ import {defaultCacheOptions, defaultWarpGwOptions, LoggerFactory, WarpFactory} f
 import fs from 'fs';
 import path from 'path';
 import {JWKInterface} from 'arweave/node/lib/wallet';
-import {WarpPlugin, WarpPluginType} from "../src/core/WarpPlugin";
-
-const { NlpManager } = require('node-nlp');
 
 async function main() {
   let wallet: JWKInterface = readJSON('./.secrets/33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA.json');;
@@ -18,17 +15,6 @@ async function main() {
     port: 443,
     protocol: 'https'
   });
-
-  class NlpExtension implements WarpPlugin<any, void> {
-    process(input: any): void {
-      input.NlpManager = NlpManager;
-    }
-
-    type(): WarpPluginType {
-      return 'smartweave-extension';
-    }
-
-  }
 
   try {
     const warp = WarpFactory
