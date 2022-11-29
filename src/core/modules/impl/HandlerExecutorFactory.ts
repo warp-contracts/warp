@@ -205,7 +205,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
         });
       } else {
         const contractFunction = new Function(normalizedSource);
-        const handler = contractFunction(swGlobal, BigNumber, LoggerFactory.INST.create(swGlobal.contract.id));
+        const handler = contractFunction(swGlobal, BigNumber, LoggerFactory.INST.create(swGlobal.contract.id), Buffer);
         return new JsHandlerApi(swGlobal, contractDefinition, handler);
       }
     }
