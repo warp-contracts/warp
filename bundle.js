@@ -1,6 +1,8 @@
 const { build } = require('esbuild');
 const rimraf = require('rimraf');
-const fs = require("fs");
+const fs = require('fs');
+const plugin = require('node-stdlib-browser/helpers/esbuild/plugin');
+const stdLibBrowser = require('node-stdlib-browser');
 
 const clean = async () => {
   return new Promise((resolve) => {
@@ -17,14 +19,22 @@ const runBuild = async () => {
     platform: 'browser',
     target: ['esnext'],
     format: 'esm',
-    globalName: 'warp'
+    globalName: 'warp',
+    inject: [require.resolve('node-stdlib-browser/helpers/esbuild/shim')],
+    define: {
+      global: 'global',
+      process: 'process',
+      Buffer: 'Buffer',
+      crypto: 'crypto'
+    },
+    plugins: [plugin(stdLibBrowser)]
   };
 
   console.log('Building web bundle esm.');
   const result = await build({
     ...buildConfig,
     minify: true,
-    outfile: './bundles/web.bundle.min.js',
+    outfile: './bundles/web.bundle.min.js'
   }).catch((e) => {
     console.log(e);
     process.exit(1);
