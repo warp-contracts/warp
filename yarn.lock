@@ -3294,7 +3294,19 @@ arweave-stream-tx@^1.1.0:
   dependencies:
     exponential-backoff "^3.1.0"
 
-arweave@1.11.6, arweave@^1.10.13, arweave@^1.10.23, arweave@^1.10.5, arweave@^1.11.4:
+arweave@1.11.7:
+  version "1.11.7"
+  resolved "https://registry.yarnpkg.com/arweave/-/arweave-1.11.7.tgz#41266e2ad98e9d3fe19ccc781f6d6259c5724455"
+  integrity sha512-T4o1OZVUbigNSNWQTM84z2wDJ6ERSXSBVecB+TQF2VzYbwuekLbl/iDSrgGlY4aH1ZzbCuA5oWrlcRMqG0XnCg==
+  dependencies:
+    arconnect "^0.4.2"
+    asn1.js "^5.4.1"
+    axios "^0.27.2"
+    base64-js "^1.5.1"
+    bignumber.js "^9.0.2"
+    util "^0.12.4"
+
+arweave@^1.10.13, arweave@^1.10.23, arweave@^1.10.5, arweave@^1.11.4:
   version "1.11.6"
   resolved "https://registry.yarnpkg.com/arweave/-/arweave-1.11.6.tgz#5afcded201c6f123dd62e5bfae1b72ca793ec7c2"
   integrity sha512-D6N6e2z7oZoxFhu/qElLwQ2T8DxZ8xIqDB+Y16KHvZbassIrrS9iALwxLdaFYNInuyElg6i7qotBMcShWbFSTw==
