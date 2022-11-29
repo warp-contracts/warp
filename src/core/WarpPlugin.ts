@@ -1,6 +1,7 @@
 export const knownWarpPlugins = [
   'evm-signature-verification',
-  'smartweave-extension',
+  'smartweave-nlp-extension',
+  'smartweave-ethers-extension',
   'subscription',
   'ivm-handler-api',
   'evaluation-progress'

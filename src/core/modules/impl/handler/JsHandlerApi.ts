@@ -37,10 +37,14 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
       this.assignRefreshState(executionContext);
 
       const { warp } = executionContext;
-      if (warp.hasPlugin('smartweave-extension')) {
-        const extension = warp.loadPlugin<any, void>('smartweave-extension');
-        extension.process(this.swGlobal.extensions);
-      }
+
+      const extensionPlugins = ['smartweave-nlp-extension', 'smartweave-ethers-extension'] as const;
+      extensionPlugins.forEach((ex) => {
+        if (warp.hasPlugin(ex)) {
+          const extension = warp.loadPlugin<any, void>(ex);
+          extension.process(this.swGlobal.extensions);
+        }
+      });
 
       const handlerResult = await Promise.race([timeoutPromise, this.contractFunction(stateCopy, interaction)]);
 
