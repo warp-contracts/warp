@@ -26,3 +26,5 @@ yalc.lock
 bundles/
 
 .secrets
+
+tools/dist/
