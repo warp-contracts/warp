@@ -33,7 +33,7 @@ export function normalizeContractSource(contractSrc: string, useVM2: boolean): s
   } else {
     return `
     const window=void 0,document=void 0,Function=void 0,eval=void 0;
-    const [SmartWeave, BigNumber, logger] = arguments;
+    const [SmartWeave] = arguments;
     class ContractError extends Error { constructor(message) { super(message); this.name = 'ContractError' } };
     function ContractAssert(cond, message) { if (!cond) throw new ContractError(message) };
     ${contractSrc};

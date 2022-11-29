@@ -6,10 +6,10 @@ build({
   outdir: './tools/dist',
   minify: false,
   bundle: true,
-  /*plugins: [
+  plugins: [
     GlobalsPolyfills({
       buffer: true
     })
-  ],*/
+  ],
   legalComments: 'none'
 }).catch(() => process.exit(1));

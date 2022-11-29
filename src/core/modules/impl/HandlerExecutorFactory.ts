@@ -172,8 +172,19 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
         }
       }
       if (evaluationOptions.useVM2) {
-        console.error(normalizedSource);
         const vmScript = new vm2.VMScript(normalizedSource);
+        const ProxiedUint8Array = new Proxy(Uint8Array, {
+          construct(target, args, newTarget) {
+            const original = Reflect.construct(target, args, newTarget);
+            Reflect.defineProperty(original, '__proto__', {
+              get() {return Reflect.getPrototypeOf(original);},
+              set(value) {Reflect.setPrototypeOf(original, value);},
+              configurable: true,
+              enumerable: false
+            });
+            return original;
+          }
+        });
         const vm = new vm2.NodeVM({
           console: 'off',
           sandbox: {
@@ -185,7 +196,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
               if (!cond) throw new ContractError(message);
             },
             //https://github.com/patriksimek/vm2/issues/484#issuecomment-1327479592
-            Uint8Array: Uint8Array,
+            Uint8Array: ProxiedUint8Array,
             atob: atob
           },
           compiler: 'javascript',
@@ -206,9 +217,8 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
           contractDefinition
         });
       } else {
-        console.error(normalizedSource);
         const contractFunction = new Function(normalizedSource);
-        const handler = contractFunction(swGlobal, BigNumber, LoggerFactory.INST.create(swGlobal.contract.id));
+        const handler = contractFunction(swGlobal);
         return new JsHandlerApi(swGlobal, contractDefinition, handler);
       }
     }
