@@ -38,7 +38,7 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
 
       const { warp } = executionContext;
 
-      const extensionPlugins = ['smartweave-nlp-extension', 'smartweave-ethers-extension'] as const;
+      const extensionPlugins = ['smartweave-extension-nlp', 'smartweave-extension-ethers'] as const;
       extensionPlugins.forEach((ex) => {
         if (warp.hasPlugin(ex)) {
           const extension = warp.loadPlugin<any, void>(ex);

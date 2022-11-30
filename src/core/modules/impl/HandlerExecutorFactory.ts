@@ -19,6 +19,8 @@ import { normalizeContractSource } from './normalize-source';
 import { MemCache } from '../../../cache/impl/MemCache';
 import BigNumber from '../../../legacy/bignumber';
 import { Warp } from '../../Warp';
+import { isBrowser } from '../../../utils/utils';
+import { Buffer } from 'redstone-isomorphic';
 
 class ContractError extends Error {
   constructor(message) {
@@ -205,7 +207,9 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
         });
       } else {
         const contractFunction = new Function(normalizedSource);
-        const handler = contractFunction(swGlobal, BigNumber, LoggerFactory.INST.create(swGlobal.contract.id), Buffer);
+        const handler = isBrowser()
+          ? contractFunction(swGlobal, BigNumber, LoggerFactory.INST.create(swGlobal.contract.id), Buffer, atob, btoa)
+          : contractFunction(swGlobal, BigNumber, LoggerFactory.INST.create(swGlobal.contract.id));
         return new JsHandlerApi(swGlobal, contractDefinition, handler);
       }
     }
