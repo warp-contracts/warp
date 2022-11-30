@@ -32,7 +32,7 @@ export interface SortKeyCache<V> {
   /**
    * removes contract's data
    */
-  delete(contractTxId: string): Promise<void>
+  delete(contractTxId: string): Promise<void>;
 
   close(): Promise<void>;
 
@@ -73,10 +73,10 @@ export interface PruneStats {
 }
 
 export class CacheKey {
-  constructor(readonly contractTxId: string, readonly sortKey: string) { }
+  constructor(readonly contractTxId: string, readonly sortKey: string) {}
 }
 
 // tslint:disable-next-line:max-classes-per-file
 export class SortKeyCacheResult<V> {
-  constructor(readonly sortKey: string, readonly cachedValue: V) { }
+  constructor(readonly sortKey: string, readonly cachedValue: V) {}
 }
