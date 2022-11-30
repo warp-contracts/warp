@@ -53,6 +53,12 @@ export class ContractDefinitionLoader implements DefinitionLoader {
       throw new Error('Trying to use non-testnet contract in a testnet env.');
     }
     const minFee = this.tagsParser.getTag(contractTx, SmartWeaveTags.MIN_FEE);
+    let manifest = null;
+    const rawManifest = this.tagsParser.getTag(contractTx, SmartWeaveTags.MANIFEST);
+    if (rawManifest) {
+      manifest = JSON.parse(rawManifest);
+    }
+
     this.logger.debug('Tags decoding', benchmark.elapsed());
     benchmark.reset();
     const s = await this.evalInitialState(contractTx);
@@ -75,6 +81,7 @@ export class ContractDefinitionLoader implements DefinitionLoader {
       owner,
       contractType,
       metadata,
+      manifest,
       contractTx: contractTx.toJSON(),
       srcTx,
       testnet
