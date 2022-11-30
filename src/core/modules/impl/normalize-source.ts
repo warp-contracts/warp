@@ -1,3 +1,5 @@
+import { isBrowser } from '../../../utils/utils';
+
 export function normalizeContractSource(contractSrc: string, useVM2: boolean): string {
   // Convert from ES Module format to something we can run inside a Function.
   // Removes the `export` keyword and adds ;return handle to the end of the function.
@@ -32,8 +34,8 @@ export function normalizeContractSource(contractSrc: string, useVM2: boolean): s
     module.exports = handle;`;
   } else {
     return `
-    const window=void 0,document=void 0,Function=void 0,eval=void 0;
-    const [SmartWeave, BigNumber, logger, Buffer] = arguments;
+    const window=void 0,document=void 0,Function=void 0,eval=void 0,globalThis=void 0;
+    const [SmartWeave, BigNumber, logger${isBrowser() ? ', Buffer, atob, btoa' : ''}] = arguments;
     class ContractError extends Error { constructor(message) { super(message); this.name = 'ContractError' } };
     function ContractAssert(cond, message) { if (!cond) throw new ContractError(message) };
     ${contractSrc};
