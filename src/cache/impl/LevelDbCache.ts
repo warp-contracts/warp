@@ -94,6 +94,12 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
     await contractCache.put(stateCacheKey.sortKey, value);
   }
 
+  async delete(contractTxId: string): Promise<void> {
+    const contractCache = this.db.sublevel<string, any>(contractTxId, { valueEncoding: 'json' });
+    await contractCache.open();
+    await contractCache.clear();
+  }
+
   close(): Promise<void> {
     return this.db.close();
   }
