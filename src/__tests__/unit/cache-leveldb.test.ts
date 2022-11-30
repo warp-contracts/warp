@@ -84,4 +84,25 @@ describe('LevelDB cache prune', () => {
     expect(await sut.getNumEntries()).toBe(contracts * toLeave)
   });
 
+  it('deletes contracts from cache', async () => {
+    const contracts = 7
+    const entriesPerContract = 12
+    const sut = await cache(contracts, entriesPerContract)
+
+    await sut.delete(getContractId(0))
+
+    // Removed elements
+    for (let j = 0; j < entriesPerContract; j++) {
+      expect(await sut.get(getContractId(0), getSortKey(j))).toBeFalsy()
+    }
+
+    // Remaining elements
+    for (let i = 1; i < contracts; i++) {
+      for (let j = 0; j < entriesPerContract; j++) {
+        expect(await sut.get(getContractId(i), getSortKey(j))).toBeTruthy()
+      }
+    }
+
+    expect(await sut.getNumEntries()).toBe((contracts - 1) * entriesPerContract)
+  });
 });

@@ -29,6 +29,11 @@ export interface SortKeyCache<V> {
    */
   put(cacheKey: CacheKey, value: V): Promise<void>;
 
+  /**
+   * removes contract's data
+   */
+  delete(contractTxId: string): Promise<void>
+
   close(): Promise<void>;
 
   /**
