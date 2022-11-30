@@ -22,20 +22,26 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
    * and there doesn't seem to be any public interface/abstract type for all Level implementations
    * (the AbstractLevel is not exported from the package...)
    */
-  private readonly db: MemoryLevel;
+  private _db: MemoryLevel;
 
-  constructor(cacheOptions: CacheOptions) {
-    if (cacheOptions.inMemory) {
-      this.db = new MemoryLevel({ valueEncoding: 'json' });
-    } else {
-      if (!cacheOptions.dbLocation) {
-        throw new Error('LevelDb cache configuration error - no db location specified');
+  // Lazy initialization upon first access
+  private get db(): MemoryLevel {
+    if (!this._db) {
+      if (this.cacheOptions.inMemory) {
+        this._db = new MemoryLevel({ valueEncoding: 'json' });
+      } else {
+        if (!this.cacheOptions.dbLocation) {
+          throw new Error('LevelDb cache configuration error - no db location specified');
+        }
+        const dbLocation = this.cacheOptions.dbLocation;
+        this.logger.info(`Using location ${dbLocation}`);
+        this._db = new Level<string, any>(dbLocation, { valueEncoding: 'json' });
       }
-      const dbLocation = cacheOptions.dbLocation;
-      this.logger.info(`Using location ${dbLocation}`);
-      this.db = new Level<string, any>(dbLocation, { valueEncoding: 'json' });
     }
+    return this._db;
   }
+
+  constructor(private readonly cacheOptions: CacheOptions) { }
 
   async get(contractTxId: string, sortKey: string, returnDeepCopy?: boolean): Promise<SortKeyCacheResult<V> | null> {
     const contractCache = this.db.sublevel<string, any>(contractTxId, { valueEncoding: 'json' });
@@ -144,7 +150,7 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
 
   async getNumEntries(): Promise<number> {
     const keys = await this.db.keys().all();
-    return keys.length
+    return keys.length;
   }
 
   /**
@@ -161,12 +167,11 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
   */
   async prune(entriesStored = 5): Promise<null> {
     if (!entriesStored || entriesStored <= 0) {
-      entriesStored = 1
+      entriesStored = 1;
     }
 
     const contracts = await this.allContracts();
     for (let i = 0; i < contracts.length; i++) {
-
       const contractCache = this.db.sublevel<string, any>(contracts[i], { valueEncoding: 'json' });
 
       // manually opening to fix https://github.com/Level/level/issues/221
@@ -175,12 +180,12 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
       // Get keys that will be left, just to get the last one of them
       const entries = await contractCache.keys({ reverse: true, limit: entriesStored }).all();
       if (!entries || entries.length < entriesStored) {
-        continue
+        continue;
       }
-      await contractCache.clear({ lt: entries[entries.length - 1] })
-      await contractCache.close()
+      await contractCache.clear({ lt: entries[entries.length - 1] });
+      await contractCache.close();
     }
 
-    return null
+    return null;
   }
 }
