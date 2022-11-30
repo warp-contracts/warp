@@ -22,7 +22,7 @@ export class DefaultCreateContract implements CreateContract {
   }
 
   async deploy(contractData: ContractData, disableBundling?: boolean): Promise<ContractDeploy> {
-    const { wallet, initState, tags, transfer, data } = contractData;
+    const { wallet, initState, tags, transfer, data, evaluationManifest } = contractData;
 
     const effectiveUseBundler =
       disableBundling == undefined ? this.warp.definitionLoader.type() == 'warp' : !disableBundling;
@@ -41,7 +41,8 @@ export class DefaultCreateContract implements CreateContract {
         initState,
         tags,
         transfer,
-        data
+        data,
+        evaluationManifest
       },
       !effectiveUseBundler,
       srcTx
@@ -54,7 +55,7 @@ export class DefaultCreateContract implements CreateContract {
     srcTx: Transaction = null
   ): Promise<ContractDeploy> {
     this.logger.debug('Creating new contract from src tx');
-    const { wallet, srcTxId, initState, tags, transfer, data } = contractData;
+    const { wallet, srcTxId, initState, tags, transfer, data, evaluationManifest } = contractData;
     this.signature = new Signature(this.warp, wallet);
     const signer = this.signature.signer;
 
@@ -92,6 +93,10 @@ export class DefaultCreateContract implements CreateContract {
 
     if (this.warp.environment === 'testnet') {
       contractTX.addTag(SmartWeaveTags.WARP_TESTNET, '1.0.0');
+    }
+
+    if (contractData.evaluationManifest) {
+      contractTX.addTag(SmartWeaveTags.MANIFEST, JSON.stringify(contractData.evaluationManifest));
     }
 
     await signer(contractTX);

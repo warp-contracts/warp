@@ -1,6 +1,8 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import { SignatureType } from '../../contract/Signature';
 import { Source } from './Source';
+import {EvaluationOptions} from "../../core/modules/StateEvaluator";
+import {WarpPluginType} from "../../core/WarpPlugin";
 
 export type Tags = { name: string; value: string }[];
 
@@ -18,6 +20,11 @@ export const emptyTransfer: ArTransfer = {
   winstonQty: '0'
 };
 
+export type EvaluationManifest = {
+  evaluationOptions: Partial<EvaluationOptions>;
+  plugins: WarpPluginType[]
+}
+
 export interface CommonContractData {
   wallet: ArWallet | SignatureType;
   initState: string;
@@ -27,6 +34,7 @@ export interface CommonContractData {
     'Content-Type': string;
     body: string | Uint8Array | ArrayBuffer;
   };
+  evaluationManifest?: EvaluationManifest
 }
 
 export interface ContractData extends CommonContractData {
