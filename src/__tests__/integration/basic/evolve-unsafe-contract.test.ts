@@ -27,10 +27,10 @@ describe('Testing unsafe client in nested contracts with "skip" option', () => {
   let contractTxId: string;
 
   beforeAll(async () => {
-    arlocal = new ArLocal(1666, false);
+    arlocal = new ArLocal(1668, false);
     await arlocal.start();
     LoggerFactory.INST.logLevel('error');
-    warp = WarpFactory.forLocal(1666);
+    warp = WarpFactory.forLocal(1668);
 
     ({ arweave } = warp);
     ({ jwk: wallet, address: walletAddress } = await warp.generateWallet());
@@ -124,7 +124,7 @@ describe('Testing unsafe client in nested contracts with "skip" option', () => {
     );
 
     // testcase for new warp instance
-    const newWarp = WarpFactory.forLocal(1666);
+    const newWarp = WarpFactory.forLocal(1668);
     const freshPst = newWarp.contract(contractTxId).setEvaluationOptions({
       unsafeClient: 'allow'
     });

@@ -26,12 +26,11 @@ describe('Testing unsafe client in nested contracts with "skip" option', () => {
   let contractTxId, foreignUnsafeContractTxId, foreignSafeContractTxId: string;
 
   beforeAll(async () => {
-    arlocal = new ArLocal(1666, false);
+    arlocal = new ArLocal(1667, false);
     await arlocal.start();
     LoggerFactory.INST.logLevel('error');
-    warp = WarpFactory.forLocal(1666);
-
-    warpUnsafe = WarpFactory.forLocal(1666);
+    warp = WarpFactory.forLocal(1667);
+    warpUnsafe = WarpFactory.forLocal(1667);
 
     ({ arweave } = warp);
     ({ jwk: wallet, address: walletAddress } = await warp.generateWallet());
@@ -69,7 +68,6 @@ describe('Testing unsafe client in nested contracts with "skip" option', () => {
     }));
     await mineBlock(warp);
 
-
     ({ contractTxId: foreignSafeContractTxId } = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify(initialState),
@@ -80,14 +78,16 @@ describe('Testing unsafe client in nested contracts with "skip" option', () => {
     // this contract will evolve to unsafe
     // in order to allow to make an evolve to unsafe
     // - the unsafeClient must be set to 'allow'
-    foreignSafePst = warp.pst(foreignSafeContractTxId)
+    foreignSafePst = warp
+      .pst(foreignSafeContractTxId)
       .setEvaluationOptions({
         unsafeClient: 'allow',
         internalWrites: true
       })
       .connect(wallet) as PstContract;
 
-    foreignUnsafePst = warpUnsafe.pst(foreignUnsafeContractTxId)
+    foreignUnsafePst = warpUnsafe
+      .pst(foreignUnsafeContractTxId)
       .setEvaluationOptions({
         unsafeClient: 'allow',
         internalWrites: true
