@@ -23,7 +23,7 @@ import { isBrowser } from '../../../utils/utils';
 import { Buffer } from 'redstone-isomorphic';
 
 export class ContractError extends Error {
-  constructor(message, readonly subtype?: string, readonly uuid?: string, readonly traceData?: string) {
+  constructor(message, readonly subtype?: string) {
     super(message);
     this.name = 'ContractError';
   }

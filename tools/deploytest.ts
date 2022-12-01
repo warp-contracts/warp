@@ -1,13 +1,15 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import {defaultCacheOptions, defaultWarpGwOptions, LoggerFactory, WarpFactory} from '../src';
+import {defaultCacheOptions, LoggerFactory, WarpFactory} from '../src';
 import fs from 'fs';
 import path from 'path';
 import {JWKInterface} from 'arweave/node/lib/wallet';
 
 async function main() {
-  let wallet: JWKInterface = readJSON('./.secrets/33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA.json');;
-  LoggerFactory.INST.logLevel('debug');
+  let wallet: JWKInterface = readJSON('./.secrets/33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA.json');
+  ;
+  LoggerFactory.INST.logLevel('none');
+  LoggerFactory.INST.logLevel('debug', 'ExecutionContext');
   const logger = LoggerFactory.INST.create('deploy');
 
   const arweave = Arweave.init({
@@ -28,6 +30,12 @@ async function main() {
       wallet,
       initState: initialState,
       src: jsContractSrc,
+      evaluationManifest: {
+        evaluationOptions: {
+          unsafeClient: 'skip',
+          internalWrites: true
+        }
+      }
     });
 
     console.log('contractTxId:', contractTxId);
@@ -55,33 +63,32 @@ async function main() {
       srcTxId: "5wXT-A0iugP9pWEyw-iTbB0plZ_AbmvlNKyBfGS3AUY",
     });*/
 
-          /*const contract = warp.contract<any>('OZBvm55O2fmoeotAphv0_4mhcrBspaTyBSDQ-ZmAWwA')
-            .setEvaluationOptions({
-            })
-            .connect(wallet);
+    const contract = warp.contract<any>(contractTxId)
+      .setEvaluationOptions({sequencerUrl: "http://localhost:5666/", internalWrites: false, unsafeClient: 'throw'})
+      .connect(wallet);
 
-          await Promise.all([
-           contract.writeInteraction<any>({
-              function: "transfer",
-              target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
-              qty: 100
-            }),
-           contract.writeInteraction<any>({
-              function: "transfer",
-              target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
-              qty: 100
-            }),
-            contract.writeInteraction<any>({
-              function: "transfer",
-              target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
-              qty: 100
-            })
-    ]);*/
+    await Promise.all([
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      })
+    ]);
 
-    /*const {cachedValue} = await contract.readState();
+    const {cachedValue} = await contract.readState();
 
     logger.info("Result");
-    console.dir(cachedValue.state);*/
+    console.dir(cachedValue.state);
 
   } catch (e) {
     logger.error(e)

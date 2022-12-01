@@ -2,7 +2,7 @@
  * This type contains all data and meta-data of the given contact.
  */
 
-import {ContractType, EvaluationManifest} from '../contract/deploy/CreateContract';
+import { ContractType, EvaluationManifest } from '../contract/deploy/CreateContract';
 
 export class ContractMetadata {
   dtor: number;
