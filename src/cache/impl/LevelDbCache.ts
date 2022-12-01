@@ -41,7 +41,7 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
     return this._db;
   }
 
-  constructor(private readonly cacheOptions: CacheOptions) { }
+  constructor(private readonly cacheOptions: CacheOptions) {}
 
   async get(contractTxId: string, sortKey: string, returnDeepCopy?: boolean): Promise<SortKeyCacheResult<V> | null> {
     const contractCache = this.db.sublevel<string, any>(contractTxId, { valueEncoding: 'json' });
