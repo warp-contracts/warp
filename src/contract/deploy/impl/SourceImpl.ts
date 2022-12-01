@@ -8,8 +8,11 @@ import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { Source } from '../Source';
 import { Buffer } from 'redstone-isomorphic';
-import { Warp, WarpEnvironment } from '../../../core/Warp';
+import { Warp } from '../../../core/Warp';
 import { Signature, SignatureType } from '../../../contract/Signature';
+import Transaction from 'arweave/node/lib/transaction';
+import { WARP_GW_URL } from '../../../core/WarpFactory';
+import { TagsParser } from '../../../core/modules/impl/TagsParser';
 
 const wasmTypeMapping: Map<number, string> = new Map([
   [1, 'assemblyscript'],
@@ -31,20 +34,13 @@ export class SourceImpl implements Source {
 
   constructor(private readonly warp: Warp) {}
 
-  async save(
-    contractData: SourceData,
-    env: WarpEnvironment,
-    signature: ArWallet | SignatureType,
-    useBundler = false
-  ): Promise<any> {
+  async createSourceTx(sourceData: SourceData, wallet: ArWallet | SignatureType): Promise<Transaction> {
     this.logger.debug('Creating new contract source');
 
-    const { src, wasmSrcCodeDir, wasmGlueCode } = contractData;
+    const { src, wasmSrcCodeDir, wasmGlueCode } = sourceData;
 
-    this.signature = new Signature(this.warp, signature);
+    this.signature = new Signature(this.warp, wallet);
     const signer = this.signature.signer;
-
-    this.signature.checkNonArweaveSigningAvailability(useBundler);
 
     const contractType: ContractType = src instanceof Buffer ? 'wasm' : 'js';
     let srcTx;
@@ -122,7 +118,7 @@ export class SourceImpl implements Source {
       srcTx.addTag(SmartWeaveTags.WASM_META, JSON.stringify(metadata));
     }
 
-    if (env === 'testnet') {
+    if (this.warp.environment === 'testnet') {
       srcTx.addTag(SmartWeaveTags.WARP_TESTNET, '1.0.0');
     }
 
@@ -130,17 +126,40 @@ export class SourceImpl implements Source {
 
     this.logger.debug('Posting transaction with source');
 
-    // note: in case of useBundler = true, we're posting both
-    // src tx and contract tx in one request.
-    let responseOk = true;
+    return srcTx;
+  }
+
+  async saveSourceTx(srcTx: Transaction, disableBundling: boolean = false): Promise<string> {
+    this.logger.debug('Saving contract source', srcTx.id);
+
+    if (this.warp.environment == 'local') {
+      disableBundling = true;
+    }
+
+    const effectiveUseBundler =
+      disableBundling == undefined ? this.warp.definitionLoader.type() == 'warp' : !disableBundling;
+
+    const tagsParser = new TagsParser();
+    const signatureTag = tagsParser.getTag(srcTx, SmartWeaveTags.SIGNATURE_TYPE);
+
+    if (signatureTag && signatureTag != 'arweave' && !effectiveUseBundler) {
+      throw new Error(`Unable to save source with signature type: ${signatureTag} when bundling is disabled.`);
+    }
+
+    let responseOk: boolean;
     let response: { status: number; statusText: string; data: any };
-    if (!useBundler) {
+
+    if (!disableBundling) {
+      const result = await this.postSource(srcTx);
+      this.logger.debug(result);
+      responseOk = true;
+    } else {
       response = await this.warp.arweave.transactions.post(srcTx);
       responseOk = response.status === 200 || response.status === 208;
     }
 
     if (responseOk) {
-      return srcTx;
+      return srcTx.id;
     } else {
       throw new Error(
         `Unable to write Contract Source. Arweave responded with status ${response.status}: ${response.statusText}`
@@ -186,6 +205,26 @@ export class SourceImpl implements Source {
     outputStreamBuffer.end();
 
     return outputStreamBuffer.getContents();
+  }
+
+  private async postSource(srcTx: Transaction = null): Promise<any> {
+    const response = await fetch(`${WARP_GW_URL}/gateway/sources/deploy`, {
+      method: 'POST',
+      body: JSON.stringify({ srcTx }),
+      headers: {
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Content-Type': 'application/json',
+        Accept: 'application/json'
+      }
+    });
+
+    if (response.ok) {
+      return response.json();
+    } else {
+      throw new Error(
+        `Error while posting contract source. Sequencer responded with status ${response.status} ${response.statusText}`
+      );
+    }
   }
 }
 

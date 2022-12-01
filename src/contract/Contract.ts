@@ -4,7 +4,6 @@ import { InteractionResult } from '../core/modules/impl/HandlerExecutorFactory';
 import { EvaluationOptions, EvalStateResult } from '../core/modules/StateEvaluator';
 import { GQLNodeInterface } from '../legacy/gqlResult';
 import { ArTransfer, Tags, ArWallet } from './deploy/CreateContract';
-import { Source } from './deploy/Source';
 import { SignatureType } from './Signature';
 
 export type CurrentTx = { interactionTxId: string; contractTxId: string };
@@ -69,7 +68,7 @@ export type InnerCallData = { callingInteraction: GQLNodeInterface; callType: In
  * A base interface to be implemented by SmartWeave Contracts clients
  * - contains "low-level" methods that allow to interact with any contract
  */
-export interface Contract<State = unknown> extends Source {
+export interface Contract<State = unknown> {
   /**
    * Returns the Arweave transaction id of this contract.
    */

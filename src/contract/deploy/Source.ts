@@ -1,17 +1,19 @@
 import { ArWallet } from './CreateContract';
 import { SourceData } from './impl/SourceImpl';
-import { WarpEnvironment } from '../../core/Warp';
 import { SignatureType } from '../../contract/Signature';
-
+import Transaction from 'arweave/node/lib/transaction';
 export interface Source {
   /**
-   * allows to post contract source on Arweave
-   * @param contractSource - contract source...
+   * allows to create contract source
+   * @param sourceData - contract source data
+   * @param wallet - either Arweave wallet or custom signature type
    */
-  save(
-    contractSource: SourceData,
-    env: WarpEnvironment,
-    signer?: ArWallet | SignatureType,
-    useBundler?: boolean
-  ): Promise<string | null>;
+  createSourceTx(sourceData: SourceData, wallet: ArWallet | SignatureType): Promise<Transaction>;
+
+  /**
+   * allows to save contract source
+   * @param sourceTx - contract source transaction
+   * @param disableBundling = whether source should be deployed through bundlr using Warp Gateway
+   */
+  saveSourceTx(sourceTx: Transaction, disableBundling?: boolean): Promise<string>;
 }
