@@ -37,6 +37,7 @@ import { InnerWritesEvaluator } from './InnerWritesEvaluator';
 import { generateMockVrf } from '../utils/vrf';
 import { Signature, SignatureType } from './Signature';
 import { ContractDefinition } from '../core/ContractDefinition';
+import { EvaluationOptionsEvaluator } from './EvaluationOptionsEvaluator';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -47,8 +48,12 @@ import { ContractDefinition } from '../core/ContractDefinition';
 export class HandlerBasedContract<State> implements Contract<State> {
   private readonly logger = LoggerFactory.INST.create('HandlerBasedContract');
 
+  // TODO: refactor: extract execution context logic to a separate class
+  private readonly ecLogger = LoggerFactory.INST.create('ExecutionContext');
+
   private _callStack: ContractCallRecord;
-  private _evaluationOptions: EvaluationOptions = new DefaultEvaluationOptions();
+  private _evaluationOptions: EvaluationOptions;
+  private _eoEvaluator: EvaluationOptionsEvaluator; // this is set after loading Contract Definition for the root contract
   private readonly _innerWritesEvaluator = new InnerWritesEvaluator();
   private readonly _callDepth: number;
   private _benchmarkStats: BenchmarkStats = null;
@@ -67,7 +72,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     this._arweaveWrapper = new ArweaveWrapper(warp.arweave);
     this._sorter = new LexicographicalInteractionsSorter(warp.arweave);
     if (_parentContract != null) {
-      this._evaluationOptions = _parentContract.evaluationOptions();
+      this._evaluationOptions = this.getRoot().evaluationOptions();
       this._callDepth = _parentContract.callDepth() + 1;
       const callingInteraction: InteractionCall = _parentContract
         .getCallStack()
@@ -106,6 +111,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       this._callDepth = 0;
       this._callStack = new ContractCallRecord(_contractTxId, 0);
       this._rootSortKey = null;
+      this._evaluationOptions = new DefaultEvaluationOptions();
     }
 
     this.getCallStack = this.getCallStack.bind(this);
@@ -123,7 +129,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     });
     const initBenchmark = Benchmark.measure();
     this.maybeResetRootContract();
-    if (this._parentContract != null && sortKeyOrBlockHeight == null) {
+    if (!this.isRoot() && sortKeyOrBlockHeight == null) {
       throw new Error('SortKey MUST be always set for non-root contract calls');
     }
 
@@ -403,6 +409,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
   }
 
   setEvaluationOptions(options: Partial<EvaluationOptions>): Contract<State> {
+    if (!this.isRoot()) {
+      throw new Error('Evaluation options can be set only for the root contract');
+    }
     this._evaluationOptions = {
       ...this._evaluationOptions,
       ...options
@@ -473,20 +482,31 @@ export class HandlerBasedContract<State> implements Contract<State> {
         sortedInteractions = sortedInteractions.filter((i) => i.sortKey.localeCompare(upToSortKey) <= 0);
       }
       this.logger.debug('contract and interactions load', benchmark.elapsed());
-      if (this._parentContract == null && sortedInteractions.length) {
+      if (this.isRoot() && sortedInteractions.length) {
         // note: if the root contract has zero interactions, it still should be safe
         // - as no other contracts will be called.
         this._rootSortKey = sortedInteractions[sortedInteractions.length - 1].sortKey;
       }
       handler = await this.safeGetHandler(contractDefinition);
     }
+    if (this.isRoot()) {
+      this._eoEvaluator = new EvaluationOptionsEvaluator(
+        this.evaluationOptions(),
+        contractDefinition.manifest?.evaluationOptions
+      );
+    }
+    const contractEvaluationOptions = this.isRoot()
+      ? this._eoEvaluator.rootOptions
+      : this.getEoEvaluator().forForeignContract(contractDefinition.manifest?.evaluationOptions);
+
+    this.ecLogger.debug(`Evaluation options ${contractTxId}:`, contractEvaluationOptions);
 
     return {
       warp: this.warp,
       contract: this,
       contractDefinition,
       sortedInteractions,
-      evaluationOptions: this._evaluationOptions,
+      evaluationOptions: contractEvaluationOptions,
       handler,
       cachedState,
       requestedSortKey: upToSortKey
@@ -496,27 +516,17 @@ export class HandlerBasedContract<State> implements Contract<State> {
   private async safeGetHandler(contractDefinition: ContractDefinition<any>): Promise<HandlerApi<State> | null> {
     const { executorFactory } = this.warp;
     try {
-      return (await executorFactory.create(contractDefinition, this._evaluationOptions, this.warp)) as HandlerApi<State>;
+      return (await executorFactory.create(
+        contractDefinition,
+        this._evaluationOptions,
+        this.warp
+      )) as HandlerApi<State>;
     } catch (e) {
       if (e.name == 'ContractError' && e.subtype == 'unsafeClientSkip') {
-        if (this._parentContract == null) {
+        if (this.isRoot()) {
           return null;
         } else {
-          console.info('Rethrowing ContractError with trace data');
-          throw new ContractError(
-            e.message,
-            e.subtype,
-            e.uuid,
-            JSON.stringify(
-              {
-                contract: contractDefinition.txId,
-                parentContract: this._parentContract?.txId(),
-                callingTx: JSON.stringify(this._innerCallData.callingInteraction)
-              },
-              null,
-              2
-            )
-          );
+          throw new ContractError(e.message, e.subtype);
         }
       } else {
         throw e;
@@ -553,7 +563,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   }
 
   private maybeResetRootContract() {
-    if (this._parentContract == null) {
+    if (this.isRoot()) {
       this.logger.debug('Clearing call stack for the root contract');
       this._callStack = new ContractCallRecord(this.txId(), 0);
       this._rootSortKey = null;
@@ -781,5 +791,23 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   get rootSortKey(): string {
     return this._rootSortKey;
+  }
+
+  private getRoot(): Contract<unknown> {
+    let result: Contract = this;
+    while (!result.isRoot()) {
+      result = result.parent();
+    }
+
+    return result;
+  }
+
+  getEoEvaluator(): EvaluationOptionsEvaluator {
+    const root = this.getRoot() as HandlerBasedContract<unknown>;
+    return root._eoEvaluator;
+  }
+
+  isRoot(): boolean {
+    return this._parentContract == null;
   }
 }

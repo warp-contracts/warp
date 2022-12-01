@@ -5,6 +5,7 @@ import { EvaluationOptions, EvalStateResult } from '../core/modules/StateEvaluat
 import { GQLNodeInterface } from '../legacy/gqlResult';
 import { ArTransfer, Tags, ArWallet } from './deploy/CreateContract';
 import { SignatureType } from './Signature';
+import { EvaluationOptionsEvaluator } from './EvaluationOptionsEvaluator';
 
 export type CurrentTx = { interactionTxId: string; contractTxId: string };
 export type BenchmarkStats = { gatewayCommunication: number; stateEvaluation: number; total: number };
@@ -227,4 +228,8 @@ export interface Contract<State = unknown> {
   evolve(newSrcTxId: string, options?: WriteInteractionOptions): Promise<WriteInteractionResponse | null>;
 
   rootSortKey: string;
+
+  getEoEvaluator(): EvaluationOptionsEvaluator;
+
+  isRoot(): boolean;
 }

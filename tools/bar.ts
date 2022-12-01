@@ -1,3 +1,4 @@
+/* eslint-disable */
 const fs = require('fs');
 
 import { defaultCacheOptions, LoggerFactory, WarpFactory } from '../src';

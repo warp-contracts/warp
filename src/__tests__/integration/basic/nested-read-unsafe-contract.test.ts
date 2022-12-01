@@ -66,7 +66,6 @@ describe('Testing unsafe client in nested contracts with "skip" option', () => {
     }));
     await mineBlock(warp);
 
-
     ({ contractTxId: foreignSafeContractTxId } = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify(initialState),
@@ -77,7 +76,8 @@ describe('Testing unsafe client in nested contracts with "skip" option', () => {
     // this contract will evolve to unsafe
     // in order to allow to make an evolve to unsafe
     // - the unsafeClient must be set to 'allow'
-    foreignSafePst = warp.pst(foreignSafeContractTxId)
+    foreignSafePst = warp
+      .pst(foreignSafeContractTxId)
       .setEvaluationOptions({
         unsafeClient: 'allow'
       })
