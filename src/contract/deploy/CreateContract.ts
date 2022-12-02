@@ -1,5 +1,6 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import { SignatureType } from '../../contract/Signature';
+import { Source } from './Source';
 
 export type Tags = { name: string; value: string }[];
 
@@ -43,7 +44,7 @@ export interface ContractDeploy {
   srcTxId?: string;
 }
 
-export interface CreateContract {
+export interface CreateContract extends Source {
   deploy(contractData: ContractData, disableBundling?: boolean): Promise<ContractDeploy>;
 
   deployFromSourceTx(contractData: FromSrcTxContractData, disableBundling?: boolean): Promise<ContractDeploy>;

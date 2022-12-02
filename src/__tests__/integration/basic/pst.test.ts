@@ -120,7 +120,8 @@ describe('Testing the Profit Sharing Token', () => {
 
     const newSource = fs.readFileSync(path.join(__dirname, '../data/token-evolve.js'), 'utf8');
 
-    const newSrcTxId = await pst.save({ src: newSource }, warp.environment);
+    const srcTx = await warp.createSourceTx({ src: newSource }, wallet);
+    const newSrcTxId = await warp.saveSourceTx(srcTx);
     await mineBlock(warp);
 
     await pst.evolve(newSrcTxId);

@@ -1,6 +1,12 @@
 import Arweave from 'arweave';
 import { Contract, InnerCallData } from '../contract/Contract';
-import { CreateContract } from '../contract/deploy/CreateContract';
+import {
+  ArWallet,
+  ContractData,
+  ContractDeploy,
+  CreateContract,
+  FromSrcTxContractData
+} from '../contract/deploy/CreateContract';
 import { DefaultCreateContract } from '../contract/deploy/impl/DefaultCreateContract';
 import { HandlerBasedContract } from '../contract/HandlerBasedContract';
 import { PstContract } from '../contract/PstContract';
@@ -15,6 +21,9 @@ import { WarpBuilder } from './WarpBuilder';
 import { WarpPluginType, WarpPlugin, knownWarpPlugins } from './WarpPlugin';
 import { SortKeyCache } from '../cache/SortKeyCache';
 import { ContractDefinition } from './ContractDefinition';
+import { SignatureType } from '../contract/Signature';
+import { SourceData } from '../contract/deploy/impl/SourceImpl';
+import Transaction from 'arweave/node/lib/transaction';
 
 export type WarpEnvironment = 'local' | 'testnet' | 'mainnet' | 'custom';
 
@@ -27,6 +36,9 @@ export type WarpEnvironment = 'local' | 'testnet' | 'mainnet' | 'custom';
  * contract and perform operations on them (see {@link Contract})
  */
 export class Warp {
+  /**
+   * @deprecated createContract will be a private field, please use its methods directly e.g. await warp.deploy(...)
+   */
   readonly createContract: CreateContract;
   readonly testing: Testing;
 
@@ -59,6 +71,26 @@ export class Warp {
    */
   contract<State>(contractTxId: string, callingContract?: Contract, innerCallData?: InnerCallData): Contract<State> {
     return new HandlerBasedContract<State>(contractTxId, this, callingContract, innerCallData);
+  }
+
+  async deploy(contractData: ContractData, disableBundling?: boolean): Promise<ContractDeploy> {
+    return await this.createContract.deploy(contractData, disableBundling);
+  }
+
+  async deployFromSourceTx(contractData: FromSrcTxContractData, disableBundling?: boolean): Promise<ContractDeploy> {
+    return await this.createContract.deployFromSourceTx(contractData, disableBundling);
+  }
+
+  async deployBundled(rawDataItem: Buffer): Promise<ContractDeploy> {
+    return await this.createContract.deployBundled(rawDataItem);
+  }
+
+  async createSourceTx(sourceData: SourceData, wallet: ArWallet | SignatureType): Promise<Transaction> {
+    return await this.createContract.createSourceTx(sourceData, wallet);
+  }
+
+  async saveSourceTx(srcTx: Transaction, disableBundling?: boolean): Promise<string> {
+    return await this.createContract.saveSourceTx(srcTx, disableBundling);
   }
 
   /**

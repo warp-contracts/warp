@@ -754,17 +754,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return await this.writeInteraction<any>({ function: 'evolve', value: newSrcTxId }, options);
   }
 
-  async save(sourceData: SourceData): Promise<any> {
-    if (!this.signature) {
-      throw new Error("Wallet not connected. Use 'connect' method first.");
-    }
-    const source = new SourceImpl(this.warp);
-
-    const srcTx = await source.save(sourceData, this.warp.environment, this.signature);
-
-    return srcTx.id;
-  }
-
   get rootSortKey(): string {
     return this._rootSortKey;
   }

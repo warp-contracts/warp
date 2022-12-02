@@ -223,14 +223,15 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
 
     const newContractSrc = fs.readFileSync(path.join(__dirname, '../data/wasm/rust/rust-pst-evolve_bg.wasm'));
 
-    const newSrcTxId = await pst.save(
+    const srcTx = await warp.createSourceTx(
       {
         src: newContractSrc,
         wasmSrcCodeDir: path.join(__dirname, '../data/wasm/rust/src-evolve'),
         wasmGlueCode: path.join(__dirname, '../data/wasm/rust/rust-pst-evolve.js')
       },
-      warp.environment
+      wallet
     );
+    const newSrcTxId = await warp.saveSourceTx(srcTx);
 
     await mineBlock(warp);
 

@@ -1,21 +1,24 @@
 /* eslint-disable */
 import Arweave from 'arweave';
 import Transaction from 'arweave/node/lib/transaction';
-import { Signature } from '../../../contract/Signature';
+import { Signature, SignatureType } from '../../../contract/Signature';
 import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
 import { Warp } from '../../../core/Warp';
 import { WARP_GW_URL } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
-import { CreateContract, ContractData, ContractDeploy, FromSrcTxContractData } from '../CreateContract';
-import { SourceImpl } from './SourceImpl';
+import { CreateContract, ContractData, ContractDeploy, FromSrcTxContractData, ArWallet } from '../CreateContract';
+import { SourceData, SourceImpl } from './SourceImpl';
 import { Buffer } from 'redstone-isomorphic';
 
 export class DefaultCreateContract implements CreateContract {
   private readonly logger = LoggerFactory.INST.create('DefaultCreateContract');
+  private readonly source: SourceImpl;
+
   private signature: Signature;
 
   constructor(private readonly arweave: Arweave, private warp: Warp) {
     this.deployFromSourceTx = this.deployFromSourceTx.bind(this);
+    this.source = new SourceImpl(this.warp);
   }
 
   async deploy(contractData: ContractData, disableBundling?: boolean): Promise<ContractDeploy> {
@@ -24,9 +27,11 @@ export class DefaultCreateContract implements CreateContract {
     const effectiveUseBundler =
       disableBundling == undefined ? this.warp.definitionLoader.type() == 'warp' : !disableBundling;
 
-    const source = new SourceImpl(this.warp);
+    const srcTx = await this.source.createSourceTx(contractData, wallet);
+    if (!effectiveUseBundler) {
+      await this.source.saveSourceTx(srcTx, true);
+    }
 
-    const srcTx = await source.save(contractData, this.warp.environment, wallet, effectiveUseBundler);
     this.logger.debug('Creating new contract');
 
     return await this.deployFromSourceTx(
@@ -94,7 +99,7 @@ export class DefaultCreateContract implements CreateContract {
     let responseOk: boolean;
     let response: { status: number; statusText: string; data: any };
     if (effectiveUseBundler) {
-      const result = await this.post(contractTX, srcTx);
+      const result = await this.postContract(contractTX, srcTx);
       this.logger.debug(result);
       responseOk = true;
     } else {
@@ -136,7 +141,15 @@ export class DefaultCreateContract implements CreateContract {
     }
   }
 
-  private async post(contractTx: Transaction, srcTx: Transaction = null): Promise<any> {
+  async createSourceTx(sourceData: SourceData, wallet: ArWallet | SignatureType): Promise<Transaction> {
+    return this.source.createSourceTx(sourceData, wallet);
+  }
+
+  async saveSourceTx(srcTx: Transaction, disableBundling?: boolean): Promise<string> {
+    return this.source.saveSourceTx(srcTx, disableBundling);
+  }
+
+  private async postContract(contractTx: Transaction, srcTx: Transaction = null): Promise<any> {
     let body: any = {
       contractTx
     };
