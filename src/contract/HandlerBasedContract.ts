@@ -619,8 +619,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     const handleResult = await this.evalInteraction<Input, View>(
       {
-        interaction,
-        interactionTx: dummyTx,
+        action: interaction,
+        interaction: dummyTx,
         currentTx: []
       },
       executionContext,
@@ -658,8 +658,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     };
 
     const interactionData: InteractionData<Input> = {
-      interaction,
-      interactionTx,
+      action: interaction,
+      interaction: interactionTx,
       currentTx
     };
 
@@ -689,7 +689,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     interactionCall.update({
       cacheHit: false,
-      outputState: this._evaluationOptions.stackTrace.saveState ? result.state : undefined,
       executionTime: benchmark.elapsed(true) as number,
       valid: result.type === 'ok',
       errorMessage: result.errorMessage,

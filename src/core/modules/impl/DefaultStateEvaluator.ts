@@ -13,8 +13,9 @@ import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { indent } from '../../../utils/utils';
 import { EvalStateResult, StateEvaluator } from '../StateEvaluator';
 import { ContractInteraction, HandlerApi, InteractionResult } from './HandlerExecutorFactory';
-import { canBeCached } from './StateCache';
+import { isConfirmedInteraction } from './StateCache';
 import { TagsParser } from './TagsParser';
+import {EvaluationProgressInput} from "../../WarpPlugin";
 
 const EC = new elliptic.ec('secp256k1');
 
@@ -48,14 +49,14 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
   }
 
   protected async doReadState<State>(
-    missingInteractions: GQLNodeInterface[],
+    interactions: GQLNodeInterface[],
     baseState: EvalStateResult<State>,
     executionContext: ExecutionContext<State, HandlerApi<State>>,
     currentTx: CurrentTx[]
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
     const { ignoreExceptions, stackTrace, internalWrites, cacheEveryNInteractions } =
       executionContext.evaluationOptions;
-    const { contract, contractDefinition, sortedInteractions, warp } = executionContext;
+    const { contract, contractDefinition, sortedInteractions, warp, handler } = executionContext;
 
     let currentState = baseState.state;
     let currentSortKey = null;
@@ -67,48 +68,48 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     const depth = executionContext.contract.callDepth();
 
     this.logger.info(
-      `${indent(depth)}Evaluating state for ${contractDefinition.txId} [${missingInteractions.length} non-cached of ${
+      `${indent(depth)}Evaluating state for ${contractDefinition.txId} [${interactions.length} non-cached of ${
         sortedInteractions.length
       } all]`
     );
 
     let errorMessage = null;
-    let lastConfirmedTxState: { tx: GQLNodeInterface; state: EvalStateResult<State> } = null;
-
-    const missingInteractionsLength = missingInteractions.length;
-    executionContext.handler.initState(currentState);
+    //let lastConfirmedTxState: { tx: GQLNodeInterface; state: EvalStateResult<State> } = null;
+    let lastConfirmedTx: GQLNodeInterface = null;
+    let lastConfirmedState: EvalStateResult<State> = null;
+    const interactionsLength = interactions.length;
 
     const evmSignatureVerificationPlugin = warp.hasPlugin('evm-signature-verification')
       ? warp.loadPlugin<GQLNodeInterface, Promise<boolean>>('evm-signature-verification')
       : null;
 
     const progressPlugin = warp.hasPlugin('evaluation-progress')
-      ? warp.loadPlugin<
-          {
-            contractTxId: string;
-            currentInteraction: number;
-            allInteractions: number;
-            lastInteractionProcessingTime: string;
-          },
-          void
-        >('evaluation-progress')
+      ? warp.loadPlugin<EvaluationProgressInput, void>('evaluation-progress')
       : null;
 
-    for (let i = 0; i < missingInteractionsLength; i++) {
-      const missingInteraction = missingInteractions[i];
-      const singleInteractionBenchmark = Benchmark.measure();
-      currentSortKey = missingInteraction.sortKey;
 
-      if (missingInteraction.vrf) {
-        if (!this.verifyVrf(missingInteraction.vrf, missingInteraction.sortKey, this.arweave)) {
+    for (let i = interactionsLength - 1; i >= 0; i--) {
+      if (isConfirmedInteraction(interactions[i])) {
+        lastConfirmedTx = interactions[i];
+        break;
+      }
+    }
+
+    for (let i = 0; i < interactionsLength; i++) {
+      const interaction = interactions[i];
+      const singleInteractionBenchmark = Benchmark.measure();
+      currentSortKey = interaction.sortKey;
+
+      if (interaction.vrf) {
+        if (!this.verifyVrf(interaction.vrf, interaction.sortKey, this.arweave)) {
           throw new Error('Vrf verification failed.');
         }
       }
 
-      if (evmSignatureVerificationPlugin && this.tagsParser.isEvmSigned(missingInteraction)) {
+      if (evmSignatureVerificationPlugin && this.tagsParser.isEvmSigned(interaction)) {
         try {
-          if (!(await evmSignatureVerificationPlugin.process(missingInteraction))) {
-            this.logger.warn(`Interaction ${missingInteraction.id} was not verified, skipping.`);
+          if (!(await evmSignatureVerificationPlugin.process(interaction))) {
+            this.logger.warn(`Interaction ${interaction.id} was not verified, skipping.`);
             continue;
           }
         } catch (e) {
@@ -118,161 +119,154 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       }
 
       this.logger.debug(
-        `${indent(depth)}[${contractDefinition.txId}][${missingInteraction.id}][${missingInteraction.block.height}]: ${
-          missingInteractions.indexOf(missingInteraction) + 1
-        }/${missingInteractions.length} [of all:${sortedInteractions.length}]`
+        `${indent(depth)}[${contractDefinition.txId}][${interaction.id}][${interaction.block.height}]: ${
+          interactions.indexOf(interaction) + 1
+        }/${interactions.length} [of all:${sortedInteractions.length}]`
       );
 
-      const isInteractWrite = this.tagsParser.isInteractWrite(missingInteraction, contractDefinition.txId);
+      const isInteractWrite = this.tagsParser.isInteractWrite(interaction, contractDefinition.txId);
 
       // other contract makes write ("writing contract") on THIS contract
       if (isInteractWrite && internalWrites) {
         // evaluating txId of the contract that is writing on THIS contract
-        const writingContractTxId = this.tagsParser.getContractTag(missingInteraction);
+        const writingContractTxId = this.tagsParser.getContractTag(interaction);
         this.logger.debug(`${indent(depth)}Internal Write - Loading writing contract`, writingContractTxId);
 
         const interactionCall: InteractionCall = contract
           .getCallStack()
-          .addInteractionData({ interaction: null, interactionTx: missingInteraction, currentTx });
+          .addInteractionData({ action: null, interaction: interaction, currentTx });
 
         // creating a Contract instance for the "writing" contract
         const writingContract = executionContext.warp.contract(writingContractTxId, executionContext.contract, {
-          callingInteraction: missingInteraction,
+          callingInteraction: interaction,
           callType: 'read'
         });
 
         await this.onContractCall(
-          missingInteraction,
+          interaction,
           executionContext,
           new EvalStateResult<State>(currentState, validity, errorMessages)
         );
 
-        this.logger.debug(`${indent(depth)}Reading state of the calling contract at`, missingInteraction.sortKey);
+        this.logger.debug(`${indent(depth)}Reading state of the calling contract at`, interaction.sortKey);
         /**
          Reading the state of the writing contract.
          This in turn will cause the state of THIS contract to be
          updated in cache - see {@link ContractHandlerApi.assignWrite}
          */
-        await writingContract.readState(missingInteraction.sortKey, [
+        await writingContract.readState(interaction.sortKey, [
           ...(currentTx || []),
           {
             contractTxId: contractDefinition.txId, //not: writingContractTxId!
-            interactionTxId: missingInteraction.id
+            interactionTxId: interaction.id
           }
         ]);
 
         // loading latest state of THIS contract from cache
-        const newState = await this.internalWriteState<State>(contractDefinition.txId, missingInteraction.sortKey);
+        const newState = await this.internalWriteState<State>(contractDefinition.txId, interaction.sortKey);
         if (newState !== null) {
           currentState = newState.cachedValue.state;
           // we need to update the state in the wasm module
           executionContext?.handler.initState(currentState);
 
-          validity[missingInteraction.id] = newState.cachedValue.validity[missingInteraction.id];
-          if (newState.cachedValue.errorMessages?.[missingInteraction.id]) {
-            errorMessages[missingInteraction.id] = newState.cachedValue.errorMessages[missingInteraction.id];
+          validity[interaction.id] = newState.cachedValue.validity[interaction.id];
+          if (newState.cachedValue.errorMessages?.[interaction.id]) {
+            errorMessages[interaction.id] = newState.cachedValue.errorMessages[interaction.id];
           }
 
           const toCache = new EvalStateResult(currentState, validity, errorMessages);
-          await this.onStateUpdate<State>(missingInteraction, executionContext, toCache);
-          if (canBeCached(missingInteraction)) {
-            lastConfirmedTxState = {
-              tx: missingInteraction,
-              state: toCache
-            };
+          await this.onStateUpdate<State>(interaction, executionContext, toCache);
+          if (interaction.id == lastConfirmedTx.id) {
+            lastConfirmedState = toCache;
           }
         } else {
-          validity[missingInteraction.id] = false;
+          validity[interaction.id] = false;
         }
 
         interactionCall.update({
           cacheHit: false,
-          outputState: stackTrace.saveState ? currentState : undefined,
           executionTime: singleInteractionBenchmark.elapsed(true) as number,
-          valid: validity[missingInteraction.id],
+          valid: validity[interaction.id],
           errorMessage: errorMessage,
           gasUsed: 0 // TODO...
         });
       } else {
         // "direct" interaction with this contract - "standard" processing
-        const inputTag = this.tagsParser.getInputTag(missingInteraction, executionContext.contractDefinition.txId);
+        const inputTag = this.tagsParser.getInputTag(interaction, contractDefinition.txId);
         if (!inputTag) {
-          this.logger.error(`${indent(depth)}Skipping tx - Input tag not found for ${missingInteraction.id}`);
+          this.logger.error(`${indent(depth)}Skipping tx - Input tag not found for ${interaction.id}`);
           continue;
         }
         const input = this.parseInput(inputTag);
         if (!input) {
-          this.logger.error(`${indent(depth)}Skipping tx - invalid Input tag - ${missingInteraction.id}`);
+          this.logger.error(`${indent(depth)}Skipping tx - invalid Input tag - ${interaction.id}`);
           continue;
         }
 
-        const interaction: ContractInteraction<unknown> = {
+        const action: ContractInteraction<unknown> = {
           input,
-          caller: missingInteraction.owner.address
+          caller: interaction.owner.address
         };
 
-        const interactionData = {
-          interaction,
-          interactionTx: missingInteraction,
-          currentTx
-        };
-
+        const interactionData = { action, interaction, currentTx };
         const interactionCall: InteractionCall = contract.getCallStack().addInteractionData(interactionData);
 
-        const result = await executionContext.handler.handle(
-          executionContext,
-          new EvalStateResult(currentState, validity, errorMessages),
-          interactionData
-        );
+        const result = await handler.handle(executionContext, new EvalStateResult(currentState, validity, errorMessages), interactionData);
         errorMessage = result.errorMessage;
         if (result.type !== 'ok') {
-          errorMessages[missingInteraction.id] = errorMessage;
+          errorMessages[interaction.id] = errorMessage;
         }
 
-        this.logResult<State>(result, missingInteraction, executionContext);
+        this.logResult<State>(result, interaction, executionContext);
 
         this.logger.debug(`${indent(depth)}Interaction evaluation`, singleInteractionBenchmark.elapsed());
 
         interactionCall.update({
           cacheHit: false,
-          outputState: stackTrace.saveState ? currentState : undefined,
           executionTime: singleInteractionBenchmark.elapsed(true) as number,
-          valid: validity[missingInteraction.id],
+          valid: validity[interaction.id],
           errorMessage: errorMessage,
           gasUsed: result.gasUsed
         });
 
         if (result.type === 'exception' && ignoreExceptions !== true) {
-          throw new Error(`Exception while processing ${JSON.stringify(interaction)}:\n${result.errorMessage}`);
+          throw new Error(`Exception while processing ${JSON.stringify(action)}:\n${result.errorMessage}`);
         }
 
-        validity[missingInteraction.id] = result.type === 'ok';
-        currentState = result.state;
+        validity[interaction.id] = result.type === 'ok';
 
-        const toCache = new EvalStateResult(currentState, validity, errorMessages);
-        if (canBeCached(missingInteraction)) {
-          lastConfirmedTxState = {
-            tx: missingInteraction,
-            state: toCache
-          };
+        if (result.state) {
+          currentState = result.state;
+
+          const toCache = new EvalStateResult(currentState, validity, errorMessages);
+          if (interaction.id == lastConfirmedTx.id) {
+            lastConfirmedState = toCache;
+          }
+          await this.onStateUpdate<State>(
+            interaction,
+            executionContext,
+            toCache,
+            cacheEveryNInteractions % i == 0 //TODO: will not work for WASM
+          );
+        } else {
+          currentState = null;
+          if (interaction.id == lastConfirmedTx.id) {
+            const toCache = new EvalStateResult(handler.currentState(), validity, errorMessages);
+            lastConfirmedState = toCache;
+          }
         }
-        await this.onStateUpdate<State>(
-          missingInteraction,
-          executionContext,
-          toCache,
-          cacheEveryNInteractions % i == 0
-        );
       }
 
       if (progressPlugin) {
         progressPlugin.process({
           contractTxId: contractDefinition.txId,
-          allInteractions: missingInteractionsLength,
+          allInteractions: interactionsLength,
           currentInteraction: i,
           lastInteractionProcessingTime: singleInteractionBenchmark.elapsed() as string
         });
       }
 
+      // TODO: this obviously not work with the current state opt for WASM
       for (const { modify } of this.executionContextModifiers) {
         executionContext = await modify<State>(currentState, executionContext);
       }
@@ -281,8 +275,9 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
     // state could have been fully retrieved from cache
     // or there were no interactions below requested block height
-    if (lastConfirmedTxState !== null) {
-      await this.onStateEvaluated(lastConfirmedTxState.tx, executionContext, lastConfirmedTxState.state);
+    // or all interaction used for evaluation were not confirmed
+    if (lastConfirmedTx !== null && lastConfirmedState !== null) {
+      await this.onStateEvaluated(lastConfirmedTx, executionContext, lastConfirmedState);
     }
 
     return new SortKeyCacheResult(currentSortKey, evalStateResult);

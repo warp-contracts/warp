@@ -26,12 +26,12 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
     );
 
     try {
-      const { interaction, interactionTx, currentTx } = interactionData;
+      const { action, interaction, currentTx } = interactionData;
 
       const stateCopy = deepCopy(currentResult.state);
-      this.swGlobal._activeTx = interactionTx;
-      this.swGlobal.caller = interaction.caller; // either contract tx id (for internal writes) or transaction.owner
-      this.assignReadContractState<Input>(executionContext, currentTx, currentResult, interactionTx);
+      this.swGlobal._activeTx = interaction;
+      this.swGlobal.caller = action.caller; // either contract tx id (for internal writes) or transaction.owner
+      this.assignReadContractState<Input>(executionContext, currentTx, currentResult, interaction);
       this.assignViewContractState<Input>(executionContext);
       this.assignWrite(executionContext, currentTx);
       this.assignRefreshState(executionContext);
@@ -46,7 +46,7 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
         }
       });
 
-      const handlerResult = await Promise.race([timeoutPromise, this.contractFunction(stateCopy, interaction)]);
+      const handlerResult = await Promise.race([timeoutPromise, this.contractFunction(stateCopy, action)]);
 
       if (handlerResult && (handlerResult.state !== undefined || handlerResult.result !== undefined)) {
         return {
@@ -92,5 +92,9 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
 
   initState(state: State): void {
     // nth to do in this impl...
+  }
+
+  currentState(): State {
+    throw new Error('Should not be used for JS Handlers');
   }
 }

@@ -23,17 +23,17 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
     interactionData: InteractionData<Input>
   ): Promise<InteractionResult<State, Result>> {
     try {
-      const { interaction, interactionTx, currentTx } = interactionData;
+      const { action, interaction, currentTx } = interactionData;
 
-      this.swGlobal._activeTx = interactionTx;
-      this.swGlobal.caller = interaction.caller; // either contract tx id (for internal writes) or transaction.owner
+      this.swGlobal._activeTx = interaction;
+      this.swGlobal.caller = action.caller; // either contract tx id (for internal writes) or transaction.owner
       this.swGlobal.gasLimit = executionContext.evaluationOptions.gasLimit;
       this.swGlobal.gasUsed = 0;
 
-      this.assignReadContractState<Input>(executionContext, currentTx, currentResult, interactionTx);
+      this.assignReadContractState<Input>(executionContext, currentTx, currentResult, interaction);
       this.assignWrite(executionContext, currentTx);
 
-      const handlerResult = await this.doHandle(interaction);
+      const handlerResult = await this.doHandle(action);
 
       return {
         type: 'ok',
@@ -155,5 +155,9 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
         throw new Error(`Support for ${this.contractDefinition.srcWasmLang} not implemented yet.`);
       }
     }
+  }
+
+  currentState(): State {
+    return this.doGetCurrentState();
   }
 }

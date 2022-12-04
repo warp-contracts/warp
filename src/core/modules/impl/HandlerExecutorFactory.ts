@@ -230,8 +230,8 @@ async function getWasmModule(wasmResponse: Response, binary: Buffer): Promise<We
 }
 
 export interface InteractionData<Input> {
-  interaction?: ContractInteraction<Input>;
-  interactionTx: GQLNodeInterface;
+  action?: ContractInteraction<Input>;
+  interaction: GQLNodeInterface;
   currentTx: { interactionTxId: string; contractTxId: string }[];
 }
 
@@ -246,6 +246,8 @@ export interface HandlerApi<State> {
   ): Promise<InteractionResult<State, Result>>;
 
   initState(state: State): void;
+
+  currentState(): State;
 }
 
 export type HandlerFunction<State, Input, Result> = (

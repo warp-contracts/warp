@@ -11,23 +11,23 @@ export class ContractCallRecord {
   }
 
   addInteractionData(interactionData: InteractionData<any>): InteractionCall {
-    const { interaction, interactionTx } = interactionData;
+    const { action, interaction } = interactionData;
 
     const interactionCall = InteractionCall.create(
       new InteractionInput(
-        interactionTx.id,
-        interactionTx.sortKey,
-        interactionTx.block.height,
-        interactionTx.block.timestamp,
-        interaction?.caller,
-        interaction?.input.function,
-        interaction?.input,
-        interactionTx.dry,
+        interaction.id,
+        interaction.sortKey,
+        interaction.block.height,
+        interaction.block.timestamp,
+        action?.caller,
+        action?.input.function,
+        action?.input,
+        interaction.dry,
         {}
       )
     );
 
-    this.interactions[interactionTx.id] = interactionCall;
+    this.interactions[interaction.id] = interactionCall;
 
     return interactionCall;
   }
@@ -72,7 +72,6 @@ export class InteractionInput {
 export class InteractionOutput {
   constructor(
     public readonly cacheHit: boolean,
-    public readonly outputState: any,
     public readonly executionTime: number,
     public readonly valid: boolean,
     public readonly errorMessage: string = '',
