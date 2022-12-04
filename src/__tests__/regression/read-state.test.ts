@@ -214,7 +214,7 @@ describe('readState', () => {
     expect(result2String).toEqual(resultString);
   }, 800000);
 
-  it('should properly check balance of a PST contract', async () => {
+  it.skip('should properly check balance of a PST contract', async () => {
     const jwk = await arweave.wallets.generate();
     const contractTxId = '-8A6RexFkpfWwuyVO98wzSFZh0d6VJuI-buTJvlwOJQ';
     const v1Result = await interactRead(arweave, jwk, contractTxId, {
