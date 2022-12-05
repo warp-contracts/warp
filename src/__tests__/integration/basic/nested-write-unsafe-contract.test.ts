@@ -123,16 +123,13 @@ describe('Testing unsafe client in nested contracts with "skip" option', () => {
   });
 
   it('should block write from foreign unsafe contract (1)', async () => {
-    console.log('======= FIRST WRITE =====');
     const unsafeWriteTx = await foreignUnsafePst.writeInteraction({
       function: 'writeForeign',
       contractTxId: contractTxId
     });
     await mineBlock(warp);
 
-    console.log('======= Read main contract =======');
     const result = await pst.readState();
-    console.log(result.cachedValue.validity);
     expect(result.cachedValue.validity[unsafeWriteTx.originalTxId]).toBeFalsy();
     // should not change from previous test
     expect((result.cachedValue.state as any).foreignCallsCounter).toEqual(1);
@@ -141,23 +138,21 @@ describe('Testing unsafe client in nested contracts with "skip" option', () => {
   // this does not work properly. Second write from the unsafe contract
   // makes the previous write valid.
   it('should block write from foreign unsafe contract (2)', async () => {
-    console.log('======= NEXT WRITE =====');
     const unsafeWriteTx = await foreignUnsafePst.writeInteraction({
       function: 'writeForeign',
       contractTxId: contractTxId
     });
     await mineBlock(warp);
 
-    console.log('======= Read main contract =======');
     const result = await pst.readState();
-    console.log(result.cachedValue.validity);
     expect(result.cachedValue.validity[unsafeWriteTx.originalTxId]).toBeFalsy();
     // should not change from previous test
     expect((result.cachedValue.state as any).foreignCallsCounter).toEqual(1);
   });
 
   it('should block write from foreign safe contract that evolved to unsafe', async () => {
-    const unsafeSrcTxId = await foreignSafePst.save({ src: unsafeContractSrc }, warp.environment);
+    const srcTx = await warp.createSourceTx({ src: unsafeContractSrc }, wallet);
+    const unsafeSrcTxId = await warp.saveSourceTx(srcTx);
     await mineBlock(warp);
 
     await foreignSafePst.evolve(unsafeSrcTxId);

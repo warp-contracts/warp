@@ -1,4 +1,3 @@
-import { EvaluationManifest } from './deploy/CreateContract';
 import { EvaluationOptions } from '../core/modules/StateEvaluator';
 import { deepCopy } from '../utils/utils';
 
@@ -107,11 +106,30 @@ export class EvaluationOptionsEvaluator {
   };
 
   /**
-   * @param evaluationOptions evaluation options set via {@link Contract.setEvaluationOptions}
-   * @param manifestOptions evaluation options from contract's manifest
+   * @param userSetOptions evaluation options set via {@link Contract.setEvaluationOptions}
+   * @param manifestOptions evaluation options from the root contract's manifest (i.e. the contract that
+   * the user is trying to read - e.g. via warp.contract(<txId>).readState();
    */
-  constructor(evaluationOptions: EvaluationOptions, manifestOptions: Partial<EvaluationOptions>) {
-    this.rootOptions = Object.freeze(Object.assign({}, evaluationOptions, manifestOptions || {}));
+  constructor(userSetOptions: EvaluationOptions, manifestOptions: Partial<EvaluationOptions>) {
+    if (manifestOptions) {
+      for (const k in manifestOptions) {
+        if (userSetOptions[k] !== manifestOptions[k]) {
+          throw new Error(`Option {${k}} differs, user: [${userSetOptions[k]}], manifest: [${manifestOptions[k]}]`);
+        }
+      }
+
+      /* if (userSetOptions.internalWrites !== undefined && (userSetOptions.internalWrites != manifestOptions.internalWrites)) {
+        throw new Error('User and contract manifest not compatible - internalWrites');
+      }
+      if (userSetOptions.unsafeClient && (manifestOptions.unsafeClient != userSetOptions.unsafeClient)) {
+        throw new Error('User and contract manifest not compatible - unsafeClient');
+      }
+      if (userSetOptions.throwOnInternalWriteError && (manifestOptions.throwOnInternalWriteError != userSetOptions.throwOnInternalWriteError)) {
+        throw new Error('User and contract manifest not compatible - throwOnInternalWriteError');
+      }*/
+    }
+
+    this.rootOptions = Object.freeze(Object.assign({}, userSetOptions, manifestOptions || {}));
   }
 
   /**

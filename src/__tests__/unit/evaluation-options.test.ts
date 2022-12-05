@@ -1,15 +1,11 @@
-import { EvaluationOptionsEvaluator } from '../../contract/EvaluationOptionsEvaluator';
-import { WarpFactory } from '../../core/WarpFactory';
+import {EvaluationOptionsEvaluator} from '../../contract/EvaluationOptionsEvaluator';
+import {WarpFactory} from '../../core/WarpFactory';
 
 describe('Evaluation options evaluator', () => {
   const warp = WarpFactory.forLocal();
 
   it('should properly set root evaluation options', async () => {
-    const contract = warp.contract(null).setEvaluationOptions({
-      internalWrites: false,
-      useVM2: true,
-      unsafeClient: 'skip'
-    });
+    const contract = warp.contract(null);
 
     expect(new EvaluationOptionsEvaluator(contract.evaluationOptions(), {}).rootOptions).toEqual({
       allowBigInt: false,
@@ -25,11 +21,18 @@ describe('Evaluation options evaluator', () => {
         saveState: false
       },
       throwOnInternalWriteError: true,
-      unsafeClient: 'skip',
+      unsafeClient: 'throw',
       updateCacheForEachInteraction: false,
-      useVM2: true,
+      useVM2: false,
       waitForConfirmation: false,
       walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/'
+    });
+
+    contract.setEvaluationOptions({
+      allowBigInt: true,
+      useVM2: true,
+      internalWrites: true,
+      gasLimit: 3453453
     });
 
     expect(
@@ -53,7 +56,7 @@ describe('Evaluation options evaluator', () => {
         saveState: false
       },
       throwOnInternalWriteError: true,
-      unsafeClient: 'skip',
+      unsafeClient: 'throw',
       updateCacheForEachInteraction: false,
       useVM2: true,
       waitForConfirmation: false,
@@ -90,32 +93,12 @@ describe('Evaluation options evaluator', () => {
     });
 
     expect(
-      new EvaluationOptionsEvaluator(contract2.evaluationOptions(), {
-        allowBigInt: true,
-        useVM2: false,
-        internalWrites: true,
-        gasLimit: 3453453
-      }).rootOptions
-    ).toEqual({
-      allowBigInt: true,
-      cacheEveryNInteractions: -1,
-      gasLimit: 3453453,
-      ignoreExceptions: true,
-      internalWrites: true,
-      maxCallDepth: 5,
-      maxInteractionEvaluationTimeSeconds: 60,
-      mineArLocalBlocks: true,
-      sequencerUrl: 'https://d1o5nlqr4okus2.cloudfront.net/',
-      stackTrace: {
-        saveState: false
-      },
-      throwOnInternalWriteError: true,
-      unsafeClient: 'allow',
-      updateCacheForEachInteraction: false,
-      useVM2: false,
-      waitForConfirmation: false,
-      walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/'
-    });
+      function () {
+        const result = new EvaluationOptionsEvaluator(contract2.evaluationOptions(), {
+          useVM2: false
+        }).rootOptions
+      }
+    ).toThrow("Option {useVM2} differs, user: [true], manifest: [false]");
   });
 
   it('should properly set foreign evaluation options - unsafeClient - allow', async () => {
@@ -124,9 +107,9 @@ describe('Evaluation options evaluator', () => {
     });
     const eoEvaluator = new EvaluationOptionsEvaluator(contract.evaluationOptions(), {});
 
-    expect(eoEvaluator.forForeignContract({ unsafeClient: 'allow' })['unsafeClient']).toEqual('allow');
-    expect(eoEvaluator.forForeignContract({ unsafeClient: 'skip' })['unsafeClient']).toEqual('skip');
-    expect(eoEvaluator.forForeignContract({ unsafeClient: 'throw' })['unsafeClient']).toEqual('skip');
+    expect(eoEvaluator.forForeignContract({unsafeClient: 'allow'})['unsafeClient']).toEqual('allow');
+    expect(eoEvaluator.forForeignContract({unsafeClient: 'skip'})['unsafeClient']).toEqual('skip');
+    expect(eoEvaluator.forForeignContract({unsafeClient: 'throw'})['unsafeClient']).toEqual('skip');
   });
 
   it('should properly set foreign evaluation options - unsafeClient - skip', async () => {
@@ -135,9 +118,9 @@ describe('Evaluation options evaluator', () => {
     });
     const eoEvaluator = new EvaluationOptionsEvaluator(contract.evaluationOptions(), {});
 
-    expect(eoEvaluator.forForeignContract({ unsafeClient: 'allow' })['unsafeClient']).toEqual('skip');
-    expect(eoEvaluator.forForeignContract({ unsafeClient: 'skip' })['unsafeClient']).toEqual('skip');
-    expect(eoEvaluator.forForeignContract({ unsafeClient: 'throw' })['unsafeClient']).toEqual('skip');
+    expect(eoEvaluator.forForeignContract({unsafeClient: 'allow'})['unsafeClient']).toEqual('skip');
+    expect(eoEvaluator.forForeignContract({unsafeClient: 'skip'})['unsafeClient']).toEqual('skip');
+    expect(eoEvaluator.forForeignContract({unsafeClient: 'throw'})['unsafeClient']).toEqual('skip');
   });
 
   it('should properly set foreign evaluation options - unsafeClient - throw', async () => {
@@ -146,9 +129,9 @@ describe('Evaluation options evaluator', () => {
     });
     const eoEvaluator = new EvaluationOptionsEvaluator(contract.evaluationOptions(), {});
 
-    expect(eoEvaluator.forForeignContract({ unsafeClient: 'allow' })['unsafeClient']).toEqual('throw');
-    expect(eoEvaluator.forForeignContract({ unsafeClient: 'skip' })['unsafeClient']).toEqual('throw');
-    expect(eoEvaluator.forForeignContract({ unsafeClient: 'throw' })['unsafeClient']).toEqual('throw');
+    expect(eoEvaluator.forForeignContract({unsafeClient: 'allow'})['unsafeClient']).toEqual('throw');
+    expect(eoEvaluator.forForeignContract({unsafeClient: 'skip'})['unsafeClient']).toEqual('throw');
+    expect(eoEvaluator.forForeignContract({unsafeClient: 'throw'})['unsafeClient']).toEqual('throw');
   });
 
   it('should properly set foreign evaluation options - internalWrites - true', async () => {
@@ -157,8 +140,8 @@ describe('Evaluation options evaluator', () => {
     });
     const eoEvaluator = new EvaluationOptionsEvaluator(contract.evaluationOptions(), {});
 
-    expect(eoEvaluator.forForeignContract({ internalWrites: true })['internalWrites']).toEqual(true);
-    expect(eoEvaluator.forForeignContract({ internalWrites: false })['internalWrites']).toEqual(false);
+    expect(eoEvaluator.forForeignContract({internalWrites: true})['internalWrites']).toEqual(true);
+    expect(eoEvaluator.forForeignContract({internalWrites: false})['internalWrites']).toEqual(false);
   });
 
   it('should properly set foreign evaluation options - internalWrites - false', async () => {
@@ -167,8 +150,8 @@ describe('Evaluation options evaluator', () => {
     });
     const eoEvaluator = new EvaluationOptionsEvaluator(contract.evaluationOptions(), {});
 
-    expect(eoEvaluator.forForeignContract({ internalWrites: true })['internalWrites']).toEqual(true);
-    expect(eoEvaluator.forForeignContract({ internalWrites: false })['internalWrites']).toEqual(false);
+    expect(eoEvaluator.forForeignContract({internalWrites: true})['internalWrites']).toEqual(true);
+    expect(eoEvaluator.forForeignContract({internalWrites: false})['internalWrites']).toEqual(false);
   });
 
   it('should properly set foreign evaluation options - throwOnInternalWriteError - true', async () => {
@@ -177,10 +160,10 @@ describe('Evaluation options evaluator', () => {
     });
     const eoEvaluator = new EvaluationOptionsEvaluator(contract.evaluationOptions(), {});
 
-    expect(eoEvaluator.forForeignContract({ throwOnInternalWriteError: true })['throwOnInternalWriteError']).toEqual(
+    expect(eoEvaluator.forForeignContract({throwOnInternalWriteError: true})['throwOnInternalWriteError']).toEqual(
       true
     );
-    expect(eoEvaluator.forForeignContract({ throwOnInternalWriteError: false })['throwOnInternalWriteError']).toEqual(
+    expect(eoEvaluator.forForeignContract({throwOnInternalWriteError: false})['throwOnInternalWriteError']).toEqual(
       false
     );
   });
@@ -191,10 +174,10 @@ describe('Evaluation options evaluator', () => {
     });
     const eoEvaluator = new EvaluationOptionsEvaluator(contract.evaluationOptions(), {});
 
-    expect(eoEvaluator.forForeignContract({ throwOnInternalWriteError: true })['throwOnInternalWriteError']).toEqual(
+    expect(eoEvaluator.forForeignContract({throwOnInternalWriteError: true})['throwOnInternalWriteError']).toEqual(
       true
     );
-    expect(eoEvaluator.forForeignContract({ throwOnInternalWriteError: false })['throwOnInternalWriteError']).toEqual(
+    expect(eoEvaluator.forForeignContract({throwOnInternalWriteError: false})['throwOnInternalWriteError']).toEqual(
       false
     );
   });
@@ -205,8 +188,8 @@ describe('Evaluation options evaluator', () => {
     });
     const eoEvaluator = new EvaluationOptionsEvaluator(contract.evaluationOptions(), {});
 
-    expect(eoEvaluator.forForeignContract({ ignoreExceptions: true })['ignoreExceptions']).toEqual(true);
-    expect(eoEvaluator.forForeignContract({ ignoreExceptions: false })['ignoreExceptions']).toEqual(true);
+    expect(eoEvaluator.forForeignContract({ignoreExceptions: true})['ignoreExceptions']).toEqual(true);
+    expect(eoEvaluator.forForeignContract({ignoreExceptions: false})['ignoreExceptions']).toEqual(true);
   });
 
   it('should properly set foreign evaluation options - ignoreExceptions - false', async () => {
@@ -215,7 +198,7 @@ describe('Evaluation options evaluator', () => {
     });
     const eoEvaluator = new EvaluationOptionsEvaluator(contract.evaluationOptions(), {});
 
-    expect(eoEvaluator.forForeignContract({ ignoreExceptions: true })['ignoreExceptions']).toEqual(false);
-    expect(eoEvaluator.forForeignContract({ ignoreExceptions: false })['ignoreExceptions']).toEqual(false);
+    expect(eoEvaluator.forForeignContract({ignoreExceptions: true})['ignoreExceptions']).toEqual(false);
+    expect(eoEvaluator.forForeignContract({ignoreExceptions: false})['ignoreExceptions']).toEqual(false);
   });
 });

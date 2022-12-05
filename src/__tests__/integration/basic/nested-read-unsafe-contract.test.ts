@@ -9,7 +9,6 @@ import { PstContract, PstState } from '../../../contract/PstContract';
 import { Warp } from '../../../core/Warp';
 import { WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
-import exp from 'constants';
 
 describe('Testing unsafe client in nested contracts with "skip" option', () => {
   let safeContractSrc, unsafeContractSrc: string;
@@ -146,7 +145,8 @@ describe('Testing unsafe client in nested contracts with "skip" option', () => {
     });
     await mineBlock(warp);
 
-    const unsafeSrcTxId = await foreignSafePst.save({ src: unsafeContractSrc }, warp.environment);
+    const srcTx = await warp.createSourceTx({ src: unsafeContractSrc }, wallet);
+    const unsafeSrcTxId = await warp.saveSourceTx(srcTx);
     await mineBlock(warp);
 
     await foreignSafePst.evolve(unsafeSrcTxId);
