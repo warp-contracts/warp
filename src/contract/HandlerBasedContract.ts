@@ -32,7 +32,6 @@ import {
   InnerCallData
 } from './Contract';
 import { Tags, ArTransfer, emptyTransfer, ArWallet } from './deploy/CreateContract';
-import { SourceData, SourceImpl } from './deploy/impl/SourceImpl';
 import { InnerWritesEvaluator } from './InnerWritesEvaluator';
 import { generateMockVrf } from '../utils/vrf';
 import { Signature, SignatureType } from './Signature';
@@ -60,8 +59,17 @@ export class HandlerBasedContract<State> implements Contract<State> {
   private readonly _arweaveWrapper: ArweaveWrapper;
   private _sorter: InteractionsSorter;
   private _rootSortKey: string;
-  private signature: Signature;
+  private _signature: Signature;
 
+  // this map is set only for the "root" contract;
+  // it holds all uncommitted states for all contracts
+  // that take place in evaluation of every interaction of the root contract;
+  // the map is "committed" at the end of the root's contract interaction (if the result is ok)
+  private _uncommittedStates: Map<string, EvalStateResult<any>>;
+
+  // a state that is being evaluated for the current interaction
+  // if the interaction is properly evaluated - it is considered as 'committed'
+  // and can be safely cached.
   constructor(
     private readonly _contractTxId: string,
     protected readonly warp: Warp,
@@ -112,6 +120,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       this._callStack = new ContractCallRecord(_contractTxId, 0);
       this._rootSortKey = null;
       this._evaluationOptions = new DefaultEvaluationOptions();
+      this._uncommittedStates = new Map();
     }
 
     this.getCallStack = this.getCallStack.bind(this);
@@ -140,16 +149,25 @@ export class HandlerBasedContract<State> implements Contract<State> {
         ? this._sorter.generateLastSortKey(sortKeyOrBlockHeight)
         : sortKeyOrBlockHeight;
 
-    const executionContext = await this.createExecutionContext(this._contractTxId, sortKey, false, interactions);
+    if (!this.isRoot() && this.getUncommittedState(this.txId())) {
+      this.logger.info('Using uncommitted state in [readState] for', this.txId());
+      return {
+        sortKey: sortKey,
+        cachedValue: this.getUncommittedState(this.txId()) as EvalStateResult<State>
+      }
+    }
+
+    const executionContext = await this.createExecutionContext(this.txId(), sortKey, false, interactions);
+    initBenchmark.stop();
+
     this.logger.info('Execution Context', {
       srcTxId: executionContext.contractDefinition?.srcTxId,
       missingInteractions: executionContext.sortedInteractions?.length,
       cachedSortKey: executionContext.cachedState?.sortKey
     });
-    initBenchmark.stop();
 
     const stateBenchmark = Benchmark.measure();
-    const result = await stateEvaluator.eval(executionContext, currentTx || []);
+    const result = await stateEvaluator.eval(executionContext);
     stateBenchmark.stop();
 
     const total = (initBenchmark.elapsed(true) as number) + (stateBenchmark.elapsed(true) as number);
@@ -165,6 +183,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
       'Contract evaluation    ': stateBenchmark.elapsed(),
       'Total:                 ': `${total.toFixed(0)}ms`
     });
+
+    // set the uncommitted state to make available for possible future calls on this contract
+    this.setUncommittedState(this.txId(), result.cachedValue);
 
     return result;
   }
@@ -214,7 +235,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     options?: WriteInteractionOptions
   ): Promise<WriteInteractionResponse | null> {
     this.logger.info('Write interaction', { input, options });
-    if (!this.signature) {
+    if (!this._signature) {
       throw new Error("Wallet not connected. Use 'connect' method first.");
     }
     const { arweave, interactionsLoader, environment } = this.warp;
@@ -232,7 +253,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     const bundleInteraction = interactionsLoader.type() == 'warp' && !effectiveDisableBundling;
 
-    this.signature.checkNonArweaveSigningAvailability(bundleInteraction);
+    this._signature.checkNonArweaveSigningAvailability(bundleInteraction);
 
     if (
       bundleInteraction &&
@@ -382,7 +403,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     const interactionTx = await createInteractionTx(
       this.warp.arweave,
-      this.signature.signer,
+      this._signature.signer,
       this._contractTxId,
       input,
       tags,
@@ -404,7 +425,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   }
 
   connect(signature: ArWallet | SignatureType): Contract<State> {
-    this.signature = new Signature(this.warp, signature);
+    this._signature = new Signature(this.warp, signature);
     return this;
   }
 
@@ -568,6 +589,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       this._callStack = new ContractCallRecord(this.txId(), 0);
       this._rootSortKey = null;
       this.warp.interactionsLoader.clearCache();
+      this._uncommittedStates = new Map();
     }
   }
 
@@ -582,7 +604,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   ): Promise<InteractionResult<State, View>> {
     this.logger.info('Call contract input', input);
     this.maybeResetRootContract();
-    if (!this.signature) {
+    if (!this._signature) {
       this.logger.warn('Wallet not set.');
     }
     const { arweave, stateEvaluator } = this.warp;
@@ -596,7 +618,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     let effectiveCaller;
     if (caller) {
       effectiveCaller = caller;
-    } else if (this.signature) {
+    } else if (this._signature) {
       // we're creating this transaction just to call the signing function on it
       // - and retrieve the caller/owner
       const dummyTx = await arweave.createTransaction({
@@ -604,7 +626,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
         reward: '72600854',
         last_tx: 'p7vc1iSP6bvH_fCeUFa9LqoV5qiyW-jdEKouAT0XMoSwrNraB9mgpi29Q10waEpO'
       });
-      await this.signature.signer(dummyTx);
+      await this._signature.signer(dummyTx);
       effectiveCaller = await arweave.wallets.ownerToAddress(dummyTx.owner);
     } else {
       effectiveCaller = '';
@@ -617,7 +639,17 @@ export class HandlerBasedContract<State> implements Contract<State> {
     };
 
     // eval current state
-    const evalStateResult = await stateEvaluator.eval<State>(executionContext, []);
+    let evalStateResult = null;
+    if (!this.isRoot() && this.getUncommittedState(this.txId())) {
+      this.logger.info('Using uncommitted state in [callContract] for', this.txId());
+      evalStateResult =  {
+        sortKey,
+        cachedValue: this.getUncommittedState(this.txId()) as EvalStateResult<State>
+      }
+    } else {
+      evalStateResult = await stateEvaluator.eval<State>(executionContext);
+      this.setUncommittedState(this.txId(), evalStateResult);
+    }
     this.logger.info('Current state', evalStateResult.cachedValue.state);
 
     // create interaction transaction
@@ -629,7 +661,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     this.logger.debug('interaction', interaction);
     const tx = await createInteractionTx(
       arweave,
-      this.signature?.signer,
+      this._signature?.signer,
       this._contractTxId,
       input,
       tags,
@@ -679,12 +711,22 @@ export class HandlerBasedContract<State> implements Contract<State> {
   ): Promise<InteractionResult<State, View>> {
     this.maybeResetRootContract();
 
-    const executionContext = await this.createExecutionContextFromTx(this._contractTxId, interactionTx);
-    const evalStateResult = await this.warp.stateEvaluator.eval<State>(executionContext, currentTx);
+    const executionContext = await this.createExecutionContextFromTx(this.txId(), interactionTx);
+
+    // in case Contract A calls Contract B, and then Contract B calls again Contract A
+    // - the Contract B should get the Contract A state from the "uncommitted" state of its parent contract
+    // this also prevents from falling into infinite call loop
+    // AND it allows us to get us the MOST recent state (that is not yet committed)
+    // - as it was exactly before making a read/write on a contract.
+    const baseState = this.getUncommittedState(this.txId())
+      ? this.getUncommittedState(this.txId())
+      : (await this.warp.stateEvaluator.eval<State>(executionContext)).cachedValue;
+
+    this.uncommittedState = baseState;
 
     this.logger.debug('callContractForTx - evalStateResult', {
-      result: evalStateResult.cachedValue.state,
-      txId: this._contractTxId
+      result: baseState,
+      txId: this.txId()
     });
 
     const interaction: ContractInteraction<Input> = {
@@ -701,12 +743,42 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const result = await this.evalInteraction<Input, View>(
       interactionData,
       executionContext,
-      evalStateResult.cachedValue
+      baseState
     );
-    result.originalValidity = evalStateResult.cachedValue.validity;
-    result.originalErrorMessages = evalStateResult.cachedValue.errorMessages;
+    result.originalValidity = baseState.validity;
+    result.originalErrorMessages = baseState.errorMessages;
+
+    this.updateUncommittedStateInTree({
+      state: result.state,
+      validity: {
+        ...result.originalValidity,
+        [interactionTx.id]: result.type == 'ok'
+      },
+      errorMessages: {
+        ...result.originalErrorMessages,
+        [interactionTx.id]: result.errorMessage
+      }
+    }, this.txId())
 
     return result;
+  }
+
+  private loadUncommittedStateFromCallTree(contractTxId: string): EvalStateResult<State> | null {
+    console.debug('uncommittedStateInCallTree', contractTxId);
+    let state = null;
+    let currentParent = this.parent();
+    while (state == null && currentParent != null) {
+      if (currentParent.txId() == contractTxId) {
+        if (currentParent.uncommittedState == null) {
+          // sanity check.
+          throw new Error(`Uncommitted state should be set for ${currentParent.txId()}`);
+        }
+        state = currentParent.uncommittedState;
+      } else {
+        currentParent = currentParent.parent();
+      }
+    }
+    return state;
   }
 
   private async evalInteraction<Input, View = unknown>(
@@ -810,4 +882,15 @@ export class HandlerBasedContract<State> implements Contract<State> {
   isRoot(): boolean {
     return this._parentContract == null;
   }
+
+  getUncommittedState(contractTxId: string): EvalStateResult<unknown> {
+    const root = this.getRoot() as HandlerBasedContract<unknown>;
+    return root._uncommittedStates.get(contractTxId);
+  }
+
+  setUncommittedState(contractTxId, state: EvalStateResult<State>) {
+    const root = this.getRoot() as HandlerBasedContract<unknown>;
+    root._uncommittedStates.set(contractTxId, state);
+  }
+
 }

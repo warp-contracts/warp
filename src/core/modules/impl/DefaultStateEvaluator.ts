@@ -10,7 +10,7 @@ import { ExecutionContextModifier } from '../../../core/ExecutionContextModifier
 import { GQLNodeInterface, GQLTagInterface, VrfData } from '../../../legacy/gqlResult';
 import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
-import { indent } from '../../../utils/utils';
+import {deepCopy, indent} from '../../../utils/utils';
 import { EvalStateResult, StateEvaluator } from '../StateEvaluator';
 import { ContractInteraction, HandlerApi, InteractionResult } from './HandlerExecutorFactory';
 import { canBeCached } from './StateCache';
@@ -36,22 +36,19 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
   ) {}
 
   async eval<State>(
-    executionContext: ExecutionContext<State, HandlerApi<State>>,
-    currentTx: CurrentTx[]
+    executionContext: ExecutionContext<State, HandlerApi<State>>
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
     return this.doReadState(
       executionContext.sortedInteractions,
       new EvalStateResult<State>(executionContext.contractDefinition.initState, {}, {}),
-      executionContext,
-      currentTx
+      executionContext
     );
   }
 
   protected async doReadState<State>(
     missingInteractions: GQLNodeInterface[],
     baseState: EvalStateResult<State>,
-    executionContext: ExecutionContext<State, HandlerApi<State>>,
-    currentTx: CurrentTx[]
+    executionContext: ExecutionContext<State, HandlerApi<State>>
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
     const { ignoreExceptions, stackTrace, internalWrites, cacheEveryNInteractions } =
       executionContext.evaluationOptions;
@@ -101,6 +98,9 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         break;
       }
       const missingInteraction = missingInteractions[i];
+      //TODO: WASM will be problematic here...the changes made inside the function in the WASM module
+      // won't be immediately reflected here...(as it is a case for js contracts)
+      contract.uncommittedState = new EvalStateResult<State>(deepCopy(currentState), validity, errorMessages);
       const singleInteractionBenchmark = Benchmark.measure();
       currentSortKey = missingInteraction.sortKey;
 
@@ -130,9 +130,9 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
       const isInteractWrite = this.tagsParser.isInteractWrite(missingInteraction, contractDefinition.txId);
 
-      // other contract makes write ("writing contract") on THIS contract
+      // other contract ("writing contract") makes write on THIS contract
       if (isInteractWrite && internalWrites) {
-        // evaluating txId of the contract that is writing on THIS contract
+        // evaluating txId of "writing contract"
         const writingContractTxId = this.tagsParser.getContractTag(missingInteraction);
         this.logger.debug(`${indent(depth)}Internal Write - Loading writing contract`, writingContractTxId);
 
@@ -146,28 +146,16 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           callType: 'read'
         });
 
-        await this.onContractCall(
-          missingInteraction,
-          executionContext,
-          new EvalStateResult<State>(currentState, validity, errorMessages)
-        );
-
         this.logger.debug(`${indent(depth)}Reading state of the calling contract at`, missingInteraction.sortKey);
         /**
          Reading the state of the writing contract.
          This in turn will cause the state of THIS contract to be
-         updated in cache - see {@link ContractHandlerApi.assignWrite}
+         updated in uncommittedState - see {@link ContractHandlerApi.assignWrite}
          */
         let newState = null;
         try {
-          await writingContract.readState(missingInteraction.sortKey, [
-            ...(currentTx || []),
-            {
-              contractTxId: contractDefinition.txId, //not: writingContractTxId!
-              interactionTxId: missingInteraction.id
-            }
-          ]);
-          newState = await this.internalWriteState<State>(contractDefinition.txId, missingInteraction.sortKey);
+          await writingContract.readState(missingInteraction.sortKey);
+          newState = contract.uncommittedState;;
         } catch (e) {
           if (e.name == 'ContractError' && e.subtype == 'unsafeClientSkip') {
             this.logger.warn('Skipping unsafe contract in internal write');
@@ -184,18 +172,17 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           }
         }
 
-        // loading latest state of THIS contract from cache
         if (newState !== null) {
           currentState = newState.cachedValue.state;
           // we need to update the state in the wasm module
-          executionContext?.handler.initState(currentState);
+          executionContext?.handler.initState(newState.state);
 
-          validity[missingInteraction.id] = newState.cachedValue.validity[missingInteraction.id];
-          if (newState.cachedValue.errorMessages?.[missingInteraction.id]) {
-            errorMessages[missingInteraction.id] = newState.cachedValue.errorMessages[missingInteraction.id];
+          validity[missingInteraction.id] = newState.validity[missingInteraction.id];
+          if (newState.errorMessages?.[missingInteraction.id]) {
+            errorMessages[missingInteraction.id] = newState.errorMessages[missingInteraction.id];
           }
 
-          const toCache = new EvalStateResult(currentState, validity, errorMessages);
+          const toCache = new EvalStateResult(newState.state, validity, errorMessages);
           await this.onStateUpdate<State>(missingInteraction, executionContext, toCache);
           if (canBeCached(missingInteraction)) {
             lastConfirmedTxState = {
@@ -215,7 +202,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           errorMessage: errorMessage,
           gasUsed: 0 // TODO...
         });
-      } else {
+      }
+      else {
         // "direct" interaction with this contract - "standard" processing
         const inputTag = this.tagsParser.getInputTag(missingInteraction, executionContext.contractDefinition.txId);
         if (!inputTag) {

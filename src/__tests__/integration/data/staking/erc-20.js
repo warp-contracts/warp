@@ -69,9 +69,15 @@ export function handle(state, action) {
   }
 
   if (_input.function === 'transferFrom') {
+    
     const sender = _input.sender;
     const recipient = _input.recipient;
     const amount = _input.amount;
+
+
+    if (amount == 0 ) {
+      logger.error("***** TRANSFER FROM 0");
+    }
 
     const currentAllowance = _allowances[sender][_msgSender];
 

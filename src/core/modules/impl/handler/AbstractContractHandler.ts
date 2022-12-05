@@ -51,10 +51,8 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         to: contractTxId,
         input
       };
+      console.error('swGlobal.write call:', debugData);
 
-      this.logger.debug('swGlobal.write call:', debugData);
-
-      // The contract that we want to call and modify its state
       const calleeContract = executionContext.warp.contract(contractTxId, executionContext.contract, {
         callingInteraction: this.swGlobal._activeTx,
         callType: 'write'
@@ -67,6 +65,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
           interactionTxId: this.swGlobal.transaction.id
         }
       ]);
+      console.dir(result, {depth: null});
 
       this.logger.debug('Cache result?:', !this.swGlobal._activeTx.dry);
       const shouldAutoThrow =
@@ -77,7 +76,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         ? `Internal write auto error for call [${JSON.stringify(debugData)}]: ${result.errorMessage}`
         : result.errorMessage;
 
-      await executionContext.warp.stateEvaluator.onInternalWriteStateUpdate(this.swGlobal._activeTx, contractTxId, {
+      calleeContract.uncommittedState = {
         state: result.state as State,
         validity: {
           ...result.originalValidity,
@@ -87,7 +86,8 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
           ...result.originalErrorMessages,
           [this.swGlobal._activeTx.id]: effectiveErrorMessage
         }
-      });
+      };
+
       if (shouldAutoThrow) {
         throw new ContractError(effectiveErrorMessage);
       }
