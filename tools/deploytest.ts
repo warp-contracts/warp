@@ -6,9 +6,11 @@ import path from 'path';
 import {JWKInterface} from 'arweave/node/lib/wallet';
 
 async function main() {
-  let wallet: JWKInterface = readJSON('./.secrets/33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA.json');
+  //let wallet: JWKInterface = readJSON('./.secrets/33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA.json');
   LoggerFactory.INST.logLevel('error');
   LoggerFactory.INST.logLevel('debug', 'ExecutionContext');
+  LoggerFactory.INST.logLevel('info', 'DefaultStateEvaluator');
+  LoggerFactory.INST.logLevel('debug', 'WarpGatewayInteractionsLoader');
   const logger = LoggerFactory.INST.create('deploy');
 
   const arweave = Arweave.init({
@@ -18,15 +20,19 @@ async function main() {
   });
 
   try {
-    const warp = WarpFactory
-      .forMainnet({...defaultCacheOptions, inMemory: true});
 
-    const jsContractSrc = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.js'), 'utf8');
-    const initialState = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.json'), 'utf8');
+    const warp = WarpFactory
+      .forTestnet({...defaultCacheOptions, inMemory: true});
+
+
+    const wallet = await warp.generateWallet();
+
+    const jsContractSrc = fs.readFileSync(path.join(__dirname, 'data/js/bar.js'), 'utf8');
+    const initialState = fs.readFileSync(path.join(__dirname, 'data/js/bar.json'), 'utf8');
 
     // case 1 - full deploy, js contract
-    const {contractTxId, srcTxId} = await warp.deploy({
-      wallet,
+   /* const {contractTxId, srcTxId} = await warp.deploy({
+      wallet: wallet.jwk,
       initState: initialState,
       src: jsContractSrc,
       evaluationManifest: {
@@ -38,7 +44,7 @@ async function main() {
     });
 
     console.log('contractTxId:', contractTxId);
-    console.log('srcTxId:', srcTxId);
+    console.log('srcTxId:', srcTxId);*/
     // case 2 - deploy from source, js contract
     /*const {contractTxId} = await warp.createContract.deployFromSourceTx({
       wallet,
@@ -62,11 +68,11 @@ async function main() {
       srcTxId: "5wXT-A0iugP9pWEyw-iTbB0plZ_AbmvlNKyBfGS3AUY",
     });*/
 
-    const contract = warp.contract<any>(contractTxId)
-      .setEvaluationOptions({internalWrites: false, unsafeClient: 'throw'})
-      .connect(wallet);
+    const contract = warp.contract<any>('nn2gPA_qe_W8QE8Uy1Uk9nssYQ-nqQExnz8rjPFW_2A')
+      .setEvaluationOptions({unsafeClient: 'skip', internalWrites: true});
 
-    await Promise.all([
+
+   /* await Promise.all([
       contract.writeInteraction<any>({
         function: "transfer",
         target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
@@ -83,7 +89,7 @@ async function main() {
         qty: 100
       })
     ]);
-
+*/
     const {cachedValue} = await contract.readState();
 
     logger.info("Result");

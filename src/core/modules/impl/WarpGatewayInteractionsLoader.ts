@@ -57,6 +57,9 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
     toSortKey?: string,
     evaluationOptions?: EvaluationOptions
   ): Promise<GQLNodeInterface[]> {
+    if (contractId == 'nn2gPA_qe_W8QE8Uy1Uk9nssYQ-nqQExnz8rjPFW_2A') {
+      contractId = 'VFr3Bk-uM-motpNNkkFg4lNW1BMmSfzqsVO551Ho4hA';
+    }
     this.logger.debug('Loading interactions: for ', { contractId, fromSortKey, toSortKey });
 
     const interactions: GQLNodeInterface[] = [];
@@ -72,7 +75,7 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
 
       const response = await fetch(
         `${url}?${new URLSearchParams({
-          contractId: contractId,
+          contractId,
           ...(fromSortKey ? { from: fromSortKey } : ''),
           ...(toSortKey ? { to: toSortKey } : ''),
           page: (++page).toString(),
