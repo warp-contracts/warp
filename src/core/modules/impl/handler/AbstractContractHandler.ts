@@ -28,6 +28,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
   ): Promise<InteractionResult<State, Result>>;
 
   abstract initState(state: State): void;
+  abstract currentState(): State;
 
   async dispose(): Promise<void> {
     // noop by default;
@@ -132,7 +133,9 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         callType: 'read'
       });
 
-      await stateEvaluator.onContractCall(interactionTx, executionContext, currentResult);
+      if (currentResult) {
+        await stateEvaluator.onContractCall(interactionTx, executionContext, currentResult);
+      }
 
       const stateWithValidity = await childContract.readState(interactionTx.sortKey, [
         ...(currentTx || []),

@@ -1,8 +1,7 @@
 import { GQLNodeInterface } from '../../../legacy/gqlResult';
 
-//export type StateCache<State> = Array<EvalStateResult<State>>;
-export function canBeCached(tx: GQLNodeInterface): boolean {
-  // in case of using non-redstone gateway
+export function isConfirmedInteraction(tx: GQLNodeInterface): boolean {
+  // in case of using non-warp gateway
   if (tx.confirmationStatus === undefined) {
     return true;
   } else {

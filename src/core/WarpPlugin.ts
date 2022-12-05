@@ -13,3 +13,10 @@ export interface WarpPlugin<T, R> {
 
   process(input: T): R;
 }
+
+export type EvaluationProgressInput = {
+  contractTxId: string;
+  currentInteraction: number;
+  allInteractions: number;
+  lastInteractionProcessingTime: string;
+}
