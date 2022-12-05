@@ -7,8 +7,7 @@ import {JWKInterface} from 'arweave/node/lib/wallet';
 
 async function main() {
   let wallet: JWKInterface = readJSON('./.secrets/33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA.json');
-  ;
-  LoggerFactory.INST.logLevel('none');
+  LoggerFactory.INST.logLevel('error');
   LoggerFactory.INST.logLevel('debug', 'ExecutionContext');
   const logger = LoggerFactory.INST.create('deploy');
 
@@ -26,7 +25,7 @@ async function main() {
     const initialState = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.json'), 'utf8');
 
     // case 1 - full deploy, js contract
-    const {contractTxId, srcTxId} = await warp.createContract.deploy({
+    const {contractTxId, srcTxId} = await warp.deploy({
       wallet,
       initState: initialState,
       src: jsContractSrc,
@@ -64,7 +63,7 @@ async function main() {
     });*/
 
     const contract = warp.contract<any>(contractTxId)
-      .setEvaluationOptions({sequencerUrl: "http://localhost:5666/", internalWrites: false, unsafeClient: 'throw'})
+      .setEvaluationOptions({internalWrites: false, unsafeClient: 'throw'})
       .connect(wallet);
 
     await Promise.all([

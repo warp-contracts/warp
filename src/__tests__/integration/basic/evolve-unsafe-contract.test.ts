@@ -90,7 +90,8 @@ describe('Testing unsafe client in nested contracts with "skip" option', () => {
 
     const newSource = fs.readFileSync(path.join(__dirname, '../data/token-pst-unsafe.js'), 'utf8');
 
-    const newSrcTxId = await pst.save({ src: newSource }, warp.environment);
+    const srcTx = await warp.createSourceTx({ src: newSource }, wallet);
+    const newSrcTxId = await warp.saveSourceTx(srcTx);
     await mineBlock(warp);
 
     const evolveResponse = await pst.evolve(newSrcTxId);
