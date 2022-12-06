@@ -69,10 +69,17 @@ export class WarpBuilder {
       dbLocation: `${cacheOptions.dbLocation}/contracts`
     });
 
+    // Separate cache for sources to minimize duplicates
+    const sourceCache = new LevelDbCache({
+      ...cacheOptions,
+      dbLocation: `${cacheOptions.dbLocation}/source`
+    });
+
     this._definitionLoader = new WarpGatewayContractDefinitionLoader(
       gatewayOptions.address,
       this._arweave,
       contractsCache,
+      sourceCache,
       this._environment
     );
     return this;

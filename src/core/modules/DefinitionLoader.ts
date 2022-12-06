@@ -1,4 +1,4 @@
-import { ContractDefinition, ContractSource } from '../../core/ContractDefinition';
+import { ContractCache, ContractDefinition, ContractSource, SrcCache } from '../../core/ContractDefinition';
 import { GwTypeAware } from './InteractionsLoader';
 import { SortKeyCache } from '../../cache/SortKeyCache';
 
@@ -12,7 +12,12 @@ export interface DefinitionLoader extends GwTypeAware {
 
   loadContractSource(srcTxId: string): Promise<ContractSource>;
 
-  setCache(cache: SortKeyCache<ContractDefinition<any>>): void;
+  setCache(cache: SortKeyCache<ContractCache<any>>): void;
 
-  getCache(): SortKeyCache<ContractDefinition<any>>;
+  // Cache for storing common source code or binaries
+  setSrcCache(cacheSrc?: SortKeyCache<SrcCache>): void;
+
+  getCache(): SortKeyCache<ContractCache<any>>;
+
+  getSrcCache(): SortKeyCache<SrcCache>;
 }

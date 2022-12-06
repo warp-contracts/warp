@@ -1,7 +1,7 @@
 import Arweave from 'arweave';
 import Transaction from 'arweave/node/lib/transaction';
 import { ContractType } from '../../../contract/deploy/CreateContract';
-import { ContractDefinition, ContractSource } from '../../../core/ContractDefinition';
+import { ContractDefinition, ContractSource, ContractCache, SrcCache } from '../../../core/ContractDefinition';
 import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
 import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
@@ -146,7 +146,16 @@ export class ContractDefinitionLoader implements DefinitionLoader {
   setCache(cache: SortKeyCache<ContractDefinition<any>>): void {
     throw new Error('No cache implemented for this loader');
   }
-  getCache(): SortKeyCache<ContractDefinition<any>> {
+
+  setSrcCache(cache: SortKeyCache<SrcCache>): void {
+    throw new Error('No cache implemented for this loader');
+  }
+
+  getCache(): SortKeyCache<ContractCache<any>> {
+    throw new Error('No cache implemented for this loader');
+  }
+
+  getSrcCache(): SortKeyCache<SrcCache> {
     throw new Error('No cache implemented for this loader');
   }
 }
