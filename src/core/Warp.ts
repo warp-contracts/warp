@@ -20,7 +20,7 @@ import { EvalStateResult, StateEvaluator } from './modules/StateEvaluator';
 import { WarpBuilder } from './WarpBuilder';
 import { WarpPluginType, WarpPlugin, knownWarpPlugins } from './WarpPlugin';
 import { SortKeyCache } from '../cache/SortKeyCache';
-import { ContractDefinition } from './ContractDefinition';
+import { ContractDefinition, SrcCache } from './ContractDefinition';
 import { SignatureType } from '../contract/Signature';
 import { SourceData } from '../contract/deploy/impl/SourceImpl';
 import Transaction from 'arweave/node/lib/transaction';
@@ -106,8 +106,9 @@ export class Warp {
     return this;
   }
 
-  useContractCache(contractsCache: SortKeyCache<ContractDefinition<any>>): Warp {
-    this.definitionLoader.setCache(contractsCache);
+  useContractCache(definition: SortKeyCache<ContractDefinition<any>>, src: SortKeyCache<SrcCache>): Warp {
+    this.definitionLoader.setSrcCache(src);
+    this.definitionLoader.setCache(definition);
     return this;
   }
 

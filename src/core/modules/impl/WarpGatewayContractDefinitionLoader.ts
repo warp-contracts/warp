@@ -3,7 +3,7 @@ import { ContractDefinitionLoader } from './ContractDefinitionLoader';
 import { Buffer } from 'redstone-isomorphic';
 import Transaction from 'arweave/node/lib/transaction';
 import { GW_TYPE } from '../InteractionsLoader';
-import { ContractDefinition, ContractSource } from '../../../core/ContractDefinition';
+import { ContractDefinition, ContractSource, SrcCache, ContractCache } from '../../../core/ContractDefinition';
 import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
 import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
@@ -32,7 +32,8 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
   constructor(
     private readonly baseUrl: string,
     arweave: Arweave,
-    private cache: SortKeyCache<ContractDefinition<any>>,
+    private definitionCache: SortKeyCache<ContractCache<any>>,
+    private srcCache: SortKeyCache<SrcCache>,
     private readonly env: WarpEnvironment
   ) {
     this.baseUrl = stripTrailingSlash(baseUrl);
@@ -42,15 +43,9 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
   }
 
   async load<State>(contractTxId: string, evolvedSrcTxId?: string): Promise<ContractDefinition<State>> {
-    let cacheKey = contractTxId;
-    if (evolvedSrcTxId) {
-      cacheKey += `_${evolvedSrcTxId}`;
-    }
-
-    const cacheResult = await this.cache.get(cacheKey, 'cd');
-    if (cacheResult) {
+    const result = await this.getFromCache(contractTxId, evolvedSrcTxId);
+    if (result) {
       this.rLogger.debug('WarpGatewayContractDefinitionLoader: Hit from cache!');
-      const result = cacheResult.cachedValue;
       // LevelDB serializes Buffer to an object with 'type' and 'data' fields
       if (result.contractType == 'wasm' && (result.srcBinary as any).data) {
         result.srcBinary = Buffer.from((result.srcBinary as any).data);
@@ -62,7 +57,8 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
     const contract = await this.doLoad<State>(contractTxId, evolvedSrcTxId);
     this.rLogger.info(`Contract definition loaded in: ${benchmark.elapsed()}`);
     this.verifyEnv(contract);
-    await this.cache.put({ contractTxId: cacheKey, sortKey: 'cd' }, contract);
+
+    await this.putToCache(contractTxId, contract, evolvedSrcTxId);
 
     return contract;
   }
@@ -114,12 +110,20 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
     return 'warp';
   }
 
-  setCache(cache: SortKeyCache<ContractDefinition<any>>): void {
-    this.cache = cache;
+  setCache(cache: SortKeyCache<ContractCache<any>>): void {
+    this.definitionCache = cache;
   }
 
-  getCache(): SortKeyCache<ContractDefinition<any>> {
-    return this.cache;
+  setSrcCache(cacheSrc: SortKeyCache<SrcCache>): void {
+    this.srcCache = cacheSrc;
+  }
+
+  getCache(): SortKeyCache<ContractCache<any>> {
+    return this.definitionCache;
+  }
+
+  getSrcCache(): SortKeyCache<SrcCache> {
+    return this.srcCache;
   }
 
   private verifyEnv(def: ContractDefinition<unknown>): void {
@@ -129,5 +133,27 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
     if (!def.testnet && this.env === 'testnet') {
       throw new Error('Trying to use non-testnet contract in a testnet env.');
     }
+  }
+
+  // Gets ContractDefinition and ContractSource from two caches and returns a combined structure
+  private async getFromCache(contractTxId: string, srcTxId?: string): Promise<ContractDefinition<any> | null> {
+    const contract = await this.definitionCache.get(contractTxId, 'cd');
+    if (!contract) {
+      return null;
+    }
+
+    const src = await this.srcCache.get(srcTxId || contract.cachedValue.srcTxId, 'src');
+    if (!src) {
+      return null;
+    }
+    return { ...contract.cachedValue, ...src.cachedValue };
+  }
+
+  // Divides ContractDefinition into entries in two caches to avoid duplicates
+  private async putToCache(contractTxId: string, value: ContractDefinition<any>, srcTxId?: string): Promise<void> {
+    const src = new SrcCache(value);
+    const contract = new ContractCache(value);
+    await this.definitionCache.put({ contractTxId: contractTxId, sortKey: 'cd' }, contract);
+    await this.srcCache.put({ contractTxId: srcTxId || contract.srcTxId, sortKey: 'src' }, src);
   }
 }
