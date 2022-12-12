@@ -256,7 +256,6 @@ async function getWasmModule(wasmResponse: Response, binary: Buffer): Promise<We
 export interface InteractionData<Input> {
   interaction?: ContractInteraction<Input>;
   interactionTx: GQLNodeInterface;
-  currentTx: { interactionTxId: string; contractTxId: string }[];
 }
 
 /**
