@@ -11,7 +11,7 @@ import { GW_TYPE } from '../InteractionsLoader';
 import { TagsParser } from './TagsParser';
 import { WasmSrc } from './wasm/WasmSrc';
 import { WarpEnvironment } from '../../Warp';
-import { SortKeyCache } from 'cache/SortKeyCache';
+import { SortKeyCache } from '../../../cache/SortKeyCache';
 
 const supportedSrcContentTypes = ['application/javascript', 'application/wasm'];
 

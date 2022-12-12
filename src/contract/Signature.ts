@@ -1,5 +1,5 @@
 import Transaction from 'arweave/node/lib/transaction';
-import { Warp } from 'core/Warp';
+import { Warp } from '../core/Warp';
 import { ArWallet } from './deploy/CreateContract';
 
 export type SigningFunction = (tx: Transaction) => Promise<void>;
