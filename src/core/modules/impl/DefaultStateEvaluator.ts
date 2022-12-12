@@ -142,11 +142,11 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           callType: 'read'
         });
 
-        await this.onContractCall(
+        /*await this.onContractCall(
           missingInteraction,
           executionContext,
           new EvalStateResult<State>(currentState, validity, errorMessages)
-        );
+        );*/
 
         this.logger.debug(`${indent(depth)}Reading state of the calling contract at`, missingInteraction.sortKey);
         /**
@@ -157,7 +157,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         let newState = null;
         try {
           await writingContract.readState(missingInteraction.sortKey);
-          newState = await this.internalWriteState<State>(contractDefinition.txId, missingInteraction.sortKey);
+          //newState = await this.internalWriteState<State>(contractDefinition.txId, missingInteraction.sortKey);
         } catch (e) {
           if (e.name == 'ContractError' && e.subtype == 'unsafeClientSkip') {
             this.logger.warn('Skipping unsafe contract in internal write');

@@ -226,4 +226,10 @@ export interface Contract<State = unknown> {
   getEoEvaluator(): EvaluationOptionsEvaluator;
 
   isRoot(): boolean;
+
+  getUncommittedState(contractTxId: string): EvalStateResult<unknown>;
+
+  setUncommittedState(contractTxId: string, result: EvalStateResult<unknown>): void;
+
+  hasUncommittedState(contractTxId: string): boolean;
 }
