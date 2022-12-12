@@ -1,4 +1,3 @@
-import { CurrentTx } from '../../../../contract/Contract';
 import { ContractDefinition } from '../../../../core/ContractDefinition';
 import { ExecutionContext } from '../../../../core/ExecutionContext';
 import { EvalStateResult } from '../../../../core/modules/StateEvaluator';
@@ -33,7 +32,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
     // noop by default;
   }
 
-  protected assignWrite(executionContext: ExecutionContext<State>, currentTx: CurrentTx[]) {
+  protected assignWrite(executionContext: ExecutionContext<State>) {
     this.swGlobal.contracts.write = async <Input = unknown>(
       contractTxId: string,
       input: Input,
@@ -60,13 +59,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         callType: 'write'
       });
 
-      const result = await calleeContract.dryWriteFromTx<Input>(input, this.swGlobal._activeTx, [
-        ...(currentTx || []),
-        {
-          contractTxId: this.contractDefinition.txId,
-          interactionTxId: this.swGlobal.transaction.id
-        }
-      ]);
+      const result = await calleeContract.dryWriteFromTx<Input>(input, this.swGlobal._activeTx);
 
       this.logger.debug('Cache result?:', !this.swGlobal._activeTx.dry);
       const shouldAutoThrow =
@@ -114,7 +107,6 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
 
   protected assignReadContractState<Input>(
     executionContext: ExecutionContext<State>,
-    currentTx: CurrentTx[],
     currentResult: EvalStateResult<State>,
     interactionTx: GQLNodeInterface
   ) {
@@ -134,13 +126,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
 
       await stateEvaluator.onContractCall(interactionTx, executionContext, currentResult);
 
-      const stateWithValidity = await childContract.readState(interactionTx.sortKey, [
-        ...(currentTx || []),
-        {
-          contractTxId: this.contractDefinition.txId,
-          interactionTxId: this.swGlobal.transaction.id
-        }
-      ]);
+      const stateWithValidity = await childContract.readState(interactionTx.sortKey);
 
       if (stateWithValidity?.cachedValue?.errorMessages) {
         const errorKeys = Reflect.ownKeys(stateWithValidity?.cachedValue?.errorMessages);
