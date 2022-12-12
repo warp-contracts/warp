@@ -1,6 +1,5 @@
 import Arweave from 'arweave';
 import { SortKeyCache, SortKeyCacheResult, CacheKey } from '../../../cache/SortKeyCache';
-import { CurrentTx } from '../../../contract/Contract';
 import { ExecutionContext } from '../../../core/ExecutionContext';
 import { ExecutionContextModifier } from '../../../core/ExecutionContextModifier';
 import { GQLNodeInterface } from '../../../legacy/gqlResult';
@@ -31,8 +30,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
   }
 
   async eval<State>(
-    executionContext: ExecutionContext<State, HandlerApi<State>>,
-    currentTx: CurrentTx[]
+    executionContext: ExecutionContext<State, HandlerApi<State>>
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
     const cachedState = executionContext.cachedState;
     if (cachedState && cachedState.sortKey == executionContext.requestedSortKey) {
@@ -52,20 +50,6 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     // sanity check...
     if (!contractTxId) {
       throw new Error('Contract tx id not set in the execution context');
-    }
-    for (const entry of currentTx || []) {
-      if (entry.contractTxId === executionContext.contractDefinition.txId) {
-        const index = missingInteractions.findIndex((tx) => tx.id === entry.interactionTxId);
-        if (index !== -1) {
-          this.cLogger.debug('Inf. Loop fix - removing interaction', {
-            height: missingInteractions[index].block.height,
-            contractTxId: entry.contractTxId,
-            interactionTxId: entry.interactionTxId,
-            sortKey: missingInteractions[index].sortKey
-          });
-          missingInteractions.splice(index);
-        }
-      }
     }
 
     if (missingInteractions.length == 0) {
@@ -94,8 +78,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     return await this.doReadState(
       missingInteractions,
       new EvalStateResult(baseState, baseValidity, baseErrorMessages || {}),
-      executionContext,
-      currentTx
+      executionContext
     );
   }
 
