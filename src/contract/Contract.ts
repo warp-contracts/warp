@@ -228,4 +228,10 @@ export interface Contract<State = unknown> {
   isRoot(): boolean;
 
   getStorageValues(keys: string[]): Promise<SortKeyCacheResult<Map<string, any>>>;
+
+  getUncommittedState(contractTxId: string): EvalStateResult<unknown>;
+
+  setUncommittedState(contractTxId: string, result: EvalStateResult<unknown>): void;
+
+  hasUncommittedState(contractTxId: string): boolean;
 }
