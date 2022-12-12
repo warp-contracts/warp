@@ -7,7 +7,6 @@ import { ArTransfer, Tags, ArWallet } from './deploy/CreateContract';
 import { CustomSignature } from './Signature';
 import { EvaluationOptionsEvaluator } from './EvaluationOptionsEvaluator';
 
-export type CurrentTx = { interactionTxId: string; contractTxId: string };
 export type BenchmarkStats = { gatewayCommunication: number; stateEvaluation: number; total: number };
 
 interface BundlrResponse {
@@ -96,7 +95,6 @@ export interface Contract<State = unknown> {
    */
   readState(
     sortKeyOrBlockHeight?: string | number,
-    currentTx?: CurrentTx[],
     interactions?: GQLNodeInterface[]
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
 
@@ -157,11 +155,7 @@ export interface Contract<State = unknown> {
     transfer?: ArTransfer
   ): Promise<InteractionResult<State, unknown>>;
 
-  dryWriteFromTx<Input>(
-    input: Input,
-    transaction: GQLNodeInterface,
-    currentTx?: CurrentTx[]
-  ): Promise<InteractionResult<State, unknown>>;
+  dryWriteFromTx<Input>(input: Input, transaction: GQLNodeInterface): Promise<InteractionResult<State, unknown>>;
 
   /**
    * Writes a new "interaction" transaction - i.e. such transaction that stores input for the contract.

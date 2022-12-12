@@ -3,7 +3,6 @@ import Arweave from 'arweave';
 import { ProofHoHash } from '@idena/vrf-js';
 import elliptic from 'elliptic';
 import { SortKeyCache, SortKeyCacheResult } from '../../../cache/SortKeyCache';
-import { CurrentTx } from '../../../contract/Contract';
 import { InteractionCall } from '../../ContractCallRecord';
 import { ExecutionContext } from '../../../core/ExecutionContext';
 import { ExecutionContextModifier } from '../../../core/ExecutionContextModifier';
@@ -36,22 +35,19 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
   ) {}
 
   async eval<State>(
-    executionContext: ExecutionContext<State, HandlerApi<State>>,
-    currentTx: CurrentTx[]
+    executionContext: ExecutionContext<State, HandlerApi<State>>
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
     return this.doReadState(
       executionContext.sortedInteractions,
       new EvalStateResult<State>(executionContext.contractDefinition.initState, {}, {}),
-      executionContext,
-      currentTx
+      executionContext
     );
   }
 
   protected async doReadState<State>(
     missingInteractions: GQLNodeInterface[],
     baseState: EvalStateResult<State>,
-    executionContext: ExecutionContext<State, HandlerApi<State>>,
-    currentTx: CurrentTx[]
+    executionContext: ExecutionContext<State, HandlerApi<State>>
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
     const { ignoreExceptions, stackTrace, internalWrites, cacheEveryNInteractions } =
       executionContext.evaluationOptions;
@@ -138,7 +134,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         const interactionCall: InteractionCall = contract
           .getCallStack()
-          .addInteractionData({ interaction: null, interactionTx: missingInteraction, currentTx });
+          .addInteractionData({ interaction: null, interactionTx: missingInteraction });
 
         // creating a Contract instance for the "writing" contract
         const writingContract = executionContext.warp.contract(writingContractTxId, executionContext.contract, {
@@ -160,13 +156,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
          */
         let newState = null;
         try {
-          await writingContract.readState(missingInteraction.sortKey, [
-            ...(currentTx || []),
-            {
-              contractTxId: contractDefinition.txId, //not: writingContractTxId!
-              interactionTxId: missingInteraction.id
-            }
-          ]);
+          await writingContract.readState(missingInteraction.sortKey);
           newState = await this.internalWriteState<State>(contractDefinition.txId, missingInteraction.sortKey);
         } catch (e) {
           if (e.name == 'ContractError' && e.subtype == 'unsafeClientSkip') {
@@ -235,8 +225,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         const interactionData = {
           interaction,
-          interactionTx: missingInteraction,
-          currentTx
+          interactionTx: missingInteraction
         };
 
         const interactionCall: InteractionCall = contract.getCallStack().addInteractionData(interactionData);
