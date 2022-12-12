@@ -58,7 +58,6 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         callingInteraction: this.swGlobal._activeTx,
         callType: 'write'
       });
-
       const result = await calleeContract.dryWriteFromTx<Input>(input, this.swGlobal._activeTx);
 
       this.logger.debug('Cache result?:', !this.swGlobal._activeTx.dry);
@@ -118,15 +117,20 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         transaction: this.swGlobal.transaction.id
       });
 
-      const { stateEvaluator } = executionContext.warp;
-      const childContract = executionContext.warp.contract(contractTxId, executionContext.contract, {
-        callingInteraction: interactionTx,
-        callType: 'read'
-      });
+      const {contract} = executionContext;
 
-      await stateEvaluator.onContractCall(interactionTx, executionContext, currentResult);
+      let stateWithValidity;
+      if (!contract.isRoot() && contract.hasUncommittedState(contractTxId)) {
+        stateWithValidity = contract.getUncommittedState(contractTxId);
+      } else {
+        const childContract = executionContext.warp.contract(contractTxId, contract, {
+          callingInteraction: interactionTx,
+          callType: 'read'
+        });
 
-      const stateWithValidity = await childContract.readState(interactionTx.sortKey);
+        stateWithValidity = await childContract.readState(interactionTx.sortKey);
+        executionContext.contract.setUncommittedState(contractTxId, stateWithValidity);
+      }
 
       if (stateWithValidity?.cachedValue?.errorMessages) {
         const errorKeys = Reflect.ownKeys(stateWithValidity?.cachedValue?.errorMessages);

@@ -62,10 +62,14 @@ export class HandlerBasedContract<State> implements Contract<State> {
   private signature: Signature;
   private warpFetchWrapper: WarpFetchWrapper;
 
+  private _children: HandlerBasedContract<any>[] = [];
+
+  private _uncommittedStates = new Map<string, EvalStateResult<unknown>>();
+
   constructor(
     private readonly _contractTxId: string,
     protected readonly warp: Warp,
-    private readonly _parentContract: Contract = null,
+    private readonly _parentContract: Contract<any> = null,
     private readonly _innerCallData: InnerCallData = null
   ) {
     this.waitForConfirmation = this.waitForConfirmation.bind(this);
@@ -107,11 +111,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
       callingInteraction.interactionInput.foreignContractCalls[_contractTxId] = callStack;
       this._callStack = callStack;
       this._rootSortKey = _parentContract.rootSortKey;
+      (_parentContract as HandlerBasedContract<unknown>)._children.push(this);
     } else {
       this._callDepth = 0;
       this._callStack = new ContractCallRecord(_contractTxId, 0);
       this._rootSortKey = null;
       this._evaluationOptions = new DefaultEvaluationOptions();
+      this._children = [];
     }
 
     this.getCallStack = this.getCallStack.bind(this);
@@ -549,6 +555,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
       this._callStack = new ContractCallRecord(this.txId(), 0);
       this._rootSortKey = null;
       this.warp.interactionsLoader.clearCache();
+      this._children = [];
+      this._uncommittedStates = new Map();
     }
   }
 
@@ -788,5 +796,15 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   isRoot(): boolean {
     return this._parentContract == null;
+  }
+
+  getUncommittedState(contractTxId: string): EvalStateResult<unknown> {
+    return (this.getRoot() as HandlerBasedContract<unknown>)._uncommittedStates.get(contractTxId);
+  }
+  setUncommittedState(contractTxId: string, result: EvalStateResult<unknown>): void {
+    (this.getRoot() as HandlerBasedContract<unknown>)._uncommittedStates.set(contractTxId, result);
+  }
+  hasUncommittedState(contractTxId: string): boolean {
+    return (this.getRoot() as HandlerBasedContract<unknown>)._uncommittedStates.has(contractTxId);
   }
 }
