@@ -52,7 +52,8 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
       console.log('readState', contractTxId);
       try {
         console.log = function () {}; // to hide any logs from contracts...
-        const result2 = await WarpFactory.custom(
+
+        const warp = WarpFactory.custom(
           arweave,
           {
             ...defaultCacheOptions,
@@ -61,13 +62,15 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
           'mainnet'
         )
           .useWarpGateway(
-            { ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null },
+            {...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null},
             {
               ...defaultCacheOptions,
               inMemory: true
             }
           )
-          .build()
+          .build();
+
+        const result2 = await warp
           .contract(contractTxId)
           .setEvaluationOptions({
             unsafeClient: 'allow',
@@ -75,9 +78,15 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
           })
           .readState(blockHeight);
         const result2String = stringify(result2.cachedValue.state).trim();
+
+        await warp.stateEvaluator.getCache().prune(1);
+
         expect(result2String).toEqual(resultString);
       } finally {
         console.log = originalConsoleLog;
+        const heap = Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100;
+        const rss = Math.round((process.memoryUsage().rss / 1024 / 1024) * 100) / 100;
+        console.log('Memory', { heap, rss });
       }
     },
     800000
@@ -94,7 +103,7 @@ describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
         .readFileSync(path.join(__dirname, 'test-cases', 'contracts', `${contractTxId}.json`), 'utf-8')
         .trim();
       console.log('readState', contractTxId);
-      const result2 = await WarpFactory.custom(
+      const warp = WarpFactory.custom(
         arweave,
         {
           ...defaultCacheOptions,
@@ -103,20 +112,21 @@ describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
         'mainnet'
       )
         .useWarpGateway(
-          { ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null },
+          {...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null},
           {
             ...defaultCacheOptions,
             inMemory: true
           }
         )
-        .build()
-        .contract(contractTxId)
+        .build();
+
+      const result2 = await warp.contract(contractTxId)
         .setEvaluationOptions({
           useVM2: true,
           unsafeClient: 'allow',
           allowBigInt: true
-        })
-        .readState(blockHeight);
+        }).readState(blockHeight);
+
       const result2String = stringify(result2.cachedValue.state).trim();
       expect(result2String).toEqual(resultString);
     },

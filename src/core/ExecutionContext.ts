@@ -40,7 +40,7 @@ export type ExecutionContext<State, Api = unknown> = {
    * performs all the computation.
    */
   handler: Api;
-  caller?: string; // note: this is only set for "viewState" operations
+  caller?: string; // note: this is only set for "viewState" and "write" operations
   cachedState?: SortKeyCacheResult<EvalStateResult<State>>;
   requestedSortKey?: string;
 };
