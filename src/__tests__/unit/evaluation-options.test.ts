@@ -96,7 +96,7 @@ describe('Evaluation options evaluator', () => {
       const result = new EvaluationOptionsEvaluator(contract2.evaluationOptions(), {
         useVM2: false
       }).rootOptions;
-    }).toThrow('Option {useVM2} differs, user: [true], manifest: [false]');
+    }).toThrow('Option {useVM2} differs. EvaluationOptions: [true], manifest: [false]. Use contract.setEvaluationOptions({useVM2: false) to evaluate contract state.');
   });
 
   it('should properly set foreign evaluation options - unsafeClient - allow', async () => {

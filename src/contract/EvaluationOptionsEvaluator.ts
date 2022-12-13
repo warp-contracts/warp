@@ -112,21 +112,17 @@ export class EvaluationOptionsEvaluator {
    */
   constructor(userSetOptions: EvaluationOptions, manifestOptions: Partial<EvaluationOptions>) {
     if (manifestOptions) {
+      const errors = [];
       for (const k in manifestOptions) {
         if (userSetOptions[k] !== manifestOptions[k]) {
-          throw new Error(`Option {${k}} differs, user: [${userSetOptions[k]}], manifest: [${manifestOptions[k]}]`);
+          errors.push(
+            `Option {${k}} differs. EvaluationOptions: [${userSetOptions[k]}], manifest: [${manifestOptions[k]}]. Use contract.setEvaluationOptions({${k}: ${manifestOptions[k]}) to evaluate contract state.`
+          );
         }
       }
-
-      /* if (userSetOptions.internalWrites !== undefined && (userSetOptions.internalWrites != manifestOptions.internalWrites)) {
-        throw new Error('User and contract manifest not compatible - internalWrites');
+      if (errors.length) {
+        throw new Error(errors.join('\n'));
       }
-      if (userSetOptions.unsafeClient && (manifestOptions.unsafeClient != userSetOptions.unsafeClient)) {
-        throw new Error('User and contract manifest not compatible - unsafeClient');
-      }
-      if (userSetOptions.throwOnInternalWriteError && (manifestOptions.throwOnInternalWriteError != userSetOptions.throwOnInternalWriteError)) {
-        throw new Error('User and contract manifest not compatible - throwOnInternalWriteError');
-      }*/
     }
 
     this.rootOptions = Object.freeze(Object.assign({}, userSetOptions, manifestOptions || {}));
