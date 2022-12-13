@@ -95,6 +95,7 @@ export interface Contract<State = unknown> {
    */
   readState(
     sortKeyOrBlockHeight?: string | number,
+    caller?: string,
     interactions?: GQLNodeInterface[]
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
 
@@ -155,7 +156,7 @@ export interface Contract<State = unknown> {
     transfer?: ArTransfer
   ): Promise<InteractionResult<State, unknown>>;
 
-  dryWriteFromTx<Input>(input: Input, transaction: GQLNodeInterface): Promise<InteractionResult<State, unknown>>;
+  applyInput<Input>(input: Input, transaction: GQLNodeInterface): Promise<InteractionResult<State, unknown>>;
 
   /**
    * Writes a new "interaction" transaction - i.e. such transaction that stores input for the contract.
@@ -234,4 +235,8 @@ export interface Contract<State = unknown> {
   setUncommittedState(contractTxId: string, result: EvalStateResult<unknown>): void;
 
   hasUncommittedState(contractTxId: string): boolean;
+
+  resetUncommittedState(): void;
+
+  commitStates(interaction: GQLNodeInterface): Promise<void>;
 }

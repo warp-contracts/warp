@@ -73,6 +73,10 @@ export function handle(state, action) {
     const recipient = _input.recipient;
     const amount = _input.amount;
 
+    if (amount == 0 ) {
+      throw new ContractError('TransferFromZero');
+    }
+
     const currentAllowance = _allowances[sender][_msgSender];
 
     if (currentAllowance === undefined || currentAllowance < amount) {
