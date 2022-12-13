@@ -216,7 +216,7 @@ describe('Testing internal writes', () => {
       expect((await contractB.readState()).cachedValue.state.counter).toEqual(2060);
     });
 
-    xit('should properly evaluate state with a new client', async () => {
+    it('should properly evaluate state with a new client', async () => {
       const contractA2 = WarpFactory.forLocal(port)
         .contract<any>(contractATxId)
         .setEvaluationOptions({ internalWrites: true })
@@ -279,7 +279,7 @@ describe('Testing internal writes', () => {
       expect((await contractB.readState()).cachedValue.state.counter).toEqual(2060);
     });
 
-    xit('should properly evaluate state with a new client', async () => {
+    it('should properly evaluate state with a new client', async () => {
       const contractA2 = WarpFactory.forLocal(port)
         .contract<any>(contractATxId)
         .setEvaluationOptions({ internalWrites: true })
