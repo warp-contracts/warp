@@ -58,7 +58,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         callingInteraction: this.swGlobal._activeTx,
         callType: 'write'
       });
-      const result = await calleeContract.dryWriteFromTx<Input>(input, this.swGlobal._activeTx);
+      const result = await calleeContract.applyInput<Input>(input, this.swGlobal._activeTx);
 
       this.logger.debug('Cache result?:', !this.swGlobal._activeTx.dry);
       const shouldAutoThrow =
@@ -69,7 +69,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         ? `Internal write auto error for call [${JSON.stringify(debugData)}]: ${result.errorMessage}`
         : result.errorMessage;
 
-      await executionContext.warp.stateEvaluator.onInternalWriteStateUpdate(this.swGlobal._activeTx, contractTxId, {
+      calleeContract.setUncommittedState(calleeContract.txId(), {
         state: result.state as State,
         validity: {
           ...result.originalValidity,
@@ -80,6 +80,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
           [this.swGlobal._activeTx.id]: effectiveErrorMessage
         }
       });
+
       if (shouldAutoThrow) {
         throw new ContractError(effectiveErrorMessage);
       }
@@ -117,20 +118,27 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         transaction: this.swGlobal.transaction.id
       });
 
-      const {contract} = executionContext;
+      const { contract, warp } = executionContext;
 
-      let stateWithValidity;
+      /*let stateWithValidity;
       if (!contract.isRoot() && contract.hasUncommittedState(contractTxId)) {
         stateWithValidity = contract.getUncommittedState(contractTxId);
       } else {
-        const childContract = executionContext.warp.contract(contractTxId, contract, {
+        const childContract = warp.contract(contractTxId, contract, {
           callingInteraction: interactionTx,
           callType: 'read'
         });
 
         stateWithValidity = await childContract.readState(interactionTx.sortKey);
-        executionContext.contract.setUncommittedState(contractTxId, stateWithValidity);
-      }
+        childContract.setUncommittedState(contractTxId, stateWithValidity);
+      }*/
+
+      const childContract = warp.contract(contractTxId, contract, {
+        callingInteraction: interactionTx,
+        callType: 'read'
+      });
+
+      const stateWithValidity = await childContract.readState(interactionTx.sortKey);
 
       if (stateWithValidity?.cachedValue?.errorMessages) {
         const errorKeys = Reflect.ownKeys(stateWithValidity?.cachedValue?.errorMessages);
@@ -160,12 +168,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
 
   protected assignRefreshState(executionContext: ExecutionContext<State>) {
     this.swGlobal.contracts.refreshState = async () => {
-      const stateEvaluator = executionContext.warp.stateEvaluator;
-      const result = await stateEvaluator.latestAvailableState(
-        this.swGlobal.contract.id,
-        this.swGlobal._activeTx.sortKey
-      );
-      return result?.cachedValue.state;
+      return executionContext.contract.getUncommittedState(this.swGlobal.contract.id)?.state;
     };
   }
 }

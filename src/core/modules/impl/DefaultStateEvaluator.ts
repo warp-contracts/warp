@@ -96,6 +96,9 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       if (shouldBreakAfterEvolve) {
         break;
       }
+
+      contract.setUncommittedState(contract.txId(), new EvalStateResult(currentState, validity, errorMessages));
+
       const missingInteraction = missingInteractions[i];
       const singleInteractionBenchmark = Benchmark.measure();
       currentSortKey = missingInteraction.sortKey;
@@ -125,7 +128,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       );
 
       const isInteractWrite = this.tagsParser.isInteractWrite(missingInteraction, contractDefinition.txId);
-
       // other contract makes write ("writing contract") on THIS contract
       if (isInteractWrite && internalWrites) {
         // evaluating txId of the contract that is writing on THIS contract
@@ -137,27 +139,21 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           .addInteractionData({ interaction: null, interactionTx: missingInteraction });
 
         // creating a Contract instance for the "writing" contract
-        const writingContract = executionContext.warp.contract(writingContractTxId, executionContext.contract, {
+        const writingContract = warp.contract(writingContractTxId, executionContext.contract, {
           callingInteraction: missingInteraction,
           callType: 'read'
         });
-
-        /*await this.onContractCall(
-          missingInteraction,
-          executionContext,
-          new EvalStateResult<State>(currentState, validity, errorMessages)
-        );*/
 
         this.logger.debug(`${indent(depth)}Reading state of the calling contract at`, missingInteraction.sortKey);
         /**
          Reading the state of the writing contract.
          This in turn will cause the state of THIS contract to be
-         updated in cache - see {@link ContractHandlerApi.assignWrite}
+         updated in uncommitted state
          */
-        let newState = null;
+        let newState: EvalStateResult<unknown> = null;
         try {
           await writingContract.readState(missingInteraction.sortKey);
-          //newState = await this.internalWriteState<State>(contractDefinition.txId, missingInteraction.sortKey);
+          newState = contract.getUncommittedState(contract.txId());
         } catch (e) {
           if (e.name == 'ContractError' && e.subtype == 'unsafeClientSkip') {
             this.logger.warn('Skipping unsafe contract in internal write');
@@ -176,17 +172,16 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         // loading latest state of THIS contract from cache
         if (newState !== null) {
-          currentState = newState.cachedValue.state;
+          currentState = newState.state as State;
           // we need to update the state in the wasm module
           executionContext?.handler.initState(currentState);
 
-          validity[missingInteraction.id] = newState.cachedValue.validity[missingInteraction.id];
-          if (newState.cachedValue.errorMessages?.[missingInteraction.id]) {
-            errorMessages[missingInteraction.id] = newState.cachedValue.errorMessages[missingInteraction.id];
+          validity[missingInteraction.id] = newState.validity[missingInteraction.id];
+          if (newState.errorMessages?.[missingInteraction.id]) {
+            errorMessages[missingInteraction.id] = newState.errorMessages[missingInteraction.id];
           }
 
           const toCache = new EvalStateResult(currentState, validity, errorMessages);
-          await this.onStateUpdate<State>(missingInteraction, executionContext, toCache);
           if (canBeCached(missingInteraction)) {
             lastConfirmedTxState = {
               tx: missingInteraction,
@@ -267,12 +262,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
             state: toCache
           };
         }
-        await this.onStateUpdate<State>(
-          missingInteraction,
-          executionContext,
-          toCache,
-          cacheEveryNInteractions % i == 0
-        );
       }
 
       if (progressPlugin) {
@@ -297,11 +286,17 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           throw e;
         }
       }
+
+      if (contract.isRoot()) {
+        await contract.commitStates(missingInteraction);
+      } else {
+        contract.setUncommittedState(contract.txId(), new EvalStateResult(currentState, validity, errorMessages));
+      }
     }
     const evalStateResult = new EvalStateResult<State>(currentState, validity, errorMessages);
 
     // state could have been fully retrieved from cache
-    // or there were no interactions below requested block height
+    // or there were no interactions below requested sort key
     if (lastConfirmedTxState !== null) {
       await this.onStateEvaluated(lastConfirmedTxState.tx, executionContext, lastConfirmedTxState.state);
     }
