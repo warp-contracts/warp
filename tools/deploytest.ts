@@ -8,7 +8,7 @@ import {JWKInterface} from 'arweave/node/lib/wallet';
 async function main() {
   let wallet: JWKInterface = readJSON('./.secrets/33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA.json');
   LoggerFactory.INST.logLevel('error');
-  LoggerFactory.INST.logLevel('debug', 'ExecutionContext');
+  //LoggerFactory.INST.logLevel('debug', 'ExecutionContext');
   const logger = LoggerFactory.INST.create('deploy');
 
   const arweave = Arweave.init({
@@ -63,7 +63,7 @@ async function main() {
     });*/
 
     const contract = warp.contract<any>(contractTxId)
-      .setEvaluationOptions({internalWrites: false, unsafeClient: 'throw'})
+      .setEvaluationOptions({internalWrites: false, unsafeClient: 'throw', allowBigInt: true})
       .connect(wallet);
 
     await Promise.all([
@@ -90,7 +90,8 @@ async function main() {
     console.dir(cachedValue.state);
 
   } catch (e) {
-    logger.error(e)
+    //logger.error(e)
+    throw e;
 
   }
 
