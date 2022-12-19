@@ -20,7 +20,7 @@ export const emptyTransfer: ArTransfer = {
 
 export interface CommonContractData {
   wallet: ArWallet | SignatureType;
-  initState: string;
+  initState: string | Buffer;
   tags?: Tags;
   transfer?: ArTransfer;
   data?: {

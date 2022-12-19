@@ -12,6 +12,7 @@ import { TagsParser } from './TagsParser';
 import { WasmSrc } from './wasm/WasmSrc';
 import { WarpEnvironment } from '../../Warp';
 import { SortKeyCache } from 'cache/SortKeyCache';
+import { unpack } from 'msgpackr';
 
 const supportedSrcContentTypes = ['application/javascript', 'application/wasm'];
 
@@ -55,9 +56,10 @@ export class ContractDefinitionLoader implements DefinitionLoader {
     const minFee = this.tagsParser.getTag(contractTx, SmartWeaveTags.MIN_FEE);
     this.logger.debug('Tags decoding', benchmark.elapsed());
     benchmark.reset();
-    const s = await this.evalInitialState(contractTx);
-    this.logger.debug('init state', s);
-    const initState = JSON.parse(await this.evalInitialState(contractTx));
+    // TODO: It should be stored somewhere whether the initial state is stored as a JSON string or
+    // as a MsgPack binary. For the sake of this experiment, we assume it's always MsgPack.
+    // const initState = JSON.parse(await this.evalInitialState(contractTx));
+    const initState = unpack(await this.arweaveWrapper.txData(contractTx.id));
     this.logger.debug('Parsing src and init state', benchmark.elapsed());
 
     const { src, srcBinary, srcWasmLang, contractType, metadata, srcTx } = await this.loadContractSource(
