@@ -197,7 +197,8 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
               if (!cond) throw new ContractError(message);
             },
             //https://github.com/patriksimek/vm2/issues/484#issuecomment-1327479592
-            Uint8Array: Uint8Array
+            Uint8Array: Uint8Array,
+            Uint32Array: Uint32Array
           },
           compiler: 'javascript',
           eval: false,
