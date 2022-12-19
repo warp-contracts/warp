@@ -1,4 +1,6 @@
 /* eslint-disable */
+import { unpack, pack } from 'msgpackr';
+
 import { ContractDefinition } from '../../../../core/ContractDefinition';
 import { ExecutionContext } from '../../../../core/ExecutionContext';
 import { EvalStateResult } from '../../../../core/modules/StateEvaluator';
@@ -81,7 +83,7 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
         break;
       }
       case 'rust': {
-        this.wasmExports.initState(state);
+        this.wasmExports.initState(pack(state));
         break;
       }
       case 'go': {
@@ -104,7 +106,7 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
         return JSON.parse(result);
       }
       case 'rust': {
-        let handleResult = await this.wasmExports.handle(action.input);
+        let handleResult = await this.wasmExports.handle(pack(action.input));
         if (!handleResult) {
           return;
         }
@@ -145,7 +147,7 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
         return JSON.parse(this.wasmExports.__getString(currentStatePtr));
       }
       case 'rust': {
-        return this.wasmExports.currentState();
+        return unpack(this.wasmExports.currentState());
       }
       case 'go': {
         const result = this.wasmExports.currentState();

@@ -1,7 +1,7 @@
 import Arweave from 'arweave';
 import loader from '@assemblyscript/loader';
 import { asWasmImports } from './wasm/as-wasm-imports';
-import { rustWasmImports } from './wasm/rust-wasm-imports';
+import { rustWasmImports } from './wasm/rust-wasm-imports-msgpack';
 import { Go } from './wasm/go-wasm-imports';
 import * as vm2 from 'vm2';
 import { WarpCache } from '../../../cache/WarpCache';
