@@ -71,13 +71,16 @@ export class HandlerBasedContract<State> implements Contract<State> {
     this._sorter = new LexicographicalInteractionsSorter(warp.arweave);
     if (_parentContract != null) {
       this._evaluationOptions = this.getRoot().evaluationOptions();
+      if (_parentContract.evaluationOptions().useKVStorage) {
+        throw new Error('Foreign writes or reads are forbidden for kv storage contracts');
+      }
       this._callDepth = _parentContract.callDepth() + 1;
       const callingInteraction: InteractionCall = _parentContract
         .getCallStack()
         .getInteraction(_innerCallData.callingInteraction.id);
 
       if (this._callDepth > this._evaluationOptions.maxCallDepth) {
-        throw Error(
+        throw new Error(
           `Max call depth of ${this._evaluationOptions.maxCallDepth} has been exceeded for interaction ${JSON.stringify(
             callingInteraction.interactionInput
           )}`
@@ -496,6 +499,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const contractEvaluationOptions = this.isRoot()
       ? this._eoEvaluator.rootOptions
       : this.getEoEvaluator().forForeignContract(contractDefinition.manifest?.evaluationOptions);
+    if (!this.isRoot() && contractEvaluationOptions.useKVStorage) {
+      throw new Error('Foreign read/writes cannot be performed on kv storage contracts');
+    }
 
     this.ecLogger.debug(`Evaluation options ${contractTxId}:`, contractEvaluationOptions);
 

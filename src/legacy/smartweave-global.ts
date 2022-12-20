@@ -1,7 +1,9 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import { EvaluationOptions } from '../core/modules/StateEvaluator';
-import { GQLNodeInterface, GQLTagInterface, VrfData } from './gqlResult';
+import {EvaluationOptions} from '../core/modules/StateEvaluator';
+import {GQLNodeInterface, GQLTagInterface, VrfData} from './gqlResult';
+import {BatchDBOp} from "@ethereumjs/trie/dist/types";
+import {DB} from "@ethereumjs/trie";
 
 /**
  *
@@ -56,7 +58,9 @@ export class SmartWeaveGlobal {
 
   caller?: string;
 
-  constructor(arweave: Arweave, contract: { id: string; owner: string }, evaluationOptions: EvaluationOptions) {
+  kv: KV;
+
+  constructor(arweave: Arweave, contract: { id: string; owner: string }, evaluationOptions: EvaluationOptions, storage: DB | null) {
     this.gasUsed = 0;
     this.gasLimit = Number.MAX_SAFE_INTEGER;
     this.unsafeClient = arweave;
@@ -95,6 +99,7 @@ export class SmartWeaveGlobal {
     this.getBalance = this.getBalance.bind(this);
 
     this.extensions = {};
+    this.kv = new KV(storage);
   }
 
   useGas(gas: number) {
@@ -132,7 +137,8 @@ export class SmartWeaveGlobal {
 
 // tslint:disable-next-line: max-classes-per-file
 class Transaction {
-  constructor(private readonly smartWeaveGlobal: SmartWeaveGlobal) {}
+  constructor(private readonly smartWeaveGlobal: SmartWeaveGlobal) {
+  }
 
   get id() {
     if (!this.smartWeaveGlobal._activeTx) {
@@ -179,7 +185,8 @@ class Transaction {
 
 // tslint:disable-next-line: max-classes-per-file
 class Block {
-  constructor(private readonly smartWeaveGlobal: SmartWeaveGlobal) {}
+  constructor(private readonly smartWeaveGlobal: SmartWeaveGlobal) {
+  }
 
   get height() {
     if (!this.smartWeaveGlobal._activeTx) {
@@ -204,7 +211,8 @@ class Block {
 }
 
 class Vrf {
-  constructor(private readonly smartWeaveGlobal: SmartWeaveGlobal) {}
+  constructor(private readonly smartWeaveGlobal: SmartWeaveGlobal) {
+  }
 
   get data(): VrfData {
     return this.smartWeaveGlobal._activeTx.vrf;
@@ -227,5 +235,56 @@ class Vrf {
     }
 
     return Number(result);
+  }
+}
+
+class KV {
+  private _kvBatch: BatchDBOp[] = [];
+
+  constructor(private readonly _storage: DB | null) {
+  }
+
+  async put(key: string, value: string): Promise<void> {
+    this.checkStorageAvailable();
+    this._kvBatch.push({
+      type: 'put',
+      key: Buffer.from(key),
+      value: Buffer.from(value)
+    });
+  }
+
+  del(key: string): void {
+    this.checkStorageAvailable();
+    this._kvBatch.push({
+      type: 'del',
+      key: Buffer.from(key)
+    });
+  }
+
+  async get(key: string): Promise<string | null> {
+    this.checkStorageAvailable();
+    const result = await this._storage.get(Buffer.from(key));
+    return result?.toString() || null;
+  }
+
+  async commit(): Promise<void> {
+    if (this._storage) {
+      await this._storage.batch(this._kvBatch);
+      this._kvBatch = [];
+    }
+  }
+
+  rollback(): void {
+    this._kvBatch = [];
+  }
+
+  ops(): BatchDBOp[] {
+    return structuredClone(this._kvBatch);
+  }
+
+  private checkStorageAvailable() {
+    if (!this._storage) {
+      throw new Error('KV Storage not available');
+    }
   }
 }
