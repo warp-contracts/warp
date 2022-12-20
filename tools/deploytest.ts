@@ -18,8 +18,8 @@ async function main() {
   });
 
   try {
-    const warp = WarpFactory
-      .forMainnet({...defaultCacheOptions, inMemory: true});
+      const warp = WarpFactory
+        .forMainnet({...defaultCacheOptions, inMemory: true});
 
     const jsContractSrc = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.js'), 'utf8');
     const initialState = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.json'), 'utf8');

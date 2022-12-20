@@ -21,6 +21,11 @@ import BigNumber from '../../../legacy/bignumber';
 import { Warp } from '../../Warp';
 import { isBrowser } from '../../../utils/utils';
 import { Buffer } from 'redstone-isomorphic';
+import { LevelKVStorage } from '../../../cache/impl/LevelKVStorage';
+import { DEFAULT_LEVEL_DB_LOCATION } from '../../WarpFactory';
+import { Trie } from '@ethereumjs/trie';
+import { TrieLevel } from '../../../cache/impl/TrieLevel';
+import { Level } from 'level';
 
 export class ContractError extends Error {
   constructor(message, readonly subtype?: string) {
@@ -46,13 +51,32 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
     evaluationOptions: EvaluationOptions,
     warp: Warp
   ): Promise<HandlerApi<State>> {
+    let kvStorage = null;
+    if (evaluationOptions.useKVStorage) {
+      kvStorage = new TrieLevel(new Level(`${DEFAULT_LEVEL_DB_LOCATION}/kv/${contractDefinition.txId}`));
+      /*kvStorage = new Trie({
+        db: new TrieLevel(new Level(`${DEFAULT_LEVEL_DB_LOCATION}/kv/${contractDefinition.txId}`))
+      });*/
+      /*kvStorage = new Trie({
+        db: new LevelKVStorage({
+          dbLocation: `${DEFAULT_LEVEL_DB_LOCATION}/kv/${contractDefinition.txId}`,
+          inMemory: false
+        })
+      });*/
+      /*kvStorage = new LevelKVStorage({
+        dbLocation: `${DEFAULT_LEVEL_DB_LOCATION}/kv/${contractDefinition.txId}`,
+        inMemory: false
+      });*/
+    }
+
     const swGlobal = new SmartWeaveGlobal(
       this.arweave,
       {
         id: contractDefinition.txId,
         owner: contractDefinition.owner
       },
-      evaluationOptions
+      evaluationOptions,
+      kvStorage
     );
 
     if (contractDefinition.contractType == 'wasm') {

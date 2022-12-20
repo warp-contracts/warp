@@ -102,7 +102,8 @@ export class EvaluationOptionsEvaluator {
     allowBigInt: () => this.rootOptions['allowBigInt'], // not sure about this
     walletBalanceUrl: () => this.rootOptions['walletBalanceUrl'],
     mineArLocalBlocks: () => this.rootOptions['mineArLocalBlocks'],
-    cacheEveryNInteractions: () => this.rootOptions['cacheEveryNInteractions']
+    cacheEveryNInteractions: () => this.rootOptions['cacheEveryNInteractions'],
+    useKVStorage: (foreignOptions) => foreignOptions['useKVStorage']
   };
 
   /**

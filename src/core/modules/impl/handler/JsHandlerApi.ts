@@ -11,7 +11,7 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
     swGlobal: SmartWeaveGlobal,
     contractDefinition: ContractDefinition<State>,
     // eslint-disable-next-line
-    private readonly contractFunction: Function
+    private readonly contractFunction: Function,
   ) {
     super(swGlobal, contractDefinition);
   }
@@ -49,6 +49,7 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
       const handlerResult = await Promise.race([timeoutPromise, this.contractFunction(stateCopy, interaction)]);
 
       if (handlerResult && (handlerResult.state !== undefined || handlerResult.result !== undefined)) {
+        await this.swGlobal.kv.commit();
         return {
           type: 'ok',
           result: handlerResult.result,
@@ -59,6 +60,7 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
       // Will be caught below as unexpected exception.
       throw new Error(`Unexpected result from contract: ${JSON.stringify(handlerResult)}`);
     } catch (err) {
+      await this.swGlobal.kv.rollback();
       switch (err.name) {
         case 'ContractError':
           return {
