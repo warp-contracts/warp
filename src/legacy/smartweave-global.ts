@@ -2,6 +2,7 @@
 import Arweave from 'arweave';
 import { EvaluationOptions } from '../core/modules/StateEvaluator';
 import { GQLNodeInterface, GQLTagInterface, VrfData } from './gqlResult';
+import { BatchDBOp, CacheKey, PutBatch, SortKeyCache } from '../cache/SortKeyCache';
 
 /**
  *
@@ -56,7 +57,14 @@ export class SmartWeaveGlobal {
 
   caller?: string;
 
-  constructor(arweave: Arweave, contract: { id: string; owner: string }, evaluationOptions: EvaluationOptions) {
+  kv: KV;
+
+  constructor(
+    arweave: Arweave,
+    contract: { id: string; owner: string },
+    evaluationOptions: EvaluationOptions,
+    storage: SortKeyCache<any> | null
+  ) {
     this.gasUsed = 0;
     this.gasLimit = Number.MAX_SAFE_INTEGER;
     this.unsafeClient = arweave;
@@ -95,6 +103,8 @@ export class SmartWeaveGlobal {
     this.getBalance = this.getBalance.bind(this);
 
     this.extensions = {};
+
+    this.kv = new KV(storage, this.transaction);
   }
 
   useGas(gas: number) {
@@ -162,6 +172,13 @@ class Transaction {
     return this.smartWeaveGlobal._activeTx.tags;
   }
 
+  get sortKey(): string {
+    if (!this.smartWeaveGlobal._activeTx) {
+      throw new Error('No current Tx');
+    }
+    return this.smartWeaveGlobal._activeTx.sortKey;
+  }
+
   get quantity() {
     if (!this.smartWeaveGlobal._activeTx) {
       throw new Error('No current Tx');
@@ -227,5 +244,71 @@ class Vrf {
     }
 
     return Number(result);
+  }
+}
+
+export class KV {
+  private _kvBatch: BatchDBOp<any>[] = [];
+
+  constructor(private readonly _storage: SortKeyCache<any> | null, private readonly _transaction: Transaction) {}
+
+  async put(key: string, value: any): Promise<void> {
+    this.checkStorageAvailable();
+    this._kvBatch.push({
+      type: 'put',
+      key: new CacheKey(key, this._transaction.sortKey),
+      value: value
+    });
+  }
+
+  async get<V>(key: string): Promise<V | null> {
+    this.checkStorageAvailable();
+    const sortKey = this._transaction.sortKey;
+
+    if (this._kvBatch.length > 0) {
+      const putBatches = this._kvBatch.filter((batchOp) => batchOp.type === 'put') as PutBatch<any>[];
+      const matchingPutBatch = putBatches.reverse().find((batchOp) => {
+        return batchOp.key.key === key && batchOp.key.sortKey === sortKey;
+      }) as PutBatch<V>;
+      if (matchingPutBatch !== undefined) {
+        return matchingPutBatch.value;
+      }
+    }
+
+    const result = await this._storage.getLessOrEqual(key, this._transaction.sortKey);
+    return result?.cachedValue || null;
+  }
+
+  async commit(): Promise<void> {
+    if (this._storage) {
+      await this._storage.batch(this._kvBatch);
+      this._kvBatch = [];
+    }
+  }
+
+  rollback(): void {
+    this._kvBatch = [];
+  }
+
+  ops(): BatchDBOp<any>[] {
+    return structuredClone(this._kvBatch);
+  }
+
+  open(): Promise<void> {
+    if (this._storage) {
+      return this._storage.open();
+    }
+  }
+
+  close(): Promise<void> {
+    if (this._storage) {
+      return this._storage.close();
+    }
+  }
+
+  private checkStorageAvailable() {
+    if (!this._storage) {
+      throw new Error('KV Storage not available');
+    }
   }
 }

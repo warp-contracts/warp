@@ -65,7 +65,7 @@ app.get('/:type/:key/:blockHeight', async function (req, res, next) {
   const { type, key } = req.params;
   const blockHeight = parseInt(req.params.blockHeight);
 
-  const result = await caches[type].get(key, blockHeight);
+  const result = await caches[type].get({ key: key, sortKey: blockHeight});
   console.log('get', result);
 
   res.send(result);

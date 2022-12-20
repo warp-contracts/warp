@@ -1,38 +1,45 @@
 /**
- * A cache that stores its values per contract tx id and sort key.
+ * A cache that stores its values per dedicated key and sort key.
  * A sort key is a value that the SmartWeave protocol is using
  * to sort contract transactions ({@link LexicographicalInteractionsSorter}.
  *
- * All values should be stored in a lexicographical order (per contract) -
+ * All values should be stored in a lexicographical order (per key) -
  * sorted by the sort key.
  */
 export interface SortKeyCache<V> {
   getLessOrEqual(key: string, sortKey: string): Promise<SortKeyCacheResult<V> | null>;
 
   /**
-   * returns latest value stored for given contractTxId
+   * returns value stored for a given key and last sortKey
    */
-  getLast(contractTxId: string): Promise<SortKeyCacheResult<V> | null>;
+  getLast(key: string): Promise<SortKeyCacheResult<V> | null>;
 
   /**
-   * returns last cached sort key - takes all contracts into account
+   * returns last cached sort key - takes all keys into account
    */
   getLastSortKey(): Promise<string | null>;
 
   /**
-   * returns value for the key and exact blockHeight
+   * returns value for the key and exact sortKey
    */
-  get(contractTxId: string, sortKey: string, returnDeepCopy?: boolean): Promise<SortKeyCacheResult<V> | null>;
+  get(cacheKey: CacheKey): Promise<SortKeyCacheResult<V> | null>;
 
   /**
-   * puts new value in cache under given {@link CacheKey.key} and {@link CacheKey.blockHeight}.
+   * puts new value in cache under given {@link CacheKey.key} and {@link CacheKey.sortKey}.
    */
   put(cacheKey: CacheKey, value: V): Promise<void>;
 
   /**
-   * removes contract's data
+   * removes all data stored under a specified key
    */
-  delete(contractTxId: string): Promise<void>;
+  delete(key: string): Promise<void>;
+
+  /**
+   * executes a list of stacked operations
+   */
+  batch(opStack: BatchDBOp<V>[]);
+
+  open(): Promise<void>;
 
   close(): Promise<void>;
 
@@ -43,9 +50,9 @@ export interface SortKeyCache<V> {
   dump(): Promise<any>;
 
   /**
-   * Return all cached contracts.
+   * Return all cached keys.
    */
-  allContracts(): Promise<string[]>;
+  keys(): Promise<string[]>;
 
   /**
    * returns underlying storage (LevelDB, LMDB, sqlite...)
@@ -55,10 +62,10 @@ export interface SortKeyCache<V> {
 
   /**
    * leaves n-latest (i.e. with latest (in lexicographic order) sort keys)
-   * entries for each cached contract
+   * entries for each cached key
    *
    * @param entriesStored - how many latest entries should be left
-   * for each cached contract
+   * for each cached key
    *
    * @retun PruneStats if getting them doesn't introduce a delay, null otherwise
    */
@@ -73,10 +80,21 @@ export interface PruneStats {
 }
 
 export class CacheKey {
-  constructor(readonly contractTxId: string, readonly sortKey: string) {}
+  constructor(readonly key: string, readonly sortKey: string) {}
 }
 
 // tslint:disable-next-line:max-classes-per-file
 export class SortKeyCacheResult<V> {
   constructor(readonly sortKey: string, readonly cachedValue: V) {}
+}
+
+export declare type BatchDBOp<V> = PutBatch<V> | DelBatch;
+export interface PutBatch<V> {
+  type: 'put';
+  key: CacheKey;
+  value: V;
+}
+export interface DelBatch {
+  type: 'del';
+  key: string;
 }

@@ -1,5 +1,6 @@
 import { LevelDbCache } from '../../cache/impl/LevelDbCache';
-import { defaultCacheOptions, WarpFactory } from '../../core/WarpFactory';
+import { defaultCacheOptions } from '../../core/WarpFactory';
+import { CacheKey } from '../../cache/SortKeyCache';
 
 const getContractId = (i: number) => `contract${i}`.padStart(43, '0');
 const getSortKey = (j: number) =>
@@ -13,7 +14,7 @@ describe('LevelDB cache prune', () => {
       for (let j = 0; j < numRepeatingEntries; j++) {
         await sut.put(
           {
-            contractTxId: getContractId(i),
+            key: getContractId(i),
             sortKey: getSortKey(j)
           },
           { result: `contract${i}:${j}` }
@@ -73,12 +74,12 @@ describe('LevelDB cache prune', () => {
     for (let i = 0; i < contracts; i++) {
       // Check newest elements are present
       for (let j = 0; j < toLeave; j++) {
-        expect(await sut.get(getContractId(i), getSortKey(entriesPerContract - j - 1))).toBeTruthy();
+        expect(await sut.get(new CacheKey(getContractId(i), getSortKey(entriesPerContract - j - 1)))).toBeTruthy();
       }
 
       // Check old elements are removed
       for (let j = toLeave; j < entriesPerContract; j++) {
-        expect(await sut.get(getContractId(i), getSortKey(entriesPerContract - j - 1))).toBeFalsy();
+        expect(await sut.get(new CacheKey(getContractId(i), getSortKey(entriesPerContract - j - 1)))).toBeFalsy();
       }
     }
 
@@ -94,13 +95,13 @@ describe('LevelDB cache prune', () => {
 
     // Removed elements
     for (let j = 0; j < entriesPerContract; j++) {
-      expect(await sut.get(getContractId(0), getSortKey(j))).toBeFalsy();
+      expect(await sut.get(new CacheKey(getContractId(0), getSortKey(j)))).toBeFalsy();
     }
 
     // Remaining elements
     for (let i = 1; i < contracts; i++) {
       for (let j = 0; j < entriesPerContract; j++) {
-        expect(await sut.get(getContractId(i), getSortKey(j))).toBeTruthy();
+        expect(await sut.get(new CacheKey(getContractId(i), getSortKey(j)))).toBeTruthy();
       }
     }
 

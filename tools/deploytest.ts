@@ -18,10 +18,10 @@ async function main() {
   });
 
   try {
-    const warp = WarpFactory
-      .forMainnet({...defaultCacheOptions, inMemory: true});
+      const warp = WarpFactory
+        .forMainnet({...defaultCacheOptions, inMemory: true});
 
-    const jsContractSrc = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.js'), 'utf8');
+    const jsContractSrc = fs.readFileSync(path.join(__dirname, 'data/js/kv-storage.js'), 'utf8');
     const initialState = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.json'), 'utf8');
 
     // case 1 - full deploy, js contract
@@ -31,8 +31,7 @@ async function main() {
       src: jsContractSrc,
       evaluationManifest: {
         evaluationOptions: {
-          unsafeClient: 'skip',
-          internalWrites: true
+          useKVStorage: true
         }
       }
     });
@@ -63,31 +62,31 @@ async function main() {
     });*/
 
     const contract = warp.contract<any>(contractTxId)
-      .setEvaluationOptions({internalWrites: false, unsafeClient: 'throw', allowBigInt: true})
+      .setEvaluationOptions({})
       .connect(wallet);
 
     await Promise.all([
-      contract.writeInteraction<any>({
+      /*contract.writeInteraction<any>({
         function: "transfer",
         target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),*/
+      contract.writeInteraction<any>({
+        function: "mint",
+        target: 'follows:0xe0',
         qty: 100
       }),
-      contract.writeInteraction<any>({
+      /*contract.writeInteraction<any>({
         function: "transfer",
         target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
         qty: 100
-      }),
-      contract.writeInteraction<any>({
-        function: "transfer",
-        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
-        qty: 100
-      })
+      })*/
     ]);
 
-    const {cachedValue} = await contract.readState();
+    //const {cachedValue} = await contract.readState();
 
-    logger.info("Result");
-    console.dir(cachedValue.state);
+    //logger.info("Result", await contract.getStorageValue('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA'));
+    //console.dir(cachedValue.state);
 
   } catch (e) {
     //logger.error(e)

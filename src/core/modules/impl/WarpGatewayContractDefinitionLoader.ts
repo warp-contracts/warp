@@ -13,7 +13,7 @@ import { DefinitionLoader } from '../DefinitionLoader';
 import { WasmSrc } from './wasm/WasmSrc';
 import { WarpEnvironment } from '../../Warp';
 import { TagsParser } from './TagsParser';
-import { SortKeyCache } from '../../../cache/SortKeyCache';
+import { CacheKey, SortKeyCache } from '../../../cache/SortKeyCache';
 
 /**
  * An extension to {@link ContractDefinitionLoader} that makes use of
@@ -137,12 +137,12 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
 
   // Gets ContractDefinition and ContractSource from two caches and returns a combined structure
   private async getFromCache(contractTxId: string, srcTxId?: string): Promise<ContractDefinition<any> | null> {
-    const contract = await this.definitionCache.get(contractTxId, 'cd');
+    const contract = await this.definitionCache.get(new CacheKey(contractTxId, 'cd'));
     if (!contract) {
       return null;
     }
 
-    const src = await this.srcCache.get(srcTxId || contract.cachedValue.srcTxId, 'src');
+    const src = await this.srcCache.get(new CacheKey(srcTxId || contract.cachedValue.srcTxId, 'src'));
     if (!src) {
       return null;
     }
@@ -153,7 +153,7 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
   private async putToCache(contractTxId: string, value: ContractDefinition<any>, srcTxId?: string): Promise<void> {
     const src = new SrcCache(value);
     const contract = new ContractCache(value);
-    await this.definitionCache.put({ contractTxId: contractTxId, sortKey: 'cd' }, contract);
-    await this.srcCache.put({ contractTxId: srcTxId || contract.srcTxId, sortKey: 'src' }, src);
+    await this.definitionCache.put({ key: contractTxId, sortKey: 'cd' }, contract);
+    await this.srcCache.put({ key: srcTxId || contract.srcTxId, sortKey: 'src' }, src);
   }
 }

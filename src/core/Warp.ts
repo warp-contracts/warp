@@ -31,8 +31,11 @@ import { ContractDefinition, SrcCache } from './ContractDefinition';
 import { CustomSignature } from '../contract/Signature';
 import { SourceData } from '../contract/deploy/impl/SourceImpl';
 import Transaction from 'arweave/node/lib/transaction';
+import { DEFAULT_LEVEL_DB_LOCATION } from './WarpFactory';
+import { LevelDbCache } from '../cache/impl/LevelDbCache';
 
 export type WarpEnvironment = 'local' | 'testnet' | 'mainnet' | 'custom';
+export type KVStorageFactory = (contractTxId: string) => SortKeyCache<any>;
 
 /**
  * The Warp "motherboard" ;-).
@@ -49,6 +52,7 @@ export class Warp {
    */
   readonly createContract: CreateContract;
   readonly testing: Testing;
+  kvStorageFactory: KVStorageFactory;
 
   private readonly plugins: Map<WarpPluginType, WarpPlugin<unknown, unknown>> = new Map();
 
@@ -62,6 +66,12 @@ export class Warp {
   ) {
     this.createContract = new DefaultCreateContract(arweave, this);
     this.testing = new Testing(arweave);
+    this.kvStorageFactory = (contractTxId: string) => {
+      return new LevelDbCache({
+        inMemory: false,
+        dbLocation: `${DEFAULT_LEVEL_DB_LOCATION}/kv/ldb/${contractTxId}`
+      });
+    };
   }
 
   static builder(
@@ -177,5 +187,10 @@ export class Warp {
     return (
       knownWarpPlugins.includes(value as WarpKnownPluginType) || knownWarpPluginsPartial.some((p) => value.match(p))
     );
+  }
+
+  useKVStorageFactory(factory: KVStorageFactory): Warp {
+    this.kvStorageFactory = factory;
+    return this;
   }
 }

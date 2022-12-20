@@ -33,8 +33,9 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
       this.assignReadContractState<Input>(executionContext, currentTx, currentResult, interactionTx);
       this.assignWrite(executionContext, currentTx);
 
+      await this.swGlobal.kv.open();
       const handlerResult = await this.doHandle(interaction);
-
+      await this.swGlobal.kv.commit();
       return {
         type: 'ok',
         result: handlerResult,
@@ -42,6 +43,7 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
         gasUsed: this.swGlobal.gasUsed
       };
     } catch (e) {
+      await this.swGlobal.kv.rollback();
       // note: as exceptions handling in WASM is currently somewhat non-existent
       // https://www.assemblyscript.org/status.html#exceptions
       // and since we have to somehow differentiate different types of exceptions
@@ -70,6 +72,8 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
           type: 'error'
         };
       }
+    } finally {
+      await this.swGlobal.kv.close();
     }
   }
 

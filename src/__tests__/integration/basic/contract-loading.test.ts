@@ -78,7 +78,7 @@ describe('Testing WarpGatewayContractDefinitionLoader', () => {
   it('loads contract definition when cache is empty', async () => {
     // Cache is empty
     loader.getCache().delete(contract.txId());
-    expect(await loader.getCache().get(contract.txId(), 'cd')).toBeFalsy();
+    expect(await loader.getCache().get({ key: contract.txId(), sortKey: 'cd'})).toBeFalsy();
 
     // Load contract
     const loaded = await loader.load(contract.txId());
@@ -86,12 +86,12 @@ describe('Testing WarpGatewayContractDefinitionLoader', () => {
     expect(loaded.src).toBe(contractSrc);
 
     // Contract is in its cache
-    expect(await loader.getCache().get(loaded.txId, 'cd')).toBeTruthy();
-    expect(await loader.getSrcCache().get(loaded.txId, 'cd')).toBeFalsy();
+    expect(await loader.getCache().get({ key: loaded.txId, sortKey: 'cd'})).toBeTruthy();
+    expect(await loader.getSrcCache().get({ key: loaded.txId, sortKey: 'cd'})).toBeFalsy();
 
     // Source is in its cache
-    expect(await loader.getCache().get(loaded.srcTxId, 'src')).toBeFalsy();
-    expect(await loader.getSrcCache().get(loaded.srcTxId, 'src')).toBeTruthy();
+    expect(await loader.getCache().get({ key: loaded.srcTxId, sortKey: 'src'})).toBeFalsy();
+    expect(await loader.getSrcCache().get({ key: loaded.srcTxId, sortKey: 'src'})).toBeTruthy();
   });
 
   it('loads contract definition when cache contains given definition', async () => {
@@ -99,10 +99,10 @@ describe('Testing WarpGatewayContractDefinitionLoader', () => {
     let loaded = await loader.load(contract.txId());
 
     // Modify source in cache
-    let source = await loader.getSrcCache().get(loaded.srcTxId, 'src');
+    let source = await loader.getSrcCache().get({ key: loaded.srcTxId, sortKey: 'src' });
     expect(source).toBeTruthy();
     source!.cachedValue.src = fs.readFileSync(path.join(__dirname, '../data/token-evolve.js'), 'utf8');
-    await loader.getSrcCache().put({ contractTxId: loaded.srcTxId, sortKey: 'src' }, source!.cachedValue);
+    await loader.getSrcCache().put({ key: loaded.srcTxId, sortKey: 'src' }, source!.cachedValue);
 
     // Load again, modified cache should be returned
     loaded = await loader.load(contract.txId());
