@@ -1,4 +1,4 @@
-import { SortKeyCache, CacheKey, SortKeyCacheResult, PruneStats } from '../SortKeyCache';
+import { BatchDBOp, CacheKey, SortKeyCache, SortKeyCacheResult } from '../SortKeyCache';
 import { Level } from 'level';
 import { MemoryLevel } from 'memory-level';
 import { CacheOptions } from '../../core/WarpFactory';
@@ -43,15 +43,15 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
 
   constructor(private readonly cacheOptions: CacheOptions) {}
 
-  async get(contractTxId: string, sortKey: string, returnDeepCopy?: boolean): Promise<SortKeyCacheResult<V> | null> {
-    const contractCache = this.db.sublevel<string, any>(contractTxId, { valueEncoding: 'json' });
+  async get(cacheKey: CacheKey, returnDeepCopy?: boolean): Promise<SortKeyCacheResult<V> | null> {
+    const contractCache = this.db.sublevel<string, any>(cacheKey.key, { valueEncoding: 'json' });
     // manually opening to fix https://github.com/Level/level/issues/221
     await contractCache.open();
     try {
-      const result = await contractCache.get(sortKey);
+      const result = await contractCache.get(cacheKey.sortKey);
 
       return {
-        sortKey: sortKey,
+        sortKey: cacheKey.sortKey,
         cachedValue: result
       };
     } catch (e: any) {
@@ -63,8 +63,8 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
     }
   }
 
-  async getLast(contractTxId: string): Promise<SortKeyCacheResult<V> | null> {
-    const contractCache = this.db.sublevel<string, any>(contractTxId, { valueEncoding: 'json' });
+  async getLast(key: string): Promise<SortKeyCacheResult<V> | null> {
+    const contractCache = this.db.sublevel<string, any>(key, { valueEncoding: 'json' });
     // manually opening to fix https://github.com/Level/level/issues/221
     await contractCache.open();
     const keys = await contractCache.keys({ reverse: true, limit: 1 }).all();
@@ -78,8 +78,8 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
     }
   }
 
-  async getLessOrEqual(contractTxId: string, sortKey: string): Promise<SortKeyCacheResult<V> | null> {
-    const contractCache = this.db.sublevel<string, any>(contractTxId, { valueEncoding: 'json' });
+  async getLessOrEqual(key: string, sortKey: string): Promise<SortKeyCacheResult<V> | null> {
+    const contractCache = this.db.sublevel<string, any>(key, { valueEncoding: 'json' });
     // manually opening to fix https://github.com/Level/level/issues/221
     await contractCache.open();
     const keys = await contractCache.keys({ reverse: true, lte: sortKey, limit: 1 }).all();
@@ -94,20 +94,36 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
   }
 
   async put(stateCacheKey: CacheKey, value: V): Promise<void> {
-    const contractCache = this.db.sublevel<string, any>(stateCacheKey.contractTxId, { valueEncoding: 'json' });
+    const contractCache = this.db.sublevel<string, any>(stateCacheKey.key, { valueEncoding: 'json' });
     // manually opening to fix https://github.com/Level/level/issues/221
     await contractCache.open();
     await contractCache.put(stateCacheKey.sortKey, value);
   }
 
-  async delete(contractTxId: string): Promise<void> {
-    const contractCache = this.db.sublevel<string, any>(contractTxId, { valueEncoding: 'json' });
+  async delete(key: string): Promise<void> {
+    const contractCache = this.db.sublevel<string, any>(key, { valueEncoding: 'json' });
     await contractCache.open();
     await contractCache.clear();
   }
 
-  close(): Promise<void> {
-    return this.db.close();
+  async batch(opStack: BatchDBOp<V>[]) {
+    for (const op of opStack) {
+      if (op.type === 'put') {
+        await this.put(op.key, op.value);
+      } else if (op.type === 'del') {
+        await this.delete(op.key);
+      }
+    }
+  }
+
+  async open(): Promise<void> {
+    await this.db.open();
+  }
+
+  async close(): Promise<void> {
+    if (this._db) {
+      await this._db.close();
+    }
   }
 
   async dump(): Promise<any> {
@@ -134,7 +150,7 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
     return lastSortKey == '' ? null : lastSortKey;
   }
 
-  async allContracts(): Promise<string[]> {
+  async keys(): Promise<string[]> {
     await this.db.open();
     const keys = await this.db.keys().all();
 
@@ -170,7 +186,7 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
       entriesStored = 1;
     }
 
-    const contracts = await this.allContracts();
+    const contracts = await this.keys();
     for (let i = 0; i < contracts.length; i++) {
       const contractCache = this.db.sublevel<string, any>(contracts[i], { valueEncoding: 'json' });
 

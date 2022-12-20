@@ -102,7 +102,8 @@ export class EvaluationOptionsEvaluator {
     allowBigInt: () => this.rootOptions['allowBigInt'], // not sure about this
     walletBalanceUrl: () => this.rootOptions['walletBalanceUrl'],
     mineArLocalBlocks: () => this.rootOptions['mineArLocalBlocks'],
-    cacheEveryNInteractions: () => this.rootOptions['cacheEveryNInteractions']
+    cacheEveryNInteractions: () => this.rootOptions['cacheEveryNInteractions'],
+    useKVStorage: (foreignOptions) => foreignOptions['useKVStorage']
   };
 
   /**
@@ -114,9 +115,12 @@ export class EvaluationOptionsEvaluator {
     if (manifestOptions) {
       const errors = [];
       for (const k in manifestOptions) {
+        if (k === 'useKVStorage') {
+          continue;
+        }
         if (userSetOptions[k] !== manifestOptions[k]) {
           errors.push(
-            `Option {${k}} differs. EvaluationOptions: [${userSetOptions[k]}], manifest: [${manifestOptions[k]}]. Use contract.setEvaluationOptions({${k}: ${manifestOptions[k]}) to evaluate contract state.`
+            `Option {${k}} differs. EvaluationOptions: [${userSetOptions[k]}], manifest: [${manifestOptions[k]}]. Use contract.setEvaluationOptions({${k}: ${manifestOptions[k]}}) to evaluate contract state.`
           );
         }
       }

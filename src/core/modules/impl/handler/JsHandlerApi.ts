@@ -3,9 +3,11 @@ import { ContractDefinition } from '../../../../core/ContractDefinition';
 import { ExecutionContext } from '../../../../core/ExecutionContext';
 import { EvalStateResult } from '../../../../core/modules/StateEvaluator';
 import { SmartWeaveGlobal } from '../../../../legacy/smartweave-global';
-import { timeout, deepCopy } from '../../../../utils/utils';
+import { deepCopy, timeout } from '../../../../utils/utils';
 import { InteractionData, InteractionResult } from '../HandlerExecutorFactory';
 import { AbstractContractHandler } from './AbstractContractHandler';
+import { Level } from 'level';
+import { DEFAULT_LEVEL_DB_LOCATION } from '../../../WarpFactory';
 
 export class JsHandlerApi<State> extends AbstractContractHandler<State> {
   constructor(
@@ -39,9 +41,11 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
 
       const { warp } = executionContext;
 
+      await this.swGlobal.kv.open();
       const handlerResult = await Promise.race([timeoutPromise, this.contractFunction(stateCopy, interaction)]);
 
       if (handlerResult && (handlerResult.state !== undefined || handlerResult.result !== undefined)) {
+        await this.swGlobal.kv.commit();
         return {
           type: 'ok',
           result: handlerResult.result,
@@ -52,6 +56,7 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
       // Will be caught below as unexpected exception.
       throw new Error(`Unexpected result from contract: ${JSON.stringify(handlerResult)}`);
     } catch (err) {
+      await this.swGlobal.kv.rollback();
       switch (err.name) {
         case 'ContractError':
           return {
@@ -73,6 +78,7 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
           };
       }
     } finally {
+      await this.swGlobal.kv.close();
       if (timeoutId !== null) {
         // it is important to clear the timeout promise
         // - promise.race won't "cancel" it automatically if the "handler" promise "wins"

@@ -73,13 +73,16 @@ export class HandlerBasedContract<State> implements Contract<State> {
     this._sorter = new LexicographicalInteractionsSorter(warp.arweave);
     if (_parentContract != null) {
       this._evaluationOptions = this.getRoot().evaluationOptions();
+      if (_parentContract.evaluationOptions().useKVStorage) {
+        throw new Error('Foreign writes or reads are forbidden for kv storage contracts');
+      }
       this._callDepth = _parentContract.callDepth() + 1;
       const callingInteraction: InteractionCall = _parentContract
         .getCallStack()
         .getInteraction(_innerCallData.callingInteraction.id);
 
       if (this._callDepth > this._evaluationOptions.maxCallDepth) {
-        throw Error(
+        throw new Error(
           `Max call depth of ${this._evaluationOptions.maxCallDepth} has been exceeded for interaction ${JSON.stringify(
             callingInteraction.interactionInput
           )}`
@@ -468,7 +471,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
       this.logger.debug('State fully cached, not loading interactions.');
       if (forceDefinitionLoad || evolvedSrcTxId || interactions?.length) {
         contractDefinition = await definitionLoader.load<State>(contractTxId, evolvedSrcTxId);
-        handler = await this.safeGetHandler(contractDefinition);
         if (interactions?.length) {
           sortedInteractions = this._sorter.sort(interactions.map((i) => ({ node: i, cursor: null })));
         }
@@ -507,7 +509,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
         // - as no other contracts will be called.
         this._rootSortKey = sortedInteractions[sortedInteractions.length - 1].sortKey;
       }
-      handler = await this.safeGetHandler(contractDefinition);
     }
     if (this.isRoot()) {
       this._eoEvaluator = new EvaluationOptionsEvaluator(
@@ -518,8 +519,18 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const contractEvaluationOptions = this.isRoot()
       ? this._eoEvaluator.rootOptions
       : this.getEoEvaluator().forForeignContract(contractDefinition.manifest?.evaluationOptions);
-
+    if (!this.isRoot() && contractEvaluationOptions.useKVStorage) {
+      throw new Error('Foreign read/writes cannot be performed on kv storage contracts');
+    }
     this.ecLogger.debug(`Evaluation options ${contractTxId}:`, contractEvaluationOptions);
+
+    if (contractDefinition) {
+      handler = (await this.warp.executorFactory.create(
+        contractDefinition,
+        contractEvaluationOptions,
+        this.warp
+      )) as HandlerApi<State>;
+    }
 
     return {
       warp: this.warp,
@@ -531,11 +542,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
       cachedState,
       requestedSortKey: upToSortKey
     };
-  }
-
-  private async safeGetHandler(contractDefinition: ContractDefinition<any>): Promise<HandlerApi<State> | null> {
-    const { executorFactory } = this.warp;
-    return (await executorFactory.create(contractDefinition, this._evaluationOptions, this.warp)) as HandlerApi<State>;
   }
 
   private getToSortKey(upToSortKey?: string) {
@@ -814,5 +820,31 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   isRoot(): boolean {
     return this._parentContract == null;
+  }
+
+  async getStorageValues(keys: string[]): Promise<SortKeyCacheResult<Map<string, any>>> {
+    const lastCached = await this.warp.stateEvaluator.getCache().getLast(this.txId());
+    if (lastCached == null) {
+      return {
+        sortKey: null,
+        cachedValue: new Map()
+      };
+    }
+
+    const storage = this.warp.kvStorageFactory(this.txId());
+    const result: Map<string, any> = new Map();
+    try {
+      await storage.open();
+      for (const key of keys) {
+        const lastValue = await storage.getLessOrEqual(key, lastCached.sortKey);
+        result.set(key, lastValue == null ? null : lastValue.cachedValue);
+      }
+      return {
+        sortKey: lastCached.sortKey,
+        cachedValue: result
+      };
+    } finally {
+      await storage.close();
+    }
   }
 }

@@ -46,13 +46,20 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
     evaluationOptions: EvaluationOptions,
     warp: Warp
   ): Promise<HandlerApi<State>> {
+    let kvStorage = null;
+
+    if (evaluationOptions.useKVStorage) {
+      kvStorage = warp.kvStorageFactory(contractDefinition.txId);
+    }
+
     const swGlobal = new SmartWeaveGlobal(
       this.arweave,
       {
         id: contractDefinition.txId,
         owner: contractDefinition.owner
       },
-      evaluationOptions
+      evaluationOptions,
+      kvStorage
     );
 
     const extensionPlugins = warp.matchPlugins(`^smartweave-extension-`);

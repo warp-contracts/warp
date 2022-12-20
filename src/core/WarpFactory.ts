@@ -42,8 +42,6 @@ export const defaultCacheOptions: CacheOptions = {
  * All versions use the {@link Evolve} plugin.
  */
 export class WarpFactory {
-  private stateCache: SortKeyCache<EvalStateResult<unknown>>;
-
   /**
    * creates a Warp instance suitable for testing in a local environment
    * (e.g. usually using ArLocal)
@@ -61,7 +59,7 @@ export class WarpFactory {
       ...defaultCacheOptions,
       inMemory: true
     }
-  ) {
+  ): Warp {
     return this.customArweaveGw(arweave, cacheOptions, 'local');
   }
 
@@ -77,7 +75,7 @@ export class WarpFactory {
       port: 443,
       protocol: 'https'
     })
-  ) {
+  ): Warp {
     if (useArweaveGw) {
       return this.customArweaveGw(arweave, cacheOptions, 'testnet');
     } else {
@@ -106,7 +104,7 @@ export class WarpFactory {
       port: 443,
       protocol: 'https'
     })
-  ) {
+  ): Warp {
     if (useArweaveGw) {
       return this.customArweaveGw(arweave, cacheOptions, 'mainnet');
     } else {

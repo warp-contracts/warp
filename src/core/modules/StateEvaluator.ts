@@ -140,6 +140,8 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   throwOnInternalWriteError = true;
 
   cacheEveryNInteractions = -1;
+
+  useKVStorage = false;
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some features.
@@ -217,4 +219,7 @@ export interface EvaluationOptions {
   // force SDK to cache the state after evaluating each N interactions
   // defaults to -1, which effectively turns off this feature
   cacheEveryNInteractions: number;
+
+  // whether a separate key-value storage should be used for the contract
+  useKVStorage: boolean;
 }

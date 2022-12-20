@@ -23,6 +23,7 @@ describe('Evaluation options evaluator', () => {
       throwOnInternalWriteError: true,
       unsafeClient: 'throw',
       updateCacheForEachInteraction: false,
+      useKVStorage: false,
       useVM2: false,
       waitForConfirmation: false,
       walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/'
@@ -58,6 +59,7 @@ describe('Evaluation options evaluator', () => {
       throwOnInternalWriteError: true,
       unsafeClient: 'throw',
       updateCacheForEachInteraction: false,
+      useKVStorage: false,
       useVM2: true,
       waitForConfirmation: false,
       walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/'
@@ -87,6 +89,7 @@ describe('Evaluation options evaluator', () => {
       throwOnInternalWriteError: true,
       unsafeClient: 'allow',
       updateCacheForEachInteraction: false,
+      useKVStorage: false,
       useVM2: true,
       waitForConfirmation: false,
       walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/'
@@ -96,9 +99,7 @@ describe('Evaluation options evaluator', () => {
       const result = new EvaluationOptionsEvaluator(contract2.evaluationOptions(), {
         useVM2: false
       }).rootOptions;
-    }).toThrow(
-      'Option {useVM2} differs. EvaluationOptions: [true], manifest: [false]. Use contract.setEvaluationOptions({useVM2: false) to evaluate contract state.'
-    );
+    }).toThrow('Option {useVM2} differs.');
   });
 
   it('should properly set foreign evaluation options - unsafeClient - allow', async () => {
