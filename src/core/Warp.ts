@@ -2,6 +2,7 @@ import Arweave from 'arweave';
 import { Contract, InnerCallData } from '../contract/Contract';
 import {
   ArWallet,
+  BundlrNodeType,
   ContractData,
   ContractDeploy,
   CreateContract,
@@ -83,6 +84,10 @@ export class Warp {
 
   async deployBundled(rawDataItem: Buffer): Promise<ContractDeploy> {
     return await this.createContract.deployBundled(rawDataItem);
+  }
+
+  async register(id: string, bundlrNode: BundlrNodeType): Promise<ContractDeploy> {
+    return await this.createContract.register(id, bundlrNode);
   }
 
   async createSourceTx(sourceData: SourceData, wallet: ArWallet | SignatureType): Promise<Transaction> {

@@ -25,6 +25,9 @@ export type EvaluationManifest = {
   plugins?: WarpPluginType[];
 };
 
+export const BUNDLR_NODES = ['node1', 'node2'] as const;
+export type BundlrNodeType = typeof BUNDLR_NODES[number];
+
 export interface CommonContractData {
   wallet: ArWallet | SignatureType;
   initState: string;
@@ -58,4 +61,6 @@ export interface CreateContract extends Source {
   deployFromSourceTx(contractData: FromSrcTxContractData, disableBundling?: boolean): Promise<ContractDeploy>;
 
   deployBundled(rawDataItem: Buffer): Promise<ContractDeploy>;
+
+  register(id: string, bundlrNode: BundlrNodeType): Promise<ContractDeploy>;
 }

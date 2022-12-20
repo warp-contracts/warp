@@ -255,6 +255,32 @@ const { contractTxId, srcTxId } = await warp.createContract.deployFromSourceTx({
 
 </details>
 
+#### deployBundled
+
+Uses Warp Gateway's endpoint to upload raw data item to Bundlr and index it.
+
+<details>
+  <summary>Example</summary>
+
+```typescript
+const { contractTxId } = await warp.createContract.deployBundled(rawDataItem);
+```
+
+</details>
+
+#### register
+
+Uses Warp Gateway's endpoint to index a contract which has already been uploaded to Bundlr.
+
+<details>
+  <summary>Example</summary>
+
+```typescript
+const { contractTxId } = await warp.createContract.register(bundlrId, bundlrNode);
+```
+
+</details>
+
 ### Contract methods
 
 #### `connect`
