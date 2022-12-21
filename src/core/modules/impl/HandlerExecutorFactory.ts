@@ -186,7 +186,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
       }
       if (evaluationOptions.useVM2) {
         const vmScript = new vm2.VMScript(normalizedSource);
-	const typedArrays = {
+        const typedArrays = {
           Int8Array: Int8Array,
           Uint8Array: Uint8Array,
           Uint8ClampedArray: Uint8ClampedArray,
@@ -198,7 +198,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
           Float64Array: Float64Array,
           BigInt64Array: BigInt64Array,
           BigUint64Array: BigUint64Array
-	}
+        };
         const vm = new vm2.NodeVM({
           console: 'off',
           sandbox: {
