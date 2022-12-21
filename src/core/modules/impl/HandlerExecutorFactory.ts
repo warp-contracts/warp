@@ -186,6 +186,19 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
       }
       if (evaluationOptions.useVM2) {
         const vmScript = new vm2.VMScript(normalizedSource);
+	const typedArrays = {
+          Int8Array: Int8Array,
+          Uint8Array: Uint8Array,
+          Uint8ClampedArray: Uint8ClampedArray,
+          Int16Array: Int16Array,
+          Uint16Array: Uint16Array,
+          Int32Array: Int32Array,
+          Uint32Array: Uint32Array,
+          Float32Array: Float32Array,
+          Float64Array: Float64Array,
+          BigInt64Array: BigInt64Array,
+          BigUint64Array: BigUint64Array
+	}
         const vm = new vm2.NodeVM({
           console: 'off',
           sandbox: {
@@ -197,8 +210,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
               if (!cond) throw new ContractError(message);
             },
             //https://github.com/patriksimek/vm2/issues/484#issuecomment-1327479592
-            Uint8Array: Uint8Array,
-            Uint32Array: Uint32Array
+            ...typedArrays
           },
           compiler: 'javascript',
           eval: false,
