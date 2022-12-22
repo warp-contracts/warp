@@ -19,7 +19,7 @@
     "mjs:burn:in:hell": "bash mjs-package.sh",
     "build:types": "tsc -b tsconfig.types.json",
     "bundle": "node bundle.js",
-    "build": "yarn build:cjs && yarn build:mjs && yarn mjs:burn:in:hell && yarn build:types && yarn bundle",
+    "build": "yarn run clean && yarn build:cjs && yarn build:mjs && yarn mjs:burn:in:hell && yarn build:types && yarn bundle",
     "format": "prettier --write 'src/**/*.ts'",
     "clean": "rimraf ./lib",
     "lint": "eslint . --ext .ts",

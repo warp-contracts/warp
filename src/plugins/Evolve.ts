@@ -52,7 +52,7 @@ export class Evolve implements ExecutionContextModifier {
           //FIXME: side-effect...
           executionContext.contractDefinition = newContractDefinition;
           executionContext.handler = newHandler;
-          executionContext.handler.initState(state);
+          executionContext.handler.initState(state, executionContext.evaluationOptions.wasmSerializationFormat);
           this.logger.debug('evolved to:', {
             evolve: evolvedSrcTxId,
             newSrcTxId: executionContext.contractDefinition.srcTxId,

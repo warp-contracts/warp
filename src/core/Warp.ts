@@ -16,7 +16,7 @@ import { DefinitionLoader } from './modules/DefinitionLoader';
 import { ExecutorFactory } from './modules/ExecutorFactory';
 import { HandlerApi } from './modules/impl/HandlerExecutorFactory';
 import { InteractionsLoader } from './modules/InteractionsLoader';
-import { EvalStateResult, StateEvaluator } from './modules/StateEvaluator';
+import { EvalStateResult, SerializationFormat, StateEvaluator } from './modules/StateEvaluator';
 import { WarpBuilder } from './WarpBuilder';
 import { WarpPluginType, WarpPlugin, knownWarpPlugins } from './WarpPlugin';
 import { SortKeyCache } from '../cache/SortKeyCache';
@@ -39,7 +39,7 @@ export class Warp {
   /**
    * @deprecated createContract will be a private field, please use its methods directly e.g. await warp.deploy(...)
    */
-  readonly createContract: CreateContract;
+  readonly createContract: CreateContract<SerializationFormat>;
   readonly testing: Testing;
 
   private readonly plugins: Map<WarpPluginType, WarpPlugin<unknown, unknown>> = new Map();
@@ -73,11 +73,17 @@ export class Warp {
     return new HandlerBasedContract<State>(contractTxId, this, callingContract, innerCallData);
   }
 
-  async deploy(contractData: ContractData, disableBundling?: boolean): Promise<ContractDeploy> {
+  async deploy<T extends SerializationFormat>(
+    contractData: ContractData<T>,
+    disableBundling?: boolean
+  ): Promise<ContractDeploy> {
     return await this.createContract.deploy(contractData, disableBundling);
   }
 
-  async deployFromSourceTx(contractData: FromSrcTxContractData, disableBundling?: boolean): Promise<ContractDeploy> {
+  async deployFromSourceTx<T extends SerializationFormat>(
+    contractData: FromSrcTxContractData<T>,
+    disableBundling?: boolean
+  ): Promise<ContractDeploy> {
     return await this.createContract.deployFromSourceTx(contractData, disableBundling);
   }
 

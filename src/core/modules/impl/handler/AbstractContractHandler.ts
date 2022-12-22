@@ -1,7 +1,7 @@
 import { ContractError, CurrentTx } from '../../../../contract/Contract';
 import { ContractDefinition } from '../../../../core/ContractDefinition';
 import { ExecutionContext } from '../../../../core/ExecutionContext';
-import { EvalStateResult } from '../../../../core/modules/StateEvaluator';
+import { EvalStateResult, SerializationFormat } from '../../../../core/modules/StateEvaluator';
 import { GQLNodeInterface } from '../../../../legacy/gqlResult';
 import { SmartWeaveGlobal } from '../../../../legacy/smartweave-global';
 import { LoggerFactory } from '../../../../logging/LoggerFactory';
@@ -27,7 +27,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
     interactionData: InteractionData<Input>
   ): Promise<InteractionResult<State, Result>>;
 
-  abstract initState(state: State): void;
+  abstract initState(state: State, format: SerializationFormat): void;
 
   async dispose(): Promise<void> {
     // noop by default;

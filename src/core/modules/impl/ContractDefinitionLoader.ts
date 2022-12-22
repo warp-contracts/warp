@@ -12,7 +12,8 @@ import { TagsParser } from './TagsParser';
 import { WasmSrc } from './wasm/WasmSrc';
 import { WarpEnvironment } from '../../Warp';
 import { SortKeyCache } from 'cache/SortKeyCache';
-import { unpack } from 'msgpackr';
+import { Deserializers, SerializationFormat, stringToSerializationFormat } from '../StateEvaluator';
+import { exhaustive } from 'utils/utils';
 
 const supportedSrcContentTypes = ['application/javascript', 'application/wasm'];
 
@@ -56,10 +57,7 @@ export class ContractDefinitionLoader implements DefinitionLoader {
     const minFee = this.tagsParser.getTag(contractTx, SmartWeaveTags.MIN_FEE);
     this.logger.debug('Tags decoding', benchmark.elapsed());
     benchmark.reset();
-    // TODO: It should be stored somewhere whether the initial state is stored as a JSON string or
-    // as a MsgPack binary. For the sake of this experiment, we assume it's always MsgPack.
-    // const initState = JSON.parse(await this.evalInitialState(contractTx));
-    const initState = unpack(await this.arweaveWrapper.txData(contractTx.id));
+    const initState = await this.evalInitialState<State>(contractTx);
     this.logger.debug('Parsing src and init state', benchmark.elapsed());
 
     const { src, srcBinary, srcWasmLang, contractType, metadata, srcTx } = await this.loadContractSource(
@@ -123,14 +121,42 @@ export class ContractDefinitionLoader implements DefinitionLoader {
     };
   }
 
-  private async evalInitialState(contractTx: Transaction): Promise<string> {
+  private async evalInitialState<State>(contractTx: Transaction): Promise<State> {
     if (this.tagsParser.getTag(contractTx, SmartWeaveTags.INIT_STATE)) {
-      return this.tagsParser.getTag(contractTx, SmartWeaveTags.INIT_STATE);
+      const format = stringToSerializationFormat(
+        this.tagsParser.getTag(contractTx, SmartWeaveTags.INIT_STATE_FORMAT) ?? 'application/json'
+      );
+      const initState = this.tagsParser.getTag(contractTx, SmartWeaveTags.INIT_STATE);
+
+      switch (format) {
+        case SerializationFormat.JSON:
+          return Deserializers[format](initState);
+        case SerializationFormat.MSGPACK:
+          return Deserializers[format](new TextEncoder().encode(initState));
+        default:
+          exhaustive(format);
+      }
     } else if (this.tagsParser.getTag(contractTx, SmartWeaveTags.INIT_STATE_TX)) {
       const stateTX = this.tagsParser.getTag(contractTx, SmartWeaveTags.INIT_STATE_TX);
-      return this.arweaveWrapper.txDataString(stateTX);
+
+      return this.getInitialStateFromTx(await this.arweave.transactions.get(stateTX));
     } else {
-      return this.arweaveWrapper.txDataString(contractTx.id);
+      return this.getInitialStateFromTx(contractTx);
+    }
+  }
+
+  private async getInitialStateFromTx<State>(tx: Transaction): Promise<State> {
+    const format = stringToSerializationFormat(
+      this.tagsParser.getTag(tx, SmartWeaveTags.CONTENT_TYPE) ?? 'application/json'
+    );
+
+    switch (format) {
+      case SerializationFormat.JSON:
+        return Deserializers[format](await this.arweaveWrapper.txDataString(tx.id));
+      case SerializationFormat.MSGPACK:
+        return Deserializers[format](await this.arweaveWrapper.txData(tx.id));
+      default:
+        exhaustive(format);
     }
   }
 
