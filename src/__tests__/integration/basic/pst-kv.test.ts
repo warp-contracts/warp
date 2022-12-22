@@ -118,4 +118,11 @@ describe('Testing the Profit Sharing Token', () => {
     expect(result.ticker).toEqual('EXAMPLE_PST_TOKEN');
     expect(result.target).toEqual('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M');
   });
+
+  it('should properly read storage value', async () => {
+    expect((await pst.getStorageValue(walletAddress))).toEqual((555669 - 555).toString());
+    expect((await pst.getStorageValue('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M'))).toEqual((10000000 + 555).toString());
+    expect((await pst.getStorageValue('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA'))).toEqual((23111222).toString());
+    expect((await pst.getStorageValue('foo'))).toBeNull();
+  });
 });

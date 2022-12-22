@@ -21,9 +21,7 @@ import BigNumber from '../../../legacy/bignumber';
 import { Warp } from '../../Warp';
 import { isBrowser } from '../../../utils/utils';
 import { Buffer } from 'redstone-isomorphic';
-import { LevelKVStorage } from '../../../cache/impl/LevelKVStorage';
 import { DEFAULT_LEVEL_DB_LOCATION } from '../../WarpFactory';
-import { Trie } from '@ethereumjs/trie';
 import { TrieLevel } from '../../../cache/impl/TrieLevel';
 import { Level } from 'level';
 

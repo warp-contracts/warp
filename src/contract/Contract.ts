@@ -232,4 +232,6 @@ export interface Contract<State = unknown> {
   getEoEvaluator(): EvaluationOptionsEvaluator;
 
   isRoot(): boolean;
+
+  getStorageValue(key: string): Promise<string | null>;
 }
