@@ -63,7 +63,7 @@ async function main() {
     });*/
 
     const contract = warp.contract<any>(contractTxId)
-      .setEvaluationOptions({internalWrites: false, unsafeClient: 'throw', allowBigInt: true})
+      .setEvaluationOptions({internalWrites: true, unsafeClient: 'skip'})
       .connect(wallet);
 
     await Promise.all([
