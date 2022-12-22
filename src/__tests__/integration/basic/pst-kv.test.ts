@@ -8,7 +8,7 @@ import { mineBlock } from '../_helpers';
 import { PstState, PstContract } from '../../../contract/PstContract';
 import { InteractionResult } from '../../../core/modules/impl/HandlerExecutorFactory';
 import { Warp } from '../../../core/Warp';
-import {DEFAULT_LEVEL_DB_LOCATION, WarpFactory} from '../../../core/WarpFactory';
+import { DEFAULT_LEVEL_DB_LOCATION, WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 
 describe('Testing the Profit Sharing Token', () => {
@@ -65,7 +65,7 @@ describe('Testing the Profit Sharing Token', () => {
 
   afterAll(async () => {
     await arlocal.stop();
-    fs.rmSync(`${DEFAULT_LEVEL_DB_LOCATION}/kv/${contractTxId}`, {recursive: true})
+    fs.rmSync(`${DEFAULT_LEVEL_DB_LOCATION}/kv/${contractTxId}`, { recursive: true });
   });
 
   it('should initialize', async () => {
@@ -93,7 +93,7 @@ describe('Testing the Profit Sharing Token', () => {
   });
 
   it('should read pst state and balance data', async () => {
-   // expect(await pst.currentState()).toEqual(initialState);
+    // expect(await pst.currentState()).toEqual(initialState);
 
     expect((await pst.currentBalance('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M')).balance).toEqual(10000000);
     expect((await pst.currentBalance('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA')).balance).toEqual(23111222);
@@ -118,5 +118,4 @@ describe('Testing the Profit Sharing Token', () => {
     expect(result.ticker).toEqual('EXAMPLE_PST_TOKEN');
     expect(result.target).toEqual('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M');
   });
-
 });
