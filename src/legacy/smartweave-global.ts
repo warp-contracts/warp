@@ -1,9 +1,9 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import {EvaluationOptions} from '../core/modules/StateEvaluator';
-import {GQLNodeInterface, GQLTagInterface, VrfData} from './gqlResult';
-import {BatchDBOp} from "@ethereumjs/trie/dist/types";
-import {DB} from "@ethereumjs/trie";
+import { EvaluationOptions } from '../core/modules/StateEvaluator';
+import { GQLNodeInterface, GQLTagInterface, VrfData } from './gqlResult';
+import { BatchDBOp } from '@ethereumjs/trie/dist/types';
+import { DB } from '@ethereumjs/trie';
 
 /**
  *
@@ -60,7 +60,12 @@ export class SmartWeaveGlobal {
 
   kv: KV;
 
-  constructor(arweave: Arweave, contract: { id: string; owner: string }, evaluationOptions: EvaluationOptions, storage: DB | null) {
+  constructor(
+    arweave: Arweave,
+    contract: { id: string; owner: string },
+    evaluationOptions: EvaluationOptions,
+    storage: DB | null
+  ) {
     this.gasUsed = 0;
     this.gasLimit = Number.MAX_SAFE_INTEGER;
     this.unsafeClient = arweave;
@@ -137,8 +142,7 @@ export class SmartWeaveGlobal {
 
 // tslint:disable-next-line: max-classes-per-file
 class Transaction {
-  constructor(private readonly smartWeaveGlobal: SmartWeaveGlobal) {
-  }
+  constructor(private readonly smartWeaveGlobal: SmartWeaveGlobal) {}
 
   get id() {
     if (!this.smartWeaveGlobal._activeTx) {
@@ -185,8 +189,7 @@ class Transaction {
 
 // tslint:disable-next-line: max-classes-per-file
 class Block {
-  constructor(private readonly smartWeaveGlobal: SmartWeaveGlobal) {
-  }
+  constructor(private readonly smartWeaveGlobal: SmartWeaveGlobal) {}
 
   get height() {
     if (!this.smartWeaveGlobal._activeTx) {
@@ -211,8 +214,7 @@ class Block {
 }
 
 class Vrf {
-  constructor(private readonly smartWeaveGlobal: SmartWeaveGlobal) {
-  }
+  constructor(private readonly smartWeaveGlobal: SmartWeaveGlobal) {}
 
   get data(): VrfData {
     return this.smartWeaveGlobal._activeTx.vrf;
@@ -241,8 +243,7 @@ class Vrf {
 class KV {
   private _kvBatch: BatchDBOp[] = [];
 
-  constructor(private readonly _storage: DB | null) {
-  }
+  constructor(private readonly _storage: DB | null) {}
 
   async put(key: string, value: string): Promise<void> {
     this.checkStorageAvailable();
