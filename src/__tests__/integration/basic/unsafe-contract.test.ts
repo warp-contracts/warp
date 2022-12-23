@@ -81,7 +81,7 @@ describe('Testing the Warp client', () => {
 
   it('should not allow to evaluate contract with unsafe operations by default', async () => {
     await expect(contract.readState()).rejects.toThrowError(
-      '[SkipUnsafeError] Using unsafeClient is not allowed by default. Use EvaluationOptions.allowUnsafeClient flag'
+      '[SkipUnsafeError]'
     );
   });
 
@@ -97,17 +97,14 @@ describe('Testing the Warp client', () => {
     });
     await mineBlock(warp);
 
-    const result = await contractWithUnsafeSkip.readState();
-    expect(result.cachedValue.state).toEqual(initialState);
-    expect(result.sortKey).toEqual(genesisSortKey);
+    // even with 'skip', the unsafe client on root contract will throw
+    await expect(contractWithUnsafeSkip.readState()).rejects.toThrow('[SkipUnsafeError]');
 
     // fresh warp instance - skip
     const newWarp = WarpFactory.forLocal(1801);
     const freshPst = newWarp.contract(contractTxId).setEvaluationOptions({
       unsafeClient: 'skip'
     });
-    const freshResult = await freshPst.readState();
-    expect(freshResult.cachedValue.state).toEqual(initialState);
-    expect(freshResult.sortKey).toEqual(genesisSortKey);
+    await expect(freshPst.readState()).rejects.toThrow('[SkipUnsafeError]');
   });
 });
