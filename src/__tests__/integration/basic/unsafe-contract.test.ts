@@ -80,9 +80,7 @@ describe('Testing the Warp client', () => {
   });
 
   it('should not allow to evaluate contract with unsafe operations by default', async () => {
-    await expect(contract.readState()).rejects.toThrowError(
-      '[SkipUnsafeError]'
-    );
+    await expect(contract.readState()).rejects.toThrowError('[SkipUnsafeError]');
   });
 
   it('should allow to evaluate contract with unsafe operations when evaluation option is set.', async () => {
