@@ -6,7 +6,6 @@ import { JWKInterface } from 'arweave/node/lib/wallet';
 import path from 'path';
 import { mineBlock } from '../_helpers';
 import { PstState, PstContract } from '../../../contract/PstContract';
-import { InteractionResult } from '../../../core/modules/impl/HandlerExecutorFactory';
 import { Warp } from '../../../core/Warp';
 import { WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
@@ -111,18 +110,9 @@ describe('Testing unsafe client in nested contracts with "skip" option', () => {
       qty: 555
     });
     await mineBlock(warp);
-    // note: at this point we have already cached state until the 'evolve' and no more interactions
-    // should be evaluated
-    const result = await pst.readState();
 
-    // note: should not evaluate at all the last interaction
-    expect(Object.keys(result.cachedValue.validity).length).toEqual(2);
-    expect(Object.keys(result.cachedValue.errorMessages).length).toEqual(1);
-
-    expect(result.cachedValue.validity[evolveResponse.originalTxId]).toBe(false);
-    expect(result.cachedValue.errorMessages[evolveResponse.originalTxId]).toMatch(
-      'Skipping evaluation of the unsafe contract'
-    );
+    // even with 'skip', the unsafe client on root contract will throw
+    await expect(pst.readState()).rejects.toThrow('[SkipUnsafeError]');
 
     // testcase for new warp instance
     const newWarp = WarpFactory.forLocal(1668);
@@ -130,7 +120,6 @@ describe('Testing unsafe client in nested contracts with "skip" option', () => {
       unsafeClient: 'allow'
     });
     const freshResult = await freshPst.readState();
-    console.log(freshResult.cachedValue.validity);
     // note: should not evaluate at all the last interaction
     expect(Object.keys(freshResult.cachedValue.validity).length).toEqual(4);
     expect(Object.keys(freshResult.cachedValue.errorMessages).length).toEqual(0);

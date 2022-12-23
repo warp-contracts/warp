@@ -5,18 +5,17 @@ import { SortKeyCacheResult } from '../cache/SortKeyCache';
 import { ContractCallRecord, InteractionCall } from '../core/ContractCallRecord';
 import { ExecutionContext } from '../core/ExecutionContext';
 import {
-  InteractionResult,
-  HandlerApi,
   ContractInteraction,
+  HandlerApi,
   InteractionData,
-  ContractError
+  InteractionResult
 } from '../core/modules/impl/HandlerExecutorFactory';
 import { LexicographicalInteractionsSorter } from '../core/modules/impl/LexicographicalInteractionsSorter';
 import { InteractionsSorter } from '../core/modules/InteractionsSorter';
-import { EvaluationOptions, DefaultEvaluationOptions, EvalStateResult } from '../core/modules/StateEvaluator';
+import { DefaultEvaluationOptions, EvalStateResult, EvaluationOptions } from '../core/modules/StateEvaluator';
 import { SmartWeaveTags } from '../core/SmartWeaveTags';
 import { Warp } from '../core/Warp';
-import { createInteractionTx, createDummyTx } from '../legacy/create-interaction-tx';
+import { createDummyTx, createInteractionTx } from '../legacy/create-interaction-tx';
 import { GQLNodeInterface } from '../legacy/gqlResult';
 import { Benchmark } from '../logging/Benchmark';
 import { LoggerFactory } from '../logging/LoggerFactory';
@@ -24,14 +23,14 @@ import { Evolve } from '../plugins/Evolve';
 import { ArweaveWrapper } from '../utils/ArweaveWrapper';
 import { sleep } from '../utils/utils';
 import {
-  Contract,
   BenchmarkStats,
+  Contract,
   CurrentTx,
+  InnerCallData,
   WriteInteractionOptions,
-  WriteInteractionResponse,
-  InnerCallData
+  WriteInteractionResponse
 } from './Contract';
-import { Tags, ArTransfer, emptyTransfer, ArWallet } from './deploy/CreateContract';
+import { ArTransfer, ArWallet, emptyTransfer, Tags } from './deploy/CreateContract';
 import { InnerWritesEvaluator } from './InnerWritesEvaluator';
 import { generateMockVrf } from '../utils/vrf';
 import { Signature, SignatureType } from './Signature';
@@ -514,23 +513,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   private async safeGetHandler(contractDefinition: ContractDefinition<any>): Promise<HandlerApi<State> | null> {
     const { executorFactory } = this.warp;
-    try {
-      return (await executorFactory.create(
-        contractDefinition,
-        this._evaluationOptions,
-        this.warp
-      )) as HandlerApi<State>;
-    } catch (e) {
-      if (e.name == 'ContractError' && e.subtype == 'unsafeClientSkip') {
-        if (this.isRoot()) {
-          return null;
-        } else {
-          throw new ContractError(e.message, e.subtype);
-        }
-      } else {
-        throw e;
-      }
-    }
+    return (await executorFactory.create(contractDefinition, this._evaluationOptions, this.warp)) as HandlerApi<State>;
   }
 
   private getToSortKey(upToSortKey?: string) {

@@ -167,7 +167,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
           }
           case 'throw':
             throw new Error(
-              `[SkipUnsafeError] Using unsafeClient is not allowed by default. Use EvaluationOptions.allowUnsafeClient flag to evaluate ${contractDefinition.txId}.`
+              `[SkipUnsafeError] Using unsafeClient is not allowed by default. Use EvaluationOptions.unsafeClient flag to evaluate ${contractDefinition.txId}.`
             );
           case 'skip': {
             throw new ContractError(
