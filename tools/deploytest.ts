@@ -34,7 +34,6 @@ async function main() {
           useKVStorage: true
         }
       }
-
     });
 
     console.log('contractTxId:', contractTxId);
@@ -74,6 +73,7 @@ async function main() {
       }),*/
       contract.writeInteraction<any>({
         function: "mint",
+        target: '33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA',
         qty: 100
       }),
       /*contract.writeInteraction<any>({
@@ -83,9 +83,9 @@ async function main() {
       })*/
     ]);
 
-    //const {cachedValue} = await contract.readState();
+    const {cachedValue} = await contract.readState();
 
-    logger.info("Result");
+    logger.info("Result", await contract.getStorageValue('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA'));
     //console.dir(cachedValue.state);
 
   } catch (e) {
