@@ -115,9 +115,12 @@ export class EvaluationOptionsEvaluator {
     if (manifestOptions) {
       const errors = [];
       for (const k in manifestOptions) {
+        if (k === 'useKVStorage') {
+          continue;
+        }
         if (userSetOptions[k] !== manifestOptions[k]) {
           errors.push(
-            `Option {${k}} differs. EvaluationOptions: [${userSetOptions[k]}], manifest: [${manifestOptions[k]}]. Use contract.setEvaluationOptions({${k}: ${manifestOptions[k]}) to evaluate contract state.`
+            `Option {${k}} differs. EvaluationOptions: [${userSetOptions[k]}], manifest: [${manifestOptions[k]}]. Use contract.setEvaluationOptions({${k}: ${manifestOptions[k]}}) to evaluate contract state.`
           );
         }
       }
