@@ -49,23 +49,26 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
     evaluationOptions: EvaluationOptions,
     warp: Warp
   ): Promise<HandlerApi<State>> {
-    let kvStorage = null;
+    const kvStorage = new TrieLevel(new Level(`${DEFAULT_LEVEL_DB_LOCATION}/kv/${contractDefinition.txId}`));
+    // TODO: fix contract definition loading and manifest evaluation in createExecutionContext
+    /*
     if (evaluationOptions.useKVStorage) {
-      kvStorage = new TrieLevel(new Level(`${DEFAULT_LEVEL_DB_LOCATION}/kv/${contractDefinition.txId}`));
-      /*kvStorage = new Trie({
+      kvStorage = ;
+      kvStorage = new Trie({
         db: new TrieLevel(new Level(`${DEFAULT_LEVEL_DB_LOCATION}/kv/${contractDefinition.txId}`))
-      });*/
+      });
       /*kvStorage = new Trie({
         db: new LevelKVStorage({
           dbLocation: `${DEFAULT_LEVEL_DB_LOCATION}/kv/${contractDefinition.txId}`,
           inMemory: false
         })
       });*/
-      /*kvStorage = new LevelKVStorage({
+    /*kvStorage = new LevelKVStorage({
         dbLocation: `${DEFAULT_LEVEL_DB_LOCATION}/kv/${contractDefinition.txId}`,
         inMemory: false
-      });*/
+      });
     }
+*/
 
     const swGlobal = new SmartWeaveGlobal(
       this.arweave,
