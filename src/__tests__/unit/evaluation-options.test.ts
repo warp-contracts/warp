@@ -100,7 +100,7 @@ describe('Evaluation options evaluator', () => {
         useVM2: false
       }).rootOptions;
     }).toThrow(
-      'Option {useVM2} differs. EvaluationOptions: [true], manifest: [false]. Use contract.setEvaluationOptions({useVM2: false) to evaluate contract state.'
+      'Option {useVM2} differs.'
     );
   });
 
