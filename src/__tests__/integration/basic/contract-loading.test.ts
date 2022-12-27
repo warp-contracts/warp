@@ -14,7 +14,6 @@ import { DefaultEvaluationOptions } from '../../../core/modules/StateEvaluator';
 import { LexicographicalInteractionsSorter } from '../../../core/modules/impl/LexicographicalInteractionsSorter';
 import { LevelDbCache } from '../../../cache/impl/LevelDbCache';
 
-
 interface ExampleContractState {
   counter: number;
 }
@@ -36,18 +35,18 @@ describe('Testing WarpGatewayContractDefinitionLoader', () => {
     LoggerFactory.INST.logLevel('error');
     // note: each tests suit (i.e. file with tests that Jest is running concurrently
     // with another files has to have ArLocal set to a different port!)
-    const port = 1832
+    const port = 1832;
     arlocal = new ArLocal(port, false);
     await arlocal.start();
 
-    warp = WarpFactory.forLocal(port)
-  
+    warp = WarpFactory.forLocal(port);
+
     const { arweave } = warp;
 
     const contractCache = new LevelDbCache<any>({ ...defaultCacheOptions, inMemory: true });
     const srcCache = new LevelDbCache<any>({ ...defaultCacheOptions, inMemory: true });
 
-    loader = new WarpGatewayContractDefinitionLoader("localhost:1832", arweave, contractCache, srcCache, 'local');
+    loader = new WarpGatewayContractDefinitionLoader('localhost:1832', arweave, contractCache, srcCache, 'local');
     sorter = new LexicographicalInteractionsSorter(arweave);
 
     ({ jwk: wallet } = await warp.generateWallet());
@@ -78,8 +77,8 @@ describe('Testing WarpGatewayContractDefinitionLoader', () => {
 
   it('loads contract definition when cache is empty', async () => {
     // Cache is empty
-    loader.getCache().delete(contract.txId())
-    expect(await loader.getCache().get(contract.txId(), "cd")).toBeFalsy()
+    loader.getCache().delete(contract.txId());
+    expect(await loader.getCache().get(contract.txId(), 'cd')).toBeFalsy();
 
     // Load contract
     const loaded = await loader.load(contract.txId());
@@ -87,12 +86,12 @@ describe('Testing WarpGatewayContractDefinitionLoader', () => {
     expect(loaded.src).toBe(contractSrc);
 
     // Contract is in its cache
-    expect(await loader.getCache().get(loaded.txId, "cd")).toBeTruthy()
-    expect(await loader.getSrcCache().get(loaded.txId, "cd")).toBeFalsy()
+    expect(await loader.getCache().get(loaded.txId, 'cd')).toBeTruthy();
+    expect(await loader.getSrcCache().get(loaded.txId, 'cd')).toBeFalsy();
 
     // Source is in its cache
-    expect(await loader.getCache().get(loaded.srcTxId, "src")).toBeFalsy()
-    expect(await loader.getSrcCache().get(loaded.srcTxId, "src")).toBeTruthy()
+    expect(await loader.getCache().get(loaded.srcTxId, 'src')).toBeFalsy();
+    expect(await loader.getSrcCache().get(loaded.srcTxId, 'src')).toBeTruthy();
   });
 
   it('loads contract definition when cache contains given definition', async () => {
@@ -100,14 +99,14 @@ describe('Testing WarpGatewayContractDefinitionLoader', () => {
     let loaded = await loader.load(contract.txId());
 
     // Modify source in cache
-    let source = await loader.getSrcCache().get(loaded.srcTxId, "src")
-    expect(source).toBeTruthy()
+    let source = await loader.getSrcCache().get(loaded.srcTxId, 'src');
+    expect(source).toBeTruthy();
     source!.cachedValue.src = fs.readFileSync(path.join(__dirname, '../data/token-evolve.js'), 'utf8');
-    await loader.getSrcCache().put({ contractTxId: loaded.srcTxId, sortKey: "src" }, source!.cachedValue)
+    await loader.getSrcCache().put({ contractTxId: loaded.srcTxId, sortKey: 'src' }, source!.cachedValue);
 
     // Load again, modified cache should be returned
     loaded = await loader.load(contract.txId());
-    expect(loaded.src).toBe(source!.cachedValue.src)
+    expect(loaded.src).toBe(source!.cachedValue.src);
   });
 
   it('loads contract definition with an evolved source code', async () => {
@@ -117,14 +116,11 @@ describe('Testing WarpGatewayContractDefinitionLoader', () => {
     const newSrcTxId = await warp.saveSourceTx(srcTx);
     await mineBlock(warp);
 
-    await contract.evolve(newSrcTxId)
+    await contract.evolve(newSrcTxId);
     await mineBlock(warp);
 
     const loaded = await loader.load(contract.txId(), newSrcTxId);
-    expect(loaded.src).toBe(newSource)
-    expect(loaded.srcTxId).toBe(newSrcTxId)
+    expect(loaded.src).toBe(newSource);
+    expect(loaded.srcTxId).toBe(newSrcTxId);
   });
-
-
-
 });
