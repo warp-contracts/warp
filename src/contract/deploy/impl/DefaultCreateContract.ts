@@ -6,7 +6,7 @@ import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
 import { Warp } from '../../../core/Warp';
 import { WARP_GW_URL } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
-import { CreateContract, ContractData, ContractDeploy, FromSrcTxContractData, ArWallet } from '../CreateContract';
+import { CreateContract, ContractData, ContractDeploy, FromSrcTxContractData, ArWallet, BundlrNodeType, BUNDLR_NODES } from '../CreateContract';
 import { SourceData, SourceImpl } from './SourceImpl';
 import { Buffer } from 'redstone-isomorphic';
 
@@ -146,6 +146,31 @@ export class DefaultCreateContract implements CreateContract {
     }
   }
 
+  async register(id: string, bundlrNode: BundlrNodeType): Promise<ContractDeploy> {
+    const response = await fetch(`${WARP_GW_URL}/gateway/contracts/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json'
+      },
+      body: JSON.stringify({ id, bundlrNode })
+    });
+    if (response.ok) {
+      return response.json();
+    } else {
+      if (typeof response.json === 'function') {
+        response.json().then((responseError) => {
+          if (responseError.message) {
+            this.logger.error(responseError.message);
+          }
+        });
+      }
+      throw new Error(
+        `Error while registering data item. Warp Gateway responded with status ${response.status} ${response.statusText}`
+      );
+    }
+  }
+
   async createSourceTx(sourceData: SourceData, wallet: ArWallet | SignatureType): Promise<Transaction> {
     return this.source.createSourceTx(sourceData, wallet);
   }
@@ -182,5 +207,9 @@ export class DefaultCreateContract implements CreateContract {
         `Error while posting contract. Sequencer responded with status ${response.status} ${response.statusText}`
       );
     }
+  }
+
+  isBundlrNodeType(value: string): value is BundlrNodeType {
+    return BUNDLR_NODES.includes(value as BundlrNodeType);
   }
 }
