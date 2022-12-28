@@ -39,6 +39,7 @@ import { EvaluationOptionsEvaluator } from './EvaluationOptionsEvaluator';
 import { TrieLevel } from '../cache/impl/TrieLevel';
 import { Level } from 'level';
 import { DEFAULT_LEVEL_DB_LOCATION } from '../core/WarpFactory';
+import { LmdbTrieCache } from '../cache/impl/LmdbTrieCache';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -803,7 +804,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
   }
 
   async getStorageValue(key: string): Promise<string | null> {
-    const storage = new TrieLevel(new Level(`${DEFAULT_LEVEL_DB_LOCATION}/kv/${this.txId()}`));
+    const storage = new LmdbTrieCache(`${DEFAULT_LEVEL_DB_LOCATION}/kv/${this.txId()}`);
+    //const storage = new TrieLevel(new Level(`${DEFAULT_LEVEL_DB_LOCATION}/kv/${this.txId()}`));
     const result = await storage.get(Buffer.from(key));
     return result == null ? null : result.toString();
   }
