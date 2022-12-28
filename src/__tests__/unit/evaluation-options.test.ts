@@ -99,9 +99,7 @@ describe('Evaluation options evaluator', () => {
       const result = new EvaluationOptionsEvaluator(contract2.evaluationOptions(), {
         useVM2: false
       }).rootOptions;
-    }).toThrow(
-      'Option {useVM2} differs.'
-    );
+    }).toThrow('Option {useVM2} differs.');
   });
 
   it('should properly set foreign evaluation options - unsafeClient - allow', async () => {

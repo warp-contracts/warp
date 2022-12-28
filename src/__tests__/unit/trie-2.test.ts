@@ -1,10 +1,10 @@
-import {DB} from '@ethereumjs/trie';
+import { DB } from '@ethereumjs/trie';
 import { TrieLevel } from '../../cache/impl/TrieLevel';
 import { Level } from 'level';
-import {DEFAULT_LEVEL_DB_LOCATION, defaultCacheOptions} from '../../core/WarpFactory';
-import {BatchDBOp} from "@ethereumjs/trie/dist/types";
-import {LevelDbCache} from "../../cache/impl/LevelDbCache";
-import {sleep, timeout} from "../../utils/utils";
+import { DEFAULT_LEVEL_DB_LOCATION, defaultCacheOptions } from '../../core/WarpFactory';
+import { BatchDBOp } from '@ethereumjs/trie/dist/types';
+import { LevelDbCache } from '../../cache/impl/LevelDbCache';
+import { sleep, timeout } from '../../utils/utils';
 
 class KV {
   private _kvBatch: BatchDBOp[] = [];
@@ -63,13 +63,11 @@ class SwGlobalMock {
   }
 }
 
-
 describe('KV database', () => {
-
   let db1: LevelDbCache;
 
   beforeAll(() => {
-    db1 = new LevelDbCache({...defaultCacheOptions, inMemory: true});
+    db1 = new LevelDbCache({ ...defaultCacheOptions, inMemory: true });
   });
 
   it('should not explode', async () => {
@@ -78,11 +76,11 @@ describe('KV database', () => {
     // first readState
     await prepareHandle();
     // simulates putting the initial state in cache
-    await db1.put({contractTxId: 'xxx', sortKey: 'yyy'}, {"foo": "bar"});
+    await db1.put({ contractTxId: 'xxx', sortKey: 'yyy' }, { foo: 'bar' });
 
     // second state read
     await db1.getLessOrEqual('xxx', 'yyy');
-    const {handle: handleFn2, swGlobal} = await prepareHandle();
+    const { handle: handleFn2, swGlobal } = await prepareHandle();
 
     // simulates the code of the JsHandlerAPI.handle
     await doHandle(swGlobal, handleFn2);
@@ -111,11 +109,11 @@ describe('KV database', () => {
   return handle;
   `)(swGlobal);
 
-    return {handle, swGlobal};
+    return { handle, swGlobal };
   }
 
   async function doHandle(swGlobal: SwGlobalMock, handleFn: Function) {
-    const {timeoutId, timeoutPromise} = timeout(60);
+    const { timeoutId, timeoutPromise } = timeout(60);
     try {
       await Promise.race([timeoutPromise, handleFn()]);
       await swGlobal.kv.commit();
@@ -123,5 +121,4 @@ describe('KV database', () => {
       clearTimeout(timeoutId);
     }
   }
-
 });
