@@ -36,6 +36,7 @@ import { generateMockVrf } from '../utils/vrf';
 import { Signature, SignatureType } from './Signature';
 import { ContractDefinition } from '../core/ContractDefinition';
 import { EvaluationOptionsEvaluator } from './EvaluationOptionsEvaluator';
+import { WarpFetchWrapper } from '../core/WarpFetchWrapper';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -59,6 +60,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   private _sorter: InteractionsSorter;
   private _rootSortKey: string;
   private signature: Signature;
+  private warpFetchWrapper: WarpFetchWrapper;
 
   constructor(
     private readonly _contractTxId: string,
@@ -113,6 +115,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
 
     this.getCallStack = this.getCallStack.bind(this);
+    this.warpFetchWrapper = new WarpFetchWrapper(this.warp);
   }
 
   async readState(
@@ -301,15 +304,16 @@ export class HandlerBasedContract<State> implements Contract<State> {
       options.vrf
     );
 
-    const response = await fetch(`${this._evaluationOptions.sequencerUrl}gateway/sequencer/register`, {
-      method: 'POST',
-      body: JSON.stringify(interactionTx),
-      headers: {
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Content-Type': 'application/json',
-        Accept: 'application/json'
-      }
-    })
+    const response = await this.warpFetchWrapper
+      .fetch(`${this._evaluationOptions.sequencerUrl}gateway/sequencer/register`, {
+        method: 'POST',
+        body: JSON.stringify(interactionTx),
+        headers: {
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Content-Type': 'application/json',
+          Accept: 'application/json'
+        }
+      })
       .then((res) => {
         this.logger.debug(res);
         return res.ok ? res.json() : Promise.reject(res);
@@ -746,12 +750,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   async syncState(externalUrl: string, params?: any): Promise<Contract> {
     const { stateEvaluator } = this.warp;
-    const response = await fetch(
-      `${externalUrl}?${new URLSearchParams({
-        id: this._contractTxId,
-        ...params
-      })}`
-    )
+    const response = await this.warpFetchWrapper
+      .fetch(
+        `${externalUrl}?${new URLSearchParams({
+          id: this._contractTxId,
+          ...params
+        })}`
+      )
       .then((res) => {
         return res.ok ? res.json() : Promise.reject(res);
       })
