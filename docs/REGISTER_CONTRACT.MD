@@ -32,7 +32,7 @@ const contractTags = [
 ];
 ```
 
-2. User then needs to initialize Bundlr, create transaction with the data and contract tags, sign it and uploads it:
+2. User then needs to initialize Bundlr and uploads the contract within data:
 
 ```ts
 const jwk = JSON.parse(fs.readFileSync('.secrets/warp-wallet-jwk.json').toString());
@@ -40,9 +40,7 @@ const bundlr = new Bundlr('https://node2.bundlr.network', 'arweave', jwk);
 
 const data = fs.readFileSync('tools/data/data.txt');
 
-const transaction = bundlr.createTransaction(data, { tags: contractTags });
-await transaction.sign();
-const tx = await transaction.upload();
+const tx = await bundlr.upload(data, { tags: contractTags })
 ```
 
 3. Finally, contract is sent to Warp Gateway where it is indexes so it can be immediately available for all Warp tools, contract data can be also served by Arweave gateway:
