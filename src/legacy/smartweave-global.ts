@@ -99,6 +99,8 @@ export class SmartWeaveGlobal {
     this.getBalance = this.getBalance.bind(this);
 
     this.extensions = {};
+
+    this.kv = new KV(null);
   }
 
   useGas(gas: number) {
