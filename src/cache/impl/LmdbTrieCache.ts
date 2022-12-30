@@ -2,10 +2,12 @@
 import { Database, open } from 'lmdb';
 
 import type { BatchDBOp, DB } from '@ethereumjs/trie';
+*/
 
 // https://github.com/ethereumjs/ethereumjs-monorepo/blob/master/packages/trie/recipes/lmdb.ts
-export class LmdbTrieCache implements DB {
-  readonly _path: string;
+
+export class LmdbTrieCache /*implements DB*/ {
+  /*readonly _path: string;
   readonly _database: Database;
 
   constructor(path: string) {
@@ -43,6 +45,5 @@ export class LmdbTrieCache implements DB {
 
   copy(): DB {
     return new LmdbTrieCache(this._path);
-  }
+  }*/
 }
-*/

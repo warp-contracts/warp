@@ -60,11 +60,7 @@ export class SmartWeaveGlobal {
 
   kv: KV;
 
-  constructor(
-    arweave: Arweave,
-    contract: { id: string; owner: string },
-    evaluationOptions: EvaluationOptions,
-  ) {
+  constructor(arweave: Arweave, contract: { id: string; owner: string }, evaluationOptions: EvaluationOptions) {
     this.gasUsed = 0;
     this.gasLimit = Number.MAX_SAFE_INTEGER;
     this.unsafeClient = arweave;
