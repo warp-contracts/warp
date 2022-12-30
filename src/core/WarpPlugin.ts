@@ -4,10 +4,11 @@ export const knownWarpPlugins = [
   'subscription',
   'ivm-handler-api',
   'evaluation-progress',
-  'fetch-options',
-  ...knownWarpPluginsPartial
+  'fetch-options'
 ] as const;
-export type WarpPluginType = typeof knownWarpPlugins[number];
+type WarpPluginPartialType = `smartweave-extension-${string}`;
+export type WarpKnownPluginType = typeof knownWarpPlugins[number];
+export type WarpPluginType = WarpKnownPluginType | WarpPluginPartialType;
 
 export interface WarpPlugin<T, R> {
   type(): WarpPluginType;

@@ -19,7 +19,13 @@ import { HandlerApi } from './modules/impl/HandlerExecutorFactory';
 import { InteractionsLoader } from './modules/InteractionsLoader';
 import { EvalStateResult, StateEvaluator } from './modules/StateEvaluator';
 import { WarpBuilder } from './WarpBuilder';
-import { WarpPluginType, WarpPlugin, knownWarpPlugins, knownWarpPluginsPartial } from './WarpPlugin';
+import {
+  WarpPluginType,
+  WarpPlugin,
+  knownWarpPlugins,
+  knownWarpPluginsPartial,
+  WarpKnownPluginType
+} from './WarpPlugin';
 import { SortKeyCache } from '../cache/SortKeyCache';
 import { ContractDefinition, SrcCache } from './ContractDefinition';
 import { SignatureType } from '../contract/Signature';
@@ -159,6 +165,8 @@ export class Warp {
   }
 
   private isPluginType(value: string): value is WarpPluginType {
-    return knownWarpPlugins.includes(value as WarpPluginType) || knownWarpPluginsPartial.some((p) => value.match(p));
+    return (
+      knownWarpPlugins.includes(value as WarpKnownPluginType) || knownWarpPluginsPartial.some((p) => value.match(p))
+    );
   }
 }
