@@ -71,7 +71,6 @@
     "events": "3.3.0",
     "fast-copy": "^3.0.0",
     "level": "^8.0.0",
-    "lmdb": "^2.7.3",
     "memory-level": "^1.0.0",
     "redstone-isomorphic": "1.1.8",
     "redstone-wasm-metering": "1.0.3",

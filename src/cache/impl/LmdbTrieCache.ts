@@ -1,3 +1,4 @@
+/*
 import { Database, open } from 'lmdb';
 
 import type { BatchDBOp, DB } from '@ethereumjs/trie';
@@ -44,3 +45,4 @@ export class LmdbTrieCache implements DB {
     return new LmdbTrieCache(this._path);
   }
 }
+*/

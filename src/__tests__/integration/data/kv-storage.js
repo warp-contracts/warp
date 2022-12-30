@@ -61,8 +61,8 @@ export async function handle(state, action) {
       throw new ContractError('Must specify target to get balance for');
     }
 
-    console.log('balance', input.target);
     const result = await SmartWeave.kv.get(target);
+    console.log('balance', {target: input.target, balance: result});
 
     return {result: {target, ticker, balance: result ? parseInt(result) : 0}};
   }

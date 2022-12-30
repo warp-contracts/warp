@@ -107,7 +107,8 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
   }
 
   close(): Promise<void> {
-    return this.db.close();
+    return null;
+    //return this.db.close();
   }
 
   async dump(): Promise<any> {

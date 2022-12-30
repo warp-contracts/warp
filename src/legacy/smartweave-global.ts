@@ -64,7 +64,6 @@ export class SmartWeaveGlobal {
     arweave: Arweave,
     contract: { id: string; owner: string },
     evaluationOptions: EvaluationOptions,
-    storage: DB | null
   ) {
     this.gasUsed = 0;
     this.gasLimit = Number.MAX_SAFE_INTEGER;
@@ -104,7 +103,6 @@ export class SmartWeaveGlobal {
     this.getBalance = this.getBalance.bind(this);
 
     this.extensions = {};
-    this.kv = new KV(storage);
   }
 
   useGas(gas: number) {
@@ -240,7 +238,7 @@ class Vrf {
   }
 }
 
-class KV {
+export class KV {
   private _kvBatch: BatchDBOp[] = [];
 
   constructor(private readonly _storage: DB | null) {}

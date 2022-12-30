@@ -21,10 +21,6 @@ import BigNumber from '../../../legacy/bignumber';
 import { Warp } from '../../Warp';
 import { isBrowser } from '../../../utils/utils';
 import { Buffer } from 'redstone-isomorphic';
-import { DEFAULT_LEVEL_DB_LOCATION } from '../../WarpFactory';
-import { TrieLevel } from '../../../cache/impl/TrieLevel';
-import { Level } from 'level';
-import { LmdbTrieCache } from '../../../cache/impl/LmdbTrieCache';
 
 export class ContractError extends Error {
   constructor(message, readonly subtype?: string) {
@@ -50,8 +46,8 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
     evaluationOptions: EvaluationOptions,
     warp: Warp
   ): Promise<HandlerApi<State>> {
-    const kvStorage = new LmdbTrieCache(`${DEFAULT_LEVEL_DB_LOCATION}/kv/${contractDefinition.txId}`);
-    // const kvStorage = new TrieLevel(new Level(`${DEFAULT_LEVEL_DB_LOCATION}/kv/${contractDefinition.txId}`));
+    //const kvStorage = new LmdbTrieCache(`${DEFAULT_LEVEL_DB_LOCATION}/kv/${contractDefinition.txId}`);
+
     // TODO: fix contract definition loading and manifest evaluation in createExecutionContext
     /*
     if (evaluationOptions.useKVStorage) {
@@ -78,8 +74,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
         id: contractDefinition.txId,
         owner: contractDefinition.owner
       },
-      evaluationOptions,
-      kvStorage
+      evaluationOptions
     );
 
     if (contractDefinition.contractType == 'wasm') {

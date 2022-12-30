@@ -15,7 +15,7 @@ export class TrieLevel implements DB {
   async get(key: Buffer): Promise<Buffer | null> {
     let value: Buffer | null = null;
     try {
-      await this._leveldb.open();
+      //await this._leveldb.open();
       value = await this._leveldb.get(key, ENCODING_OPTS);
     } catch (error: any) {
       // https://github.com/Level/abstract-level/blob/915ad1317694d0ce8c580b5ab85d81e1e78a3137/abstract-level.js#L309
@@ -25,27 +25,27 @@ export class TrieLevel implements DB {
         throw error;
       }
     } finally {
-      await this._leveldb.close();
+      //await this._leveldb.close();
     }
     return value;
   }
 
   async put(key: Buffer, val: Buffer): Promise<void> {
-    await this._leveldb.open();
+    //await this._leveldb.open();
     await this._leveldb.put(key, val, ENCODING_OPTS);
-    await this._leveldb.close();
+    //await this._leveldb.close();
   }
 
   async del(key: Buffer): Promise<void> {
-    await this._leveldb.open();
+    //await this._leveldb.open();
     await this._leveldb.del(key, ENCODING_OPTS);
-    await this._leveldb.close();
+    //await this._leveldb.close();
   }
 
   async batch(opStack: BatchDBOp[]): Promise<void> {
-    await this._leveldb.open();
+    //await this._leveldb.open();
     await this._leveldb.batch(opStack, ENCODING_OPTS);
-    await this._leveldb.close();
+    //await this._leveldb.close();
   }
 
   copy(): DB {
