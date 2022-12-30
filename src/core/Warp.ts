@@ -19,7 +19,7 @@ import { HandlerApi } from './modules/impl/HandlerExecutorFactory';
 import { InteractionsLoader } from './modules/InteractionsLoader';
 import { EvalStateResult, StateEvaluator } from './modules/StateEvaluator';
 import { WarpBuilder } from './WarpBuilder';
-import { WarpPluginType, WarpPlugin, knownWarpPlugins } from './WarpPlugin';
+import { WarpPluginType, WarpPlugin, knownWarpPlugins, knownWarpPluginsPartial } from './WarpPlugin';
 import { SortKeyCache } from '../cache/SortKeyCache';
 import { ContractDefinition, SrcCache } from './ContractDefinition';
 import { SignatureType } from '../contract/Signature';
@@ -36,6 +36,7 @@ export type WarpEnvironment = 'local' | 'testnet' | 'mainnet' | 'custom';
  * After being fully configured, it allows to "connect" to
  * contract and perform operations on them (see {@link Contract})
  */
+
 export class Warp {
   /**
    * @deprecated createContract will be a private field, please use its methods directly e.g. await warp.deploy(...)
@@ -119,7 +120,7 @@ export class Warp {
 
   use(plugin: WarpPlugin<unknown, unknown>): Warp {
     const pluginType = plugin.type();
-    if (!knownWarpPlugins.some((p) => p == pluginType)) {
+    if (!this.isPluginType(pluginType)) {
       throw new Error(`Unknown plugin type ${pluginType}.`);
     }
     this.plugins.set(pluginType, plugin);
@@ -129,6 +130,11 @@ export class Warp {
 
   hasPlugin(type: WarpPluginType): boolean {
     return this.plugins.has(type);
+  }
+
+  matchPlugins(type: string): WarpPluginType[] {
+    const pluginTypes = [...this.plugins.keys()];
+    return pluginTypes.filter((p) => p.match(type));
   }
 
   loadPlugin<P, Q>(type: WarpPluginType): WarpPlugin<P, Q> {
@@ -150,5 +156,9 @@ export class Warp {
       jwk: wallet,
       address: await this.arweave.wallets.jwkToAddress(wallet)
     };
+  }
+
+  private isPluginType(value: string): value is WarpPluginType {
+    return knownWarpPlugins.includes(value as WarpPluginType) || knownWarpPluginsPartial.some((p) => value.match(p));
   }
 }

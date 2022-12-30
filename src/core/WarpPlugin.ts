@@ -1,11 +1,11 @@
+export const knownWarpPluginsPartial = [`^smartweave-extension-`] as const;
 export const knownWarpPlugins = [
   'evm-signature-verification',
-  'smartweave-extension-nlp',
-  'smartweave-extension-ethers',
   'subscription',
   'ivm-handler-api',
   'evaluation-progress',
-  'fetch-options'
+  'fetch-options',
+  ...knownWarpPluginsPartial
 ] as const;
 export type WarpPluginType = typeof knownWarpPlugins[number];
 
