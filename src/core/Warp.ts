@@ -22,7 +22,7 @@ import { WarpBuilder } from './WarpBuilder';
 import { WarpPluginType, WarpPlugin, knownWarpPlugins } from './WarpPlugin';
 import { SortKeyCache } from '../cache/SortKeyCache';
 import { ContractDefinition, SrcCache } from './ContractDefinition';
-import { SignatureType } from '../contract/Signature';
+import { CustomSignature } from '../contract/Signature';
 import { SourceData } from '../contract/deploy/impl/SourceImpl';
 import Transaction from 'arweave/node/lib/transaction';
 
@@ -90,7 +90,7 @@ export class Warp {
     return await this.createContract.register(id, bundlrNode);
   }
 
-  async createSourceTx(sourceData: SourceData, wallet: ArWallet | SignatureType): Promise<Transaction> {
+  async createSourceTx(sourceData: SourceData, wallet: ArWallet | CustomSignature): Promise<Transaction> {
     return await this.createContract.createSourceTx(sourceData, wallet);
   }
 

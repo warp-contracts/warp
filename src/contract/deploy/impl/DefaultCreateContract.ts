@@ -1,8 +1,8 @@
 /* eslint-disable */
 import Arweave from 'arweave';
 import Transaction from 'arweave/node/lib/transaction';
-import { Signature, SignatureType } from '../../../contract/Signature';
 import { WarpFetchWrapper } from '../../../core/WarpFetchWrapper';
+import { Signature, CustomSignature } from '../../../contract/Signature';
 import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
 import { Warp } from '../../../core/Warp';
 import { WARP_GW_URL } from '../../../core/WarpFactory';
@@ -182,7 +182,7 @@ export class DefaultCreateContract implements CreateContract {
     }
   }
 
-  async createSourceTx(sourceData: SourceData, wallet: ArWallet | SignatureType): Promise<Transaction> {
+  async createSourceTx(sourceData: SourceData, wallet: ArWallet | CustomSignature): Promise<Transaction> {
     return this.source.createSourceTx(sourceData, wallet);
   }
 

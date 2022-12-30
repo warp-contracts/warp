@@ -1,6 +1,6 @@
 import { ArWallet } from './CreateContract';
 import { SourceData } from './impl/SourceImpl';
-import { SignatureType } from '../../contract/Signature';
+import { CustomSignature } from '../../contract/Signature';
 import Transaction from 'arweave/node/lib/transaction';
 export interface Source {
   /**
@@ -8,7 +8,7 @@ export interface Source {
    * @param sourceData - contract source data
    * @param wallet - either Arweave wallet or custom signature type
    */
-  createSourceTx(sourceData: SourceData, wallet: ArWallet | SignatureType): Promise<Transaction>;
+  createSourceTx(sourceData: SourceData, wallet: ArWallet | CustomSignature): Promise<Transaction>;
 
   /**
    * allows to save contract source

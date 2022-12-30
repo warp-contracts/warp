@@ -1,5 +1,5 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import { SignatureType } from '../../contract/Signature';
+import { CustomSignature } from '../../contract/Signature';
 import { Source } from './Source';
 import { EvaluationOptions } from '../../core/modules/StateEvaluator';
 import { WarpPluginType } from '../../core/WarpPlugin';
@@ -29,7 +29,7 @@ export const BUNDLR_NODES = ['node1', 'node2'] as const;
 export type BundlrNodeType = typeof BUNDLR_NODES[number];
 
 export interface CommonContractData {
-  wallet: ArWallet | SignatureType;
+  wallet: ArWallet | CustomSignature;
   initState: string;
   tags?: Tags;
   transfer?: ArTransfer;

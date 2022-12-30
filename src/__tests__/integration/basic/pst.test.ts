@@ -155,4 +155,22 @@ describe('Testing the Profit Sharing Token', () => {
     expect(result.state.balances['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']).toEqual(10000000 + 555 + 333);
     expect(result.state.balances[overwrittenCaller]).toEqual(1000 - 333);
   });
+
+  describe('when in strict mode', () => {
+    it('should properly extract owner from signature, using arweave wallet', async () => {
+      const startBalance = (await pst.currentBalance(walletAddress)).balance;
+
+      await pst.writeInteraction(
+        {
+          function: 'transfer',
+          target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M',
+          qty: 100
+        },
+        { strict: true }
+      )
+
+      expect((await pst.currentBalance(walletAddress)).balance).toEqual(startBalance - 100);
+    });
+
+  })
 });
