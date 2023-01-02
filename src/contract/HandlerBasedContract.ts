@@ -468,14 +468,14 @@ export class HandlerBasedContract<State> implements Contract<State> {
         interactions
           ? Promise.resolve(interactions)
           : await interactionsLoader.load(
-            contractTxId,
-            cachedState?.sortKey,
-            // (1) we want to eagerly load dependant contract interactions and put them
-            // in the interactions' loader cache
-            // see: https://github.com/warp-contracts/warp/issues/198
-            this.getToSortKey(upToSortKey),
-            this._evaluationOptions
-          )
+              contractTxId,
+              cachedState?.sortKey,
+              // (1) we want to eagerly load dependant contract interactions and put them
+              // in the interactions' loader cache
+              // see: https://github.com/warp-contracts/warp/issues/198
+              this.getToSortKey(upToSortKey),
+              this._evaluationOptions
+            )
       ]);
       // (2) ...but we still need to return only interactions up to original "upToSortKey"
       if (cachedState?.sortKey) {
