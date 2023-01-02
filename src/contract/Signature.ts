@@ -2,34 +2,24 @@ import Transaction from 'arweave/node/lib/transaction';
 import { Warp } from '../core/Warp';
 import { ArWallet } from './deploy/CreateContract';
 
+export type SignatureType = 'arweave' | 'ethereum';
 export type SigningFunction = (tx: Transaction) => Promise<void>;
-export type SignatureType = { signer: SigningFunction; type: 'arweave' | 'ethereum' };
+export type CustomSignature = { signer: SigningFunction; type: SignatureType };
 
 export class Signature {
-  readonly signer: SigningFunction;
-  readonly type: 'arweave' | 'ethereum';
+  signer: SigningFunction;
+  type: SignatureType;
   readonly warp: Warp;
 
-  constructor(warp: Warp, walletOrSignature: ArWallet | SignatureType) {
+  constructor(warp: Warp, walletOrSignature: ArWallet | CustomSignature) {
     this.warp = warp;
 
-    if (this.isSignatureType(walletOrSignature)) {
-      if (
-        walletOrSignature.type !== 'arweave' &&
-        (!(this.warp.environment == 'mainnet') || !(this.warp.interactionsLoader.type() == 'warp'))
-      ) {
-        throw new Error(
-          `Unable to use signing function of type: ${walletOrSignature.type} when not in mainnet environment or bundling is disabled.`
-        );
-      } else {
-        this.signer = walletOrSignature.signer;
-        this.type = walletOrSignature.type;
-      }
+    if (this.isCustomSignature(walletOrSignature)) {
+      this.assertEnvForCustomSigner(walletOrSignature);
+      this.signer = walletOrSignature.signer;
+      this.type = walletOrSignature.type;
     } else {
-      this.signer = async (tx: Transaction) => {
-        await this.warp.arweave.transactions.sign(tx, walletOrSignature);
-      };
-      this.type = 'arweave';
+      this.assignDefaultSigner(walletOrSignature);
     }
   }
 
@@ -39,7 +29,23 @@ export class Signature {
     }
   }
 
-  private isSignatureType(signature: ArWallet | SignatureType): signature is SignatureType {
-    return (signature as SignatureType).signer !== undefined;
+  private assignDefaultSigner(walletOrSignature) {
+    this.signer = async (tx: Transaction) => {
+      await this.warp.arweave.transactions.sign(tx, walletOrSignature);
+    };
+    this.type = 'arweave';
+  }
+
+  private assertEnvForCustomSigner(walletOrSignature: CustomSignature) {
+    if (walletOrSignature.type !== 'arweave' &&
+      (!(this.warp.environment == 'mainnet') || !(this.warp.interactionsLoader.type() == 'warp'))) {
+      throw new Error(
+        `Unable to use signing function of type: ${walletOrSignature.type} when not in mainnet environment or bundling is disabled.`
+      );
+    }
+  }
+
+  private isCustomSignature(signature: ArWallet | CustomSignature): signature is CustomSignature {
+    return (signature as CustomSignature).signer !== undefined;
   }
 }

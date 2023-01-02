@@ -9,7 +9,7 @@ import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { Source } from '../Source';
 import { Buffer } from 'redstone-isomorphic';
 import { Warp } from '../../../core/Warp';
-import { Signature, SignatureType } from '../../../contract/Signature';
+import { Signature, CustomSignature } from '../../../contract/Signature';
 import Transaction from 'arweave/node/lib/transaction';
 import { WARP_GW_URL } from '../../../core/WarpFactory';
 import { TagsParser } from '../../../core/modules/impl/TagsParser';
@@ -32,9 +32,9 @@ export class SourceImpl implements Source {
   private readonly logger = LoggerFactory.INST.create('Source');
   private signature: Signature;
 
-  constructor(private readonly warp: Warp) {}
+  constructor(private readonly warp: Warp) { }
 
-  async createSourceTx(sourceData: SourceData, wallet: ArWallet | SignatureType): Promise<Transaction> {
+  async createSourceTx(sourceData: SourceData, wallet: ArWallet | CustomSignature): Promise<Transaction> {
     this.logger.debug('Creating new contract source');
 
     const { src, wasmSrcCodeDir, wasmGlueCode } = sourceData;
@@ -235,7 +235,7 @@ function dummyImports(moduleImports: WebAssembly.ModuleImportDescriptor[]) {
     if (!Object.prototype.hasOwnProperty.call(imports, moduleImport.module)) {
       imports[moduleImport.module] = {};
     }
-    imports[moduleImport.module][moduleImport.name] = function () {};
+    imports[moduleImport.module][moduleImport.name] = function () { };
   });
 
   return imports;

@@ -33,7 +33,7 @@ import {
 import { ArTransfer, ArWallet, emptyTransfer, Tags } from './deploy/CreateContract';
 import { InnerWritesEvaluator } from './InnerWritesEvaluator';
 import { generateMockVrf } from '../utils/vrf';
-import { Signature, SignatureType } from './Signature';
+import { Signature, CustomSignature } from './Signature';
 import { ContractDefinition } from '../core/ContractDefinition';
 import { EvaluationOptionsEvaluator } from './EvaluationOptionsEvaluator';
 import { WarpFetchWrapper } from '../core/WarpFetchWrapper';
@@ -366,13 +366,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
       });
 
       this.logger.debug('Tags with inner calls', tags);
-    } else {
-      if (strict) {
-        const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer, strict, vrf);
-        if (handlerResult.type !== 'ok') {
-          throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
-        }
-      }
     }
 
     if (vrf) {
@@ -394,6 +387,14 @@ export class HandlerBasedContract<State> implements Contract<State> {
       this.warp.environment === 'testnet',
       reward
     );
+
+    if (!this._evaluationOptions.internalWrites && strict) {
+      const handlerResult = await this.callContract(input, interactionTx.owner, undefined, tags, transfer, strict, vrf);
+      if (handlerResult.type !== 'ok') {
+        throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
+      }
+    }
+
     return interactionTx;
   }
 
@@ -405,7 +406,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return this._callStack;
   }
 
-  connect(signature: ArWallet | SignatureType): Contract<State> {
+  connect(signature: ArWallet | CustomSignature): Contract<State> {
     this.signature = new Signature(this.warp, signature);
     return this;
   }
@@ -467,14 +468,14 @@ export class HandlerBasedContract<State> implements Contract<State> {
         interactions
           ? Promise.resolve(interactions)
           : await interactionsLoader.load(
-              contractTxId,
-              cachedState?.sortKey,
-              // (1) we want to eagerly load dependant contract interactions and put them
-              // in the interactions' loader cache
-              // see: https://github.com/warp-contracts/warp/issues/198
-              this.getToSortKey(upToSortKey),
-              this._evaluationOptions
-            )
+            contractTxId,
+            cachedState?.sortKey,
+            // (1) we want to eagerly load dependant contract interactions and put them
+            // in the interactions' loader cache
+            // see: https://github.com/warp-contracts/warp/issues/198
+            this.getToSortKey(upToSortKey),
+            this._evaluationOptions
+          )
       ]);
       // (2) ...but we still need to return only interactions up to original "upToSortKey"
       if (cachedState?.sortKey) {
