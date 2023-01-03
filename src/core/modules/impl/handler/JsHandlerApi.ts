@@ -1,13 +1,12 @@
 import { ContractDefinition } from '../../../../core/ContractDefinition';
 import { ExecutionContext } from '../../../../core/ExecutionContext';
 import { EvalStateResult } from '../../../../core/modules/StateEvaluator';
-import { KV, SmartWeaveGlobal } from '../../../../legacy/smartweave-global';
-import { timeout, deepCopy } from '../../../../utils/utils';
+import { SmartWeaveGlobal } from '../../../../legacy/smartweave-global';
+import { deepCopy, timeout } from '../../../../utils/utils';
 import { InteractionData, InteractionResult } from '../HandlerExecutorFactory';
 import { AbstractContractHandler } from './AbstractContractHandler';
 import { Level } from 'level';
 import { DEFAULT_LEVEL_DB_LOCATION } from '../../../WarpFactory';
-import { TrieLevel } from '../../../../cache/impl/TrieLevel';
 
 export class JsHandlerApi<State> extends AbstractContractHandler<State> {
   constructor(
@@ -50,22 +49,10 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
         }
       });
 
-      this.swGlobal.kv = new KV(new TrieLevel(lvl));
-      try {
-        console.log('======== Connecting to  LMDB KV');
-        await lvl.open();
-      } catch (err) {
-        console.error(err.code); // 'LEVEL_DATABASE_NOT_OPEN'
-        if (err.cause && err.cause.code === 'LEVEL_LOCKED') {
-          console.error('LEVEL_LOCKED');
-        }
-        throw err;
-      }
-
+      await this.swGlobal.kv.open();
       const handlerResult = await Promise.race([timeoutPromise, this.contractFunction(stateCopy, interaction)]);
 
       if (handlerResult && (handlerResult.state !== undefined || handlerResult.result !== undefined)) {
-        console.log('==== Committing');
         await this.swGlobal.kv.commit();
         return {
           type: 'ok',
@@ -99,10 +86,7 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
           };
       }
     } finally {
-      if (lvl) {
-        console.log('======== Disconnecting from LMDB KV');
-        await lvl.close();
-      }
+      await this.swGlobal.kv.close();
       if (timeoutId !== null) {
         // it is important to clear the timeout promise
         // - promise.race won't "cancel" it automatically if the "handler" promise "wins"

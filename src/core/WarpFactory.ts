@@ -59,7 +59,7 @@ export class WarpFactory {
       ...defaultCacheOptions,
       inMemory: true
     }
-  ) {
+  ): Warp {
     return this.customArweaveGw(arweave, cacheOptions, 'local');
   }
 
@@ -75,7 +75,7 @@ export class WarpFactory {
       port: 443,
       protocol: 'https'
     })
-  ) {
+  ): Warp {
     if (useArweaveGw) {
       return this.customArweaveGw(arweave, cacheOptions, 'testnet');
     } else {
@@ -104,7 +104,7 @@ export class WarpFactory {
       port: 443,
       protocol: 'https'
     })
-  ) {
+  ): Warp {
     if (useArweaveGw) {
       return this.customArweaveGw(arweave, cacheOptions, 'mainnet');
     } else {

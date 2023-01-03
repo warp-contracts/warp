@@ -93,8 +93,7 @@ describe('Testing the Profit Sharing Token', () => {
   });
 
   it('should read pst state and balance data', async () => {
-    // expect(await pst.currentState()).toEqual(initialState);
-
+    expect(await pst.currentState()).toEqual(initialState);
     expect((await pst.currentBalance('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M')).balance).toEqual(10000000);
     expect((await pst.currentBalance('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA')).balance).toEqual(23111222);
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(555669);
@@ -120,11 +119,11 @@ describe('Testing the Profit Sharing Token', () => {
   });
 
   it('should properly read storage value', async () => {
-    expect(await pst.getStorageValue(walletAddress)).toEqual((555669 - 555).toString());
-    expect(await pst.getStorageValue('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M')).toEqual(
+    expect((await pst.getStorageValues([walletAddress])).get(walletAddress)).toEqual((555669 - 555).toString());
+    expect((await pst.getStorageValues(['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M'])).get('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M')).toEqual(
       (10000000 + 555).toString()
     );
-    expect(await pst.getStorageValue('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA')).toEqual((23111222).toString());
-    expect(await pst.getStorageValue('foo')).toBeNull();
+    expect((await pst.getStorageValues(['33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA'])).get('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA')).toEqual((23111222).toString());
+    expect((await pst.getStorageValues(['foo'])).get('foo')).toBeNull();
   });
 });

@@ -24,8 +24,20 @@ import { ContractDefinition } from './ContractDefinition';
 import { SignatureType } from '../contract/Signature';
 import { SourceData } from '../contract/deploy/impl/SourceImpl';
 import Transaction from 'arweave/node/lib/transaction';
+import { DB } from '@ethereumjs/trie';
+import { Level } from 'level';
+import { DEFAULT_LEVEL_DB_LOCATION } from './WarpFactory';
+import { TrieLevel } from '../cache/impl/TrieLevel';
 
 export type WarpEnvironment = 'local' | 'testnet' | 'mainnet' | 'custom';
+
+export interface KVDatabase extends DB {
+  open(): Promise<void>;
+
+  close(): Promise<void>;
+}
+
+export type KVStorageFactory = (contractTxId: string) => KVDatabase;
 
 /**
  * The Warp "motherboard" ;-).
@@ -41,6 +53,7 @@ export class Warp {
    */
   readonly createContract: CreateContract;
   readonly testing: Testing;
+  kvStorageFactory: KVStorageFactory;
 
   private readonly plugins: Map<WarpPluginType, WarpPlugin<unknown, unknown>> = new Map();
 
@@ -54,6 +67,9 @@ export class Warp {
   ) {
     this.createContract = new DefaultCreateContract(arweave, this);
     this.testing = new Testing(arweave);
+    this.kvStorageFactory = (contractTxId: string) => {
+      return new TrieLevel(new Level(`${DEFAULT_LEVEL_DB_LOCATION}/kv/ldb/${contractTxId}`));
+    };
   }
 
   static builder(
@@ -144,5 +160,9 @@ export class Warp {
       jwk: wallet,
       address: await this.arweave.wallets.jwkToAddress(wallet)
     };
+  }
+
+  useKVStorageFactor(factory: KVStorageFactory): void {
+    this.kvStorageFactory = factory;
   }
 }

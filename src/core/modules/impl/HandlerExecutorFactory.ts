@@ -46,27 +46,11 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
     evaluationOptions: EvaluationOptions,
     warp: Warp
   ): Promise<HandlerApi<State>> {
-    //const kvStorage = new LmdbTrieCache(`${DEFAULT_LEVEL_DB_LOCATION}/kv/${contractDefinition.txId}`);
+    let kvStorage = null;
 
-    // TODO: fix contract definition loading and manifest evaluation in createExecutionContext
-    /*
     if (evaluationOptions.useKVStorage) {
-      kvStorage = ;
-      kvStorage = new Trie({
-        db: new TrieLevel(new Level(`${DEFAULT_LEVEL_DB_LOCATION}/kv/${contractDefinition.txId}`))
-      });
-      /*kvStorage = new Trie({
-        db: new LevelKVStorage({
-          dbLocation: `${DEFAULT_LEVEL_DB_LOCATION}/kv/${contractDefinition.txId}`,
-          inMemory: false
-        })
-      });*/
-    /*kvStorage = new LevelKVStorage({
-        dbLocation: `${DEFAULT_LEVEL_DB_LOCATION}/kv/${contractDefinition.txId}`,
-        inMemory: false
-      });
+      kvStorage = warp.kvStorageFactory(contractDefinition.txId);
     }
-*/
 
     const swGlobal = new SmartWeaveGlobal(
       this.arweave,
@@ -74,7 +58,8 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
         id: contractDefinition.txId,
         owner: contractDefinition.owner
       },
-      evaluationOptions
+      evaluationOptions,
+      kvStorage
     );
 
     if (contractDefinition.contractType == 'wasm') {

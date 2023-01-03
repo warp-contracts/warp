@@ -3,7 +3,7 @@ export async function handle(state, action) {
   const caller = action.caller;
 
   if (!state.kvOps) {
-    state.kvOps = {};
+    //  state.kvOps = {};
   }
 
   if (input.function === 'mint') {

@@ -33,6 +33,7 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
       this.assignReadContractState<Input>(executionContext, currentTx, currentResult, interactionTx);
       this.assignWrite(executionContext, currentTx);
 
+      await this.swGlobal.kv.open();
       const handlerResult = await this.doHandle(interaction);
       await this.swGlobal.kv.commit();
       return {
@@ -71,6 +72,8 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
           type: 'error'
         };
       }
+    } finally {
+      await this.swGlobal.kv.close();
     }
   }
 

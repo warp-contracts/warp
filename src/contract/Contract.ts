@@ -233,5 +233,5 @@ export interface Contract<State = unknown> {
 
   isRoot(): boolean;
 
-  getStorageValue(key: string): Promise<string | null>;
+  getStorageValues(keys: string[]): Promise<Map<string, string | null>>;
 }

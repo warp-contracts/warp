@@ -461,7 +461,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
       this.logger.debug('State fully cached, not loading interactions.');
       if (forceDefinitionLoad || evolvedSrcTxId) {
         contractDefinition = await definitionLoader.load<State>(contractTxId, evolvedSrcTxId);
-        handler = await this.safeGetHandler(contractDefinition);
       }
     } else {
       [contractDefinition, sortedInteractions] = await Promise.all([
@@ -491,7 +490,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
         // - as no other contracts will be called.
         this._rootSortKey = sortedInteractions[sortedInteractions.length - 1].sortKey;
       }
-      handler = await this.safeGetHandler(contractDefinition);
     }
     if (this.isRoot()) {
       this._eoEvaluator = new EvaluationOptionsEvaluator(
@@ -505,8 +503,15 @@ export class HandlerBasedContract<State> implements Contract<State> {
     if (!this.isRoot() && contractEvaluationOptions.useKVStorage) {
       throw new Error('Foreign read/writes cannot be performed on kv storage contracts');
     }
-
     this.ecLogger.debug(`Evaluation options ${contractTxId}:`, contractEvaluationOptions);
+
+    if (contractDefinition) {
+      handler = (await this.warp.executorFactory.create(
+        contractDefinition,
+        contractEvaluationOptions,
+        this.warp
+      )) as HandlerApi<State>;
+    }
 
     return {
       warp: this.warp,
@@ -518,11 +523,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
       cachedState,
       requestedSortKey: upToSortKey
     };
-  }
-
-  private async safeGetHandler(contractDefinition: ContractDefinition<any>): Promise<HandlerApi<State> | null> {
-    const { executorFactory } = this.warp;
-    return (await executorFactory.create(contractDefinition, this._evaluationOptions, this.warp)) as HandlerApi<State>;
   }
 
   private getToSortKey(upToSortKey?: string) {
@@ -802,16 +802,19 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return this._parentContract == null;
   }
 
-  async getStorageValue(key: string): Promise<string | null> {
+  async getStorageValues(keys: string[]): Promise<Map<string, string | null>> {
     // const storage = new LmdbTrieCache(`${DEFAULT_LEVEL_DB_LOCATION}/kv/${this.txId()}`);
-    const lvl = new Level(`${DEFAULT_LEVEL_DB_LOCATION}/kv/${this.txId()}`);
-    const storage = new TrieLevel(lvl);
+    const storage = this.warp.kvStorageFactory(this.txId());
+    const result: Map<string, string> = new Map();
     try {
-      await lvl.open();
-      const result = await storage.get(Buffer.from(key));
-      return result == null ? null : result.toString();
+      await storage.open();
+      for (const key of keys) {
+        const value = await storage.get(Buffer.from(key));
+        result.set(key, value == null ? null : value.toString());
+      }
+      return result;
     } finally {
-      await lvl.close();
+      await storage.close();
     }
   }
 }
