@@ -162,7 +162,8 @@ export class Warp {
     };
   }
 
-  useKVStorageFactor(factory: KVStorageFactory): void {
+  useKVStorageFactory(factory: KVStorageFactory): Warp {
     this.kvStorageFactory = factory;
+    return this;
   }
 }
