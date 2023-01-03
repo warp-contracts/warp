@@ -120,10 +120,16 @@ describe('Testing the Profit Sharing Token', () => {
 
   it('should properly read storage value', async () => {
     expect((await pst.getStorageValues([walletAddress])).get(walletAddress)).toEqual((555669 - 555).toString());
-    expect((await pst.getStorageValues(['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M'])).get('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M')).toEqual(
-      (10000000 + 555).toString()
-    );
-    expect((await pst.getStorageValues(['33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA'])).get('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA')).toEqual((23111222).toString());
+    expect(
+      (await pst.getStorageValues(['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M'])).get(
+        'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M'
+      )
+    ).toEqual((10000000 + 555).toString());
+    expect(
+      (await pst.getStorageValues(['33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA'])).get(
+        '33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA'
+      )
+    ).toEqual((23111222).toString());
     expect((await pst.getStorageValues(['foo'])).get('foo')).toBeNull();
   });
 });

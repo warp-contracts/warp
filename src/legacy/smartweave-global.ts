@@ -4,7 +4,7 @@ import { EvaluationOptions } from '../core/modules/StateEvaluator';
 import { GQLNodeInterface, GQLTagInterface, VrfData } from './gqlResult';
 import { BatchDBOp } from '@ethereumjs/trie/dist/types';
 import { DB } from '@ethereumjs/trie';
-import {KVDatabase} from "../core/Warp";
+import { KVDatabase } from '../core/Warp';
 
 /**
  *
@@ -61,7 +61,12 @@ export class SmartWeaveGlobal {
 
   kv: KV;
 
-  constructor(arweave: Arweave, contract: { id: string; owner: string }, evaluationOptions: EvaluationOptions, storage: KVDatabase | null) {
+  constructor(
+    arweave: Arweave,
+    contract: { id: string; owner: string },
+    evaluationOptions: EvaluationOptions,
+    storage: KVDatabase | null
+  ) {
     this.gasUsed = 0;
     this.gasLimit = Number.MAX_SAFE_INTEGER;
     this.unsafeClient = arweave;
