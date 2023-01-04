@@ -34,11 +34,7 @@ import { ArTransfer, ArWallet, emptyTransfer, Tags } from './deploy/CreateContra
 import { InnerWritesEvaluator } from './InnerWritesEvaluator';
 import { generateMockVrf } from '../utils/vrf';
 import { Signature, SignatureType } from './Signature';
-import { ContractDefinition } from '../core/ContractDefinition';
 import { EvaluationOptionsEvaluator } from './EvaluationOptionsEvaluator';
-import { DEFAULT_LEVEL_DB_LOCATION } from '../core/WarpFactory';
-import { Level } from 'level';
-import { TrieLevel } from '../cache/impl/TrieLevel';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -803,7 +799,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
   }
 
   async getStorageValues(keys: string[]): Promise<Map<string, string | null>> {
-    // const storage = new LmdbTrieCache(`${DEFAULT_LEVEL_DB_LOCATION}/kv/${this.txId()}`);
     const storage = this.warp.kvStorageFactory(this.txId());
     const result: Map<string, string> = new Map();
     try {
