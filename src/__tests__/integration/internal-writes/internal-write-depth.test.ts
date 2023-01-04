@@ -283,7 +283,7 @@ describe('Testing internal writes', () => {
     });
   });
 
-  fdescribe('with different maxDepths', () => {
+  describe('with different maxDepths', () => {
     beforeEach(async () => {
       await deployContracts();
     });
