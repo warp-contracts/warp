@@ -21,7 +21,7 @@ export class CacheableInteractionsLoader implements InteractionsLoader {
       toSortKey
     });
 
-    return await this.delegate.load(contractTxId, fromSortKey, toSortKey, evaluationOptions);
+    //return await this.delegate.load(contractTxId, fromSortKey, toSortKey, evaluationOptions);
 
     if (!this.interactionsCache.has(contractTxId)) {
       const interactions = await this.delegate.load(contractTxId, fromSortKey, toSortKey, evaluationOptions);

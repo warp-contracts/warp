@@ -22,7 +22,7 @@ describe('flow with broken behaviour', () => {
     LoggerFactory.INST.logLevel('error');
 
     warp = WarpFactory.forLocal(PORT);
-    ({jwk: walletJwk} = await warp.testing.generateWallet());
+    ({jwk: walletJwk} = await warp.generateWallet());
     arweave = warp.arweave;
   });
 
@@ -269,7 +269,7 @@ describe('flow with broken behaviour', () => {
     })).originalTxId;
     await mineBlock(warp);
 
-    console.log('AFTER: ', JSON.stringify(await thetarContract.readState()));
+    console.log('AFTER: ', JSON.stringify(await thetarContract.readState(), null, 2));
   }
 
   const cancelOrder = async (orderIndex) => {
@@ -286,7 +286,7 @@ describe('flow with broken behaviour', () => {
     });
     await mineBlock(warp);
 
-    console.log('AFTER: ', JSON.stringify(await thetarContract.readState()));
+    console.log('AFTER: ', JSON.stringify(await thetarContract.readState(), null, 2));
   }
 
   const tryCancelOrder = async (orderIndex) => {
@@ -309,7 +309,7 @@ describe('flow with broken behaviour', () => {
 
     const orderId = (await freashThetarContract.readState()).cachedValue.state['orderInfos']['0']['orders'][orderIndex]['orderId'];
 
-    const txId = await freashThetarContract.dryWrite({
+    const txId = await freashThetarContract.writeInteraction({
       function: 'cancelOrder',
       params: {
         pairId: 0,
@@ -318,7 +318,7 @@ describe('flow with broken behaviour', () => {
     });
     await mineBlock(warp);
 
-    console.log('AFTER: ', JSON.stringify(await freashThetarContract.readState()));
+    console.log('AFTER: ', JSON.stringify(await freashThetarContract.readState(), null, 2));
   }
 
   const readFull = async () => {
@@ -357,12 +357,12 @@ describe('flow with broken behaviour', () => {
     //await deploy();
     await createOrder('buy', 1, 1);
     //await createOrder('buy', 2, 2);
-    /*await cancelOrder(0);
-    //await tryCancelOrder(0);
+    //await cancelOrder(0);
+    await tryCancelOrder(0);
     //await cancelOrder(0);
 
 
-    let contract = warp.contract(thethArTxId);
+    /*let contract = warp.contract(thethArTxId);
     const result1 = await contract.setEvaluationOptions({
       internalWrites: true,
       allowUnsafeClient: true,

@@ -130,7 +130,7 @@ describe('flow with broken behaviour', () => {
       internalWrites: true,
       allowUnsafeClient: true,
       allowBigInt: true,
-      updateCacheForEachInteraction: true
+      updateCacheForEachInteraction: false
     }).connect(walletJwk);
 
     console.log('Contract: ', JSON.stringify(await contract.readState(), null, "  "));
@@ -141,13 +141,19 @@ describe('flow with broken behaviour', () => {
 
     await deployJS();
     await create(1);
+    await create(1);
+    //await create(1);
     await cancel(0);
+    await cancel(0);
+    //await cancel(2);
     //await tryCancelOrder(0);
     //await cancelOrder(0);
 
 
     console.error("========= READ FULL ==========")
     await readFull();
+
+
   });
 
 });
