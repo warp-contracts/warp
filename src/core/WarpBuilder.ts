@@ -56,6 +56,8 @@ export class WarpBuilder {
   }
 
   public useWarpGateway(gatewayOptions: GatewayOptions, cacheOptions: CacheOptions): WarpBuilder {
+    console.log('gatewayOptions.address', gatewayOptions.address);
+
     this._interactionsLoader = new CacheableInteractionsLoader(
       new WarpGatewayInteractionsLoader(
         gatewayOptions.address,

@@ -302,7 +302,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       options.vrf
     );
 
-    const response = await fetch(`http://localhost:5666/gateway/sequencer/register`, {
+    const response = await fetch(`http://13.53.129.31:5666/gateway/sequencer/register`, {
       method: 'POST',
       body: JSON.stringify(interactionTx),
       headers: {
