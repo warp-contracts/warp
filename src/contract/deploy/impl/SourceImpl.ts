@@ -32,7 +32,7 @@ export class SourceImpl implements Source {
   private readonly logger = LoggerFactory.INST.create('Source');
   private signature: Signature;
 
-  constructor(private readonly warp: Warp) { }
+  constructor(private readonly warp: Warp) {}
 
   async createSourceTx(sourceData: SourceData, wallet: ArWallet | CustomSignature): Promise<Transaction> {
     this.logger.debug('Creating new contract source');
@@ -235,7 +235,7 @@ function dummyImports(moduleImports: WebAssembly.ModuleImportDescriptor[]) {
     if (!Object.prototype.hasOwnProperty.call(imports, moduleImport.module)) {
       imports[moduleImport.module] = {};
     }
-    imports[moduleImport.module][moduleImport.name] = function () { };
+    imports[moduleImport.module][moduleImport.name] = function () {};
   });
 
   return imports;

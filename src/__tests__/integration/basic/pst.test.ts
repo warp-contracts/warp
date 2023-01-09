@@ -167,10 +167,9 @@ describe('Testing the Profit Sharing Token', () => {
           qty: 100
         },
         { strict: true }
-      )
+      );
 
       expect((await pst.currentBalance(walletAddress)).balance).toEqual(startBalance - 100);
     });
-
-  })
+  });
 });
