@@ -134,6 +134,15 @@ export class Warp {
     return this.plugins.get(type) as WarpPlugin<P, Q>;
   }
 
+  // Close cache connection
+  async close(): Promise<void> {
+    return Promise.all([
+      this.definitionLoader.getSrcCache().close(),
+      this.definitionLoader.getCache().close(),
+      this.stateEvaluator.getCache().close()
+    ]).then();
+  }
+
   async generateWallet(): Promise<Wallet> {
     const wallet = await this.arweave.wallets.generate();
 
