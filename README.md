@@ -221,7 +221,7 @@ async function deploy(contractData: ContractData, disableBundling?: boolean): Pr
   <summary>Example</summary>
 
 ```typescript
-const { contractTxId, srcTxId } = await warp.createContract.deploy({
+const { contractTxId, srcTxId } = await warp.deploy({
   wallet,
   initState: initialState,
   data: { 'Content-Type': 'text/html', body: '<h1>HELLO WORLD</h1>' },
@@ -247,7 +247,7 @@ async function deployFromSourceTx(
   <summary>Example</summary>
 
 ```typescript
-const { contractTxId, srcTxId } = await warp.createContract.deployFromSourceTx({
+const { contractTxId, srcTxId } = await warp.deployFromSourceTx({
   wallet,
   initState: initialState,
   srcTxId: 'SRC_TX_ID'
@@ -264,7 +264,7 @@ Uses Warp Gateway's endpoint to upload raw data item to Bundlr and index it.
   <summary>Example</summary>
 
 ```typescript
-const { contractTxId } = await warp.createContract.deployBundled(rawDataItem);
+const { contractTxId } = await warp.deployBundled(rawDataItem);
 ```
 
 </details>
@@ -277,7 +277,7 @@ Uses Warp Gateway's endpoint to index a contract which has already been uploaded
   <summary>Example</summary>
 
 ```typescript
-const { contractTxId } = await warp.createContract.register(bundlrId, bundlrNode);
+const { contractTxId } = await warp.register(bundlrId, bundlrNode);
 ```
 
 </details>
@@ -752,7 +752,7 @@ yarn ts-node -r tsconfig-paths/register tools/migrate.ts
 ```
 
 4. The warp instance now contains info about the environment - https://github.com/warp-contracts/warp#warpenvironment . This might be useful for writing deployment scripts, etc.
-5. if the `warp` instance was obtained via `WarpFactor.forLocal` (which should be used for local testing with ArLocal), then:
+5. if the `warp` instance was obtained via `WarpFactory.forLocal` (which should be used for local testing with ArLocal), then:
 
 - you can use `warp.generateWallet()` for generating the wallet - it returns both the jwk and wallet address - [example](https://github.com/warp-contracts/warp/blob/main/src/__tests__/integration/internal-writes/internal-write-depth.test.ts#L89).
 - you can use `warp.testing.mineBlock()` to manually mine ArLocal blocks
