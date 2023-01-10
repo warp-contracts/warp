@@ -1,6 +1,6 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import {defaultCacheOptions, defaultWarpGwOptions, LoggerFactory, WarpFactory} from '../src';
+import {Benchmark, defaultCacheOptions, defaultWarpGwOptions, LoggerFactory, WarpFactory} from '../src';
 import fs from 'fs';
 import path from 'path';
 import {JWKInterface} from 'arweave/node/lib/wallet';
@@ -38,16 +38,53 @@ async function main() {
     console.log('srcTxId:', srcTxId);
 
     const contract = warp.contract<any>(contractTxId)
-      .setEvaluationOptions({internalWrites: true, unsafeClient: 'skip', sequencerUrl: 'http://13.53.129.31:5666/'})
+      .setEvaluationOptions({internalWrites: true, unsafeClient: 'skip', sequencerUrl: 'http://localhost:5666/'})
       .connect(wallet);
 
+
+    const benchmark = Benchmark.measure();
     await Promise.all([
       contract.writeInteraction<any>({
         function: "transfer",
         target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
         qty: 100
       }),
-     /* contract.writeInteraction<any>({
+/*      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
         function: "transfer",
         target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
         qty: 100
@@ -58,6 +95,8 @@ async function main() {
         qty: 100
       })*/
     ]);
+
+    console.log("Total", benchmark.elapsed());
 
     /*const {cachedValue} = await contract.readState();
 

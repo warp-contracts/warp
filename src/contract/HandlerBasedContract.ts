@@ -37,6 +37,7 @@ import { generateMockVrf } from '../utils/vrf';
 import { Signature, SignatureType } from './Signature';
 import { ContractDefinition } from '../core/ContractDefinition';
 import { EvaluationOptionsEvaluator } from './EvaluationOptionsEvaluator';
+import {WARP_GW_URL} from "../core/WarpFactory";
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -302,7 +303,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       options.vrf
     );
 
-    const response = await fetch(`http://13.53.129.31:5666/gateway/sequencer/register`, {
+    const response = await fetch(`${WARP_GW_URL}/gateway/sequencer/register`, {
       method: 'POST',
       body: JSON.stringify(interactionTx),
       headers: {
