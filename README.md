@@ -752,7 +752,7 @@ yarn ts-node -r tsconfig-paths/register tools/migrate.ts
 ```
 
 4. The warp instance now contains info about the environment - https://github.com/warp-contracts/warp#warpenvironment . This might be useful for writing deployment scripts, etc.
-5. if the `warp` instance was obtained via `WarpFactor.forLocal` (which should be used for local testing with ArLocal), then:
+5. if the `warp` instance was obtained via `WarpFactory.forLocal` (which should be used for local testing with ArLocal), then:
 
 - you can use `warp.generateWallet()` for generating the wallet - it returns both the jwk and wallet address - [example](https://github.com/warp-contracts/warp/blob/main/src/__tests__/integration/internal-writes/internal-write-depth.test.ts#L89).
 - you can use `warp.testing.mineBlock()` to manually mine ArLocal blocks
