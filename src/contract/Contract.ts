@@ -100,7 +100,7 @@ export interface Contract<State = unknown> {
     interactions?: GQLNodeInterface[]
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
 
-  readStateFor(interactions?: GQLNodeInterface[]): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
+  readStateFor(sortKey: string, interactions: GQLNodeInterface[]): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
 
   /**
    * Returns the "view" of the state, computed by the SWC -

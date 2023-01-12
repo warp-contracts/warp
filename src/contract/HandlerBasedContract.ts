@@ -170,8 +170,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return result;
   }
 
-  async readStateFor(interactions?: GQLNodeInterface[]): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
-    return this.readState(undefined, undefined, interactions);
+  async readStateFor(sortKey: string, interactions: GQLNodeInterface[]): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
+    return this.readState(sortKey, undefined, interactions);
   }
 
   async viewState<Input, View>(
@@ -458,11 +458,20 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     if (cachedState && cachedState.sortKey == upToSortKey) {
       this.logger.debug('State fully cached, not loading interactions.');
-      if (forceDefinitionLoad || evolvedSrcTxId) {
+      if (forceDefinitionLoad || evolvedSrcTxId || interactions?.length) {
         contractDefinition = await definitionLoader.load<State>(contractTxId, evolvedSrcTxId);
         handler = await this.safeGetHandler(contractDefinition);
+        if (interactions?.length) {
+          sortedInteractions = this._sorter.sort(interactions.map(i => ({node: i, cursor: null})));
+        }
       }
     } else {
+      // if we want to apply some 'external' interactions on top of the state cached at given sort key
+      // AND we don't have the state cached at the exact requested sort key - throw.
+      // NOTE: this feature is used by the D.R.E. nodes.
+      if (interactions?.length) {
+        throw new Error(`Cannot apply requested interactions at ${upToSortKey}`);
+      }
       [contractDefinition, sortedInteractions] = await Promise.all([
         definitionLoader.load<State>(contractTxId, evolvedSrcTxId),
         interactions
