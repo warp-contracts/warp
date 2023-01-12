@@ -170,7 +170,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return result;
   }
 
-  async readStateFor(sortKey: string, interactions: GQLNodeInterface[]): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
+  async readStateFor(
+    sortKey: string,
+    interactions: GQLNodeInterface[]
+  ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
     return this.readState(sortKey, undefined, interactions);
   }
 
@@ -462,7 +465,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
         contractDefinition = await definitionLoader.load<State>(contractTxId, evolvedSrcTxId);
         handler = await this.safeGetHandler(contractDefinition);
         if (interactions?.length) {
-          sortedInteractions = this._sorter.sort(interactions.map(i => ({node: i, cursor: null})));
+          sortedInteractions = this._sorter.sort(interactions.map((i) => ({ node: i, cursor: null })));
         }
       }
     } else {
