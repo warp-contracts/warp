@@ -1,9 +1,9 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import {defaultCacheOptions, LoggerFactory, WarpFactory} from '../src';
+import { defaultCacheOptions, LoggerFactory, WarpFactory } from '../src';
 import fs from 'fs';
 import path from 'path';
-import {JWKInterface} from 'arweave/node/lib/wallet';
+import { JWKInterface } from 'arweave/node/lib/wallet';
 
 async function main() {
   let wallet: JWKInterface = readJSON('./.secrets/33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA.json');
@@ -18,17 +18,16 @@ async function main() {
   });
 
   try {
-      const warp = WarpFactory
-        .forMainnet({...defaultCacheOptions, inMemory: true});
+    const warp = WarpFactory.forMainnet({ ...defaultCacheOptions, inMemory: true });
 
     const jsContractSrc = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.js'), 'utf8');
     const initialState = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.json'), 'utf8');
 
     // case 1 - full deploy, js contract
-    const {contractTxId, srcTxId} = await warp.deploy({
+    const { contractTxId, srcTxId } = await warp.deploy({
       wallet,
       initState: initialState,
-      src: jsContractSrc,
+      src: jsContractSrc
       /*evaluationManifest: {
         evaluationOptions: {
           useKVStorage: true
@@ -61,26 +60,24 @@ async function main() {
       srcTxId: "5wXT-A0iugP9pWEyw-iTbB0plZ_AbmvlNKyBfGS3AUY",
     });*/
 
-    const contract = warp.contract<any>(contractTxId)
-      .setEvaluationOptions({})
-      .connect(wallet);
+    const contract = warp.contract<any>(contractTxId).setEvaluationOptions({}).connect(wallet);
 
     await Promise.all([
       contract.writeInteraction<any>({
-        function: "transfer",
-        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        function: 'transfer',
+        target: 'M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI',
         qty: 100
       }),
       contract.writeInteraction<any>({
-        function: "transfer",
-        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        function: 'transfer',
+        target: 'M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI',
         qty: 100
       }),
       contract.writeInteraction<any>({
-        function: "transfer",
-        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        function: 'transfer',
+        target: 'M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI',
         qty: 100
-      }),
+      })
       /*contract.writeInteraction<any>({
         function: "mint",
         target: 'follows:0xe0',
@@ -92,17 +89,14 @@ async function main() {
 
     //logger.info("Result", await contract.getStorageValue('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA'));
     //console.dir(cachedValue.state);
-
   } catch (e) {
     //logger.error(e)
     throw e;
-
   }
-
 }
 
 export function readJSON(path: string): JWKInterface {
-  const content = fs.readFileSync(path, "utf-8");
+  const content = fs.readFileSync(path, 'utf-8');
   try {
     return JSON.parse(content);
   } catch (e) {

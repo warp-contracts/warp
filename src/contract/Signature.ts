@@ -1,10 +1,21 @@
 import { Warp } from '../core/Warp';
 import { ArWallet } from './deploy/CreateContract';
 import { Transaction } from '../utils/types/arweave-types';
+import { Signer } from './deploy/DataItem';
 
 export type SignatureType = 'arweave' | 'ethereum';
 export type SigningFunction = (tx: Transaction) => Promise<void>;
 export type CustomSignature = { signer: SigningFunction; type: SignatureType };
+
+/**
+Different types which can be used to sign transaction or data item
+- ArWallet - default option for signing Arweave transactions, either JWKInterface or 'use_wallet'
+- CustomSignature - object with `signer` field - a custom signing function which takes transaction as a parameter and requires signing it 
+  on the client side and `type` field of type SignatureType which indicates the wallet's chain, either 'arweave' or 'ethereum'
+- Signer - arbundles specific class which allows to sign data items (only this type can be used when bundling is enabled and data items 
+  are being created)
+*/
+export type SignatureProvider = ArWallet | CustomSignature | Signer;
 
 export class Signature {
   signer: SigningFunction;

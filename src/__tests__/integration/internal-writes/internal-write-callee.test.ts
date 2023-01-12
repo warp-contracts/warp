@@ -9,6 +9,7 @@ import { Contract } from '../../../contract/Contract';
 import { Warp } from '../../../core/Warp';
 import { WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 interface ExampleContractState {
   counter: number;
@@ -73,7 +74,7 @@ describe('Testing internal writes', () => {
   });
 
   async function deployContracts() {
-    warp = WarpFactory.forLocal(port);
+    warp = WarpFactory.forLocal(port).use(new DeployPlugin());
     ({ jwk: wallet } = await warp.generateWallet());
 
     callingContractSrc = fs.readFileSync(path.join(__dirname, '../data/writing-contract.js'), 'utf8');
@@ -81,13 +82,13 @@ describe('Testing internal writes', () => {
     calleeContractSrc = fs.readFileSync(path.join(__dirname, '../data/example-contract.js'), 'utf8');
     calleeInitialState = fs.readFileSync(path.join(__dirname, '../data/example-contract-state.json'), 'utf8');
 
-    ({ contractTxId: calleeTxId } = await warp.createContract.deploy({
+    ({ contractTxId: calleeTxId } = await warp.deploy({
       wallet,
       initState: calleeInitialState,
       src: calleeContractSrc
     }));
 
-    ({ contractTxId: callingTxId } = await warp.createContract.deploy({
+    ({ contractTxId: callingTxId } = await warp.deploy({
       wallet,
       initState: callingContractInitialState,
       src: callingContractSrc
@@ -264,11 +265,13 @@ describe('Testing internal writes', () => {
 
     it('should properly evaluate state again with a new client', async () => {
       const calleeContract2 = WarpFactory.forLocal(port)
+        .use(new DeployPlugin())
         .contract<ExampleContractState>(calleeTxId)
         .setEvaluationOptions({
           internalWrites: true
         });
       const calleeContract2VM = WarpFactory.forLocal(port)
+        .use(new DeployPlugin())
         .contract<ExampleContractState>(calleeTxId)
         .setEvaluationOptions({
           internalWrites: true,

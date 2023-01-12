@@ -9,6 +9,7 @@ import { PstState, PstContract } from '../../../contract/PstContract';
 import { Warp } from '../../../core/Warp';
 import { DEFAULT_LEVEL_DB_LOCATION, WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 describe('Testing the Profit Sharing Token', () => {
   let contractSrc: string;
@@ -31,7 +32,7 @@ describe('Testing the Profit Sharing Token', () => {
     await arlocal.start();
     LoggerFactory.INST.logLevel('error');
 
-    warp = WarpFactory.forLocal(2222);
+    warp = WarpFactory.forLocal(2222).use(new DeployPlugin());
 
     ({ arweave } = warp);
     ({ jwk: wallet, address: walletAddress } = await warp.generateWallet());

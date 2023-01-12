@@ -9,6 +9,7 @@ import { PstState, PstContract } from '../../../contract/PstContract';
 import { Warp } from '../../../core/Warp';
 import { WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 describe('Testing unsafe client in nested contracts with "skip" option', () => {
   let contractSrc: string;
@@ -28,7 +29,7 @@ describe('Testing unsafe client in nested contracts with "skip" option', () => {
     arlocal = new ArLocal(1668, false);
     await arlocal.start();
     LoggerFactory.INST.logLevel('error');
-    warp = WarpFactory.forLocal(1668);
+    warp = WarpFactory.forLocal(1668).use(new DeployPlugin());
 
     ({ arweave } = warp);
     ({ jwk: wallet, address: walletAddress } = await warp.generateWallet());
@@ -47,7 +48,7 @@ describe('Testing unsafe client in nested contracts with "skip" option', () => {
       }
     };
 
-    ({ contractTxId } = await warp.createContract.deploy({
+    ({ contractTxId } = await warp.deploy({
       wallet,
       initState: JSON.stringify(initialState),
       src: contractSrc
@@ -88,8 +89,8 @@ describe('Testing unsafe client in nested contracts with "skip" option', () => {
 
     const newSource = fs.readFileSync(path.join(__dirname, '../data/token-pst-unsafe.js'), 'utf8');
 
-    const srcTx = await warp.createSourceTx({ src: newSource }, wallet);
-    const newSrcTxId = await warp.saveSourceTx(srcTx);
+    const srcTx = await warp.createSource({ src: newSource }, wallet);
+    const newSrcTxId = await warp.saveSource(srcTx);
     await mineBlock(warp);
 
     const evolveResponse = await pst.evolve(newSrcTxId);
@@ -114,7 +115,7 @@ describe('Testing unsafe client in nested contracts with "skip" option', () => {
     await expect(pst.readState()).rejects.toThrow('[SkipUnsafeError]');
 
     // testcase for new warp instance
-    const newWarp = WarpFactory.forLocal(1668);
+    const newWarp = WarpFactory.forLocal(1668).use(new DeployPlugin());
     const freshPst = newWarp.contract(contractTxId).setEvaluationOptions({
       unsafeClient: 'allow'
     });

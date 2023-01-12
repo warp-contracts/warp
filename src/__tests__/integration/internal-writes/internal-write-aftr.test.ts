@@ -9,6 +9,7 @@ import { Contract } from '../../../contract/Contract';
 import { Warp } from '../../../core/Warp';
 import { WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 interface ExampleContractState {
   counter: number;
@@ -50,7 +51,7 @@ describe('Testing internal writes', () => {
   });
 
   async function deployContracts() {
-    warp = WarpFactory.forLocal(port);
+    warp = WarpFactory.forLocal(port).use(new DeployPlugin());
     ({ jwk: wallet, address: walletAddress } = await warp.generateWallet());
 
     aftrContractSrc = fs.readFileSync(path.join(__dirname, '../data/aftr/sampleContractSrc.js'), 'utf8');
@@ -62,13 +63,13 @@ describe('Testing internal writes', () => {
     pstContractSrc = fs.readFileSync(path.join(__dirname, '../data/aftr/sampleContractSrc.js'), 'utf8');
     pstInitialState = fs.readFileSync(path.join(__dirname, '../data/aftr/pstInitState.json'), 'utf8');
 
-    ({ contractTxId: aftrTxId, srcTxId: aftrSrcTxId } = await warp.createContract.deploy({
+    ({ contractTxId: aftrTxId, srcTxId: aftrSrcTxId } = await warp.deploy({
       wallet,
       initState: aftrContractInitialState,
       src: aftrContractSrc
     }));
 
-    ({ contractTxId: pstTxId } = await warp.createContract.deployFromSourceTx({
+    ({ contractTxId: pstTxId } = await warp.deployFromSourceTx({
       wallet,
       initState: pstInitialState,
       srcTxId: aftrSrcTxId
@@ -228,7 +229,7 @@ describe('Testing internal writes', () => {
 
   describe('AFTR test case - with a fresh Warp instance', () => {
     it('should properly read PST contract state', async () => {
-      const newWarpInstance = WarpFactory.forLocal(port);
+      const newWarpInstance = WarpFactory.forLocal(port).use(new DeployPlugin());
 
       const pst2 = newWarpInstance.contract<ExampleContractState>(pstTxId).setEvaluationOptions({
         internalWrites: true
@@ -261,7 +262,7 @@ describe('Testing internal writes', () => {
 
   describe('AFTR test case - with an illegal read state after an internal write', () => {
     it('should throw an Error if contract makes readContractState after write on the same contract', async () => {
-      const newWarpInstance = WarpFactory.forLocal(port);
+      const newWarpInstance = WarpFactory.forLocal(port).use(new DeployPlugin());
       const { jwk: wallet2 } = await newWarpInstance.generateWallet();
 
       const aftrBrokenContractSrc = fs.readFileSync(
@@ -275,13 +276,13 @@ describe('Testing internal writes', () => {
       );
       const pst2InitState = fs.readFileSync(path.join(__dirname, '../data/aftr/pstInitState.json'), 'utf8');
 
-      const { contractTxId: aftrBrokenTxId, srcTxId: brokenSrcTxId } = await newWarpInstance.createContract.deploy({
+      const { contractTxId: aftrBrokenTxId, srcTxId: brokenSrcTxId } = await newWarpInstance.deploy({
         wallet: wallet2,
         initState: aftrBrokenContractInitialState,
         src: aftrBrokenContractSrc
       });
 
-      const { contractTxId: pst2TxId } = await newWarpInstance.createContract.deployFromSourceTx({
+      const { contractTxId: pst2TxId } = await newWarpInstance.deployFromSourceTx({
         wallet: wallet2,
         initState: pst2InitState,
         srcTxId: brokenSrcTxId

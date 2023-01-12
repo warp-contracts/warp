@@ -4,6 +4,7 @@ import path from 'path';
 import {mineBlock} from '../_helpers';
 import {WarpFactory} from '../../../core/WarpFactory';
 import {LoggerFactory} from '../../../logging/LoggerFactory';
+import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 const PORT = 1970;
 
@@ -20,7 +21,7 @@ describe('flow with broken behaviour', () => {
     await arlocal.start();
     LoggerFactory.INST.logLevel('error');
 
-    warp = WarpFactory.forLocal(PORT);
+    warp = WarpFactory.forLocal(PORT).use(new DeployPlugin());
     ({jwk: walletJwk} = await warp.generateWallet());
     arweave = warp.arweave;
   });

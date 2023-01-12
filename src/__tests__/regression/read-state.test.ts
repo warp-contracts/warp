@@ -6,6 +6,7 @@ import Arweave from 'arweave';
 import { WarpFactory, defaultCacheOptions, defaultWarpGwOptions } from '../../core/WarpFactory';
 import { LoggerFactory } from '../../logging/LoggerFactory';
 import { SourceType } from '../../core/modules/impl/WarpGatewayInteractionsLoader';
+import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 const stringify = require('safe-stable-stringify');
 
@@ -68,9 +69,11 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
               inMemory: true
             }
           )
-          .build();
+          .build()
+          .use(new DeployPlugin())
 
         const result2 = await warp
+          .use(new DeployPlugin())
           .contract(contractTxId)
           .setEvaluationOptions({
             unsafeClient: 'allow',
@@ -118,7 +121,8 @@ describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
             inMemory: true
           }
         )
-        .build();
+        .build()
+        .use(new DeployPlugin());
 
       const result2 = await warp
         .contract(contractTxId)
@@ -216,6 +220,7 @@ describe('readState', () => {
         }
       )
       .build()
+      .use(new DeployPlugin())
       .contract(contractTxId)
       .setEvaluationOptions({
         unsafeClient: 'allow'
@@ -250,6 +255,7 @@ describe('readState', () => {
         }
       )
       .build()
+      .use(new DeployPlugin())
       .contract(contractTxId)
       .connect(jwk)
       .viewState({

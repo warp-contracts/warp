@@ -43,6 +43,7 @@ export * from './core/WarpFactory';
 export * from './core/Warp';
 export * from './core/WarpBuilder';
 export * from './core/WarpPlugin';
+export * from './core/WarpFetchWrapper';
 
 export * from './contract/Contract';
 export * from './contract/HandlerBasedContract';
@@ -52,9 +53,8 @@ export * from './contract/InnerWritesEvaluator';
 export * from './contract/Signature';
 export * from './contract/EvaluationOptionsEvaluator';
 export * from './contract/deploy/Source';
-export * from './contract/deploy/impl/SourceImpl';
-export * from './contract/deploy/impl/DefaultCreateContract';
 export * from './contract/deploy/CreateContract';
+export * from './contract/deploy/DataItem';
 
 export * from './legacy/gqlResult';
 export * from './legacy/smartweave-global';
@@ -64,3 +64,8 @@ export * from './legacy/create-interaction-tx';
 
 export * from './utils/utils';
 export * from './utils/ArweaveWrapper';
+export * from './utils/types/arweave-types';
+
+export * from './core/modules/impl/wasm/WasmSrc';
+export * from './core/modules/impl/wasm/rust-wasm-imports';
+export * from './core/modules/impl/wasm/wasm-bindgen-tools';
