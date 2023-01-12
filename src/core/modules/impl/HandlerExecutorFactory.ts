@@ -55,6 +55,12 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
       evaluationOptions
     );
 
+    const extensionPlugins = warp.matchPlugins(`^smartweave-extension-`);
+    extensionPlugins.forEach((ex) => {
+      const extension = warp.loadPlugin<any, void>(ex);
+      extension.process(swGlobal.extensions);
+    });
+
     if (contractDefinition.contractType == 'wasm') {
       this.logger.info('Creating handler for wasm contract', contractDefinition.txId);
       const benchmark = Benchmark.measure();
