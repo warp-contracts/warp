@@ -5898,22 +5898,22 @@ redstone-isomorphic@1.1.8:
     safe-buffer "^5.1.2"
     undici "^5.8.0"
 
-redstone-wasm-json-toolkit@1.0.4:
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/redstone-wasm-json-toolkit/-/redstone-wasm-json-toolkit-1.0.4.tgz#c3fb0fcf1a7d81ab018f0c8e15d574e8278d926c"
-  integrity sha512-QOvWuk1+daO6leVwF5L1cU1lSQnNu4xDwW9wbViuT7CjEQj5xm0hxkcgsrBJQ8Up88QETtZAl/ttnwcodaVhYw==
+redstone-wasm-json-toolkit@1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/redstone-wasm-json-toolkit/-/redstone-wasm-json-toolkit-1.0.5.tgz#b117ecc403d89577abc1bb00b9f26fa0690dfa2c"
+  integrity sha512-xuMPgeTL3Jl010uj261eBNS21fWFjy1RQREfnZFckY1IEOn/wGrydrqEhY7Gb6f8oQMk2uVYhjkgVYJ29GVD0w==
   dependencies:
     buffer-pipe "0.0.3"
     leb128 "0.0.4"
     redstone-isomorphic "1.1.0"
 
-redstone-wasm-metering@1.0.4:
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/redstone-wasm-metering/-/redstone-wasm-metering-1.0.4.tgz#39390a1c7e1adcaa4efb66d7fd0848676189bdc4"
-  integrity sha512-wVqDmUDRuxZXhET9R3aGnEgJpGLy5M4LejhJWk2NpgnGZh7uUFx2I4KP/BPeB9kiNuXRF9Zf8k4S6TLksWyEBA==
+redstone-wasm-metering@1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/redstone-wasm-metering/-/redstone-wasm-metering-1.0.5.tgz#fac2f8e6f6b28945f37aa1920489adca7ff809e9"
+  integrity sha512-A8XGdH5OBVMLk/s2To2WjfAmOssiy0Jrh3GZ2i0zhdKcTltMD2t+EC/46iNZAsxWpfMJPajxrJ1dNgrgWkY3Zw==
   dependencies:
     leb128 "^0.0.4"
-    redstone-wasm-json-toolkit "1.0.4"
+    redstone-wasm-json-toolkit "1.0.5"
 
 regexpp@^3.1.0, regexpp@^3.2.0:
   version "3.2.0"
