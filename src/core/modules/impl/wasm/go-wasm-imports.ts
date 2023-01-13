@@ -25,7 +25,7 @@ let globalJsModule;
   globalJsModule.redstone = {
     go: {}
   };
-}).call(
+}.call(
   this,
   typeof global !== 'undefined'
     ? global
@@ -34,7 +34,7 @@ let globalJsModule;
     : typeof window !== 'undefined'
     ? window
     : {}
-);
+));
 
 export class Go {
   private _callbackTimeouts: Map<any, any>;
