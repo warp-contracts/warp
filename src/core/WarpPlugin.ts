@@ -7,7 +7,7 @@ export const knownWarpPlugins = [
   'fetch-options'
 ] as const;
 type WarpPluginPartialType = `smartweave-extension-${string}`;
-export type WarpKnownPluginType = (typeof knownWarpPlugins)[number];
+export type WarpKnownPluginType = typeof knownWarpPlugins[number];
 export type WarpPluginType = WarpKnownPluginType | WarpPluginPartialType;
 
 export interface WarpPlugin<T, R> {
