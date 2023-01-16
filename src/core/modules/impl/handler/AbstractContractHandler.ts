@@ -7,7 +7,6 @@ import { SmartWeaveGlobal } from '../../../../legacy/smartweave-global';
 import { LoggerFactory } from '../../../../logging/LoggerFactory';
 import { deepCopy } from '../../../../utils/utils';
 import { ContractError, HandlerApi, InteractionData, InteractionResult } from '../HandlerExecutorFactory';
-import { DB } from '@ethereumjs/trie';
 
 export abstract class AbstractContractHandler<State> implements HandlerApi<State> {
   protected logger = LoggerFactory.INST.create('ContractHandler');

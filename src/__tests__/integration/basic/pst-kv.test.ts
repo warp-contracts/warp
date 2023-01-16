@@ -6,7 +6,6 @@ import { JWKInterface } from 'arweave/node/lib/wallet';
 import path from 'path';
 import { mineBlock } from '../_helpers';
 import { PstState, PstContract } from '../../../contract/PstContract';
-import { InteractionResult } from '../../../core/modules/impl/HandlerExecutorFactory';
 import { Warp } from '../../../core/Warp';
 import { DEFAULT_LEVEL_DB_LOCATION, WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
@@ -119,17 +118,17 @@ describe('Testing the Profit Sharing Token', () => {
   });
 
   it('should properly read storage value', async () => {
-    expect((await pst.getStorageValues([walletAddress])).get(walletAddress)).toEqual((555669 - 555).toString());
+    expect((await pst.getStorageValues([walletAddress])).cachedValue.get(walletAddress)).toEqual(555669 - 555);
     expect(
-      (await pst.getStorageValues(['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M'])).get(
+      (await pst.getStorageValues(['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M'])).cachedValue.get(
         'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M'
       )
-    ).toEqual((10000000 + 555).toString());
+    ).toEqual(10000000 + 555);
     expect(
-      (await pst.getStorageValues(['33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA'])).get(
+      (await pst.getStorageValues(['33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA'])).cachedValue.get(
         '33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA'
       )
-    ).toEqual((23111222).toString());
-    expect((await pst.getStorageValues(['foo'])).get('foo')).toBeNull();
+    ).toEqual(23111222);
+    expect((await pst.getStorageValues(['foo'])).cachedValue.get('foo')).toBeNull();
   });
 });

@@ -24,20 +24,11 @@ import { ContractDefinition } from './ContractDefinition';
 import { SignatureType } from '../contract/Signature';
 import { SourceData } from '../contract/deploy/impl/SourceImpl';
 import Transaction from 'arweave/node/lib/transaction';
-import { DB } from '@ethereumjs/trie';
-import { Level } from 'level';
 import { DEFAULT_LEVEL_DB_LOCATION } from './WarpFactory';
-import { TrieLevel } from '../cache/impl/TrieLevel';
+import { LevelDbCache } from '../cache/impl/LevelDbCache';
 
 export type WarpEnvironment = 'local' | 'testnet' | 'mainnet' | 'custom';
-
-export interface KVDatabase extends DB {
-  open(): Promise<void>;
-
-  close(): Promise<void>;
-}
-
-export type KVStorageFactory = (contractTxId: string) => KVDatabase;
+export type KVStorageFactory = (contractTxId: string) => SortKeyCache<any>;
 
 /**
  * The Warp "motherboard" ;-).
@@ -68,7 +59,10 @@ export class Warp {
     this.createContract = new DefaultCreateContract(arweave, this);
     this.testing = new Testing(arweave);
     this.kvStorageFactory = (contractTxId: string) => {
-      return new TrieLevel(new Level(`${DEFAULT_LEVEL_DB_LOCATION}/kv/ldb/${contractTxId}`));
+      return new LevelDbCache({
+        inMemory: false,
+        dbLocation: `${DEFAULT_LEVEL_DB_LOCATION}/kv/ldb/${contractTxId}`
+      });
     };
   }
 
