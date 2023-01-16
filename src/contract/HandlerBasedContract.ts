@@ -392,7 +392,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
     );
 
     if (!this._evaluationOptions.internalWrites && strict) {
-      const handlerResult = await this.callContract(input, interactionTx.owner, undefined, tags, transfer, strict, vrf);
+      const { arweave } = this.warp;
+      const caller =
+        this.signature.type == 'arweave'
+          ? await arweave.wallets.ownerToAddress(interactionTx.owner)
+          : interactionTx.owner;
+      const handlerResult = await this.callContract(input, caller, undefined, tags, transfer, strict, vrf);
       if (handlerResult.type !== 'ok') {
         throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
       }
