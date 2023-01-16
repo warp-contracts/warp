@@ -13,7 +13,7 @@ import { DefinitionLoader } from '../DefinitionLoader';
 import { WasmSrc } from './wasm/WasmSrc';
 import { WarpEnvironment } from '../../Warp';
 import { TagsParser } from './TagsParser';
-import { SortKeyCache } from '../../../cache/SortKeyCache';
+import { CacheKey, SortKeyCache } from '../../../cache/SortKeyCache';
 
 /**
  * An extension to {@link ContractDefinitionLoader} that makes use of
@@ -47,7 +47,7 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
       cacheKey += `_${evolvedSrcTxId}`;
     }
 
-    const cacheResult = await this.cache.get(cacheKey, 'cd');
+    const cacheResult = await this.cache.get(new CacheKey(cacheKey, 'cd'));
     if (cacheResult) {
       this.rLogger.debug('WarpGatewayContractDefinitionLoader: Hit from cache!');
       const result = cacheResult.cachedValue;
@@ -62,7 +62,7 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
     const contract = await this.doLoad<State>(contractTxId, evolvedSrcTxId);
     this.rLogger.info(`Contract definition loaded in: ${benchmark.elapsed()}`);
     this.verifyEnv(contract);
-    await this.cache.put({ contractTxId: cacheKey, sortKey: 'cd' }, contract);
+    await this.cache.put({ key: cacheKey, sortKey: 'cd' }, contract);
 
     return contract;
   }

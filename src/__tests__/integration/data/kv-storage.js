@@ -7,8 +7,8 @@ export async function handle(state, action) {
   }
 
   if (input.function === 'mint') {
-    console.log('mint', input.target, input.qty.toString());
-    await SmartWeave.kv.put(input.target, input.qty.toString());
+    console.log('mint', input.target, input.qty);
+    await SmartWeave.kv.put(input.target, input.qty);
     // for debug or whatever
     //state.kvOps[SmartWeave.transaction.id] = SmartWeave.kv.ops();
     return {state};
@@ -31,7 +31,7 @@ export async function handle(state, action) {
     }
 
     let callerBalance = await SmartWeave.kv.get(caller);
-    callerBalance = callerBalance ? parseInt(callerBalance) : 0;
+    callerBalance = callerBalance ? callerBalance : 0;
 
     if (callerBalance < qty) {
       throw new ContractError(`Caller balance not high enough to send ${qty} token(s)!`);
@@ -39,13 +39,13 @@ export async function handle(state, action) {
 
     // Lower the token balance of the caller
     callerBalance -= qty;
-    await SmartWeave.kv.put(caller, callerBalance.toString());
+    await SmartWeave.kv.put(caller, callerBalance);
 
     let targetBalance = await SmartWeave.kv.get(target);
-    targetBalance = targetBalance ? parseInt(targetBalance) : 0;
+    targetBalance = targetBalance ? targetBalance : 0;
 
     targetBalance += qty;
-    await SmartWeave.kv.put(target, targetBalance.toString());
+    await SmartWeave.kv.put(target, targetBalance);
 
     // for debug or whatever
     //state.kvOps[SmartWeave.transaction.id] = SmartWeave.kv.ops();
@@ -64,7 +64,7 @@ export async function handle(state, action) {
     const result = await SmartWeave.kv.get(target);
     console.log('balance', {target: input.target, balance: result});
 
-    return {result: {target, ticker, balance: result ? parseInt(result) : 0}};
+    return {result: {target, ticker, balance: result ? result : 0}};
   }
 
   throw new ContractError(`No function supplied or function not recognised: "${input.function}"`);
