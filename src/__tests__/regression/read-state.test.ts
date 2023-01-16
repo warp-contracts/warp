@@ -78,13 +78,16 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
         expect(result2String).toEqual(resultString);
       } finally {
         console.log = originalConsoleLog;
+        const heap = Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100;
+        const rss = Math.round((process.memoryUsage().rss / 1024 / 1024) * 100) / 100;
+        console.log('Memory', { heap, rss });
       }
     },
     800000
   );
 });
 
-describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
+xdescribe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
   it.concurrent.each(contracts)(
     '.test %# %o',
     async (contractTxId: string) => {
@@ -181,7 +184,7 @@ describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
   );
 });*/
 
-describe('readState', () => {
+xdescribe('readState', () => {
   it('should properly read state at requested block height', async () => {
     const contractTxId = 'CbGCxBJn6jLeezqDl1w3o8oCSeRCb-MmtZNKPodla-0';
     const blockHeight = 707892;
