@@ -21,7 +21,7 @@ async function main() {
     const cacheOptions = {...defaultCacheOptions, inMemory: true}
     const warp = WarpFactory
       .custom(arweave, cacheOptions, 'mainnet')
-      .useWarpGateway({...defaultWarpGwOptions, address: 'http://13.53.129.31:5666'}, cacheOptions)
+      .useWarpGateway({...defaultWarpGwOptions, address: 'http://localhost:5666'}, cacheOptions)
       .build();
 
     const jsContractSrc = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.js'), 'utf8');
