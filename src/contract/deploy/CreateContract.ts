@@ -57,10 +57,16 @@ export interface ContractDeploy {
   srcTxId?: string;
 }
 
-export interface CreateContract<T extends SerializationFormat> extends Source {
-  deploy(contractData: ContractData<T>, disableBundling?: boolean): Promise<ContractDeploy>;
+export interface CreateContract extends Source {
+  deploy<T extends SerializationFormat>(
+    contractData: ContractData<T>,
+    disableBundling?: boolean
+  ): Promise<ContractDeploy>;
 
-  deployFromSourceTx(contractData: FromSrcTxContractData<T>, disableBundling?: boolean): Promise<ContractDeploy>;
+  deployFromSourceTx<T extends SerializationFormat>(
+    contractData: FromSrcTxContractData<T>,
+    disableBundling?: boolean
+  ): Promise<ContractDeploy>;
 
   deployBundled(rawDataItem: Buffer): Promise<ContractDeploy>;
 

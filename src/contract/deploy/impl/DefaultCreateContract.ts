@@ -20,7 +20,7 @@ import { SourceData, SourceImpl } from './SourceImpl';
 import { Buffer } from 'redstone-isomorphic';
 import { SerializationFormat } from 'core/modules/StateEvaluator';
 
-export class DefaultCreateContract<T extends SerializationFormat> implements CreateContract<T> {
+export class DefaultCreateContract implements CreateContract {
   private readonly logger = LoggerFactory.INST.create('DefaultCreateContract');
   private readonly source: SourceImpl;
 

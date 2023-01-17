@@ -47,7 +47,7 @@ export class Warp {
   /**
    * @deprecated createContract will be a private field, please use its methods directly e.g. await warp.deploy(...)
    */
-  readonly createContract: CreateContract<SerializationFormat>;
+  readonly createContract: CreateContract;
   readonly testing: Testing;
 
   private readonly plugins: Map<WarpPluginType, WarpPlugin<unknown, unknown>> = new Map();
