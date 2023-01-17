@@ -62,7 +62,7 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
           'mainnet'
         )
           .useWarpGateway(
-            {...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null},
+            { ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null },
             {
               ...defaultCacheOptions,
               inMemory: true
@@ -112,7 +112,7 @@ describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
         'mainnet'
       )
         .useWarpGateway(
-          {...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null},
+          { ...defaultWarpGwOptions, source: SourceType.ARWEAVE, confirmationStatus: null },
           {
             ...defaultCacheOptions,
             inMemory: true
@@ -120,12 +120,14 @@ describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
         )
         .build();
 
-      const result2 = await warp.contract(contractTxId)
+      const result2 = await warp
+        .contract(contractTxId)
         .setEvaluationOptions({
           useVM2: true,
           unsafeClient: 'allow',
           allowBigInt: true
-        }).readState(blockHeight);
+        })
+        .readState(blockHeight);
 
       const result2String = stringify(result2.cachedValue.state).trim();
       expect(result2String).toEqual(resultString);
