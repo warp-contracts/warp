@@ -1,7 +1,7 @@
 import { pack, unpack } from 'msgpackr';
 import stringify from 'safe-stable-stringify';
-import { exhaustive } from 'utils/utils';
 
+import { exhaustive } from '../../utils/utils';
 import { SortKeyCache, SortKeyCacheResult } from '../../cache/SortKeyCache';
 import { CurrentTx } from '../../contract/Contract';
 import { ExecutionContext } from '../../core/ExecutionContext';

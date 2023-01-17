@@ -12,7 +12,7 @@ import { TagsParser } from './TagsParser';
 import { WasmSrc } from './wasm/WasmSrc';
 import { WarpEnvironment } from '../../Warp';
 import { Deserializers, SerializationFormat, stringToSerializationFormat } from '../StateEvaluator';
-import { exhaustive } from 'utils/utils';
+import { exhaustive } from '../../../utils/utils';
 import { SortKeyCache } from '../../../cache/SortKeyCache';
 
 const supportedSrcContentTypes = ['application/javascript', 'application/wasm'];
