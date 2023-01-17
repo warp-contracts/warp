@@ -80,7 +80,6 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
     }
   }
 
-  // TODO:noom support SerializationFormat here too
   initState(state: State, format: SerializationFormat): void {
     switch (this.contractDefinition.srcWasmLang) {
       case 'assemblyscript': {

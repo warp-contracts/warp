@@ -10,7 +10,6 @@ import { CreateContract, ContractData, ContractDeploy, FromSrcTxContractData, Ar
 import { SourceData, SourceImpl } from './SourceImpl';
 import { Buffer } from 'redstone-isomorphic';
 import { SerializationFormat } from 'core/modules/StateEvaluator';
-import { exhaustive } from 'utils/utils';
 
 export class DefaultCreateContract<T extends SerializationFormat> implements CreateContract<T> {
   private readonly logger = LoggerFactory.INST.create('DefaultCreateContract');

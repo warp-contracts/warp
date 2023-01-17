@@ -124,7 +124,7 @@ export class ContractDefinitionLoader implements DefinitionLoader {
   private async evalInitialState<State>(contractTx: Transaction): Promise<State> {
     if (this.tagsParser.getTag(contractTx, SmartWeaveTags.INIT_STATE)) {
       const format = stringToSerializationFormat(
-        this.tagsParser.getTag(contractTx, SmartWeaveTags.INIT_STATE_FORMAT) ?? 'application/json'
+        this.tagsParser.getTag(contractTx, SmartWeaveTags.INIT_STATE_FORMAT) ?? SerializationFormat.JSON
       );
       const initState = this.tagsParser.getTag(contractTx, SmartWeaveTags.INIT_STATE);
 
@@ -147,7 +147,7 @@ export class ContractDefinitionLoader implements DefinitionLoader {
 
   private async getInitialStateFromTx<State>(tx: Transaction): Promise<State> {
     const format = stringToSerializationFormat(
-      this.tagsParser.getTag(tx, SmartWeaveTags.CONTENT_TYPE) ?? 'application/json'
+      this.tagsParser.getTag(tx, SmartWeaveTags.CONTENT_TYPE) ?? SerializationFormat.JSON
     );
 
     switch (format) {
