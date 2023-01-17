@@ -1,6 +1,6 @@
 import { WriteInteractionOptions, WriteInteractionResponse } from './Contract';
-import { HandlerBasedContract } from './HandlerBasedContract';
 import { PstState, PstContract, BalanceResult, TransferInput } from './PstContract';
+import { HandlerBasedContract } from './HandlerBasedContract';
 
 interface BalanceInput {
   function: string;

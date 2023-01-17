@@ -32,11 +32,6 @@ export class Evolve implements ExecutionContextModifier {
     const currentSrcTxId = executionContext.contractDefinition.srcTxId;
 
     if (evolvedSrcTxId) {
-      this.logger.debug('Checking evolve:', {
-        current: currentSrcTxId,
-        evolvedSrcTxId
-      });
-
       if (currentSrcTxId !== evolvedSrcTxId) {
         try {
           // note: that's really nasty IMO - loading original contract definition,
@@ -56,16 +51,20 @@ export class Evolve implements ExecutionContextModifier {
           this.logger.debug('evolved to:', {
             evolve: evolvedSrcTxId,
             newSrcTxId: executionContext.contractDefinition.srcTxId,
-            current: currentSrcTxId,
-            txId: executionContext.contractDefinition.txId
+            currentSrcTxId: currentSrcTxId,
+            contract: executionContext.contractDefinition.txId
           });
 
           return executionContext;
         } catch (e) {
-          throw new SmartWeaveError(SmartWeaveErrorType.CONTRACT_NOT_FOUND, {
-            message: `Error while evolving ${contractTxId} from ${currentSrcTxId} to ${evolvedSrcTxId}: ${e}`,
-            requestedTxId: contractTxId
-          });
+          if (e.name === 'ContractError' && e.subtype === 'unsafeClientSkip') {
+            throw e;
+          } else {
+            throw new SmartWeaveError(SmartWeaveErrorType.CONTRACT_NOT_FOUND, {
+              message: `Error while evolving ${contractTxId} from ${currentSrcTxId} to ${evolvedSrcTxId}: ${e}`,
+              requestedTxId: contractTxId
+            });
+          }
         }
       }
     }

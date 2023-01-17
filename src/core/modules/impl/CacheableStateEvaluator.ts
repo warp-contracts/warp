@@ -91,8 +91,6 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     const baseValidity = cachedState == null ? {} : cachedState.cachedValue.validity;
     const baseErrorMessages = cachedState == null ? {} : cachedState.cachedValue.errorMessages;
 
-    this.cLogger.debug('Base state', baseState);
-
     // eval state for the missing transactions - starting from the latest value from cache.
     return await this.doReadState(
       missingInteractions,

@@ -1,7 +1,7 @@
 import Arweave from 'arweave';
 import Transaction from 'arweave/node/lib/transaction';
 import { ContractType } from '../../../contract/deploy/CreateContract';
-import { ContractDefinition, ContractSource } from '../../../core/ContractDefinition';
+import { ContractDefinition, ContractSource, ContractCache, SrcCache } from '../../../core/ContractDefinition';
 import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
 import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
@@ -11,9 +11,9 @@ import { GW_TYPE } from '../InteractionsLoader';
 import { TagsParser } from './TagsParser';
 import { WasmSrc } from './wasm/WasmSrc';
 import { WarpEnvironment } from '../../Warp';
-import { SortKeyCache } from 'cache/SortKeyCache';
 import { Deserializers, SerializationFormat, stringToSerializationFormat } from '../StateEvaluator';
 import { exhaustive } from 'utils/utils';
+import { SortKeyCache } from '../../../cache/SortKeyCache';
 
 const supportedSrcContentTypes = ['application/javascript', 'application/wasm'];
 
@@ -55,6 +55,12 @@ export class ContractDefinitionLoader implements DefinitionLoader {
       throw new Error('Trying to use non-testnet contract in a testnet env.');
     }
     const minFee = this.tagsParser.getTag(contractTx, SmartWeaveTags.MIN_FEE);
+    let manifest = null;
+    const rawManifest = this.tagsParser.getTag(contractTx, SmartWeaveTags.MANIFEST);
+    if (rawManifest) {
+      manifest = JSON.parse(rawManifest);
+    }
+
     this.logger.debug('Tags decoding', benchmark.elapsed());
     benchmark.reset();
     const initState = await this.evalInitialState<State>(contractTx);
@@ -75,6 +81,7 @@ export class ContractDefinitionLoader implements DefinitionLoader {
       owner,
       contractType,
       metadata,
+      manifest,
       contractTx: contractTx.toJSON(),
       srcTx,
       testnet
@@ -167,7 +174,16 @@ export class ContractDefinitionLoader implements DefinitionLoader {
   setCache(cache: SortKeyCache<ContractDefinition<any>>): void {
     throw new Error('No cache implemented for this loader');
   }
-  getCache(): SortKeyCache<ContractDefinition<any>> {
+
+  setSrcCache(cache: SortKeyCache<SrcCache>): void {
+    throw new Error('No cache implemented for this loader');
+  }
+
+  getCache(): SortKeyCache<ContractCache<any>> {
+    throw new Error('No cache implemented for this loader');
+  }
+
+  getSrcCache(): SortKeyCache<SrcCache> {
     throw new Error('No cache implemented for this loader');
   }
 }

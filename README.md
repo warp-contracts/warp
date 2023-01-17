@@ -36,6 +36,7 @@ If you are interested in the main assumptions for Warp ecosystem as well as its 
   - [Internal writes](#internal-writes)
   - [UnsafeClient](#unsafeclient)
   - [Cache](#cache)
+  - [SmartWeave Global API](#smartweave-global-api)
   - [CLI](#cli)
   - [Examples](#examples)
   - [Migrations](#migrations)
@@ -220,7 +221,7 @@ async function deploy(contractData: ContractData, disableBundling?: boolean): Pr
   <summary>Example</summary>
 
 ```typescript
-const { contractTxId, srcTxId } = await warp.createContract.deploy({
+const { contractTxId, srcTxId } = await warp.deploy({
   wallet,
   initState: initialState,
   data: { 'Content-Type': 'text/html', body: '<h1>HELLO WORLD</h1>' },
@@ -246,11 +247,37 @@ async function deployFromSourceTx(
   <summary>Example</summary>
 
 ```typescript
-const { contractTxId, srcTxId } = await warp.createContract.deployFromSourceTx({
+const { contractTxId, srcTxId } = await warp.deployFromSourceTx({
   wallet,
   initState: initialState,
   srcTxId: 'SRC_TX_ID'
 });
+```
+
+</details>
+
+#### deployBundled
+
+Uses Warp Gateway's endpoint to upload raw data item to Bundlr and index it.
+
+<details>
+  <summary>Example</summary>
+
+```typescript
+const { contractTxId } = await warp.deployBundled(rawDataItem);
+```
+
+</details>
+
+#### register
+
+Uses Warp Gateway's endpoint to index a contract which has already been uploaded to Bundlr.
+
+<details>
+  <summary>Example</summary>
+
+```typescript
+const { contractTxId } = await warp.register(bundlrId, bundlrNode);
 ```
 
 </details>
@@ -558,9 +585,81 @@ You can also supply your own implementation of the `SortKeyCache` interface and 
 In order to use custom implementation call either `useStateCache` or `useContractCache` on `warp` instance.
 An example - LMDB - implementation is available [here](https://github.com/warp-contracts/warp-contracts-lmdb#warp-contracts-lmdb-cache).
 
+### SmartWeave Global API
+
+All contracts have access to a global object `SmartWeave`. It provides access to additional API for getting further information or using utility and crypto functions from inside the contracts execution. It also allows to interact with other contracts and read other contracts states.
+
+List of available options:
+
+* transaction informations:
+  - SmartWeave.transaction.id
+  - SmartWeave.transaction.owner
+  - SmartWeave.transaction.tags
+  - SmartWeave.transaction.quantity
+  - SmartWeave.transaction.reward
+
+* contract
+  - SmartWeave.contract.id
+  - SmartWeave.contract.owner
+
+* contracts
+  - readContractState(contractId: string)
+  - viewContractState(contractId: string, input: any)
+  - write(contractId: string, input: any)
+  - refreshState()
+
+* block informations:
+  - SmartWeave.block.height
+  - SmartWeave.block.timestamp
+  - SmartWeave.block.indep_hash
+
+* Arweave utils
+  - SmartWeave.arweave.utils
+  - SmartWeave.arweave.crypto
+  - SmartWeave.arweave.wallets
+  - SmartWeave.arweave.ar
+
+* potentially non-deterministic full Arweave client:
+  - SmartWeave.unsafeClient
+
+* evaluation options
+  - SmartWeave.evaluationOptions
+
+* VRF
+  - SmartWeave.vrf.data
+  - SmartWeave.vrf.value
+  - SmartWeave.vrf.randomInt(maxValue: number)
+
+* other
+  - SmartWeave.useGas(gas: number)
+  - SmartWeave.getBalance(address: string, height?: number)
+  - SmartWeave.gasUsed
+  - SmartWeave.gasLimit
+
+* extensions - additional `SmartWeave` options which can be for example injected through dedicated plugins (an example of such in [`warp-contracts-plugins` repository](https://github.com/warp-contracts/warp-contracts-plugins)).
+
 ### CLI
 
 A dedicated CLI which eases the process of using main methods of the Warp SDK library has been created. Please refer to [`warp-contracts-cli` npm page](https://www.npmjs.com/package/warp-contracts-cli) for more details.
+
+### Customize `fetch` options
+
+It is possible to customize `fetch` options using dedicated plugin. In order to change `fetch` options one needs to create an implementation of [WarpPlugin](https://github.com/warp-contracts/warp/blob/main/src/core/WarpPlugin.ts) interface. `process` method will receive following properties:
+
+```ts
+interface FetchRequest {
+  input: RequestInfo | URL;
+  init: Partial<RequestInit>;
+}
+```
+
+...and it should return updated `fetch` options (by returning updated `init` object). An example of such implementation in [src/tools/fetch-options-plugin.ts](https://github.com/warp-contracts/warp/tree/main/tools/fetch-options-plugin.ts).
+
+In order to use this plugin, it needs to be attached while creating `Warp` instance, e.g.:
+
+```ts
+const warp = WarpFactory.forMainnet().use(new FetchOptionsPlugin());
+```
 
 ### Migrations
 
@@ -653,7 +752,7 @@ yarn ts-node -r tsconfig-paths/register tools/migrate.ts
 ```
 
 4. The warp instance now contains info about the environment - https://github.com/warp-contracts/warp#warpenvironment . This might be useful for writing deployment scripts, etc.
-5. if the `warp` instance was obtained via `WarpFactor.forLocal` (which should be used for local testing with ArLocal), then:
+5. if the `warp` instance was obtained via `WarpFactory.forLocal` (which should be used for local testing with ArLocal), then:
 
 - you can use `warp.generateWallet()` for generating the wallet - it returns both the jwk and wallet address - [example](https://github.com/warp-contracts/warp/blob/main/src/__tests__/integration/internal-writes/internal-write-depth.test.ts#L89).
 - you can use `warp.testing.mineBlock()` to manually mine ArLocal blocks

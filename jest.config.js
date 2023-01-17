@@ -1,7 +1,7 @@
 module.exports = {
   // Automatically clear mock calls and instances between every test
   clearMocks: true,
-
+  testTimeout: 30000,
   moduleFileExtensions: ['ts', 'js'],
 
   testPathIgnorePatterns: [
@@ -19,5 +19,7 @@ module.exports = {
 
   transform: {
     '^.+\\.(ts|js)$': 'ts-jest'
-  }
+  },
+
+  silent: true
 };

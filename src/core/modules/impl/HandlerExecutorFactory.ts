@@ -23,8 +23,8 @@ import { Warp } from '../../Warp';
 import { exhaustive, isBrowser } from '../../../utils/utils';
 import { Buffer } from 'redstone-isomorphic';
 
-class ContractError extends Error {
-  constructor(message) {
+export class ContractError extends Error {
+  constructor(message, readonly subtype?: string) {
     super(message);
     this.name = 'ContractError';
   }
@@ -55,6 +55,12 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
       },
       evaluationOptions
     );
+
+    const extensionPlugins = warp.matchPlugins(`^smartweave-extension-`);
+    extensionPlugins.forEach((ex) => {
+      const extension = warp.loadPlugin<any, void>(ex);
+      extension.process(swGlobal.extensions);
+    });
 
     if (contractDefinition.contractType == 'wasm') {
       this.logger.info('Creating handler for wasm contract', contractDefinition.txId);
@@ -171,14 +177,25 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
       this.logger.info(`WASM ${contractDefinition.srcWasmLang} handler created in ${benchmark.elapsed()}`);
       return new WasmHandlerApi(swGlobal, contractDefinition, jsExports || wasmInstance.exports);
     } else {
-      this.logger.info('Creating handler for js contract', contractDefinition.txId);
       const normalizedSource = normalizeContractSource(contractDefinition.src, evaluationOptions.useVM2);
-
-      if (!evaluationOptions.allowUnsafeClient) {
-        if (normalizedSource.includes('SmartWeave.unsafeClient')) {
-          throw new Error(
-            'Using unsafeClient is not allowed by default. Use EvaluationOptions.allowUnsafeClient flag.'
-          );
+      if (normalizedSource.includes('unsafeClient')) {
+        switch (evaluationOptions.unsafeClient) {
+          case 'allow': {
+            this.logger.warn(`Reading unsafe contract ${contractDefinition.txId}, evaluation is non-deterministic!`);
+            break;
+          }
+          case 'throw':
+            throw new Error(
+              `[SkipUnsafeError] Using unsafeClient is not allowed by default. Use EvaluationOptions.unsafeClient flag to evaluate ${contractDefinition.txId}.`
+            );
+          case 'skip': {
+            throw new ContractError(
+              `[SkipUnsafeError] Skipping evaluation of the unsafe contract ${contractDefinition.txId}.`,
+              'unsafeClientSkip'
+            );
+          }
+          default:
+            throw new Error(`Unknown unsafeClient setting ${evaluationOptions.unsafeClient}`);
         }
       }
       if (!evaluationOptions.allowBigInt) {
@@ -188,6 +205,19 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
       }
       if (evaluationOptions.useVM2) {
         const vmScript = new vm2.VMScript(normalizedSource);
+        const typedArrays = {
+          Int8Array: Int8Array,
+          Uint8Array: Uint8Array,
+          Uint8ClampedArray: Uint8ClampedArray,
+          Int16Array: Int16Array,
+          Uint16Array: Uint16Array,
+          Int32Array: Int32Array,
+          Uint32Array: Uint32Array,
+          Float32Array: Float32Array,
+          Float64Array: Float64Array,
+          BigInt64Array: BigInt64Array,
+          BigUint64Array: BigUint64Array
+        };
         const vm = new vm2.NodeVM({
           console: 'off',
           sandbox: {
@@ -199,7 +229,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
               if (!cond) throw new ContractError(message);
             },
             //https://github.com/patriksimek/vm2/issues/484#issuecomment-1327479592
-            Uint8Array: Uint8Array
+            ...typedArrays
           },
           compiler: 'javascript',
           eval: false,

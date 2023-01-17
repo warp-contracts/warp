@@ -2,6 +2,7 @@ import Arweave from 'arweave';
 import { Contract, InnerCallData } from '../contract/Contract';
 import {
   ArWallet,
+  BundlrNodeType,
   ContractData,
   ContractDeploy,
   CreateContract,
@@ -18,10 +19,16 @@ import { HandlerApi } from './modules/impl/HandlerExecutorFactory';
 import { InteractionsLoader } from './modules/InteractionsLoader';
 import { EvalStateResult, SerializationFormat, StateEvaluator } from './modules/StateEvaluator';
 import { WarpBuilder } from './WarpBuilder';
-import { WarpPluginType, WarpPlugin, knownWarpPlugins } from './WarpPlugin';
+import {
+  WarpPluginType,
+  WarpPlugin,
+  knownWarpPlugins,
+  knownWarpPluginsPartial,
+  WarpKnownPluginType
+} from './WarpPlugin';
 import { SortKeyCache } from '../cache/SortKeyCache';
-import { ContractDefinition } from './ContractDefinition';
-import { SignatureType } from '../contract/Signature';
+import { ContractDefinition, SrcCache } from './ContractDefinition';
+import { CustomSignature } from '../contract/Signature';
 import { SourceData } from '../contract/deploy/impl/SourceImpl';
 import Transaction from 'arweave/node/lib/transaction';
 
@@ -35,6 +42,7 @@ export type WarpEnvironment = 'local' | 'testnet' | 'mainnet' | 'custom';
  * After being fully configured, it allows to "connect" to
  * contract and perform operations on them (see {@link Contract})
  */
+
 export class Warp {
   /**
    * @deprecated createContract will be a private field, please use its methods directly e.g. await warp.deploy(...)
@@ -91,7 +99,11 @@ export class Warp {
     return await this.createContract.deployBundled(rawDataItem);
   }
 
-  async createSourceTx(sourceData: SourceData, wallet: ArWallet | SignatureType): Promise<Transaction> {
+  async register(id: string, bundlrNode: BundlrNodeType): Promise<ContractDeploy> {
+    return await this.createContract.register(id, bundlrNode);
+  }
+
+  async createSourceTx(sourceData: SourceData, wallet: ArWallet | CustomSignature): Promise<Transaction> {
     return await this.createContract.createSourceTx(sourceData, wallet);
   }
 
@@ -112,14 +124,15 @@ export class Warp {
     return this;
   }
 
-  useContractCache(contractsCache: SortKeyCache<ContractDefinition<any>>): Warp {
-    this.definitionLoader.setCache(contractsCache);
+  useContractCache(definition: SortKeyCache<ContractDefinition<any>>, src: SortKeyCache<SrcCache>): Warp {
+    this.definitionLoader.setSrcCache(src);
+    this.definitionLoader.setCache(definition);
     return this;
   }
 
   use(plugin: WarpPlugin<unknown, unknown>): Warp {
     const pluginType = plugin.type();
-    if (!knownWarpPlugins.some((p) => p == pluginType)) {
+    if (!this.isPluginType(pluginType)) {
       throw new Error(`Unknown plugin type ${pluginType}.`);
     }
     this.plugins.set(pluginType, plugin);
@@ -131,12 +144,26 @@ export class Warp {
     return this.plugins.has(type);
   }
 
+  matchPlugins(type: string): WarpPluginType[] {
+    const pluginTypes = [...this.plugins.keys()];
+    return pluginTypes.filter((p) => p.match(type));
+  }
+
   loadPlugin<P, Q>(type: WarpPluginType): WarpPlugin<P, Q> {
     if (!this.hasPlugin(type)) {
       throw new Error(`Plugin ${type} not registered.`);
     }
 
     return this.plugins.get(type) as WarpPlugin<P, Q>;
+  }
+
+  // Close cache connection
+  async close(): Promise<void> {
+    return Promise.all([
+      this.definitionLoader.getSrcCache().close(),
+      this.definitionLoader.getCache().close(),
+      this.stateEvaluator.getCache().close()
+    ]).then();
   }
 
   async generateWallet(): Promise<Wallet> {
@@ -150,5 +177,11 @@ export class Warp {
       jwk: wallet,
       address: await this.arweave.wallets.jwkToAddress(wallet)
     };
+  }
+
+  private isPluginType(value: string): value is WarpPluginType {
+    return (
+      knownWarpPlugins.includes(value as WarpKnownPluginType) || knownWarpPluginsPartial.some((p) => value.match(p))
+    );
   }
 }

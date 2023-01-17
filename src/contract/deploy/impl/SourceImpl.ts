@@ -9,7 +9,7 @@ import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { Source } from '../Source';
 import { Buffer } from 'redstone-isomorphic';
 import { Warp } from '../../../core/Warp';
-import { Signature, SignatureType } from '../../../contract/Signature';
+import { Signature, CustomSignature } from '../../../contract/Signature';
 import Transaction from 'arweave/node/lib/transaction';
 import { WARP_GW_URL } from '../../../core/WarpFactory';
 import { TagsParser } from '../../../core/modules/impl/TagsParser';
@@ -34,7 +34,7 @@ export class SourceImpl implements Source {
 
   constructor(private readonly warp: Warp) {}
 
-  async createSourceTx(sourceData: SourceData, wallet: ArWallet | SignatureType): Promise<Transaction> {
+  async createSourceTx(sourceData: SourceData, wallet: ArWallet | CustomSignature): Promise<Transaction> {
     this.logger.debug('Creating new contract source');
 
     const { src, wasmSrcCodeDir, wasmGlueCode } = sourceData;

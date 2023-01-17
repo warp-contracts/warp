@@ -4,17 +4,11 @@ import { InteractionResult } from '../core/modules/impl/HandlerExecutorFactory';
 import { EvaluationOptions, EvalStateResult } from '../core/modules/StateEvaluator';
 import { GQLNodeInterface } from '../legacy/gqlResult';
 import { ArTransfer, Tags, ArWallet } from './deploy/CreateContract';
-import { SignatureType } from './Signature';
+import { CustomSignature } from './Signature';
+import { EvaluationOptionsEvaluator } from './EvaluationOptionsEvaluator';
 
 export type CurrentTx = { interactionTxId: string; contractTxId: string };
 export type BenchmarkStats = { gatewayCommunication: number; stateEvaluation: number; total: number };
-
-export class ContractError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = 'ContractError';
-  }
-}
 
 interface BundlrResponse {
   id: string;
@@ -82,7 +76,7 @@ export interface Contract<State = unknown> {
    *
    * @param signer - either {@link ArWallet} that will be connected to this contract or custom {@link SigningFunction}
    */
-  connect(signature: ArWallet | SignatureType): Contract<State>;
+  connect(signature: ArWallet | CustomSignature): Contract<State>;
 
   /**
    * Allows to set ({@link EvaluationOptions})
@@ -106,7 +100,7 @@ export interface Contract<State = unknown> {
     interactions?: GQLNodeInterface[]
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
 
-  readStateFor(interactions?: GQLNodeInterface[]): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
+  readStateFor(sortKey: string, interactions: GQLNodeInterface[]): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
 
   /**
    * Returns the "view" of the state, computed by the SWC -
@@ -234,4 +228,8 @@ export interface Contract<State = unknown> {
   evolve(newSrcTxId: string, options?: WriteInteractionOptions): Promise<WriteInteractionResponse | null>;
 
   rootSortKey: string;
+
+  getEoEvaluator(): EvaluationOptionsEvaluator;
+
+  isRoot(): boolean;
 }

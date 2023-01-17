@@ -71,7 +71,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
     const depth = executionContext.contract.callDepth();
 
-    this.logger.info(
+    this.logger.debug(
       `${indent(depth)}Evaluating state for ${contractDefinition.txId} [${missingInteractions.length} non-cached of ${
         sortedInteractions.length
       } all]`
@@ -99,7 +99,12 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         >('evaluation-progress')
       : null;
 
+    let shouldBreakAfterEvolve = false;
+
     for (let i = 0; i < missingInteractionsLength; i++) {
+      if (shouldBreakAfterEvolve) {
+        break;
+      }
       const missingInteraction = missingInteractions[i];
       const singleInteractionBenchmark = Benchmark.measure();
       currentSortKey = missingInteraction.sortKey;
@@ -158,16 +163,33 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
          This in turn will cause the state of THIS contract to be
          updated in cache - see {@link ContractHandlerApi.assignWrite}
          */
-        await writingContract.readState(missingInteraction.sortKey, [
-          ...(currentTx || []),
-          {
-            contractTxId: contractDefinition.txId, //not: writingContractTxId!
-            interactionTxId: missingInteraction.id
+        let newState = null;
+        try {
+          await writingContract.readState(missingInteraction.sortKey, [
+            ...(currentTx || []),
+            {
+              contractTxId: contractDefinition.txId, //not: writingContractTxId!
+              interactionTxId: missingInteraction.id
+            }
+          ]);
+          newState = await this.internalWriteState<State>(contractDefinition.txId, missingInteraction.sortKey);
+        } catch (e) {
+          if (e.name == 'ContractError' && e.subtype == 'unsafeClientSkip') {
+            this.logger.warn('Skipping unsafe contract in internal write');
+            errorMessages[missingInteraction.id] = e;
+            if (canBeCached(missingInteraction)) {
+              const toCache = new EvalStateResult(currentState, validity, errorMessages);
+              lastConfirmedTxState = {
+                tx: missingInteraction,
+                state: toCache
+              };
+            }
+          } else {
+            throw e;
           }
-        ]);
+        }
 
         // loading latest state of THIS contract from cache
-        const newState = await this.internalWriteState<State>(contractDefinition.txId, missingInteraction.sortKey);
         if (newState !== null) {
           currentState = newState.cachedValue.state;
           // we need to update the state in the wasm module
@@ -278,8 +300,18 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         });
       }
 
-      for (const { modify } of this.executionContextModifiers) {
-        executionContext = await modify<State>(currentState, executionContext);
+      try {
+        for (const { modify } of this.executionContextModifiers) {
+          executionContext = await modify<State>(currentState, executionContext);
+        }
+      } catch (e) {
+        if (e.name == 'ContractError' && e.subtype == 'unsafeClientSkip') {
+          validity[missingInteraction.id] = false;
+          errorMessages[missingInteraction.id] = e.message;
+          shouldBreakAfterEvolve = true;
+        } else {
+          throw e;
+        }
       }
     }
     const evalStateResult = new EvalStateResult<State>(currentState, validity, errorMessages);

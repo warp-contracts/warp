@@ -5,17 +5,17 @@ import { SortKeyCacheResult } from '../cache/SortKeyCache';
 import { ContractCallRecord, InteractionCall } from '../core/ContractCallRecord';
 import { ExecutionContext } from '../core/ExecutionContext';
 import {
-  InteractionResult,
-  HandlerApi,
   ContractInteraction,
-  InteractionData
+  HandlerApi,
+  InteractionData,
+  InteractionResult
 } from '../core/modules/impl/HandlerExecutorFactory';
 import { LexicographicalInteractionsSorter } from '../core/modules/impl/LexicographicalInteractionsSorter';
 import { InteractionsSorter } from '../core/modules/InteractionsSorter';
-import { EvaluationOptions, DefaultEvaluationOptions, EvalStateResult } from '../core/modules/StateEvaluator';
+import { DefaultEvaluationOptions, EvalStateResult, EvaluationOptions } from '../core/modules/StateEvaluator';
 import { SmartWeaveTags } from '../core/SmartWeaveTags';
 import { Warp } from '../core/Warp';
-import { createInteractionTx, createDummyTx } from '../legacy/create-interaction-tx';
+import { createDummyTx, createInteractionTx } from '../legacy/create-interaction-tx';
 import { GQLNodeInterface } from '../legacy/gqlResult';
 import { Benchmark } from '../logging/Benchmark';
 import { LoggerFactory } from '../logging/LoggerFactory';
@@ -23,18 +23,20 @@ import { Evolve } from '../plugins/Evolve';
 import { ArweaveWrapper } from '../utils/ArweaveWrapper';
 import { sleep } from '../utils/utils';
 import {
-  Contract,
   BenchmarkStats,
+  Contract,
   CurrentTx,
+  InnerCallData,
   WriteInteractionOptions,
-  WriteInteractionResponse,
-  InnerCallData
+  WriteInteractionResponse
 } from './Contract';
-import { Tags, ArTransfer, emptyTransfer, ArWallet } from './deploy/CreateContract';
-import { SourceData, SourceImpl } from './deploy/impl/SourceImpl';
+import { ArTransfer, ArWallet, emptyTransfer, Tags } from './deploy/CreateContract';
 import { InnerWritesEvaluator } from './InnerWritesEvaluator';
 import { generateMockVrf } from '../utils/vrf';
-import { Signature, SignatureType } from './Signature';
+import { Signature, CustomSignature } from './Signature';
+import { ContractDefinition } from '../core/ContractDefinition';
+import { EvaluationOptionsEvaluator } from './EvaluationOptionsEvaluator';
+import { WarpFetchWrapper } from '../core/WarpFetchWrapper';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -45,8 +47,12 @@ import { Signature, SignatureType } from './Signature';
 export class HandlerBasedContract<State> implements Contract<State> {
   private readonly logger = LoggerFactory.INST.create('HandlerBasedContract');
 
+  // TODO: refactor: extract execution context logic to a separate class
+  private readonly ecLogger = LoggerFactory.INST.create('ExecutionContext');
+
   private _callStack: ContractCallRecord;
-  private _evaluationOptions: EvaluationOptions = new DefaultEvaluationOptions();
+  private _evaluationOptions: EvaluationOptions;
+  private _eoEvaluator: EvaluationOptionsEvaluator; // this is set after loading Contract Definition for the root contract
   private readonly _innerWritesEvaluator = new InnerWritesEvaluator();
   private readonly _callDepth: number;
   private _benchmarkStats: BenchmarkStats = null;
@@ -54,6 +60,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   private _sorter: InteractionsSorter;
   private _rootSortKey: string;
   private signature: Signature;
+  private warpFetchWrapper: WarpFetchWrapper;
 
   constructor(
     private readonly _contractTxId: string,
@@ -65,7 +72,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     this._arweaveWrapper = new ArweaveWrapper(warp.arweave);
     this._sorter = new LexicographicalInteractionsSorter(warp.arweave);
     if (_parentContract != null) {
-      this._evaluationOptions = _parentContract.evaluationOptions();
+      this._evaluationOptions = this.getRoot().evaluationOptions();
       this._callDepth = _parentContract.callDepth() + 1;
       const callingInteraction: InteractionCall = _parentContract
         .getCallStack()
@@ -104,9 +111,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
       this._callDepth = 0;
       this._callStack = new ContractCallRecord(_contractTxId, 0);
       this._rootSortKey = null;
+      this._evaluationOptions = new DefaultEvaluationOptions();
     }
 
     this.getCallStack = this.getCallStack.bind(this);
+    this.warpFetchWrapper = new WarpFetchWrapper(this.warp);
   }
 
   async readState(
@@ -121,7 +130,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     });
     const initBenchmark = Benchmark.measure();
     this.maybeResetRootContract();
-    if (this._parentContract != null && sortKeyOrBlockHeight == null) {
+    if (!this.isRoot() && sortKeyOrBlockHeight == null) {
       throw new Error('SortKey MUST be always set for non-root contract calls');
     }
 
@@ -161,8 +170,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return result;
   }
 
-  async readStateFor(interactions?: GQLNodeInterface[]): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
-    return this.readState(undefined, undefined, interactions);
+  async readStateFor(
+    sortKey: string,
+    interactions: GQLNodeInterface[]
+  ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
+    return this.readState(sortKey, undefined, interactions);
   }
 
   async viewState<Input, View>(
@@ -295,15 +307,16 @@ export class HandlerBasedContract<State> implements Contract<State> {
       options.vrf
     );
 
-    const response = await fetch(`${this._evaluationOptions.bundlerUrl}gateway/sequencer/register`, {
-      method: 'POST',
-      body: JSON.stringify(interactionTx),
-      headers: {
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Content-Type': 'application/json',
-        Accept: 'application/json'
-      }
-    })
+    const response = await this.warpFetchWrapper
+      .fetch(`${this._evaluationOptions.sequencerUrl}gateway/sequencer/register`, {
+        method: 'POST',
+        body: JSON.stringify(interactionTx),
+        headers: {
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Content-Type': 'application/json',
+          Accept: 'application/json'
+        }
+      })
       .then((res) => {
         this.logger.debug(res);
         return res.ok ? res.json() : Promise.reject(res);
@@ -356,13 +369,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
       });
 
       this.logger.debug('Tags with inner calls', tags);
-    } else {
-      if (strict) {
-        const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer, strict, vrf);
-        if (handlerResult.type !== 'ok') {
-          throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
-        }
-      }
     }
 
     if (vrf) {
@@ -384,6 +390,19 @@ export class HandlerBasedContract<State> implements Contract<State> {
       this.warp.environment === 'testnet',
       reward
     );
+
+    if (!this._evaluationOptions.internalWrites && strict) {
+      const { arweave } = this.warp;
+      const caller =
+        this.signature.type == 'arweave'
+          ? await arweave.wallets.ownerToAddress(interactionTx.owner)
+          : interactionTx.owner;
+      const handlerResult = await this.callContract(input, caller, undefined, tags, transfer, strict, vrf);
+      if (handlerResult.type !== 'ok') {
+        throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
+      }
+    }
+
     return interactionTx;
   }
 
@@ -395,12 +414,15 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return this._callStack;
   }
 
-  connect(signature: ArWallet | SignatureType): Contract<State> {
+  connect(signature: ArWallet | CustomSignature): Contract<State> {
     this.signature = new Signature(this.warp, signature);
     return this;
   }
 
   setEvaluationOptions(options: Partial<EvaluationOptions>): Contract<State> {
+    if (!this.isRoot()) {
+      throw new Error('Evaluation options can be set only for the root contract');
+    }
     this._evaluationOptions = {
       ...this._evaluationOptions,
       ...options
@@ -429,7 +451,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     forceDefinitionLoad = false,
     interactions?: GQLNodeInterface[]
   ): Promise<ExecutionContext<State, HandlerApi<State>>> {
-    const { definitionLoader, interactionsLoader, executorFactory, stateEvaluator } = this.warp;
+    const { definitionLoader, interactionsLoader, stateEvaluator } = this.warp;
 
     const benchmark = Benchmark.measure();
     const cachedState = await stateEvaluator.latestAvailableState<State>(contractTxId, upToSortKey);
@@ -444,15 +466,20 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     if (cachedState && cachedState.sortKey == upToSortKey) {
       this.logger.debug('State fully cached, not loading interactions.');
-      if (forceDefinitionLoad || evolvedSrcTxId) {
+      if (forceDefinitionLoad || evolvedSrcTxId || interactions?.length) {
         contractDefinition = await definitionLoader.load<State>(contractTxId, evolvedSrcTxId);
-        handler = (await executorFactory.create(
-          contractDefinition,
-          this._evaluationOptions,
-          this.warp
-        )) as HandlerApi<State>;
+        handler = await this.safeGetHandler(contractDefinition);
+        if (interactions?.length) {
+          sortedInteractions = this._sorter.sort(interactions.map((i) => ({ node: i, cursor: null })));
+        }
       }
     } else {
+      // if we want to apply some 'external' interactions on top of the state cached at given sort key
+      // AND we don't have the state cached at the exact requested sort key - throw.
+      // NOTE: this feature is used by the D.R.E. nodes.
+      if (interactions?.length) {
+        throw new Error(`Cannot apply requested interactions at ${upToSortKey}`);
+      }
       [contractDefinition, sortedInteractions] = await Promise.all([
         definitionLoader.load<State>(contractTxId, evolvedSrcTxId),
         interactions
@@ -475,28 +502,40 @@ export class HandlerBasedContract<State> implements Contract<State> {
         sortedInteractions = sortedInteractions.filter((i) => i.sortKey.localeCompare(upToSortKey) <= 0);
       }
       this.logger.debug('contract and interactions load', benchmark.elapsed());
-      if (this._parentContract == null && sortedInteractions.length) {
+      if (this.isRoot() && sortedInteractions.length) {
         // note: if the root contract has zero interactions, it still should be safe
         // - as no other contracts will be called.
         this._rootSortKey = sortedInteractions[sortedInteractions.length - 1].sortKey;
       }
-      handler = (await executorFactory.create(
-        contractDefinition,
-        this._evaluationOptions,
-        this.warp
-      )) as HandlerApi<State>;
+      handler = await this.safeGetHandler(contractDefinition);
     }
+    if (this.isRoot()) {
+      this._eoEvaluator = new EvaluationOptionsEvaluator(
+        this.evaluationOptions(),
+        contractDefinition.manifest?.evaluationOptions
+      );
+    }
+    const contractEvaluationOptions = this.isRoot()
+      ? this._eoEvaluator.rootOptions
+      : this.getEoEvaluator().forForeignContract(contractDefinition.manifest?.evaluationOptions);
+
+    this.ecLogger.debug(`Evaluation options ${contractTxId}:`, contractEvaluationOptions);
 
     return {
       warp: this.warp,
       contract: this,
       contractDefinition,
       sortedInteractions,
-      evaluationOptions: this._evaluationOptions,
+      evaluationOptions: contractEvaluationOptions,
       handler,
       cachedState,
       requestedSortKey: upToSortKey
     };
+  }
+
+  private async safeGetHandler(contractDefinition: ContractDefinition<any>): Promise<HandlerApi<State> | null> {
+    const { executorFactory } = this.warp;
+    return (await executorFactory.create(contractDefinition, this._evaluationOptions, this.warp)) as HandlerApi<State>;
   }
 
   private getToSortKey(upToSortKey?: string) {
@@ -528,7 +567,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   }
 
   private maybeResetRootContract() {
-    if (this._parentContract == null) {
+    if (this.isRoot()) {
       this.logger.debug('Clearing call stack for the root contract');
       this._callStack = new ContractCallRecord(this.txId(), 0);
       this._rootSortKey = null;
@@ -729,12 +768,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   async syncState(externalUrl: string, params?: any): Promise<Contract> {
     const { stateEvaluator } = this.warp;
-    const response = await fetch(
-      `${externalUrl}?${new URLSearchParams({
-        id: this._contractTxId,
-        ...params
-      })}`
-    )
+    const response = await this.warpFetchWrapper
+      .fetch(
+        `${externalUrl}?${new URLSearchParams({
+          id: this._contractTxId,
+          ...params
+        })}`
+      )
       .then((res) => {
         return res.ok ? res.json() : Promise.reject(res);
       })
@@ -756,5 +796,23 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   get rootSortKey(): string {
     return this._rootSortKey;
+  }
+
+  private getRoot(): Contract<unknown> {
+    let result: Contract = this;
+    while (!result.isRoot()) {
+      result = result.parent();
+    }
+
+    return result;
+  }
+
+  getEoEvaluator(): EvaluationOptionsEvaluator {
+    const root = this.getRoot() as HandlerBasedContract<unknown>;
+    return root._eoEvaluator;
+  }
+
+  isRoot(): boolean {
+    return this._parentContract == null;
   }
 }

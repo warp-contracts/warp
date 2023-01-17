@@ -1,12 +1,21 @@
 /* eslint-disable */
 import Arweave from 'arweave';
 import Transaction from 'arweave/node/lib/transaction';
-import { Signature, SignatureType } from '../../../contract/Signature';
+import { WarpFetchWrapper } from '../../../core/WarpFetchWrapper';
+import { Signature, CustomSignature } from '../../../contract/Signature';
 import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
 import { Warp } from '../../../core/Warp';
 import { WARP_GW_URL } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
-import { CreateContract, ContractData, ContractDeploy, FromSrcTxContractData, ArWallet } from '../CreateContract';
+import {
+  CreateContract,
+  ContractData,
+  ContractDeploy,
+  FromSrcTxContractData,
+  ArWallet,
+  BundlrNodeType,
+  BUNDLR_NODES
+} from '../CreateContract';
 import { SourceData, SourceImpl } from './SourceImpl';
 import { Buffer } from 'redstone-isomorphic';
 import { SerializationFormat } from 'core/modules/StateEvaluator';
@@ -16,17 +25,19 @@ export class DefaultCreateContract<T extends SerializationFormat> implements Cre
   private readonly source: SourceImpl;
 
   private signature: Signature;
+  private readonly warpFetchWrapper: WarpFetchWrapper;
 
   constructor(private readonly arweave: Arweave, private warp: Warp) {
     this.deployFromSourceTx = this.deployFromSourceTx.bind(this);
     this.source = new SourceImpl(this.warp);
+    this.warpFetchWrapper = new WarpFetchWrapper(this.warp);
   }
 
   async deploy<T extends SerializationFormat>(
     contractData: ContractData<T>,
     disableBundling?: boolean
   ): Promise<ContractDeploy> {
-    const { wallet, stateFormat, initState, tags, transfer, data } = contractData;
+    const { wallet, stateFormat, initState, tags, transfer, data, evaluationManifest } = contractData;
 
     const effectiveUseBundler =
       disableBundling == undefined ? this.warp.definitionLoader.type() == 'warp' : !disableBundling;
@@ -46,7 +57,8 @@ export class DefaultCreateContract<T extends SerializationFormat> implements Cre
         initState,
         tags,
         transfer,
-        data
+        data,
+        evaluationManifest
       },
       !effectiveUseBundler,
       srcTx
@@ -59,7 +71,7 @@ export class DefaultCreateContract<T extends SerializationFormat> implements Cre
     srcTx: Transaction = null
   ): Promise<ContractDeploy> {
     this.logger.debug('Creating new contract from src tx');
-    const { wallet, srcTxId, stateFormat, initState, tags, transfer, data } = contractData;
+    const { wallet, srcTxId, stateFormat, initState, tags, transfer, data, evaluationManifest } = contractData;
     this.signature = new Signature(this.warp, wallet);
     const signer = this.signature.signer;
 
@@ -101,6 +113,10 @@ export class DefaultCreateContract<T extends SerializationFormat> implements Cre
 
     if (this.warp.environment === 'testnet') {
       contractTX.addTag(SmartWeaveTags.WARP_TESTNET, '1.0.0');
+    }
+
+    if (contractData.evaluationManifest) {
+      contractTX.addTag(SmartWeaveTags.MANIFEST, JSON.stringify(contractData.evaluationManifest));
     }
 
     await signer(contractTX);
@@ -150,7 +166,32 @@ export class DefaultCreateContract<T extends SerializationFormat> implements Cre
     }
   }
 
-  async createSourceTx(sourceData: SourceData, wallet: ArWallet | SignatureType): Promise<Transaction> {
+  async register(id: string, bundlrNode: BundlrNodeType): Promise<ContractDeploy> {
+    const response = await fetch(`${WARP_GW_URL}/gateway/contracts/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json'
+      },
+      body: JSON.stringify({ id, bundlrNode })
+    });
+    if (response.ok) {
+      return response.json();
+    } else {
+      if (typeof response.json === 'function') {
+        response.json().then((responseError) => {
+          if (responseError.message) {
+            this.logger.error(responseError.message);
+          }
+        });
+      }
+      throw new Error(
+        `Error while registering data item. Warp Gateway responded with status ${response.status} ${response.statusText}`
+      );
+    }
+  }
+
+  async createSourceTx(sourceData: SourceData, wallet: ArWallet | CustomSignature): Promise<Transaction> {
     return this.source.createSourceTx(sourceData, wallet);
   }
 
@@ -169,7 +210,7 @@ export class DefaultCreateContract<T extends SerializationFormat> implements Cre
       };
     }
 
-    const response = await fetch(`${WARP_GW_URL}/gateway/contracts/deploy`, {
+    const response = await this.warpFetchWrapper.fetch(`${WARP_GW_URL}/gateway/contracts/deploy`, {
       method: 'POST',
       body: JSON.stringify(body),
       headers: {
@@ -186,5 +227,9 @@ export class DefaultCreateContract<T extends SerializationFormat> implements Cre
         `Error while posting contract. Sequencer responded with status ${response.status} ${response.statusText}`
       );
     }
+  }
+
+  isBundlrNodeType(value: string): value is BundlrNodeType {
+    return BUNDLR_NODES.includes(value as BundlrNodeType);
   }
 }

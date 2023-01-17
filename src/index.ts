@@ -50,6 +50,7 @@ export * from './contract/PstContract';
 export * from './contract/PstContractImpl';
 export * from './contract/InnerWritesEvaluator';
 export * from './contract/Signature';
+export * from './contract/EvaluationOptionsEvaluator';
 export * from './contract/deploy/Source';
 export * from './contract/deploy/impl/SourceImpl';
 export * from './contract/deploy/impl/DefaultCreateContract';

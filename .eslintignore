@@ -1,3 +1,4 @@
 node_modules
 lib
-src/__tests__/integration/data
+src/__tests__/
+src/__tests__/

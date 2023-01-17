@@ -1,6 +1,6 @@
 {
   "name": "warp-contracts",
-  "version": "1.2.32",
+  "version": "1.2.47",
   "description": "An implementation of the SmartWeave smart contract protocol.",
   "types": "./lib/types/index.d.ts",
   "main": "./lib/cjs/index.js",
@@ -35,6 +35,8 @@
     "test:unit:cache": "jest ./src/__tests__/unit/cache-leveldb.test.ts",
     "test:unit:cache:real": "jest ./src/__tests__/unit/cache-leveldb-real-data.test.ts",
     "test:integration:basic": "jest ./src/__tests__/integration/basic",
+    "test:integration:basic:load": "jest --silent=false --detectOpenHandles ./src/__tests__/integration/basic/contract-loading.test.ts ",
+    "test:integration:basic:arweave": "jest ./src/__tests__/integration/basic/arweave-transactions-loading",
     "test:integration:internal-writes": "jest ./src/__tests__/integration/internal-writes",
     "test:integration:wasm": "jest ./src/__tests__/integration/wasm",
     "test:regression": "node ./node_modules/.bin/jest ./src/__tests__/regression"
@@ -73,7 +75,7 @@
     "memory-level": "^1.0.0",
     "msgpackr": "^1.8.1",
     "redstone-isomorphic": "1.1.8",
-    "redstone-wasm-metering": "1.0.3",
+    "redstone-wasm-metering": "1.0.5",
     "safe-stable-stringify": "2.4.1",
     "stream-buffers": "^3.0.2",
     "unzipit": "^1.4.0",

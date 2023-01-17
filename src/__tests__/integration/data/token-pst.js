@@ -1,4 +1,4 @@
-export function handle(state, action) {
+export async function handle(state, action) {
   const balances = state.balances;
   const canEvolve = state.canEvolve;
   const input = action.input;
@@ -20,7 +20,7 @@ export function handle(state, action) {
       throw new ContractError('Invalid token transfer');
     }
 
-    if (balances[caller] < qty) {
+    if (!balances[caller] || balances[caller] < qty) {
       throw new ContractError(`Caller balance not high enough to send ${qty} token(s)!`);
     }
 
@@ -88,6 +88,32 @@ export function handle(state, action) {
 
     state.evolve = input.value;
 
+    return {state};
+  }
+
+  if (input.function === 'readForeign') {
+    if (state.foreignCallsCounter === undefined) {
+      state.foreignCallsCounter = 0;
+    }
+    const result = await SmartWeave.contracts.readContractState(input.contractTxId, true);
+    state.foreignCallsCounter++; // this should not happen for unsafe contracts when skipUnsafe is set to true
+    return {state};
+  }
+
+  if (input.function === 'writeForeign') {
+    console.log('writeForeign');
+    const result = await SmartWeave.contracts.write(input.contractTxId, {
+      function: "callFromForeign"
+    });
+    return {state};
+  }
+
+  if (input.function === 'callFromForeign') {
+    console.log('callFromForeign');
+    if (state.foreignCallsCounter === undefined) {
+      state.foreignCallsCounter = 0;
+    }
+    state.foreignCallsCounter++;
     return {state};
   }
 

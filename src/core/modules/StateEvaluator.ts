@@ -103,6 +103,8 @@ export class EvalStateResult<State> {
   ) {}
 }
 
+export type UnsafeClientOptions = 'allow' | 'skip' | 'throw';
+
 export class DefaultEvaluationOptions implements EvaluationOptions {
   // default = true - still cannot decide whether true or false should be the default.
   // "false" may lead to some fairly simple attacks on contract, if the contract
@@ -125,13 +127,13 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
     saveState: false
   };
 
-  bundlerUrl = `https://d1o5nlqr4okus2.cloudfront.net/`;
+  sequencerUrl = `https://d1o5nlqr4okus2.cloudfront.net/`;
 
   gasLimit = Number.MAX_SAFE_INTEGER;
 
   useVM2 = false;
 
-  allowUnsafeClient = false;
+  unsafeClient = 'throw' as const;
 
   allowBigInt = false;
 
@@ -224,7 +226,7 @@ export interface EvaluationOptions {
     saveState: boolean;
   };
 
-  bundlerUrl: string;
+  sequencerUrl: string;
 
   gasLimit: number;
 
@@ -235,9 +237,10 @@ export interface EvaluationOptions {
   useVM2: boolean;
 
   // Whether using unsafe client should be allowed
-  // if set to false - calling unsafe clinet in contract code will
-  // result in throwing an exception
-  allowUnsafeClient: boolean;
+  // allow - allows to evaluate contracts with SmartWeave.unsafeClient calls
+  // skip - skips all the transactions the make calls to unsafeClient (including all nested calls)
+  // throw - throws and stops evaluation whenever unsafeClient is being used
+  unsafeClient: UnsafeClientOptions;
 
   // whether using BigInt in contract code is allowed. Defaults to false
   // as by default BigInt cannot be serialized to json.
