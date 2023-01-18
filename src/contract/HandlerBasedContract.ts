@@ -799,17 +799,24 @@ export class HandlerBasedContract<State> implements Contract<State> {
   }
 
   async getStorageValues(keys: string[]): Promise<SortKeyCacheResult<Map<string, any>>> {
-    const lastSortKey = await this.warp.stateEvaluator.lastCachedSortKey();
+    const lastCached = await this.warp.stateEvaluator.getCache().getLast(this.txId());
+    if (lastCached == null) {
+      return {
+        sortKey: null,
+        cachedValue: new Map()
+      };
+    }
+
     const storage = this.warp.kvStorageFactory(this.txId());
     const result: Map<string, any> = new Map();
     try {
       await storage.open();
       for (const key of keys) {
-        const lastValue = await storage.getLessOrEqual(key, lastSortKey);
+        const lastValue = await storage.getLessOrEqual(key, lastCached.sortKey);
         result.set(key, lastValue == null ? null : lastValue.cachedValue);
       }
       return {
-        sortKey: lastSortKey,
+        sortKey: lastCached.sortKey,
         cachedValue: result
       };
     } finally {

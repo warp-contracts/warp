@@ -27,7 +27,6 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
       executionContext.evaluationOptions.maxInteractionEvaluationTimeSeconds
     );
 
-    const lvl = new Level(`${DEFAULT_LEVEL_DB_LOCATION}/kv/${executionContext.contractDefinition.txId}`);
     try {
       const { interaction, interactionTx, currentTx } = interactionData;
 
