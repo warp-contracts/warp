@@ -31,6 +31,7 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
       this.swGlobal.gasUsed = 0;
 
       this.assignReadContractState<Input>(executionContext, currentTx, currentResult, interactionTx);
+      this.assignViewContractState(executionContext);
       this.assignWrite(executionContext, currentTx);
 
       const handlerResult = await this.doHandle(interaction);

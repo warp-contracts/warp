@@ -57,6 +57,9 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance, dtorVal
       readContractState: async function (contractTxId): Promise<any> {
         return await swGlobal.contracts.readContractState(contractTxId);
       },
+      viewContractState: async function (contractTxId, input: any): Promise<any> {
+        return await swGlobal.contracts.viewContractState(contractTxId, input);
+      },
       write: async function (contractId: string, input: any) {
         return await swGlobal.contracts.write(contractId, input);
       }
@@ -111,8 +114,9 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance, dtorVal
       var ret = rawImports.SmartWeave.readContractState(getStringFromWasm0(arg0, arg1));
       return addHeapObject(ret);
     },
-    __wbg_viewContractState: function (arg0, arg1) {
-      // TODO
+    __wbg_viewContractState: function (arg0, arg1, arg2) {
+      var ret = rawImports.SmartWeave.viewContractState(getStringFromWasm0(arg0, arg1), takeObject(arg2));
+      return addHeapObject(ret);
     },
     __wbg_caller: function (arg0) {
       var ret = rawImports.SmartWeave.caller();
