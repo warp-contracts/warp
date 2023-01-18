@@ -1,0 +1,14 @@
+{
+  "name": "warp-erc1155-implementation",
+  "collaborators": [
+    "Eyal Chojnowski"
+  ],
+  "version": "0.1.0",
+  "files": [
+    "rust-contract_bg.wasm",
+    "rust-contract.js",
+    "rust-contract.d.ts"
+  ],
+  "main": "rust-contract.js",
+  "types": "rust-contract.d.ts"
+}
