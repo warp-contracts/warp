@@ -2,7 +2,7 @@
 import Arweave from 'arweave';
 import { EvaluationOptions } from '../core/modules/StateEvaluator';
 import { GQLNodeInterface, GQLTagInterface, VrfData } from './gqlResult';
-import { BatchDBOp, CacheKey, PutBatch, SortKeyCache } from "../cache/SortKeyCache";
+import { BatchDBOp, CacheKey, PutBatch, SortKeyCache } from '../cache/SortKeyCache';
 
 /**
  *
@@ -172,7 +172,7 @@ class Transaction {
     return this.smartWeaveGlobal._activeTx.tags;
   }
 
-  get sortKey():string {
+  get sortKey(): string {
     if (!this.smartWeaveGlobal._activeTx) {
       throw new Error('No current Tx');
     }

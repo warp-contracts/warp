@@ -1,6 +1,6 @@
 import { LevelDbCache } from '../../cache/impl/LevelDbCache';
 import { defaultCacheOptions } from '../../core/WarpFactory';
-import { CacheKey } from "../../cache/SortKeyCache";
+import { CacheKey } from '../../cache/SortKeyCache';
 
 const getContractId = (i: number) => `contract${i}`.padStart(43, '0');
 const getSortKey = (j: number) =>
