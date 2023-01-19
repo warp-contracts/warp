@@ -34,12 +34,11 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
       const stateCopy = deepCopy(currentResult.state);
       this.swGlobal._activeTx = interactionTx;
       this.swGlobal.caller = interaction.caller; // either contract tx id (for internal writes) or transaction.owner
-      this.assignReadContractState<Input>(executionContext, currentResult, interactionTx);
+
+      this.assignReadContractState<Input>(executionContext, interactionTx);
       this.assignViewContractState<Input>(executionContext);
       this.assignWrite(executionContext);
       this.assignRefreshState(executionContext);
-
-      const { warp } = executionContext;
 
       await this.swGlobal.kv.open();
       const handlerResult = await Promise.race([timeoutPromise, this.contractFunction(stateCopy, interaction)]);

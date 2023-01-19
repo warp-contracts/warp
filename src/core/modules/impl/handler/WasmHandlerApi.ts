@@ -30,7 +30,7 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
       this.swGlobal.gasLimit = executionContext.evaluationOptions.gasLimit;
       this.swGlobal.gasUsed = 0;
 
-      this.assignReadContractState<Input>(executionContext, currentResult, interactionTx);
+      this.assignReadContractState<Input>(executionContext, interactionTx);
       this.assignViewContractState(executionContext);
       this.assignWrite(executionContext);
 
