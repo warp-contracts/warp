@@ -1,5 +1,5 @@
 /* eslint-disable */
-import metering from 'redstone-wasm-metering';
+import metering from 'warp-wasm-metering';
 import { Go } from '../../../core/modules/impl/wasm/go-wasm-imports';
 import fs, { PathOrFileDescriptor } from 'fs';
 import { matchMutClosureDtor } from '../../../core/modules/impl/wasm/wasm-bindgen-tools';
