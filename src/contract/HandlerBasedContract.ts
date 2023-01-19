@@ -865,7 +865,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   }
 
   getUncommittedState(contractTxId: string): EvalStateResult<unknown> {
-    return (this.getRoot() as HandlerBasedContract<unknown>)._uncommittedStates.get(contractTxId);
+    return this.getRoot()._uncommittedStates.get(contractTxId);
   }
 
   setUncommittedState(contractTxId: string, result: EvalStateResult<unknown>): void {
@@ -883,6 +883,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
   async commitStates(interaction: GQLNodeInterface): Promise<void> {
     const uncommittedStates = this.getRoot()._uncommittedStates;
     try {
+      // i.e. if more than root contract state is in uncommitted state
+      // - without this check, we would effectively cache state for each evaluated interaction
+      // - which is not storage-effective
       if (uncommittedStates.size > 1) {
         for (const [k, v] of uncommittedStates) {
           await this.warp.stateEvaluator.putInCache(k, interaction, v);
