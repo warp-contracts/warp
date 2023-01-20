@@ -18,6 +18,7 @@ import {
 } from '../CreateContract';
 import { SourceData, SourceImpl } from './SourceImpl';
 import { Buffer } from 'redstone-isomorphic';
+import { SerializationFormat } from 'core/modules/StateEvaluator';
 
 export class DefaultCreateContract implements CreateContract {
   private readonly logger = LoggerFactory.INST.create('DefaultCreateContract');
@@ -32,8 +33,11 @@ export class DefaultCreateContract implements CreateContract {
     this.warpFetchWrapper = new WarpFetchWrapper(this.warp);
   }
 
-  async deploy(contractData: ContractData, disableBundling?: boolean): Promise<ContractDeploy> {
-    const { wallet, initState, tags, transfer, data, evaluationManifest } = contractData;
+  async deploy<T extends SerializationFormat>(
+    contractData: ContractData<T>,
+    disableBundling?: boolean
+  ): Promise<ContractDeploy> {
+    const { wallet, stateFormat, initState, tags, transfer, data, evaluationManifest } = contractData;
 
     const effectiveUseBundler =
       disableBundling == undefined ? this.warp.definitionLoader.type() == 'warp' : !disableBundling;
@@ -49,6 +53,7 @@ export class DefaultCreateContract implements CreateContract {
       {
         srcTxId: srcTx.id,
         wallet,
+        stateFormat,
         initState,
         tags,
         transfer,
@@ -60,13 +65,13 @@ export class DefaultCreateContract implements CreateContract {
     );
   }
 
-  async deployFromSourceTx(
-    contractData: FromSrcTxContractData,
+  async deployFromSourceTx<T extends SerializationFormat>(
+    contractData: FromSrcTxContractData<T>,
     disableBundling?: boolean,
     srcTx: Transaction = null
   ): Promise<ContractDeploy> {
     this.logger.debug('Creating new contract from src tx');
-    const { wallet, srcTxId, initState, tags, transfer, data, evaluationManifest } = contractData;
+    const { wallet, srcTxId, stateFormat, initState, tags, transfer, data, evaluationManifest } = contractData;
     this.signature = new Signature(this.warp, wallet);
     const signer = this.signature.signer;
 
@@ -97,9 +102,13 @@ export class DefaultCreateContract implements CreateContract {
     contractTX.addTag(SmartWeaveTags.SDK, 'RedStone');
     if (data) {
       contractTX.addTag(SmartWeaveTags.CONTENT_TYPE, data['Content-Type']);
-      contractTX.addTag(SmartWeaveTags.INIT_STATE, initState);
+      contractTX.addTag(SmartWeaveTags.INIT_STATE_FORMAT, stateFormat);
+      contractTX.addTag(
+        SmartWeaveTags.INIT_STATE,
+        typeof initState === 'string' ? initState : new TextDecoder().decode(initState)
+      );
     } else {
-      contractTX.addTag(SmartWeaveTags.CONTENT_TYPE, 'application/json');
+      contractTX.addTag(SmartWeaveTags.CONTENT_TYPE, stateFormat);
     }
 
     if (this.warp.environment === 'testnet') {

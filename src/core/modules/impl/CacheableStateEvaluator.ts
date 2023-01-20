@@ -6,7 +6,7 @@ import { ExecutionContextModifier } from '../../../core/ExecutionContextModifier
 import { GQLNodeInterface } from '../../../legacy/gqlResult';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { indent } from '../../../utils/utils';
-import { EvalStateResult } from '../StateEvaluator';
+import { EvalStateResult, SerializationFormat } from '../StateEvaluator';
 import { DefaultStateEvaluator } from './DefaultStateEvaluator';
 import { HandlerApi } from './HandlerExecutorFactory';
 import { genesisSortKey } from './LexicographicalInteractionsSorter';
@@ -35,11 +35,12 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     currentTx: CurrentTx[]
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
     const cachedState = executionContext.cachedState;
+    const { wasmSerializationFormat: serializationFormat } = executionContext.evaluationOptions;
     if (cachedState && cachedState.sortKey == executionContext.requestedSortKey) {
       this.cLogger.info(
         `Exact cache hit for sortKey ${executionContext?.contractDefinition?.txId}:${cachedState.sortKey}`
       );
-      executionContext.handler?.initState(cachedState.cachedValue.state);
+      executionContext.handler?.initState(cachedState.cachedValue.state, serializationFormat);
       return cachedState;
     }
 
@@ -71,10 +72,10 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     if (missingInteractions.length == 0) {
       this.cLogger.info(`No missing interactions ${contractTxId}`);
       if (cachedState) {
-        executionContext.handler?.initState(cachedState.cachedValue.state);
+        executionContext.handler?.initState(cachedState.cachedValue.state, serializationFormat);
         return cachedState;
       } else {
-        executionContext.handler?.initState(executionContext.contractDefinition.initState);
+        executionContext.handler?.initState(executionContext.contractDefinition.initState, serializationFormat);
         this.cLogger.debug('Inserting initial state into cache');
         const stateToCache = new EvalStateResult(executionContext.contractDefinition.initState, {}, {});
         // no real sort-key - as we're returning the initial state

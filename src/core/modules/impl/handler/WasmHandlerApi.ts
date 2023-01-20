@@ -1,11 +1,17 @@
 /* eslint-disable */
 import { ContractDefinition } from '../../../../core/ContractDefinition';
 import { ExecutionContext } from '../../../../core/ExecutionContext';
-import { EvalStateResult } from '../../../../core/modules/StateEvaluator';
+import {
+  Deserializers,
+  EvalStateResult,
+  SerializationFormat,
+  Serializers
+} from '../../../../core/modules/StateEvaluator';
 import { SmartWeaveGlobal } from '../../../../legacy/smartweave-global';
 import stringify from 'safe-stable-stringify';
-import { InteractionData, InteractionResult } from '../HandlerExecutorFactory';
+import { ContractInteraction, InteractionData, InteractionResult } from '../HandlerExecutorFactory';
 import { AbstractContractHandler } from './AbstractContractHandler';
+import { exhaustive } from 'utils/utils';
 
 export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
   constructor(
@@ -24,21 +30,22 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
   ): Promise<InteractionResult<State, Result>> {
     try {
       const { interaction, interactionTx, currentTx } = interactionData;
+      const { gasLimit, wasmSerializationFormat } = executionContext.evaluationOptions;
 
       this.swGlobal._activeTx = interactionTx;
       this.swGlobal.caller = interaction.caller; // either contract tx id (for internal writes) or transaction.owner
-      this.swGlobal.gasLimit = executionContext.evaluationOptions.gasLimit;
+      this.swGlobal.gasLimit = gasLimit;
       this.swGlobal.gasUsed = 0;
 
       this.assignReadContractState<Input>(executionContext, currentTx, currentResult, interactionTx);
       this.assignWrite(executionContext, currentTx);
 
-      const handlerResult = await this.doHandle(interaction);
+      const handlerResult = await this.doHandle(interaction, wasmSerializationFormat);
 
       return {
         type: 'ok',
         result: handlerResult,
-        state: this.doGetCurrentState(), // TODO: return only at the end of evaluation and when caching is required
+        state: this.doGetCurrentState(wasmSerializationFormat), // TODO: return only at the end of evaluation and when caching is required
         gasUsed: this.swGlobal.gasUsed
       };
     } catch (e) {
@@ -73,7 +80,7 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
     }
   }
 
-  initState(state: State): void {
+  initState(state: State, format: SerializationFormat): void {
     switch (this.contractDefinition.srcWasmLang) {
       case 'assemblyscript': {
         const statePtr = this.wasmExports.__newString(stringify(state));
@@ -81,7 +88,7 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
         break;
       }
       case 'rust': {
-        this.wasmExports.initState(state);
+        this.wasmExports.initState(Serializers[format](state));
         break;
       }
       case 'go': {
@@ -94,7 +101,7 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
     }
   }
 
-  private async doHandle(action: any): Promise<any> {
+  private async doHandle<INPUT>(action: ContractInteraction<INPUT>, format: SerializationFormat): Promise<any> {
     switch (this.contractDefinition.srcWasmLang) {
       case 'assemblyscript': {
         const actionPtr = this.wasmExports.__newString(stringify(action.input));
@@ -104,7 +111,8 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
         return JSON.parse(result);
       }
       case 'rust': {
-        let handleResult = await this.wasmExports.handle(action.input);
+        const handleResult = await this.wasmExports.handle(Serializers[format](action.input));
+
         if (!handleResult) {
           return;
         }
@@ -138,14 +146,14 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
     }
   }
 
-  private doGetCurrentState(): State {
+  private doGetCurrentState(format: SerializationFormat): State {
     switch (this.contractDefinition.srcWasmLang) {
       case 'assemblyscript': {
         const currentStatePtr = this.wasmExports.currentState();
         return JSON.parse(this.wasmExports.__getString(currentStatePtr));
       }
       case 'rust': {
-        return this.wasmExports.currentState();
+        return Deserializers[format](this.wasmExports.currentState());
       }
       case 'go': {
         const result = this.wasmExports.currentState();

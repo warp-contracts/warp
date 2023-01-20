@@ -1,3 +1,7 @@
+import { pack, unpack } from 'msgpackr';
+import stringify from 'safe-stable-stringify';
+
+import { exhaustive } from '../../utils/utils';
 import { SortKeyCache, SortKeyCacheResult } from '../../cache/SortKeyCache';
 import { CurrentTx } from '../../contract/Contract';
 import { ExecutionContext } from '../../core/ExecutionContext';
@@ -140,7 +144,45 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   throwOnInternalWriteError = true;
 
   cacheEveryNInteractions = -1;
+
+  wasmSerializationFormat = SerializationFormat.JSON;
 }
+
+export enum SerializationFormat {
+  JSON = 'application/json',
+  // NOTE: There is still no officially registered Media Type for Messagepack and there are
+  // apparently multiple different versions used in the wild like:
+  // - application/msgpack
+  // - application/x-msgpack
+  // - application/x.msgpack
+  // - [...]
+  // See <https://github.com/msgpack/msgpack/issues/194>. I've decided to use the first one
+  // as it looks like the one that makes the most sense.
+  MSGPACK = 'application/msgpack'
+}
+
+export const stringToSerializationFormat = (format: string): SerializationFormat => {
+  const formatTyped = format as SerializationFormat;
+
+  switch (formatTyped) {
+    case SerializationFormat.JSON:
+      return SerializationFormat.JSON;
+    case SerializationFormat.MSGPACK:
+      return SerializationFormat.MSGPACK;
+    default:
+      return exhaustive(formatTyped, `Unsupported serialization format: "${formatTyped}"`);
+  }
+};
+
+export const Serializers = {
+  [SerializationFormat.JSON]: stringify,
+  [SerializationFormat.MSGPACK]: pack
+} as const satisfies Record<SerializationFormat, unknown>;
+
+export const Deserializers = {
+  [SerializationFormat.JSON]: JSON.parse,
+  [SerializationFormat.MSGPACK]: unpack
+} as const satisfies Record<SerializationFormat, unknown>;
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some features.
 export interface EvaluationOptions {
@@ -217,4 +259,11 @@ export interface EvaluationOptions {
   // force SDK to cache the state after evaluating each N interactions
   // defaults to -1, which effectively turns off this feature
   cacheEveryNInteractions: number;
+
+  /**
+   * What serialization format should be used for the WASM<->JS bridge. Note that changing this
+   * currently only affects Rust smartcontracts. AssemblyScript and Go smartcontracts will always
+   * use JSON. Defaults to JSON.
+   */
+  wasmSerializationFormat: SerializationFormat;
 }

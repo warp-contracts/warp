@@ -3,6 +3,10 @@ import copy from 'fast-copy';
 import { Buffer } from 'redstone-isomorphic';
 import { randomUUID } from 'crypto';
 
+export const exhaustive = (_: never, errorMessage = 'Exhaustive check failed') => {
+  throw new Error(errorMessage);
+};
+
 export const sleep = (ms: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };

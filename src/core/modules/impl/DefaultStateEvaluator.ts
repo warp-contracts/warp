@@ -53,8 +53,13 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     executionContext: ExecutionContext<State, HandlerApi<State>>,
     currentTx: CurrentTx[]
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
-    const { ignoreExceptions, stackTrace, internalWrites, cacheEveryNInteractions } =
-      executionContext.evaluationOptions;
+    const {
+      ignoreExceptions,
+      stackTrace,
+      internalWrites,
+      cacheEveryNInteractions,
+      wasmSerializationFormat: serializationFormat
+    } = executionContext.evaluationOptions;
     const { contract, contractDefinition, sortedInteractions, warp } = executionContext;
 
     let currentState = baseState.state;
@@ -62,7 +67,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     const validity = baseState.validity;
     const errorMessages = baseState.errorMessages;
 
-    executionContext?.handler.initState(currentState);
+    executionContext?.handler.initState(currentState, serializationFormat);
 
     const depth = executionContext.contract.callDepth();
 
@@ -76,7 +81,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     let lastConfirmedTxState: { tx: GQLNodeInterface; state: EvalStateResult<State> } = null;
 
     const missingInteractionsLength = missingInteractions.length;
-    executionContext.handler.initState(currentState);
+    executionContext.handler.initState(currentState, serializationFormat);
 
     const evmSignatureVerificationPlugin = warp.hasPlugin('evm-signature-verification')
       ? warp.loadPlugin<GQLNodeInterface, Promise<boolean>>('evm-signature-verification')
@@ -188,7 +193,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         if (newState !== null) {
           currentState = newState.cachedValue.state;
           // we need to update the state in the wasm module
-          executionContext?.handler.initState(currentState);
+          executionContext?.handler.initState(currentState, serializationFormat);
 
           validity[missingInteraction.id] = newState.cachedValue.validity[missingInteraction.id];
           if (newState.cachedValue.errorMessages?.[missingInteraction.id]) {

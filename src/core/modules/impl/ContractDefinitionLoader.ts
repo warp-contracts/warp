@@ -11,6 +11,8 @@ import { GW_TYPE } from '../InteractionsLoader';
 import { TagsParser } from './TagsParser';
 import { WasmSrc } from './wasm/WasmSrc';
 import { WarpEnvironment } from '../../Warp';
+import { Deserializers, SerializationFormat, stringToSerializationFormat } from '../StateEvaluator';
+import { exhaustive } from '../../../utils/utils';
 import { SortKeyCache } from '../../../cache/SortKeyCache';
 
 const supportedSrcContentTypes = ['application/javascript', 'application/wasm'];
@@ -61,9 +63,7 @@ export class ContractDefinitionLoader implements DefinitionLoader {
 
     this.logger.debug('Tags decoding', benchmark.elapsed());
     benchmark.reset();
-    const s = await this.evalInitialState(contractTx);
-    this.logger.debug('init state', s);
-    const initState = JSON.parse(await this.evalInitialState(contractTx));
+    const initState = await this.evalInitialState<State>(contractTx);
     this.logger.debug('Parsing src and init state', benchmark.elapsed());
 
     const { src, srcBinary, srcWasmLang, contractType, metadata, srcTx } = await this.loadContractSource(
@@ -128,14 +128,42 @@ export class ContractDefinitionLoader implements DefinitionLoader {
     };
   }
 
-  private async evalInitialState(contractTx: Transaction): Promise<string> {
+  private async evalInitialState<State>(contractTx: Transaction): Promise<State> {
     if (this.tagsParser.getTag(contractTx, SmartWeaveTags.INIT_STATE)) {
-      return this.tagsParser.getTag(contractTx, SmartWeaveTags.INIT_STATE);
+      const format = stringToSerializationFormat(
+        this.tagsParser.getTag(contractTx, SmartWeaveTags.INIT_STATE_FORMAT) ?? SerializationFormat.JSON
+      );
+      const initState = this.tagsParser.getTag(contractTx, SmartWeaveTags.INIT_STATE);
+
+      switch (format) {
+        case SerializationFormat.JSON:
+          return Deserializers[format](initState);
+        case SerializationFormat.MSGPACK:
+          return Deserializers[format](new TextEncoder().encode(initState));
+        default:
+          exhaustive(format);
+      }
     } else if (this.tagsParser.getTag(contractTx, SmartWeaveTags.INIT_STATE_TX)) {
       const stateTX = this.tagsParser.getTag(contractTx, SmartWeaveTags.INIT_STATE_TX);
-      return this.arweaveWrapper.txDataString(stateTX);
+
+      return this.getInitialStateFromTx(await this.arweave.transactions.get(stateTX));
     } else {
-      return this.arweaveWrapper.txDataString(contractTx.id);
+      return this.getInitialStateFromTx(contractTx);
+    }
+  }
+
+  private async getInitialStateFromTx<State>(tx: Transaction): Promise<State> {
+    const format = stringToSerializationFormat(
+      this.tagsParser.getTag(tx, SmartWeaveTags.CONTENT_TYPE) ?? SerializationFormat.JSON
+    );
+
+    switch (format) {
+      case SerializationFormat.JSON:
+        return Deserializers[format](await this.arweaveWrapper.txDataString(tx.id));
+      case SerializationFormat.MSGPACK:
+        return Deserializers[format](await this.arweaveWrapper.txData(tx.id));
+      default:
+        exhaustive(format);
     }
   }
 

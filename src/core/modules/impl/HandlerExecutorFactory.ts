@@ -1,7 +1,8 @@
 import Arweave from 'arweave';
 import loader from '@assemblyscript/loader';
 import { asWasmImports } from './wasm/as-wasm-imports';
-import { rustWasmImports } from './wasm/rust-wasm-imports';
+import { rustWasmImportsJson } from './wasm/rust-wasm-imports-json';
+import { rustWasmImportsMsgpack } from './wasm/rust-wasm-imports-msgpack';
 import { Go } from './wasm/go-wasm-imports';
 import * as vm2 from 'vm2';
 import { WarpCache } from '../../../cache/WarpCache';
@@ -12,14 +13,14 @@ import { SmartWeaveGlobal } from '../../../legacy/smartweave-global';
 import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { ExecutorFactory } from '../ExecutorFactory';
-import { EvalStateResult, EvaluationOptions } from '../StateEvaluator';
+import { EvalStateResult, EvaluationOptions, SerializationFormat } from '../StateEvaluator';
 import { JsHandlerApi } from './handler/JsHandlerApi';
 import { WasmHandlerApi } from './handler/WasmHandlerApi';
 import { normalizeContractSource } from './normalize-source';
 import { MemCache } from '../../../cache/impl/MemCache';
 import BigNumber from '../../../legacy/bignumber';
 import { Warp } from '../../Warp';
-import { isBrowser } from '../../../utils/utils';
+import { exhaustive, isBrowser } from '../../../utils/utils';
 import { Buffer } from 'redstone-isomorphic';
 
 export class ContractError extends Error {
@@ -110,6 +111,18 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
               return imp.module === '__wbindgen_placeholder__';
             })
             .map((imp) => imp.name);
+
+          let rustWasmImports;
+          switch (evaluationOptions.wasmSerializationFormat) {
+            case SerializationFormat.JSON:
+              rustWasmImports = rustWasmImportsJson;
+              break;
+            case SerializationFormat.MSGPACK:
+              rustWasmImports = rustWasmImportsMsgpack;
+              break;
+            default:
+              return exhaustive(evaluationOptions.wasmSerializationFormat);
+          }
 
           const { imports, exports } = rustWasmImports(
             swGlobal,
@@ -275,7 +288,7 @@ export interface HandlerApi<State> {
     interactionData: InteractionData<Input>
   ): Promise<InteractionResult<State, Result>>;
 
-  initState(state: State): void;
+  initState(state: State, format: SerializationFormat): void;
 }
 
 export type HandlerFunction<State, Input, Result> = (

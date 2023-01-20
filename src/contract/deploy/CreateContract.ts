@@ -1,4 +1,5 @@
 import { JWKInterface } from 'arweave/node/lib/wallet';
+import { SerializationFormat } from 'core/modules/StateEvaluator';
 import { CustomSignature } from '../../contract/Signature';
 import { Source } from './Source';
 import { EvaluationOptions } from '../../core/modules/StateEvaluator';
@@ -28,9 +29,10 @@ export type EvaluationManifest = {
 export const BUNDLR_NODES = ['node1', 'node2'] as const;
 export type BundlrNodeType = typeof BUNDLR_NODES[number];
 
-export interface CommonContractData {
+export interface CommonContractData<T extends SerializationFormat> {
   wallet: ArWallet | CustomSignature;
-  initState: string;
+  stateFormat: T;
+  initState: T extends SerializationFormat.JSON ? string : Buffer;
   tags?: Tags;
   transfer?: ArTransfer;
   data?: {
@@ -40,13 +42,13 @@ export interface CommonContractData {
   evaluationManifest?: EvaluationManifest;
 }
 
-export interface ContractData extends CommonContractData {
+export interface ContractData<T extends SerializationFormat> extends CommonContractData<T> {
   src: string | Buffer;
   wasmSrcCodeDir?: string;
   wasmGlueCode?: string;
 }
 
-export interface FromSrcTxContractData extends CommonContractData {
+export interface FromSrcTxContractData<T extends SerializationFormat> extends CommonContractData<T> {
   srcTxId: string;
 }
 
@@ -56,9 +58,15 @@ export interface ContractDeploy {
 }
 
 export interface CreateContract extends Source {
-  deploy(contractData: ContractData, disableBundling?: boolean): Promise<ContractDeploy>;
+  deploy<T extends SerializationFormat>(
+    contractData: ContractData<T>,
+    disableBundling?: boolean
+  ): Promise<ContractDeploy>;
 
-  deployFromSourceTx(contractData: FromSrcTxContractData, disableBundling?: boolean): Promise<ContractDeploy>;
+  deployFromSourceTx<T extends SerializationFormat>(
+    contractData: FromSrcTxContractData<T>,
+    disableBundling?: boolean
+  ): Promise<ContractDeploy>;
 
   deployBundled(rawDataItem: Buffer): Promise<ContractDeploy>;
 

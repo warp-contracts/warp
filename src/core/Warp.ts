@@ -17,7 +17,7 @@ import { DefinitionLoader } from './modules/DefinitionLoader';
 import { ExecutorFactory } from './modules/ExecutorFactory';
 import { HandlerApi } from './modules/impl/HandlerExecutorFactory';
 import { InteractionsLoader } from './modules/InteractionsLoader';
-import { EvalStateResult, StateEvaluator } from './modules/StateEvaluator';
+import { EvalStateResult, SerializationFormat, StateEvaluator } from './modules/StateEvaluator';
 import { WarpBuilder } from './WarpBuilder';
 import {
   WarpPluginType,
@@ -81,11 +81,17 @@ export class Warp {
     return new HandlerBasedContract<State>(contractTxId, this, callingContract, innerCallData);
   }
 
-  async deploy(contractData: ContractData, disableBundling?: boolean): Promise<ContractDeploy> {
+  async deploy<T extends SerializationFormat>(
+    contractData: ContractData<T>,
+    disableBundling?: boolean
+  ): Promise<ContractDeploy> {
     return await this.createContract.deploy(contractData, disableBundling);
   }
 
-  async deployFromSourceTx(contractData: FromSrcTxContractData, disableBundling?: boolean): Promise<ContractDeploy> {
+  async deployFromSourceTx<T extends SerializationFormat>(
+    contractData: FromSrcTxContractData<T>,
+    disableBundling?: boolean
+  ): Promise<ContractDeploy> {
     return await this.createContract.deployFromSourceTx(contractData, disableBundling);
   }
 
