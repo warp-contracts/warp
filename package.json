@@ -1,6 +1,6 @@
 {
   "name": "warp-contracts",
-  "version": "1.2.47",
+  "version": "1.2.48",
   "description": "An implementation of the SmartWeave smart contract protocol.",
   "types": "./lib/types/index.d.ts",
   "main": "./lib/cjs/index.js",
@@ -74,11 +74,11 @@
     "level": "^8.0.0",
     "memory-level": "^1.0.0",
     "redstone-isomorphic": "1.1.8",
-    "warp-wasm-metering": "1.0.0",
     "safe-stable-stringify": "2.4.1",
     "stream-buffers": "^3.0.2",
     "unzipit": "^1.4.0",
-    "vm2": "3.9.11"
+    "vm2": "3.9.11",
+    "warp-wasm-metering": "1.0.0"
   },
   "devDependencies": {
     "@types/cheerio": "^0.22.30",

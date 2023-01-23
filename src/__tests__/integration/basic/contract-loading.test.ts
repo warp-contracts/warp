@@ -78,7 +78,7 @@ describe('Testing WarpGatewayContractDefinitionLoader', () => {
   it('loads contract definition when cache is empty', async () => {
     // Cache is empty
     loader.getCache().delete(contract.txId());
-    expect(await loader.getCache().get({ key: contract.txId(), sortKey: 'cd'})).toBeFalsy();
+    expect(await loader.getCache().get({ key: contract.txId(), sortKey: 'cd' })).toBeFalsy();
 
     // Load contract
     const loaded = await loader.load(contract.txId());
@@ -86,12 +86,12 @@ describe('Testing WarpGatewayContractDefinitionLoader', () => {
     expect(loaded.src).toBe(contractSrc);
 
     // Contract is in its cache
-    expect(await loader.getCache().get({ key: loaded.txId, sortKey: 'cd'})).toBeTruthy();
-    expect(await loader.getSrcCache().get({ key: loaded.txId, sortKey: 'cd'})).toBeFalsy();
+    expect(await loader.getCache().get({ key: loaded.txId, sortKey: 'cd' })).toBeTruthy();
+    expect(await loader.getSrcCache().get({ key: loaded.txId, sortKey: 'cd' })).toBeFalsy();
 
     // Source is in its cache
-    expect(await loader.getCache().get({ key: loaded.srcTxId, sortKey: 'src'})).toBeFalsy();
-    expect(await loader.getSrcCache().get({ key: loaded.srcTxId, sortKey: 'src'})).toBeTruthy();
+    expect(await loader.getCache().get({ key: loaded.srcTxId, sortKey: 'src' })).toBeFalsy();
+    expect(await loader.getSrcCache().get({ key: loaded.srcTxId, sortKey: 'src' })).toBeTruthy();
   });
 
   it('loads contract definition when cache contains given definition', async () => {
