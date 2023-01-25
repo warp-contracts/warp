@@ -478,7 +478,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     benchmark.reset();
 
     const evolvedSrcTxId = Evolve.evolvedSrcTxId(cachedState?.cachedValue?.state);
-    let handler, contractDefinition, sortedInteractions;
+    let handler, contractDefinition, sortedInteractions, contractEvaluationOptions;
 
     this.logger.debug('Cached state', cachedState, upToSortKey);
 
@@ -527,21 +527,22 @@ export class HandlerBasedContract<State> implements Contract<State> {
         this._rootSortKey = sortedInteractions[sortedInteractions.length - 1].sortKey;
       }
     }
-    if (this.isRoot()) {
-      this._eoEvaluator = new EvaluationOptionsEvaluator(
-        this.evaluationOptions(),
-        contractDefinition.manifest?.evaluationOptions
-      );
-    }
-    const contractEvaluationOptions = this.isRoot()
-      ? this._eoEvaluator.rootOptions
-      : this.getEoEvaluator().forForeignContract(contractDefinition.manifest?.evaluationOptions);
-    if (!this.isRoot() && contractEvaluationOptions.useKVStorage) {
-      throw new Error('Foreign read/writes cannot be performed on kv storage contracts');
-    }
-    this.ecLogger.debug(`Evaluation options ${contractTxId}:`, contractEvaluationOptions);
 
     if (contractDefinition) {
+      if (this.isRoot()) {
+        this._eoEvaluator = new EvaluationOptionsEvaluator(
+          this.evaluationOptions(),
+          contractDefinition.manifest?.evaluationOptions
+        );
+      }
+      const contractEvaluationOptions = this.isRoot()
+        ? this._eoEvaluator.rootOptions
+        : this.getEoEvaluator().forForeignContract(contractDefinition.manifest?.evaluationOptions);
+      if (!this.isRoot() && contractEvaluationOptions.useKVStorage) {
+        throw new Error('Foreign read/writes cannot be performed on kv storage contracts');
+      }
+      this.ecLogger.debug(`Evaluation options ${contractTxId}:`, contractEvaluationOptions);
+
       handler = (await this.warp.executorFactory.create(
         contractDefinition,
         contractEvaluationOptions,
@@ -554,7 +555,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       contract: this,
       contractDefinition,
       sortedInteractions,
-      evaluationOptions: contractEvaluationOptions,
+      evaluationOptions: contractEvaluationOptions || this.evaluationOptions(),
       handler,
       cachedState,
       requestedSortKey: upToSortKey
