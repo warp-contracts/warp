@@ -7,9 +7,9 @@ import fs from "fs";
 const logger = LoggerFactory.INST.create('Contract');
 
 //LoggerFactory.use(new TsLogFactory());
-LoggerFactory.INST.logLevel('info');
-LoggerFactory.INST.logLevel('debug', 'WarpSubscriptionPlugin');
-//LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
+LoggerFactory.INST.logLevel('error');
+
+LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
 
 async function main() {
   printTestInfo();
@@ -18,21 +18,48 @@ async function main() {
   const rssUsedBefore = Math.round((process.memoryUsage().rss / 1024 / 1024) * 100) / 100;
 
   const warp = WarpFactory
-    .forMainnet({...defaultCacheOptions, inMemory: false});
+    .forMainnet({...defaultCacheOptions, inMemory: true});
 
   let wallet: JWKInterface = readJSON('./.secrets/33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA.json');
 
   try {
     const contract = warp
-      .contract("47Fo4Mgpj_xzvImqIqMOZ_rwPJETqt1Fn0kMDwzUcZE")
-      .connect(wallet);
+      .contract("UBn9JE5iMyQ-nee7bjoE9oNbgTsHDMT7IfPNzZpvyyU")
+    const cacheResult = await contract
+      .readState('000001105599,1674667555600,3ffc7b84a6ea98d21fe13a773ad17d051d2aaa402b229d01acd189b4431085fa');
+    console.log(cacheResult.cachedValue.validity);
 
-     const cacheResult = await contract
-       .setEvaluationOptions({
-       })
-       .readState();
+    const result2 = await contract.readStateFor('000001105599,1674667555600,3ffc7b84a6ea98d21fe13a773ad17d051d2aaa402b229d01acd189b4431085fa',
+      [{
+        "id": "-HX10_iGrTRb1iKRoQYrm_RvXfP9plsyyJANa_kXybw",
+        "fee": {"winston": "72600854"},
+        "vrf": null,
+        "tags": [{"name": "App-Name", "value": "SmartWeaveAction"}, {
+          "name": "App-Version",
+          "value": "0.3.0"
+        }, {"name": "SDK", "value": "Warp"}, {
+          "name": "Contract",
+          "value": "UBn9JE5iMyQ-nee7bjoE9oNbgTsHDMT7IfPNzZpvyyU"
+        }, {
+          "name": "Input",
+          "value": "{\"function\":\"transfer\",\"target\":\"M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI\",\"qty\":100}"
+        }],
+        "block": {
+          "id": "FtFO_auDIaR-caLom7Zl8unOPRJLU8zel1XvuYxDJO_fsVjz45YLjKiTK7tDvZ5k",
+          "height": 1105599,
+          "timestamp": 1674667290
+        },
+        "owner": {"address": "33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA"},
+        "source": "redstone-sequencer",
+        "sortKey": "000001105599,1674667555795,7298532efd6c0aa28fad539bbe7a37007a49719d42e7a5dff5a3a00d28086297",
+        "testnet": null,
+        "quantity": {"winston": "0"},
+        "recipient": "",
+        "lastSortKey": "000001105599,1674667555600,3ffc7b84a6ea98d21fe13a773ad17d051d2aaa402b229d01acd189b4431085fa"
+      } as any]
+    )
 
-     console.log(cacheResult.cachedValue.state);
+    console.log(result2.cachedValue.validity);
   } catch (e) {
     console.error(e);
   }

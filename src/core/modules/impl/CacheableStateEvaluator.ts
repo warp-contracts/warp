@@ -33,7 +33,9 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     executionContext: ExecutionContext<State, HandlerApi<State>>
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
     const cachedState = executionContext.cachedState;
-    if (cachedState && cachedState.sortKey == executionContext.requestedSortKey) {
+    const missingInteractions = executionContext.sortedInteractions;
+
+    if (cachedState && cachedState.sortKey == executionContext.requestedSortKey && !missingInteractions?.length) {
       this.cLogger.info(
         `Exact cache hit for sortKey ${executionContext?.contractDefinition?.txId}:${cachedState.sortKey}`
       );
@@ -41,7 +43,6 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       return cachedState;
     }
 
-    const missingInteractions = executionContext.sortedInteractions;
     const contractTxId = executionContext.contractDefinition.txId;
     // sanity check...
     if (!contractTxId) {
