@@ -1,5 +1,6 @@
 import { EvaluationOptionsEvaluator } from '../../contract/EvaluationOptionsEvaluator';
 import { WarpFactory } from '../../core/WarpFactory';
+import { SourceType } from '../../core/modules/impl/WarpGatewayInteractionsLoader';
 
 describe('Evaluation options evaluator', () => {
   const warp = WarpFactory.forLocal();
@@ -17,6 +18,7 @@ describe('Evaluation options evaluator', () => {
       maxInteractionEvaluationTimeSeconds: 60,
       mineArLocalBlocks: true,
       sequencerUrl: 'https://d1o5nlqr4okus2.cloudfront.net/',
+      sourceType: SourceType.BOTH,
       stackTrace: {
         saveState: false
       },
@@ -53,6 +55,7 @@ describe('Evaluation options evaluator', () => {
       maxInteractionEvaluationTimeSeconds: 60,
       mineArLocalBlocks: true,
       sequencerUrl: 'https://d1o5nlqr4okus2.cloudfront.net/',
+      sourceType: SourceType.BOTH,
       stackTrace: {
         saveState: false
       },
@@ -83,6 +86,7 @@ describe('Evaluation options evaluator', () => {
       maxInteractionEvaluationTimeSeconds: 60,
       mineArLocalBlocks: true,
       sequencerUrl: 'https://d1o5nlqr4okus2.cloudfront.net/',
+      sourceType: "both",
       stackTrace: {
         saveState: false
       },
@@ -201,5 +205,27 @@ describe('Evaluation options evaluator', () => {
 
     expect(eoEvaluator.forForeignContract({ ignoreExceptions: true })['ignoreExceptions']).toEqual(false);
     expect(eoEvaluator.forForeignContract({ ignoreExceptions: false })['ignoreExceptions']).toEqual(false);
+  });
+
+  it('should properly set sourceType - from manifest BOTH', async () => {
+    const contract = warp.contract(null).setEvaluationOptions({
+      ignoreExceptions: false,
+      sourceType: null
+    });
+    const eoEvaluator = new EvaluationOptionsEvaluator(contract.evaluationOptions(), {sourceType: SourceType.BOTH});
+
+    expect(eoEvaluator.forForeignContract({ ignoreExceptions: true })['sourceType']).toEqual(SourceType.BOTH);
+    expect(eoEvaluator.forForeignContract({ ignoreExceptions: false })['sourceType']).toEqual(SourceType.BOTH);
+  });
+
+  it('should properly set sourceType - from manifest ARWEAVE', async () => {
+    const contract = warp.contract(null).setEvaluationOptions({
+      ignoreExceptions: false,
+      sourceType: SourceType.BOTH
+    });
+    const eoEvaluator = new EvaluationOptionsEvaluator(contract.evaluationOptions(), {sourceType: SourceType.ARWEAVE});
+
+    expect(eoEvaluator.forForeignContract({ ignoreExceptions: true })['sourceType']).toEqual(SourceType.ARWEAVE);
+    expect(eoEvaluator.forForeignContract({ ignoreExceptions: false })['sourceType']).toEqual(SourceType.ARWEAVE);
   });
 });

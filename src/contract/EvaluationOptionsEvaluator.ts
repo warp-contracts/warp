@@ -96,6 +96,7 @@ export class EvaluationOptionsEvaluator {
     maxCallDepth: () => this.rootOptions['maxCallDepth'],
     maxInteractionEvaluationTimeSeconds: () => this.rootOptions['maxInteractionEvaluationTimeSeconds'],
     stackTrace: () => this.rootOptions['stackTrace'],
+    sourceType: () => this.rootOptions['sourceType'],
     sequencerUrl: () => this.rootOptions['sequencerUrl'],
     gasLimit: () => this.rootOptions['gasLimit'],
     useVM2: () => this.rootOptions['useVM2'],
@@ -115,7 +116,7 @@ export class EvaluationOptionsEvaluator {
     if (manifestOptions) {
       const errors = [];
       for (const k in manifestOptions) {
-        if (k === 'useKVStorage') {
+        if (['useKVStorage', 'sourceType'].includes(k)) {
           continue;
         }
         if (userSetOptions[k] !== manifestOptions[k]) {

@@ -9,7 +9,6 @@ import { ConfirmationStatus, SourceType } from './modules/impl/WarpGatewayIntera
 import { EvalStateResult } from './modules/StateEvaluator';
 import { WarpEnvironment, Warp } from './Warp';
 import { WarpBuilder } from './WarpBuilder';
-import { SortKeyCache } from '../cache/SortKeyCache';
 
 export type GatewayOptions = {
   confirmationStatus: ConfirmationStatus;
@@ -26,7 +25,7 @@ export const WARP_GW_URL = 'https://d1o5nlqr4okus2.cloudfront.net';
 
 export const defaultWarpGwOptions: GatewayOptions = {
   confirmationStatus: { notCorrupted: true },
-  source: null,
+  source: SourceType.BOTH,
   address: WARP_GW_URL
 };
 

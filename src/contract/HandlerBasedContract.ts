@@ -499,20 +499,19 @@ export class HandlerBasedContract<State> implements Contract<State> {
       if (interactions?.length) {
         throw new Error(`Cannot apply requested interactions at ${upToSortKey}`);
       }
-      [contractDefinition, sortedInteractions] = await Promise.all([
-        definitionLoader.load<State>(contractTxId, evolvedSrcTxId),
-        interactions
-          ? Promise.resolve(interactions)
-          : await interactionsLoader.load(
-              contractTxId,
-              cachedState?.sortKey,
-              // (1) we want to eagerly load dependant contract interactions and put them
-              // in the interactions' loader cache
-              // see: https://github.com/warp-contracts/warp/issues/198
-              this.getToSortKey(upToSortKey),
-              this._evaluationOptions
-            )
-      ]);
+
+      contractDefinition = await definitionLoader.load<State>(contractTxId, evolvedSrcTxId);
+      contractEvaluationOptions = this.resolveEvaluationOptions(contractDefinition.manifest?.evaluationOptions);
+
+      sortedInteractions = interactions
+        ? interactions
+        : await interactionsLoader.load(
+            contractTxId,
+            cachedState?.sortKey,
+            this.getToSortKey(upToSortKey),
+            contractEvaluationOptions
+          );
+
       // (2) ...but we still need to return only interactions up to original "upToSortKey"
       if (cachedState?.sortKey) {
         sortedInteractions = sortedInteractions.filter((i) => i.sortKey.localeCompare(cachedState?.sortKey) > 0);
@@ -529,15 +528,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
 
     if (contractDefinition) {
-      if (this.isRoot()) {
-        this._eoEvaluator = new EvaluationOptionsEvaluator(
-          this.evaluationOptions(),
-          contractDefinition.manifest?.evaluationOptions
-        );
+      if (!contractEvaluationOptions) {
+        contractEvaluationOptions = this.resolveEvaluationOptions(contractDefinition.manifest?.evaluationOptions);
       }
-      const contractEvaluationOptions = this.isRoot()
-        ? this._eoEvaluator.rootOptions
-        : this.getEoEvaluator().forForeignContract(contractDefinition.manifest?.evaluationOptions);
+
       if (!this.isRoot() && contractEvaluationOptions.useKVStorage) {
         throw new Error('Foreign read/writes cannot be performed on kv storage contracts');
       }
@@ -560,6 +554,14 @@ export class HandlerBasedContract<State> implements Contract<State> {
       cachedState,
       requestedSortKey: upToSortKey
     };
+  }
+
+  private resolveEvaluationOptions(rootManifestEvalOptions: EvaluationOptions) {
+    if (this.isRoot()) {
+      this._eoEvaluator = new EvaluationOptionsEvaluator(this.evaluationOptions(), rootManifestEvalOptions);
+      return this._eoEvaluator.rootOptions;
+    }
+    return this.getRootEoEvaluator().forForeignContract(rootManifestEvalOptions);
   }
 
   private getToSortKey(upToSortKey?: string) {
@@ -832,7 +834,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return this._rootSortKey;
   }
 
-  getEoEvaluator(): EvaluationOptionsEvaluator {
+  getRootEoEvaluator(): EvaluationOptionsEvaluator {
     const root = this.getRoot() as HandlerBasedContract<unknown>;
     return root._eoEvaluator;
   }
