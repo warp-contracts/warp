@@ -1,6 +1,7 @@
 import { SortKeyCache, SortKeyCacheResult } from '../../cache/SortKeyCache';
-import { ExecutionContext } from '../../core/ExecutionContext';
+import { ExecutionContext } from '../ExecutionContext';
 import { GQLNodeInterface } from '../../legacy/gqlResult';
+import { SourceType } from './impl/WarpGatewayInteractionsLoader';
 
 /**
  * Implementors of this class are responsible for evaluating contract's state
@@ -123,6 +124,8 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
 
   gasLimit = Number.MAX_SAFE_INTEGER;
 
+  sourceType = SourceType.BOTH;
+
   useVM2 = false;
 
   unsafeClient = 'throw' as const;
@@ -204,6 +207,10 @@ export interface EvaluationOptions {
 
   // an endpoint for retrieving wallet balance info
   walletBalanceUrl: string;
+
+  // Whether interactions should be taken from {@link SourceType.ARWEAVE} or {@link SourceType.WARP_SEQUENCER}.
+  // By default it is {@link SourceType.BOTH}
+  sourceType: SourceType;
 
   // whether the local Warp instance should manually mine blocks in ArLocal. Defaults to true.
   mineArLocalBlocks: boolean;

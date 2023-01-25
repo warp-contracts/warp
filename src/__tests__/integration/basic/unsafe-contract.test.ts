@@ -9,7 +9,6 @@ import { Warp } from '../../../core/Warp';
 import { WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { PstState } from '../../../contract/PstContract';
-import { genesisSortKey } from '../../../core/modules/impl/LexicographicalInteractionsSorter';
 
 let arlocal: ArLocal;
 let warp: Warp;

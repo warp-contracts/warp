@@ -224,7 +224,7 @@ export interface Contract<State = unknown> {
 
   rootSortKey: string;
 
-  getEoEvaluator(): EvaluationOptionsEvaluator;
+  getRootEoEvaluator(): EvaluationOptionsEvaluator;
 
   isRoot(): boolean;
 

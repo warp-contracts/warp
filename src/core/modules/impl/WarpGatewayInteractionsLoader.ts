@@ -18,7 +18,8 @@ export type ConfirmationStatus =
 
 export const enum SourceType {
   ARWEAVE = 'arweave',
-  WARP_SEQUENCER = 'redstone-sequencer'
+  WARP_SEQUENCER = 'redstone-sequencer',
+  BOTH = 'both'
 }
 
 /**
@@ -31,8 +32,8 @@ export const enum SourceType {
  * enough confirmations, whose existence is confirmed by at least 3 Arweave peers.
  * 2. {@link ConfirmationStatus.notCorrupted} flag - to receive both already confirmed and not yet confirmed (ie. latest)
  * interactions.
- * 3. {@link SourceType} - to receive interactions based on their origin ({@link SourceType.ARWEAVE} or {@link SourceType.REDSTONE_SEQUENCER}).
- * If not set, interactions from all sources will be loaded.
+ * 3. {@link SourceType} - to receive interactions based on their origin ({@link SourceType.ARWEAVE} or {@link SourceType.WARP_SEQUENCER}).
+ * If not set, by default {@link SourceType.BOTH} is set.
  *
  * Passing no flag is the "backwards compatible" mode (ie. it will behave like the original Arweave GQL gateway endpoint).
  * Note that this may result in returning corrupted and/or forked interactions
@@ -42,7 +43,7 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
   constructor(
     private readonly baseUrl: string,
     private readonly confirmationStatus: ConfirmationStatus = null,
-    private readonly source: SourceType = null
+    private readonly source: SourceType = SourceType.BOTH
   ) {
     this.baseUrl = stripTrailingSlash(baseUrl);
     Object.assign(this, confirmationStatus);
@@ -64,6 +65,7 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
     let limit = 0;
     let items = 0;
 
+    const effectiveSourceType = evaluationOptions ? evaluationOptions.sourceType : this.source;
     const benchmarkTotalTime = Benchmark.measure();
     do {
       const benchmarkRequestTime = Benchmark.measure();
@@ -81,7 +83,7 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
           ...(this.confirmationStatus && this.confirmationStatus.notCorrupted
             ? { confirmationStatus: 'not_corrupted' }
             : ''),
-          ...(this.source ? { source: this.source } : '')
+          ...(effectiveSourceType == SourceType.BOTH ? '' : { source: effectiveSourceType })
         })}`
       )
         .then((res) => {
