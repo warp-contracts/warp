@@ -487,7 +487,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
       if (forceDefinitionLoad || evolvedSrcTxId || interactions?.length) {
         contractDefinition = await definitionLoader.load<State>(contractTxId, evolvedSrcTxId);
         if (interactions?.length) {
-          sortedInteractions = this._sorter.sort(interactions.map((i) => ({ node: i, cursor: null })));
+          sortedInteractions = (await this._sorter.sort(interactions.map((i) => ({ node: i, cursor: null })))).map(
+            (i) => i.node
+          );
         }
       }
     } else {

@@ -21,7 +21,7 @@ async function main() {
       const warp = WarpFactory
         .forMainnet({...defaultCacheOptions, inMemory: true});
 
-    const jsContractSrc = fs.readFileSync(path.join(__dirname, 'data/js/kv-storage.js'), 'utf8');
+    const jsContractSrc = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.js'), 'utf8');
     const initialState = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.json'), 'utf8');
 
     // case 1 - full deploy, js contract
@@ -29,11 +29,11 @@ async function main() {
       wallet,
       initState: initialState,
       src: jsContractSrc,
-      evaluationManifest: {
+      /*evaluationManifest: {
         evaluationOptions: {
           useKVStorage: true
         }
-      }
+      }*/
     });
 
     console.log('contractTxId:', contractTxId);
@@ -66,21 +66,26 @@ async function main() {
       .connect(wallet);
 
     await Promise.all([
-      /*contract.writeInteraction<any>({
+      contract.writeInteraction<any>({
         function: "transfer",
         target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
         qty: 100
-      }),*/
+      }),
       contract.writeInteraction<any>({
-        function: "mint",
-        target: 'follows:0xe0',
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
         qty: 100
       }),
       /*contract.writeInteraction<any>({
-        function: "transfer",
-        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        function: "mint",
+        target: 'follows:0xe0',
         qty: 100
-      })*/
+      }),*/
     ]);
 
     //const {cachedValue} = await contract.readState();
