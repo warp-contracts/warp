@@ -145,11 +145,16 @@ export class DefaultCreateContract implements CreateContract {
       return response.json();
     } else {
       if (typeof response.json === 'function') {
-        response.json().then((responseError) => {
-          if (responseError.message) {
-            this.logger.error(responseError.message);
-          }
-        });
+        response
+          .json()
+          .then((responseError) => {
+            if (responseError.message) {
+              this.logger.error(responseError.message);
+            }
+          })
+          .catch((err) => {
+            this.logger.error(err);
+          });
       }
       throw new Error(
         `Error while deploying data item. Warp Gateway responded with status ${response.status} ${response.statusText}`
@@ -170,11 +175,16 @@ export class DefaultCreateContract implements CreateContract {
       return response.json();
     } else {
       if (typeof response.json === 'function') {
-        response.json().then((responseError) => {
-          if (responseError.message) {
-            this.logger.error(responseError.message);
-          }
-        });
+        response
+          .json()
+          .then((responseError) => {
+            if (responseError.message) {
+              this.logger.error(responseError.message);
+            }
+          })
+          .catch((err) => {
+            this.logger.error(err);
+          });
       }
       throw new Error(
         `Error while registering data item. Warp Gateway responded with status ${response.status} ${response.statusText}`
