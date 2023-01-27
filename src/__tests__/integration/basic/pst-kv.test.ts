@@ -110,6 +110,21 @@ describe('Testing the Profit Sharing Token', () => {
     expect((await pst.currentBalance('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M')).balance).toEqual(10000000 + 555);
   });
 
+  it('should read pst state and balance ignoring dry runs', async () => {
+    await pst.dryWrite(
+      {
+        function: 'transfer',
+        target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M',
+        qty: 111
+      }
+    );
+
+    await mineBlock(warp);
+
+    expect((await pst.currentBalance(walletAddress)).balance).toEqual(555669 - 555);
+    expect((await pst.currentBalance('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M')).balance).toEqual(10000000 + 555);
+  });
+
   it('should properly view contract state', async () => {
     const result = await pst.currentBalance('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M');
     expect(result.balance).toEqual(10000000 + 555);

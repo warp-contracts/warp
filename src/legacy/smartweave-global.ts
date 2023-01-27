@@ -179,6 +179,13 @@ class Transaction {
     return this.smartWeaveGlobal._activeTx.sortKey;
   }
 
+  get dryRun(): boolean {
+    if (!this.smartWeaveGlobal._activeTx) {
+      throw new Error('No current Tx');
+    }
+    return this.smartWeaveGlobal._activeTx.dry === true;
+  }
+
   get quantity() {
     if (!this.smartWeaveGlobal._activeTx) {
       throw new Error('No current Tx');
@@ -281,7 +288,9 @@ export class KV {
 
   async commit(): Promise<void> {
     if (this._storage) {
-      await this._storage.batch(this._kvBatch);
+      if (!this._transaction.dryRun) {
+        await this._storage.batch(this._kvBatch);
+      }
       this._kvBatch = [];
     }
   }
