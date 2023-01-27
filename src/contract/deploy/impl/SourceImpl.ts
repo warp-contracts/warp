@@ -7,7 +7,7 @@ import { ArWallet, ContractType } from '../CreateContract';
 import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { Source } from '../Source';
-import { Buffer } from 'redstone-isomorphic';
+import { Buffer } from 'warp-isomorphic';
 import { Warp } from '../../../core/Warp';
 import { Signature, CustomSignature } from '../../../contract/Signature';
 import Transaction from 'arweave/node/lib/transaction';

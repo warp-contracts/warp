@@ -2,7 +2,7 @@ import Arweave from 'arweave';
 import { NetworkInfoInterface } from 'arweave/node/network';
 import { AxiosResponse } from 'axios';
 import Transaction from 'arweave/node/lib/transaction';
-import { Buffer as isomorphicBuffer } from 'redstone-isomorphic';
+import { Buffer as isomorphicBuffer } from 'warp-isomorphic';
 import { BlockData } from 'arweave/node/blocks';
 import { GqlReqVariables } from '../core/modules/impl/ArweaveGatewayInteractionsLoader';
 import { WARP_GW_URL } from '../core/WarpFactory';

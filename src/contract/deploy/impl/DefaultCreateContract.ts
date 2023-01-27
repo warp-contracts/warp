@@ -17,7 +17,7 @@ import {
   BUNDLR_NODES
 } from '../CreateContract';
 import { SourceData, SourceImpl } from './SourceImpl';
-import { Buffer } from 'redstone-isomorphic';
+import { Buffer } from 'warp-isomorphic';
 
 export class DefaultCreateContract implements CreateContract {
   private readonly logger = LoggerFactory.INST.create('DefaultCreateContract');

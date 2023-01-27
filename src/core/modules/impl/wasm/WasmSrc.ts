@@ -1,5 +1,5 @@
 import { unzip } from 'unzipit';
-import { Buffer } from 'redstone-isomorphic';
+import { Buffer } from 'warp-isomorphic';
 import { LoggerFactory } from '../../../../logging/LoggerFactory';
 
 export class WasmSrc {
