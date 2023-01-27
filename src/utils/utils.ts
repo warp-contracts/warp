@@ -1,6 +1,6 @@
 /* eslint-disable */
 import copy from 'fast-copy';
-import { Buffer } from 'redstone-isomorphic';
+import { Buffer } from 'warp-isomorphic';
 import { randomUUID } from 'crypto';
 
 export const sleep = (ms: number): Promise<void> => {

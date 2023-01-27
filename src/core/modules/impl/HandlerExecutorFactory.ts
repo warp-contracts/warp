@@ -20,7 +20,7 @@ import { MemCache } from '../../../cache/impl/MemCache';
 import BigNumber from '../../../legacy/bignumber';
 import { Warp } from '../../Warp';
 import { isBrowser } from '../../../utils/utils';
-import { Buffer } from 'redstone-isomorphic';
+import { Buffer } from 'warp-isomorphic';
 
 export class ContractError extends Error {
   constructor(message, readonly subtype?: string) {

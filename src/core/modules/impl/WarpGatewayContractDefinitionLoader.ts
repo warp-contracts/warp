@@ -1,6 +1,6 @@
 import Arweave from 'arweave';
 import { ContractDefinitionLoader } from './ContractDefinitionLoader';
-import { Buffer } from 'redstone-isomorphic';
+import { Buffer } from 'warp-isomorphic';
 import Transaction from 'arweave/node/lib/transaction';
 import { GW_TYPE } from '../InteractionsLoader';
 import { ContractDefinition, ContractSource, SrcCache, ContractCache } from '../../../core/ContractDefinition';
