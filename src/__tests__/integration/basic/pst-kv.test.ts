@@ -111,13 +111,11 @@ describe('Testing the Profit Sharing Token', () => {
   });
 
   it('should read pst state and balance ignoring dry runs', async () => {
-    await pst.dryWrite(
-      {
-        function: 'transfer',
-        target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M',
-        qty: 111
-      }
-    );
+    await pst.dryWrite({
+      function: 'transfer',
+      target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M',
+      qty: 111
+    });
 
     await mineBlock(warp);
 

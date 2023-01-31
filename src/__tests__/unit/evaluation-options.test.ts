@@ -86,7 +86,7 @@ describe('Evaluation options evaluator', () => {
       maxInteractionEvaluationTimeSeconds: 60,
       mineArLocalBlocks: true,
       sequencerUrl: 'https://d1o5nlqr4okus2.cloudfront.net/',
-      sourceType: "both",
+      sourceType: 'both',
       stackTrace: {
         saveState: false
       },
@@ -212,7 +212,7 @@ describe('Evaluation options evaluator', () => {
       ignoreExceptions: false,
       sourceType: null
     });
-    const eoEvaluator = new EvaluationOptionsEvaluator(contract.evaluationOptions(), {sourceType: SourceType.BOTH});
+    const eoEvaluator = new EvaluationOptionsEvaluator(contract.evaluationOptions(), { sourceType: SourceType.BOTH });
 
     expect(eoEvaluator.forForeignContract({ ignoreExceptions: true })['sourceType']).toEqual(SourceType.BOTH);
     expect(eoEvaluator.forForeignContract({ ignoreExceptions: false })['sourceType']).toEqual(SourceType.BOTH);
@@ -223,7 +223,9 @@ describe('Evaluation options evaluator', () => {
       ignoreExceptions: false,
       sourceType: SourceType.BOTH
     });
-    const eoEvaluator = new EvaluationOptionsEvaluator(contract.evaluationOptions(), {sourceType: SourceType.ARWEAVE});
+    const eoEvaluator = new EvaluationOptionsEvaluator(contract.evaluationOptions(), {
+      sourceType: SourceType.ARWEAVE
+    });
 
     expect(eoEvaluator.forForeignContract({ ignoreExceptions: true })['sourceType']).toEqual(SourceType.ARWEAVE);
     expect(eoEvaluator.forForeignContract({ ignoreExceptions: false })['sourceType']).toEqual(SourceType.ARWEAVE);
