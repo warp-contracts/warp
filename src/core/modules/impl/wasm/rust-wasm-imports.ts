@@ -51,10 +51,10 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance, dtorVal
       }
     },
     KV: {
-      get: async function(key: string): Promise<any> {
+      get: async function (key: string): Promise<any> {
         return await swGlobal.kv.get(key);
       },
-      put: async function(key: string, value: any): Promise<void> {
+      put: async function (key: string, value: any): Promise<void> {
         await swGlobal.kv.put(key, value);
       }
     },
@@ -106,7 +106,7 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance, dtorVal
       getInt32Memory0()[arg0 / 4 + 1] = len0;
       getInt32Memory0()[arg0 / 4 + 0] = ptr0;
     },
-    __wbindgen_is_null: function(arg0) {
+    __wbindgen_is_null: function (arg0) {
       return getObject(arg0) === null;
     },
     __wbindgen_object_drop_ref: function (arg0) {
@@ -125,13 +125,13 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance, dtorVal
       return handleError(function (arg0, arg1, arg2) {
         var ret = rawImports.KV.put(getStringFromWasm0(arg0, arg1), takeObject(arg2));
         return addHeapObject(ret);
-      }, arguments)
+      }, arguments);
     },
     __wbg_kvGet: function (arg0, arg1) {
       return handleError(function (arg0, arg1) {
         var ret = rawImports.KV.get(getStringFromWasm0(arg0, arg1));
         return addHeapObject(ret);
-      }, arguments)
+      }, arguments);
     },
     __wbg_readContractState: function (arg0, arg1) {
       var ret = rawImports.SmartWeave.readContractState(getStringFromWasm0(arg0, arg1));
@@ -291,10 +291,12 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance, dtorVal
       var ret = getStringFromWasm0(arg0, arg1);
       return addHeapObject(ret);
     },
-    __wbindgen_string_get: function(arg0, arg1) {
+    __wbindgen_string_get: function (arg0, arg1) {
       const obj = getObject(arg1);
-      var ret = typeof(obj) === 'string' ? obj : undefined;
-      var ptr0 = isLikeNone(ret) ? 0 : passStringToWasm0(ret, wasmInstance.exports.__wbindgen_malloc, wasmInstance.exports.__wbindgen_realloc);
+      var ret = typeof obj === 'string' ? obj : undefined;
+      var ptr0 = isLikeNone(ret)
+        ? 0
+        : passStringToWasm0(ret, wasmInstance.exports.__wbindgen_malloc, wasmInstance.exports.__wbindgen_realloc);
       var len0 = WASM_VECTOR_LEN;
       getInt32Memory0()[arg0 / 4 + 1] = len0;
       getInt32Memory0()[arg0 / 4 + 0] = ptr0;

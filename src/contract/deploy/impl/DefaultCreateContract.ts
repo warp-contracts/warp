@@ -17,7 +17,7 @@ import {
 } from '../CreateContract';
 import { SourceData, SourceImpl } from './SourceImpl';
 import { Buffer } from 'warp-isomorphic';
-import {Transaction} from "../../../utils/types/arweave-types";
+import { Transaction } from '../../../utils/types/arweave-types';
 
 export class DefaultCreateContract implements CreateContract {
   private readonly logger = LoggerFactory.INST.create('DefaultCreateContract');
