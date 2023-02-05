@@ -1,7 +1,6 @@
 import Arweave from 'arweave';
 import { ContractDefinitionLoader } from './ContractDefinitionLoader';
 import { Buffer } from 'warp-isomorphic';
-import Transaction from 'arweave/node/lib/transaction';
 import { GW_TYPE } from '../InteractionsLoader';
 import { ContractDefinition, ContractSource, SrcCache, ContractCache } from '../../../core/ContractDefinition';
 import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
@@ -14,6 +13,7 @@ import { WasmSrc } from './wasm/WasmSrc';
 import { WarpEnvironment } from '../../Warp';
 import { TagsParser } from './TagsParser';
 import { CacheKey, SortKeyCache } from '../../../cache/SortKeyCache';
+import { Transaction } from '../../../utils/types/arweave-types';
 
 /**
  * An extension to {@link ContractDefinitionLoader} that makes use of

@@ -1,6 +1,5 @@
 /* eslint-disable */
 import Arweave from 'arweave';
-import Transaction from 'arweave/node/lib/transaction';
 import { WarpFetchWrapper } from '../../../core/WarpFetchWrapper';
 import { Signature, CustomSignature } from '../../../contract/Signature';
 import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
@@ -18,6 +17,7 @@ import {
 } from '../CreateContract';
 import { SourceData, SourceImpl } from './SourceImpl';
 import { Buffer } from 'warp-isomorphic';
+import {Transaction} from "../../../utils/types/arweave-types";
 
 export class DefaultCreateContract implements CreateContract {
   private readonly logger = LoggerFactory.INST.create('DefaultCreateContract');

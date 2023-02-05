@@ -30,9 +30,9 @@ import { SortKeyCache } from '../cache/SortKeyCache';
 import { ContractDefinition, SrcCache } from './ContractDefinition';
 import { CustomSignature } from '../contract/Signature';
 import { SourceData } from '../contract/deploy/impl/SourceImpl';
-import Transaction from 'arweave/node/lib/transaction';
 import { DEFAULT_LEVEL_DB_LOCATION } from './WarpFactory';
 import { LevelDbCache } from '../cache/impl/LevelDbCache';
+import { Transaction } from '../utils/types/arweave-types';
 
 export type WarpEnvironment = 'local' | 'testnet' | 'mainnet' | 'custom';
 export type KVStorageFactory = (contractTxId: string) => SortKeyCache<any>;

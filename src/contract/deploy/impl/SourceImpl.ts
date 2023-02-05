@@ -10,9 +10,9 @@ import { Source } from '../Source';
 import { Buffer } from 'warp-isomorphic';
 import { Warp } from '../../../core/Warp';
 import { Signature, CustomSignature } from '../../../contract/Signature';
-import Transaction from 'arweave/node/lib/transaction';
 import { WARP_GW_URL } from '../../../core/WarpFactory';
 import { TagsParser } from '../../../core/modules/impl/TagsParser';
+import {Transaction} from "../../../utils/types/arweave-types";
 
 const wasmTypeMapping: Map<number, string> = new Map([
   [1, 'assemblyscript'],

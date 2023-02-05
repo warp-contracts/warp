@@ -1,7 +1,7 @@
 import { ArWallet } from './CreateContract';
 import { SourceData } from './impl/SourceImpl';
 import { CustomSignature } from '../../contract/Signature';
-import Transaction from 'arweave/node/lib/transaction';
+import { Transaction } from '../../utils/types/arweave-types';
 export interface Source {
   /**
    * allows to create contract source

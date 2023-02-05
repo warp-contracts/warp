@@ -1,5 +1,5 @@
 import Arweave from 'arweave';
-import { JWKInterface } from 'arweave/node/lib/wallet';
+import { JWKInterface } from '../../utils/types/arweave-types';
 
 export type Wallet = {
   jwk: JWKInterface;
