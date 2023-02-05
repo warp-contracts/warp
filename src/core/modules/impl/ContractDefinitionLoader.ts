@@ -1,5 +1,4 @@
 import Arweave from 'arweave';
-import Transaction from 'arweave/node/lib/transaction';
 import { ContractType } from '../../../contract/deploy/CreateContract';
 import { ContractDefinition, ContractSource, ContractCache, SrcCache } from '../../../core/ContractDefinition';
 import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
@@ -12,6 +11,7 @@ import { TagsParser } from './TagsParser';
 import { WasmSrc } from './wasm/WasmSrc';
 import { WarpEnvironment } from '../../Warp';
 import { SortKeyCache } from '../../../cache/SortKeyCache';
+import { Transaction } from '../../../utils/types/arweave-types';
 
 const supportedSrcContentTypes = ['application/javascript', 'application/wasm'];
 

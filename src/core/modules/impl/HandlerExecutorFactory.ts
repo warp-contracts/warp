@@ -17,10 +17,14 @@ import { JsHandlerApi } from './handler/JsHandlerApi';
 import { WasmHandlerApi } from './handler/WasmHandlerApi';
 import { normalizeContractSource } from './normalize-source';
 import { MemCache } from '../../../cache/impl/MemCache';
-import BigNumber from '../../../legacy/bignumber';
 import { Warp } from '../../Warp';
 import { isBrowser } from '../../../utils/utils';
 import { Buffer } from 'warp-isomorphic';
+
+// 'require' to fix esbuild adding same lib in both cjs and esm format
+// https://github.com/evanw/esbuild/issues/1950
+// eslint-disable-next-line
+const BigNumber = require('bignumber.js');
 
 export class ContractError extends Error {
   constructor(message, readonly subtype?: string) {

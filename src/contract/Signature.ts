@@ -1,6 +1,6 @@
-import Transaction from 'arweave/node/lib/transaction';
 import { Warp } from '../core/Warp';
 import { ArWallet } from './deploy/CreateContract';
+import { Transaction } from '../utils/types/arweave-types';
 
 export type SignatureType = 'arweave' | 'ethereum';
 export type SigningFunction = (tx: Transaction) => Promise<void>;

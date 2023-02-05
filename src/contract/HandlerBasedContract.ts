@@ -1,4 +1,3 @@
-import { TransactionStatusResponse } from 'arweave/node/transactions';
 import stringify from 'safe-stable-stringify';
 import * as crypto from 'crypto';
 import { SortKeyCacheResult } from '../cache/SortKeyCache';
@@ -31,6 +30,7 @@ import { ContractDefinition } from '../core/ContractDefinition';
 import { EvaluationOptionsEvaluator } from './EvaluationOptionsEvaluator';
 import { WarpFetchWrapper } from '../core/WarpFetchWrapper';
 import { Mutex } from 'async-mutex';
+import { TransactionStatusResponse } from '../utils/types/arweave-types';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style

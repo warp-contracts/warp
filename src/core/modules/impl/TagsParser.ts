@@ -1,7 +1,7 @@
-import Transaction from 'arweave/node/lib/transaction';
 import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
 import { GQLNodeInterface, GQLTagInterface } from '../../../legacy/gqlResult';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { Transaction } from '../../../utils/types/arweave-types';
 
 /**
  * A class that is responsible for retrieving "input" tag from the interaction transaction.
