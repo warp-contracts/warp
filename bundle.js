@@ -24,17 +24,17 @@ const runBuild = async () => {
   const result = await build({
     ...buildConfig,
     minify: true,
-    metafile: true,
+    // metafile: true,
     outfile: './bundles/web.bundle.min.js'
   }).catch((e) => {
     console.log(e);
     process.exit(1);
   });
 
-  fs.writeFileSync('metadata.json', JSON.stringify({
+  /*fs.writeFileSync('metadata.json', JSON.stringify({
     inputs: result.metafile.inputs,
     outputs: result.metafile.outputs
-  }));
+  }));*/
 
   console.log('Building web bundle iife.');
   await build({
