@@ -26,7 +26,6 @@ import { ArTransfer, ArWallet, emptyTransfer, Tags } from './deploy/CreateContra
 import { InnerWritesEvaluator } from './InnerWritesEvaluator';
 import { generateMockVrf } from '../utils/vrf';
 import { Signature, CustomSignature } from './Signature';
-import { ContractDefinition } from '../core/ContractDefinition';
 import { EvaluationOptionsEvaluator } from './EvaluationOptionsEvaluator';
 import { WarpFetchWrapper } from '../core/WarpFetchWrapper';
 import { Mutex } from 'async-mutex';
