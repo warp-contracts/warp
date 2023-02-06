@@ -3,7 +3,6 @@ import { ContractDefinition } from '../../../../core/ContractDefinition';
 import { ExecutionContext } from '../../../../core/ExecutionContext';
 import { EvalStateResult } from '../../../../core/modules/StateEvaluator';
 import { SmartWeaveGlobal } from '../../../../legacy/smartweave-global';
-import stringify from 'safe-stable-stringify';
 import { InteractionData, InteractionResult } from '../HandlerExecutorFactory';
 import { AbstractContractHandler } from './AbstractContractHandler';
 
@@ -80,17 +79,8 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
 
   initState(state: State): void {
     switch (this.contractDefinition.srcWasmLang) {
-      case 'assemblyscript': {
-        const statePtr = this.wasmExports.__newString(stringify(state));
-        this.wasmExports.initState(statePtr);
-        break;
-      }
       case 'rust': {
         this.wasmExports.initState(state);
-        break;
-      }
-      case 'go': {
-        this.wasmExports.initState(stringify(state));
         break;
       }
       default: {
@@ -101,13 +91,6 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
 
   private async doHandle(action: any): Promise<any> {
     switch (this.contractDefinition.srcWasmLang) {
-      case 'assemblyscript': {
-        const actionPtr = this.wasmExports.__newString(stringify(action.input));
-        const resultPtr = this.wasmExports.handle(actionPtr);
-        const result = this.wasmExports.__getString(resultPtr);
-
-        return JSON.parse(result);
-      }
       case 'rust': {
         let handleResult = await this.wasmExports.handle(action.input);
         if (!handleResult) {
@@ -136,10 +119,6 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
           }
         }
       }
-      case 'go': {
-        const result = await this.wasmExports.handle(stringify(action.input));
-        return JSON.parse(result);
-      }
       default: {
         throw new Error(`Support for ${this.contractDefinition.srcWasmLang} not implemented yet.`);
       }
@@ -148,16 +127,8 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
 
   private doGetCurrentState(): State {
     switch (this.contractDefinition.srcWasmLang) {
-      case 'assemblyscript': {
-        const currentStatePtr = this.wasmExports.currentState();
-        return JSON.parse(this.wasmExports.__getString(currentStatePtr));
-      }
       case 'rust': {
         return this.wasmExports.currentState();
-      }
-      case 'go': {
-        const result = this.wasmExports.currentState();
-        return JSON.parse(result);
       }
       default: {
         throw new Error(`Support for ${this.contractDefinition.srcWasmLang} not implemented yet.`);

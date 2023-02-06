@@ -1,18 +1,17 @@
 /* eslint-disable */
 import metering from 'warp-wasm-metering';
-import { Go } from '../../../core/modules/impl/wasm/go-wasm-imports';
-import fs, { PathOrFileDescriptor } from 'fs';
-import { matchMutClosureDtor } from '../../../core/modules/impl/wasm/wasm-bindgen-tools';
-import { ArWallet, ContractType } from '../CreateContract';
-import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
-import { LoggerFactory } from '../../../logging/LoggerFactory';
-import { Source } from '../Source';
-import { Buffer } from 'warp-isomorphic';
-import { Warp } from '../../../core/Warp';
-import { Signature, CustomSignature } from '../../../contract/Signature';
-import { WARP_GW_URL } from '../../../core/WarpFactory';
-import { TagsParser } from '../../../core/modules/impl/TagsParser';
-import { Transaction } from '../../../utils/types/arweave-types';
+import fs, {PathOrFileDescriptor} from 'fs';
+import {matchMutClosureDtor} from '../../../core/modules/impl/wasm/wasm-bindgen-tools';
+import {ArWallet, ContractType} from '../CreateContract';
+import {SmartWeaveTags} from '../../../core/SmartWeaveTags';
+import {LoggerFactory} from '../../../logging/LoggerFactory';
+import {Source} from '../Source';
+import {Buffer} from 'warp-isomorphic';
+import {Warp} from '../../../core/Warp';
+import {CustomSignature, Signature} from '../../../contract/Signature';
+import {WARP_GW_URL} from '../../../core/WarpFactory';
+import {TagsParser} from '../../../core/modules/impl/TagsParser';
+import {Transaction} from '../../../utils/types/arweave-types';
 
 const wasmTypeMapping: Map<number, string> = new Map([
   [1, 'assemblyscript'],
@@ -32,12 +31,13 @@ export class SourceImpl implements Source {
   private readonly logger = LoggerFactory.INST.create('Source');
   private signature: Signature;
 
-  constructor(private readonly warp: Warp) {}
+  constructor(private readonly warp: Warp) {
+  }
 
   async createSourceTx(sourceData: SourceData, wallet: ArWallet | CustomSignature): Promise<Transaction> {
     this.logger.debug('Creating new contract source');
 
-    const { src, wasmSrcCodeDir, wasmGlueCode } = sourceData;
+    const {src, wasmSrcCodeDir, wasmGlueCode} = sourceData;
 
     this.signature = new Signature(this.warp, wallet);
     const signer = this.signature.signer;
@@ -60,30 +60,25 @@ export class SourceImpl implements Source {
       const moduleImports = WebAssembly.Module.imports(wasmModule);
       let lang: number;
 
-      if (this.isGoModule(moduleImports)) {
-        const go = new Go(null);
-        const module = new WebAssembly.Instance(wasmModule, go.importObject);
-        // DO NOT await here!
-        go.run(module);
-        lang = go.exports.lang();
-        wasmVersion = go.exports.version();
-      } else {
-        // @ts-ignore
-        const module: WebAssembly.Instance = await WebAssembly.instantiate(src, dummyImports(moduleImports));
-        // @ts-ignore
-        if (!module.instance.exports.lang) {
-          throw new Error(`No info about source type in wasm binary. Did you forget to export "lang" function?`);
-        }
-        // @ts-ignore
-        lang = module.instance.exports.lang();
-        // @ts-ignore
-        wasmVersion = module.instance.exports.version();
-        if (!wasmTypeMapping.has(lang)) {
-          throw new Error(`Unknown wasm source type ${lang}`);
-        }
+
+      // @ts-ignore
+      const module: WebAssembly.Instance = await WebAssembly.instantiate(src, dummyImports(moduleImports));
+      // @ts-ignore
+      if (!module.instance.exports.lang) {
+        throw new Error(`No info about source type in wasm binary. Did you forget to export "lang" function?`);
+      }
+      // @ts-ignore
+      lang = module.instance.exports.lang();
+      // @ts-ignore
+      wasmVersion = module.instance.exports.version();
+      if (!wasmTypeMapping.has(lang)) {
+        throw new Error(`Unknown wasm source type ${lang}`);
       }
 
       wasmLang = wasmTypeMapping.get(lang);
+      if (wasmLang != 'rust') {
+        throw new Error('Support for for Go and AssemblyScript contract has been dropped. See https://github.com/warp-contracts/warp/issues/348');
+      }
       if (wasmSrcCodeDir == null) {
         throw new Error('No path to original wasm contract source code');
       }
@@ -91,20 +86,18 @@ export class SourceImpl implements Source {
       const zippedSourceCode = await this.zipContents(wasmSrcCodeDir);
       data.push(zippedSourceCode);
 
-      if (wasmLang == 'rust') {
-        if (!wasmGlueCode) {
-          throw new Error('No path to generated wasm-bindgen js code');
-        }
-        const wasmBindgenSrc = fs.readFileSync(wasmGlueCode, 'utf-8');
-        const dtor = matchMutClosureDtor(wasmBindgenSrc);
-        metadata['dtor'] = parseInt(dtor);
-        data.push(Buffer.from(wasmBindgenSrc));
+      if (!wasmGlueCode) {
+        throw new Error('No path to generated wasm-bindgen js code');
       }
+      const wasmBindgenSrc = fs.readFileSync(wasmGlueCode, 'utf-8');
+      const dtor = matchMutClosureDtor(wasmBindgenSrc);
+      metadata['dtor'] = parseInt(dtor);
+      data.push(Buffer.from(wasmBindgenSrc));
     }
 
     const allData = contractType == 'wasm' ? this.joinBuffers(data) : src;
 
-    srcTx = await this.warp.arweave.createTransaction({ data: allData });
+    srcTx = await this.warp.arweave.createTransaction({data: allData});
 
     srcTx.addTag(SmartWeaveTags.APP_NAME, 'SmartWeaveContractSource');
     // TODO: version should be taken from the current package.json version.
@@ -167,12 +160,6 @@ export class SourceImpl implements Source {
     }
   }
 
-  private isGoModule(moduleImports: WebAssembly.ModuleImportDescriptor[]) {
-    return moduleImports.some((moduleImport) => {
-      return moduleImport.module == 'env' && moduleImport.name.startsWith('syscall/js');
-    });
-  }
-
   private joinBuffers(buffers: Buffer[]): Buffer {
     const length = buffers.length;
     const result = [];
@@ -194,7 +181,7 @@ export class SourceImpl implements Source {
       incrementAmount: 1000 * 1024 // grow by 1000 kilobytes each time buffer overflows.
     });
     const archive = archiver('zip', {
-      zlib: { level: 9 } // Sets the compression level.
+      zlib: {level: 9} // Sets the compression level.
     });
     archive.on('error', function (err: any) {
       throw err;
@@ -210,7 +197,7 @@ export class SourceImpl implements Source {
   private async postSource(srcTx: Transaction = null): Promise<any> {
     const response = await fetch(`${WARP_GW_URL}/gateway/sources/deploy`, {
       method: 'POST',
-      body: JSON.stringify({ srcTx }),
+      body: JSON.stringify({srcTx}),
       headers: {
         'Accept-Encoding': 'gzip, deflate, br',
         'Content-Type': 'application/json',
@@ -235,7 +222,8 @@ function dummyImports(moduleImports: WebAssembly.ModuleImportDescriptor[]) {
     if (!Object.prototype.hasOwnProperty.call(imports, moduleImport.module)) {
       imports[moduleImport.module] = {};
     }
-    imports[moduleImport.module][moduleImport.name] = function () {};
+    imports[moduleImport.module][moduleImport.name] = function () {
+    };
   });
 
   return imports;
