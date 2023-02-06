@@ -1,8 +1,5 @@
 import Arweave from 'arweave';
-import loader from '@assemblyscript/loader';
-import { asWasmImports } from './wasm/as-wasm-imports';
 import { rustWasmImports } from './wasm/rust-wasm-imports';
-import { Go } from './wasm/go-wasm-imports';
 import * as vm2 from 'vm2';
 import { WarpCache } from '../../../cache/WarpCache';
 import { ContractDefinition } from '../../../core/ContractDefinition';
@@ -82,16 +79,6 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
       const wasmResponse = generateResponse(contractDefinition.srcBinary);
 
       switch (contractDefinition.srcWasmLang) {
-        case 'assemblyscript': {
-          const wasmInstanceExports = {
-            exports: null
-          };
-          wasmInstance = await loader.instantiateStreaming(wasmResponse, asWasmImports(swGlobal, wasmInstanceExports));
-          // note: well, exports are required by some imports
-          // - e.g. those that use wasmModule.exports.__newString underneath (like Block.indep_hash)
-          wasmInstanceExports.exports = wasmInstance.exports;
-          break;
-        }
         case 'rust': {
           const wasmInstanceExports = {
             exports: null,
@@ -150,21 +137,6 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
                 wasmInstance.exports[moduleExport];
             }
           });
-          break;
-        }
-        case 'go': {
-          const go = new Go(swGlobal);
-          go.importObject.metering = {
-            usegas: function (value) {
-              swGlobal.useGas(value);
-            }
-          };
-          const wasmModule = await getWasmModule(wasmResponse, contractDefinition.srcBinary);
-          wasmInstance = await WebAssembly.instantiate(wasmModule, go.importObject);
-
-          // nope - DO NOT await here!
-          go.run(wasmInstance);
-          jsExports = go.exports;
           break;
         }
 

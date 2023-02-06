@@ -6,8 +6,6 @@ import { SmartWeaveGlobal } from '../../../../legacy/smartweave-global';
 import { deepCopy, timeout } from '../../../../utils/utils';
 import { InteractionData, InteractionResult } from '../HandlerExecutorFactory';
 import { AbstractContractHandler } from './AbstractContractHandler';
-import { Level } from 'level';
-import { DEFAULT_LEVEL_DB_LOCATION } from '../../../WarpFactory';
 
 export class JsHandlerApi<State> extends AbstractContractHandler<State> {
   constructor(

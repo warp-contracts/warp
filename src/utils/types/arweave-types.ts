@@ -164,7 +164,7 @@ export class Transaction extends BaseObject implements TransactionInterface {
   }
 
   public async prepareChunks(data: Uint8Array) {
-    throw new Error('Should not be called, use arweave-js version');
+    throw new Error('Should not be called, use arweave-js version.');
   }
 
   // Returns a chunk in a format suitable for posting to /chunk.
@@ -186,7 +186,7 @@ export class Transaction extends BaseObject implements TransactionInterface {
   }
 
   public async getSignatureData(): Promise<Uint8Array> {
-    throw new Error('Should not be called, use arweave-js');
+    throw new Error('Should not be called, use arweave-js version.');
   }
 }
 
