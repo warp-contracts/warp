@@ -134,12 +134,16 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance, dtorVal
       }, arguments);
     },
     __wbg_readContractState: function (arg0, arg1) {
-      var ret = rawImports.SmartWeave.readContractState(getStringFromWasm0(arg0, arg1));
-      return addHeapObject(ret);
+      return handleError(function (arg0, arg1) {
+        var ret = rawImports.SmartWeave.readContractState(getStringFromWasm0(arg0, arg1));
+        return addHeapObject(ret);
+      }, arguments)
     },
     __wbg_viewContractState: function (arg0, arg1, arg2) {
-      var ret = rawImports.SmartWeave.viewContractState(getStringFromWasm0(arg0, arg1), takeObject(arg2));
-      return addHeapObject(ret);
+      return handleError(function (arg0, arg1, arg2) {
+        var ret = rawImports.SmartWeave.viewContractState(getStringFromWasm0(arg0, arg1), takeObject(arg2));
+        return addHeapObject(ret);
+      }, arguments)
     },
     __wbg_caller: function (arg0) {
       var ret = rawImports.SmartWeave.caller();
@@ -153,8 +157,10 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance, dtorVal
       getInt32Memory0()[arg0 / 4 + 0] = ptr0;
     },
     __wbg_write: function (arg0, arg1, arg2) {
-      var ret = rawImports.SmartWeave.write(getStringFromWasm0(arg0, arg1), takeObject(arg2));
-      return addHeapObject(ret);
+      return handleError(function (arg0, arg1, arg2) {
+        var ret = rawImports.SmartWeave.write(getStringFromWasm0(arg0, arg1), takeObject(arg2));
+        return addHeapObject(ret);
+      }, arguments)
     },
     __wbg_refreshState: function (arg0, arg1) {
       // TODO
