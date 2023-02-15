@@ -46,6 +46,7 @@ export class ContractCache<State> {
     this.txId = value.txId;
     this.srcTxId = value.srcTxId;
     this.initState = value.initState;
+    this.manifest = value.manifest;
     this.minFee = value.minFee;
     this.owner = value.owner;
     this.contractType = value.contractType;
