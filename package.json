@@ -79,7 +79,8 @@
     "unzipit": "^1.4.0",
     "vm2": "3.9.13",
     "warp-isomorphic": "1.0.0",
-    "warp-wasm-metering": "1.0.1"
+    "warp-wasm-metering": "1.0.1", 
+    "jsonwebtoken": "^8.5.1"
   },
   "devDependencies": {
     "@types/cheerio": "^0.22.30",
