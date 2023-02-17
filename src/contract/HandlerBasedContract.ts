@@ -34,7 +34,6 @@ import { ArTransfer, ArWallet, emptyTransfer, Tags } from './deploy/CreateContra
 import { InnerWritesEvaluator } from './InnerWritesEvaluator';
 import { generateMockVrf } from '../utils/vrf';
 import { Signature, CustomSignature } from './Signature';
-import { ContractDefinition } from '../core/ContractDefinition';
 import { EvaluationOptionsEvaluator } from './EvaluationOptionsEvaluator';
 import { WarpFetchWrapper } from '../core/WarpFetchWrapper';
 
@@ -463,7 +462,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     benchmark.reset();
 
     const evolvedSrcTxId = Evolve.evolvedSrcTxId(cachedState?.cachedValue?.state);
-    let handler, contractDefinition, sortedInteractions;
+    let handler, contractDefinition, sortedInteractions, contractEvaluationOptions;
 
     this.logger.debug('Cached state', cachedState, upToSortKey);
 
@@ -510,21 +509,17 @@ export class HandlerBasedContract<State> implements Contract<State> {
         this._rootSortKey = sortedInteractions[sortedInteractions.length - 1].sortKey;
       }
     }
-    if (this.isRoot()) {
-      this._eoEvaluator = new EvaluationOptionsEvaluator(
-        this.evaluationOptions(),
-        contractDefinition.manifest?.evaluationOptions
-      );
-    }
-    const contractEvaluationOptions = this.isRoot()
-      ? this._eoEvaluator.rootOptions
-      : this.getEoEvaluator().forForeignContract(contractDefinition.manifest?.evaluationOptions);
-    if (!this.isRoot() && contractEvaluationOptions.useKVStorage) {
-      throw new Error('Foreign read/writes cannot be performed on kv storage contracts');
-    }
-    this.ecLogger.debug(`Evaluation options ${contractTxId}:`, contractEvaluationOptions);
 
     if (contractDefinition) {
+      if (!contractEvaluationOptions) {
+        contractEvaluationOptions = this.resolveEvaluationOptions(contractDefinition.manifest?.evaluationOptions);
+      }
+
+      if (!this.isRoot() && contractEvaluationOptions.useKVStorage) {
+        throw new Error('Foreign read/writes cannot be performed on kv storage contracts');
+      }
+      this.ecLogger.debug(`Evaluation options ${contractTxId}:`, contractEvaluationOptions);
+
       handler = (await this.warp.executorFactory.create(
         contractDefinition,
         contractEvaluationOptions,
@@ -537,11 +532,19 @@ export class HandlerBasedContract<State> implements Contract<State> {
       contract: this,
       contractDefinition,
       sortedInteractions,
-      evaluationOptions: contractEvaluationOptions,
+      evaluationOptions: contractEvaluationOptions || this.evaluationOptions(),
       handler,
       cachedState,
       requestedSortKey: upToSortKey
     };
+  }
+
+  private resolveEvaluationOptions(rootManifestEvalOptions: EvaluationOptions) {
+    if (this.isRoot()) {
+      this._eoEvaluator = new EvaluationOptionsEvaluator(this.evaluationOptions(), rootManifestEvalOptions);
+      return this._eoEvaluator.rootOptions;
+    }
+    return this.getRootEoEvaluator().forForeignContract(rootManifestEvalOptions);
   }
 
   private getToSortKey(upToSortKey?: string) {
@@ -804,16 +807,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return this._rootSortKey;
   }
 
-  private getRoot(): Contract<unknown> {
-    let result: Contract = this;
-    while (!result.isRoot()) {
-      result = result.parent();
-    }
-
-    return result;
-  }
-
-  getEoEvaluator(): EvaluationOptionsEvaluator {
+  getRootEoEvaluator(): EvaluationOptionsEvaluator {
     const root = this.getRoot() as HandlerBasedContract<unknown>;
     return root._eoEvaluator;
   }
@@ -846,5 +840,14 @@ export class HandlerBasedContract<State> implements Contract<State> {
     } finally {
       await storage.close();
     }
+  }
+
+  private getRoot(): HandlerBasedContract<unknown> {
+    let result: Contract = this;
+    while (!result.isRoot()) {
+      result = result.parent();
+    }
+
+    return result as HandlerBasedContract<unknown>;
   }
 }
