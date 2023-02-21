@@ -392,12 +392,12 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     state: EvalStateResult<State>
   ): Promise<void>;
 
-  abstract syncState(
+  abstract syncState<State>(
     contractTxId: string,
     sortKey: string,
-    state: unknown,
+    state: State,
     validity: Record<string, boolean>
-  ): Promise<void>;
+  ): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   abstract dumpCache(): Promise<any>;

@@ -21,6 +21,18 @@ export interface WriteInteractionResponse {
   originalTxId: string;
 }
 
+export interface DREContractStatusResponse<State> {
+  status: string;
+  contractTxId: string;
+  state: State;
+  validity: Record<string, boolean>;
+  errorMessages: Record<string, string>;
+  sortKey: string;
+  timestamp: string;
+  signature: string;
+  stateHash: string;
+}
+
 export type WarpOptions = {
   vrf?: boolean;
   disableBundling?: boolean;
