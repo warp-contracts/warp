@@ -211,7 +211,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     input: Input,
     interactionTx: GQLNodeInterface
   ): Promise<InteractionResult<State, View>> {
-    this.logger.info(`View state for ${this._contractTxId}`, interactionTx);
+    this.logger.info(`View state for ${this._contractTxId}`);
     return await this.doApplyInputOnTx<Input, View>(input, interactionTx);
   }
 
