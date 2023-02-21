@@ -7,9 +7,10 @@ import fs from "fs";
 const logger = LoggerFactory.INST.create('Contract');
 
 //LoggerFactory.use(new TsLogFactory());
-LoggerFactory.INST.logLevel('error');
+//LoggerFactory.INST.logLevel('error');
 
-LoggerFactory.INST.logLevel('error', 'CacheableStateEvaluator');
+LoggerFactory.INST.logLevel('debug', 'DefaultStateEvaluator');
+LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
 
 async function main() {
   printTestInfo();
@@ -24,62 +25,15 @@ async function main() {
 
   try {
     const contract = warp
-      .contract("OrO8n453N6bx921wtsEs-0OCImBLCItNU5oSbFKlFuU")
+      .contract("f86Qw3vp6TlgxI3mABFnWDQNqR8mPVkVTBN04hwywqc")
     const cacheResult = await contract
       .setEvaluationOptions({
         allowBigInt: true,
-        internalWrites: true,
-        unsafeClient: "allow",
+        useVM2: true,
       })
-      .readState('000000910492,1649597937854,be3250a325c520e72f6301ea7eee0e554d54b3c74778c11a7af72dd5988049dd');
+      .readState(/*'000001110120,1675251724861,1e1115cbd63aaf205584e2dcb2ca669b40409a0392e0ebf15ff7efac1ecbb24b'*/);
     console.log(cacheResult.sortKey);
-
-    const result2 = await contract.readStateFor('000000910492,1649597937854,be3250a325c520e72f6301ea7eee0e554d54b3c74778c11a7af72dd5988049dd',
-      [{
-        "id": "YOIBrNDTwRoZRmlfTZhyjg7ygdjzqV9bZb6pZmXQzeE",
-        "fee": {
-          "winston": "62411260"
-        },
-        "tags": [
-          {
-            "name": "App-Name",
-            "value": "SmartWeaveAction"
-          },
-          {
-            "name": "App-Version",
-            "value": "0.3.0"
-          },
-          {
-            "name": "SDK",
-            "value": "RedStone"
-          },
-          {
-            "name": "Contract",
-            "value": "OrO8n453N6bx921wtsEs-0OCImBLCItNU5oSbFKlFuU"
-          },
-          {
-            "name": "Input",
-            "value": "{\"function\":\"registerProvider\",\"data\":{\"provider\":{\"adminsPool\":[\"saRRtnBNekVmBvx_3vNqQ2n2zhG7v3KCGsHbKioS5Sc\"],\"profile\":{\"name\":\"RedStone Avalanche prod 5\",\"description\":\"Most popular tokens from the Avalanche ecosystem\",\"url\":\"https://redstone.finance/\",\"imgUrl\":\"https://redstone.finance/assets/img/redstone-logo-full.svg\"},\"manifests\":[{\"changeMessage\":\"initial manifest\",\"lockedHours\":0,\"manifestTxId\":\"y7ppr6m9MuP65Fiivd9CX84qcPLoYBMifUrFK3jXw2k\"}]}}}"
-          }
-        ],
-        "block": {
-          "id": "fZsSqrjTNX3IDVkDuCVX512ZnJ3HU9jjZ9Dg_7b471BWeT1sJ83c7RDMWCWd-1Mt",
-          "height": 910563,
-          "timestamp": 1649606400
-        },
-        "owner": {
-          "address": "saRRtnBNekVmBvx_3vNqQ2n2zhG7v3KCGsHbKioS5Sc"
-        },
-        "source": "redstone-sequencer",
-        "sortKey": "000000910564,1649606636671,94a0b260d85920f86100fb200c60307ea0b30b70b4d2970049a567f53cd6f9c0",
-        "quantity": {
-          "winston": "0"
-        },
-        "recipient": ""
-      } as any]
-    )
-
-    console.log(result2.sortKey);
+    console.dir(cacheResult.cachedValue.state, {depth: null});
   } catch (e) {
     console.error(e);
   }
