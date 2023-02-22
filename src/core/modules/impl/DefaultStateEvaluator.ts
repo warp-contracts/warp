@@ -290,10 +290,12 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       // if that's the end of the root contract's interaction - commit all the uncommitted states to cache.
       if (contract.isRoot()) {
         // update the uncommitted state of the root contract
-        contract.setUncommittedState(contract.txId(), lastConfirmedTxState.state);
-        await contract.commitStates(missingInteraction);
+        if (lastConfirmedTxState) {
+          contract.setUncommittedState(contract.txId(), lastConfirmedTxState.state);
+          await contract.commitStates(missingInteraction);
+        }
       } else {
-        // if that's a inner contract call - only update the state in the uncommitted states
+        // if that's an inner contract call - only update the state in the uncommitted states
         contract.setUncommittedState(contract.txId(), new EvalStateResult(currentState, validity, errorMessages));
       }
     }
