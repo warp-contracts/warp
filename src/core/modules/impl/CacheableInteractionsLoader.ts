@@ -1,13 +1,15 @@
-import { GQLNodeInterface } from '../../../legacy/gqlResult';
-import { LoggerFactory } from '../../../logging/LoggerFactory';
-import { InteractionsLoader, GW_TYPE } from '../InteractionsLoader';
-import { EvaluationOptions } from '../StateEvaluator';
+import {GQLNodeInterface} from '../../../legacy/gqlResult';
+import {LoggerFactory} from '../../../logging/LoggerFactory';
+import {GW_TYPE, InteractionsLoader} from '../InteractionsLoader';
+import {EvaluationOptions} from '../StateEvaluator';
+import {genesisSortKey} from "./LexicographicalInteractionsSorter";
 
 export class CacheableInteractionsLoader implements InteractionsLoader {
   private readonly logger = LoggerFactory.INST.create('CacheableInteractionsLoader');
   private readonly interactionsCache: Map<string, GQLNodeInterface[]> = new Map();
 
-  constructor(private readonly delegate: InteractionsLoader) {}
+  constructor(private readonly delegate: InteractionsLoader) {
+  }
 
   async load(
     contractTxId: string,
@@ -31,19 +33,19 @@ export class CacheableInteractionsLoader implements InteractionsLoader {
       return interactions;
     } else {
       const cachedInteractions = this.interactionsCache.get(contractTxId);
-      if (cachedInteractions?.length) {
-        const lastCachedKey = cachedInteractions[cachedInteractions.length - 1].sortKey;
-        if (lastCachedKey.localeCompare(toSortKey) < 0) {
-          const missingInteractions = await this.delegate.load(
-            contractTxId,
-            lastCachedKey,
-            toSortKey,
-            evaluationOptions
-          );
-          const allInteractions = cachedInteractions.concat(missingInteractions);
-          this.interactionsCache.set(contractTxId, allInteractions);
-          return allInteractions;
-        }
+      const lastCachedKey = cachedInteractions?.length
+        ? cachedInteractions[cachedInteractions.length - 1].sortKey
+        : genesisSortKey;
+      if (lastCachedKey.localeCompare(toSortKey) < 0) {
+        const missingInteractions = await this.delegate.load(
+          contractTxId,
+          lastCachedKey,
+          toSortKey,
+          evaluationOptions
+        );
+        const allInteractions = cachedInteractions.concat(missingInteractions);
+        this.interactionsCache.set(contractTxId, allInteractions);
+        return allInteractions;
       }
 
       return cachedInteractions;
