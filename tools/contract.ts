@@ -11,6 +11,7 @@ const logger = LoggerFactory.INST.create('Contract');
 
 LoggerFactory.INST.logLevel('debug', 'DefaultStateEvaluator');
 LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
+LoggerFactory.INST.logLevel('debug', 'WarpGatewayInteractionsLoader');
 
 async function main() {
   printTestInfo();

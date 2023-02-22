@@ -23,8 +23,10 @@ export class CacheableInteractionsLoader implements InteractionsLoader {
 
     if (!this.interactionsCache.has(contractTxId)) {
       const interactions = await this.delegate.load(contractTxId, fromSortKey, toSortKey, evaluationOptions);
-      if (interactions.length) {
+      if (interactions?.length) {
         this.interactionsCache.set(contractTxId, interactions);
+      } else {
+        this.interactionsCache.set(contractTxId, []);
       }
       return interactions;
     } else {

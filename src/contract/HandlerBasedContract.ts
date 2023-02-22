@@ -25,7 +25,7 @@ import { BenchmarkStats, Contract, InnerCallData, WriteInteractionOptions, Write
 import { ArTransfer, ArWallet, emptyTransfer, Tags } from './deploy/CreateContract';
 import { InnerWritesEvaluator } from './InnerWritesEvaluator';
 import { generateMockVrf } from '../utils/vrf';
-import { Signature, CustomSignature } from './Signature';
+import { CustomSignature, Signature } from './Signature';
 import { EvaluationOptionsEvaluator } from './EvaluationOptionsEvaluator';
 import { WarpFetchWrapper } from '../core/WarpFetchWrapper';
 import { Mutex } from 'async-mutex';
@@ -507,6 +507,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
         : await interactionsLoader.load(
             contractTxId,
             cachedState?.sortKey,
+            // (1) we want to eagerly load dependant contract interactions and put them
+            // in the interactions' loader cache
+            // see: https://github.com/warp-contracts/warp/issues/198
             this.getToSortKey(upToSortKey),
             contractEvaluationOptions
           );
