@@ -30,6 +30,7 @@ import { EvaluationOptionsEvaluator } from './EvaluationOptionsEvaluator';
 import { WarpFetchWrapper } from '../core/WarpFetchWrapper';
 import { Mutex } from 'async-mutex';
 import { TransactionStatusResponse } from '../utils/types/arweave-types';
+import { Crypto } from 'warp-isomorphic';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -505,11 +506,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
       sortedInteractions = interactions
         ? interactions
         : await interactionsLoader.load(
-            contractTxId,
-            cachedState?.sortKey,
-            this.getToSortKey(upToSortKey),
-            contractEvaluationOptions
-          );
+          contractTxId,
+          cachedState?.sortKey,
+          this.getToSortKey(upToSortKey),
+          contractEvaluationOptions
+        );
 
       // (2) ...but we still need to return only interactions up to original "upToSortKey"
       if (cachedState?.sortKey) {
@@ -792,16 +793,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return this._benchmarkStats;
   }
 
-  stateHash(state: State): string {
+  async stateHash(state: State): Promise<string> {
     const jsonState = stringify(state);
 
-    // note: cannot reuse:
-    // "The Hash object can not be used again after hash.digest() method has been called.
-    // Multiple calls will cause an error to be thrown."
-    const hash = crypto.createHash('sha256');
-    hash.update(jsonState);
+    const hash = await Crypto.subtle.digest('SHA-256', Buffer.from(jsonState, 'utf-8'));
 
-    return hash.digest('hex');
+    return Buffer.from(hash).toString('hex');
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- params can be anything

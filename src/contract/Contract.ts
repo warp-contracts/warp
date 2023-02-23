@@ -203,7 +203,7 @@ export interface Contract<State = unknown> {
   /**
    * calculates state hash using stable stringify
    */
-  stateHash(state: State): string;
+  stateHash(state: State): Promise<string>;
 
   /**
    * this method allows to sync the state of the local SDK state with the state provided by an external endpoint;

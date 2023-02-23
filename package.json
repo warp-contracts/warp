@@ -11,7 +11,7 @@
   },
   "sideEffects": false,
   "engines": {
-    "node": ">=16.5"
+    "node": ">=16.8"
   },
   "scripts": {
     "build:cjs": "tsc -b tsconfig.json",
@@ -78,7 +78,7 @@
     "stream-buffers": "^3.0.2",
     "unzipit": "^1.4.0",
     "vm2": "3.9.13",
-    "warp-isomorphic": "1.0.0",
+    "warp-isomorphic": "1.0.4",
     "warp-wasm-metering": "1.0.1"
   },
   "devDependencies": {

@@ -1,7 +1,6 @@
 /* eslint-disable */
 import copy from 'fast-copy';
 import { Buffer } from 'warp-isomorphic';
-import { randomUUID } from 'crypto';
 
 export const sleep = (ms: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -74,14 +73,6 @@ export function bufToBn(buf: Buffer) {
   });
 
   return BigInt('0x' + hex.join(''));
-}
-
-export function isomorphicRandomUUID() {
-  if (isBrowser() && self.crypto) {
-    return self.crypto.randomUUID();
-  } else {
-    return randomUUID();
-  }
 }
 
 export const isBrowser = new Function('try {return this===window;}catch(e){ return false;}');
