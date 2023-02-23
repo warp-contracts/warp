@@ -143,15 +143,17 @@ export class ContractDefinitionLoader implements DefinitionLoader {
     return 'arweave';
   }
 
-  setCache(cache: SortKeyCache<ContractDefinition<any>>): void {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  setCache(cache: SortKeyCache<ContractDefinition<unknown>>): void {
     throw new Error('No cache implemented for this loader');
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   setSrcCache(cache: SortKeyCache<SrcCache>): void {
     throw new Error('No cache implemented for this loader');
   }
 
-  getCache(): SortKeyCache<ContractCache<any>> {
+  getCache(): SortKeyCache<ContractCache<unknown>> {
     throw new Error('No cache implemented for this loader');
   }
 

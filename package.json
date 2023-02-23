@@ -22,7 +22,7 @@
     "build": "yarn run clean && yarn build:cjs && yarn build:mjs && yarn mjs:burn:in:hell && yarn build:types && yarn bundle",
     "format": "prettier --write 'src/**/*.ts'",
     "clean": "rimraf ./lib",
-    "lint": "eslint . --ext .ts",
+    "lint": "eslint . --ext .ts --max-warnings=0",
     "lint:fix": "eslint . --ext .ts --fix",
     "prettier:format": "prettier --config .prettierrc 'src/**/*.ts' --write",
     "prepublishOnly": "yarn lint",

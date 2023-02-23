@@ -12,7 +12,7 @@ import { DefinitionLoader } from '../DefinitionLoader';
 import { WasmSrc } from './wasm/WasmSrc';
 import { WarpEnvironment } from '../../Warp';
 import { TagsParser } from './TagsParser';
-import { CacheKey, SortKeyCache } from '../../../cache/SortKeyCache';
+import { CacheKey, SortKeyCache, SortKeyCacheResult } from '../../../cache/SortKeyCache';
 import { Transaction } from '../../../utils/types/arweave-types';
 
 /**
@@ -32,7 +32,7 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
   constructor(
     private readonly baseUrl: string,
     arweave: Arweave,
-    private definitionCache: SortKeyCache<ContractCache<any>>,
+    private definitionCache: SortKeyCache<ContractCache<unknown>>,
     private srcCache: SortKeyCache<SrcCache>,
     private readonly env: WarpEnvironment
   ) {
@@ -43,11 +43,13 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
   }
 
   async load<State>(contractTxId: string, evolvedSrcTxId?: string): Promise<ContractDefinition<State>> {
-    const result = await this.getFromCache(contractTxId, evolvedSrcTxId);
+    const result = await this.getFromCache<State>(contractTxId, evolvedSrcTxId);
     if (result) {
       this.rLogger.debug('WarpGatewayContractDefinitionLoader: Hit from cache!');
       // LevelDB serializes Buffer to an object with 'type' and 'data' fields
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (result.contractType == 'wasm' && (result.srcBinary as any).data) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         result.srcBinary = Buffer.from((result.srcBinary as any).data);
       }
       this.verifyEnv(result);
@@ -80,6 +82,7 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
           );
         });
       if (result.srcBinary != null && !(result.srcBinary instanceof Buffer)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         result.srcBinary = Buffer.from((result.srcBinary as any).data);
       }
       if (result.srcBinary) {
@@ -110,7 +113,7 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
     return 'warp';
   }
 
-  setCache(cache: SortKeyCache<ContractCache<any>>): void {
+  setCache(cache: SortKeyCache<ContractCache<unknown>>): void {
     this.definitionCache = cache;
   }
 
@@ -118,7 +121,7 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
     this.srcCache = cacheSrc;
   }
 
-  getCache(): SortKeyCache<ContractCache<any>> {
+  getCache(): SortKeyCache<ContractCache<unknown>> {
     return this.definitionCache;
   }
 
@@ -136,8 +139,8 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
   }
 
   // Gets ContractDefinition and ContractSource from two caches and returns a combined structure
-  private async getFromCache(contractTxId: string, srcTxId?: string): Promise<ContractDefinition<any> | null> {
-    const contract = await this.definitionCache.get(new CacheKey(contractTxId, 'cd'));
+  private async getFromCache<State>(contractTxId: string, srcTxId?: string): Promise<ContractDefinition<State> | null> {
+    const contract = await this.definitionCache.get(new CacheKey(contractTxId, 'cd')) as SortKeyCacheResult<ContractCache<State>>;
     if (!contract) {
       return null;
     }
@@ -150,7 +153,11 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
   }
 
   // Divides ContractDefinition into entries in two caches to avoid duplicates
-  private async putToCache(contractTxId: string, value: ContractDefinition<any>, srcTxId?: string): Promise<void> {
+  private async putToCache<State>(
+    contractTxId: string,
+    value: ContractDefinition<State>,
+    srcTxId?: string
+  ): Promise<void> {
     const src = new SrcCache(value);
     const contract = new ContractCache(value);
     await this.definitionCache.put({ key: contractTxId, sortKey: 'cd' }, contract);

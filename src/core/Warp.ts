@@ -35,7 +35,7 @@ import { LevelDbCache } from '../cache/impl/LevelDbCache';
 import { Transaction } from '../utils/types/arweave-types';
 
 export type WarpEnvironment = 'local' | 'testnet' | 'mainnet' | 'custom';
-export type KVStorageFactory = (contractTxId: string) => SortKeyCache<any>;
+export type KVStorageFactory = (contractTxId: string) => SortKeyCache<unknown>;
 
 /**
  * The Warp "motherboard" ;-).
@@ -128,7 +128,7 @@ export class Warp {
     return this;
   }
 
-  useContractCache(definition: SortKeyCache<ContractDefinition<any>>, src: SortKeyCache<SrcCache>): Warp {
+  useContractCache(definition: SortKeyCache<ContractDefinition<unknown>>, src: SortKeyCache<SrcCache>): Warp {
     this.definitionLoader.setSrcCache(src);
     this.definitionLoader.setCache(definition);
     return this;

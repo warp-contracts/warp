@@ -2,17 +2,16 @@ export const enum SmartWeaveErrorType {
   CONTRACT_NOT_FOUND = 'CONTRACT_NOT_FOUND'
 }
 
+type SmartWeaveErrorInfo = {
+  message?: string;
+  requestedTxId?: string;
+};
+
 export class SmartWeaveError extends Error {
   public readonly type: SmartWeaveErrorType;
-  public readonly otherInfo: any;
+  public readonly otherInfo: SmartWeaveErrorInfo;
 
-  constructor(
-    type: SmartWeaveErrorType,
-    optional: {
-      message?: string;
-      requestedTxId?: string;
-    } = {}
-  ) {
+  constructor(type: SmartWeaveErrorType, optional: SmartWeaveErrorInfo = {}) {
     if (optional.message) {
       super(optional.message);
     } else {

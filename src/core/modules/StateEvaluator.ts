@@ -68,13 +68,14 @@ export interface StateEvaluator {
   /**
    * allows to syncState with an external state source (like Warp Distributed Execution Network)
    */
-  syncState(contractTxId: string, sortKey: string, state: any, validity: any): Promise<void>;
+  syncState(contractTxId: string, sortKey: string, state: unknown, validity: Record<string, boolean>): Promise<void>;
 
   internalWriteState<State>(
     contractTxId: string,
     sortKey: string
   ): Promise<SortKeyCacheResult<EvalStateResult<State>> | null>;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   dumpCache(): Promise<any>;
 
   hasContractCached(contractTxId: string): Promise<boolean>;

@@ -13,7 +13,7 @@ export type ContractSource = {
   srcBinary: Buffer | null;
   srcWasmLang: string | null;
   contractType: ContractType;
-  srcTx: any;
+  srcTx: any; // eslint-disable-line @typescript-eslint/no-explicit-any
   metadata?: ContractMetadata;
 };
 
@@ -22,7 +22,7 @@ export class SrcCache {
   srcBinary: Buffer | null;
   srcWasmLang: string | null;
 
-  constructor(value: ContractDefinition<any>) {
+  constructor(value: ContractDefinition<unknown>) {
     this.src = value.src;
     this.srcBinary = value.srcBinary;
     this.srcWasmLang = value.srcWasmLang;
@@ -38,8 +38,8 @@ export class ContractCache<State> {
   contractType: ContractType;
   metadata?: ContractMetadata;
   manifest?: EvaluationManifest;
-  contractTx: any;
-  srcTx: any;
+  contractTx: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  srcTx: any; // eslint-disable-line @typescript-eslint/no-explicit-any
   testnet: string | null;
 
   constructor(value: ContractDefinition<State>) {

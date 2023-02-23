@@ -97,6 +97,7 @@ export class Evolve implements ExecutionContextModifier {
   }
 }
 
+/* eslint-disable @typescript-eslint/no-explicit-any -- dispatching of any type is done by this function */
 function evalSettings(state: any): Map<string, any> {
   // default  - empty
   let settings = new Map<string, any>();
@@ -112,6 +113,7 @@ function evalSettings(state: any): Map<string, any> {
 
   return settings;
 }
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 function isIterable(obj: unknown): boolean {
   // checks for null and undefined

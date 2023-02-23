@@ -29,6 +29,7 @@ export class ArweaveWrapper {
     return await this.doFetchInfo<NetworkInfoInterface>(`${this.baseUrl}/info`);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async gql(query: string, variables: GqlReqVariables): Promise<Partial<AxiosResponse<any>>> {
     try {
       const data = JSON.stringify({

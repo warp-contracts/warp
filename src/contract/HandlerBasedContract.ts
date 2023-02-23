@@ -55,7 +55,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   private signature: Signature;
   private warpFetchWrapper: WarpFetchWrapper;
 
-  private _children: HandlerBasedContract<any>[] = [];
+  private _children: HandlerBasedContract<unknown>[] = [];
 
   private _uncommittedStates = new Map<string, EvalStateResult<unknown>>();
 
@@ -64,7 +64,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   constructor(
     private readonly _contractTxId: string,
     protected readonly warp: Warp,
-    private readonly _parentContract: Contract<any> = null,
+    private readonly _parentContract: Contract<unknown> = null,
     private readonly _innerCallData: InnerCallData = null
   ) {
     this.waitForConfirmation = this.waitForConfirmation.bind(this);
@@ -804,6 +804,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return hash.digest('hex');
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- params can be anything
   async syncState(externalUrl: string, params?: any): Promise<Contract> {
     const { stateEvaluator } = this.warp;
     const response = await this.warpFetchWrapper
@@ -829,7 +830,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   }
 
   async evolve(newSrcTxId: string, options?: WriteInteractionOptions): Promise<WriteInteractionResponse | null> {
-    return await this.writeInteraction<any>({ function: 'evolve', value: newSrcTxId }, options);
+    return await this.writeInteraction({ function: 'evolve', value: newSrcTxId }, options);
   }
 
   get rootSortKey(): string {
@@ -845,7 +846,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return this._parentContract == null;
   }
 
-  async getStorageValues(keys: string[]): Promise<SortKeyCacheResult<Map<string, any>>> {
+  async getStorageValues(keys: string[]): Promise<SortKeyCacheResult<Map<string, unknown>>> {
     const lastCached = await this.warp.stateEvaluator.getCache().getLast(this.txId());
     if (lastCached == null) {
       return {
@@ -855,7 +856,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
 
     const storage = this.warp.kvStorageFactory(this.txId());
-    const result: Map<string, any> = new Map();
+    const result: Map<string, unknown> = new Map();
     try {
       await storage.open();
       for (const key of keys) {

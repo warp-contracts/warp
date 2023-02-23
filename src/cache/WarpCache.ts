@@ -4,10 +4,11 @@
  * - like contract's source code cache.
  * See {@link MemCache} for example implementation.
  *
- * @typeParam K - type of the cache key, defaults to `string`
- * @typeParam V - type of the cache value, default to `any`.
+ * @typeParam K - type of the cache key.
+ * @typeParam V - type of the cache value.
  */
-export interface WarpCache<K = string, V = any> {
+
+export interface WarpCache<K, V> {
   /**
    * gets value by its key
    */
@@ -21,15 +22,15 @@ export interface WarpCache<K = string, V = any> {
   /**
    * puts new value under specified key
    */
-  put(key: K, value: V);
+  put(key: K, value: V): void;
 
   /**
    * clears the whole cache
    */
-  clearAll();
+  clearAll(): void;
 
   /**
    * remove entry in cache for given key
    */
-  remove(key: K);
+  remove(key: K): void;
 }

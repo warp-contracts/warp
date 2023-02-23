@@ -81,6 +81,7 @@ export class TagsParser {
   }
 
   decodeTags(tx: Transaction): GQLTagInterface[] {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const tags = tx.get('tags') as any;
     const result: GQLTagInterface[] = [];
 
@@ -98,6 +99,7 @@ export class TagsParser {
   }
 
   getTag(tx: Transaction, name: string) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const tags = tx.get('tags') as any;
 
     for (const tag of tags) {

@@ -47,7 +47,7 @@ export interface SortKeyCache<V> {
    * used mostly for debugging, allows to dump the current content cache
    * It's slow.
    */
-  dump(): Promise<any>;
+  dump(): Promise<any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
   /**
    * Return all cached keys.

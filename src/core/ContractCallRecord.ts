@@ -10,6 +10,7 @@ export class ContractCallRecord {
     this.id = isomorphicRandomUUID();
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   addInteractionData(interactionData: InteractionData<any>): InteractionCall {
     const { interaction, interactionTx } = interactionData;
 
@@ -72,6 +73,7 @@ export class InteractionInput {
 export class InteractionOutput {
   constructor(
     public readonly cacheHit: boolean,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public readonly outputState: any,
     public readonly executionTime: number,
     public readonly valid: boolean,

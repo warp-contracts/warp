@@ -14,7 +14,8 @@ import { LoggerFactory } from '../../logging/LoggerFactory';
  *
  * In order to reduce the cache size, the oldest entries are automatically pruned.
  */
-export class LevelDbCache<V = any> implements SortKeyCache<V> {
+
+export class LevelDbCache<V> implements SortKeyCache<V> {
   private readonly logger = LoggerFactory.INST.create('LevelDbCache');
 
   /**
@@ -22,10 +23,10 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
    * and there doesn't seem to be any public interface/abstract type for all Level implementations
    * (the AbstractLevel is not exported from the package...)
    */
-  private _db: MemoryLevel;
+  private _db: MemoryLevel<string, V>;
 
   // Lazy initialization upon first access
-  private get db(): MemoryLevel {
+  private get db(): MemoryLevel<string, V> {
     if (!this._db) {
       if (this.cacheOptions.inMemory) {
         this._db = new MemoryLevel({ valueEncoding: 'json' });
@@ -35,7 +36,7 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
         }
         const dbLocation = this.cacheOptions.dbLocation;
         this.logger.info(`Using location ${dbLocation}`);
-        this._db = new Level<string, any>(dbLocation, { valueEncoding: 'json' });
+        this._db = new Level<string, V>(dbLocation, { valueEncoding: 'json' });
       }
     }
     return this._db;
@@ -43,8 +44,9 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
 
   constructor(private readonly cacheOptions: CacheOptions) {}
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async get(cacheKey: CacheKey, returnDeepCopy?: boolean): Promise<SortKeyCacheResult<V> | null> {
-    const contractCache = this.db.sublevel<string, any>(cacheKey.key, { valueEncoding: 'json' });
+    const contractCache = this.db.sublevel<string, V>(cacheKey.key, { valueEncoding: 'json' });
     // manually opening to fix https://github.com/Level/level/issues/221
     await contractCache.open();
     try {
@@ -54,6 +56,7 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
         sortKey: cacheKey.sortKey,
         cachedValue: result
       };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       if (e.code == 'LEVEL_NOT_FOUND') {
         return null;
@@ -64,7 +67,7 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
   }
 
   async getLast(key: string): Promise<SortKeyCacheResult<V> | null> {
-    const contractCache = this.db.sublevel<string, any>(key, { valueEncoding: 'json' });
+    const contractCache = this.db.sublevel<string, V>(key, { valueEncoding: 'json' });
     // manually opening to fix https://github.com/Level/level/issues/221
     await contractCache.open();
     const keys = await contractCache.keys({ reverse: true, limit: 1 }).all();
@@ -79,7 +82,7 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
   }
 
   async getLessOrEqual(key: string, sortKey: string): Promise<SortKeyCacheResult<V> | null> {
-    const contractCache = this.db.sublevel<string, any>(key, { valueEncoding: 'json' });
+    const contractCache = this.db.sublevel<string, V>(key, { valueEncoding: 'json' });
     // manually opening to fix https://github.com/Level/level/issues/221
     await contractCache.open();
     const keys = await contractCache.keys({ reverse: true, lte: sortKey, limit: 1 }).all();
@@ -94,14 +97,14 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
   }
 
   async put(stateCacheKey: CacheKey, value: V): Promise<void> {
-    const contractCache = this.db.sublevel<string, any>(stateCacheKey.key, { valueEncoding: 'json' });
+    const contractCache = this.db.sublevel<string, V>(stateCacheKey.key, { valueEncoding: 'json' });
     // manually opening to fix https://github.com/Level/level/issues/221
     await contractCache.open();
     await contractCache.put(stateCacheKey.sortKey, value);
   }
 
   async delete(key: string): Promise<void> {
-    const contractCache = this.db.sublevel<string, any>(key, { valueEncoding: 'json' });
+    const contractCache = this.db.sublevel<string, V>(key, { valueEncoding: 'json' });
     await contractCache.open();
     await contractCache.clear();
   }
@@ -126,6 +129,7 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async dump(): Promise<any> {
     const result = await this.db.iterator().all();
     return result;
@@ -188,7 +192,7 @@ export class LevelDbCache<V = any> implements SortKeyCache<V> {
 
     const contracts = await this.keys();
     for (let i = 0; i < contracts.length; i++) {
-      const contractCache = this.db.sublevel<string, any>(contracts[i], { valueEncoding: 'json' });
+      const contractCache = this.db.sublevel<string, V>(contracts[i], { valueEncoding: 'json' });
 
       // manually opening to fix https://github.com/Level/level/issues/221
       await contractCache.open();

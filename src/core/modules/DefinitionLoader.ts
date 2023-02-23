@@ -12,12 +12,12 @@ export interface DefinitionLoader extends GwTypeAware {
 
   loadContractSource(srcTxId: string): Promise<ContractSource>;
 
-  setCache(cache: SortKeyCache<ContractCache<any>>): void;
+  setCache(cache: SortKeyCache<ContractCache<unknown>>): void;
 
   // Cache for storing common source code or binaries
   setSrcCache(cacheSrc?: SortKeyCache<SrcCache>): void;
 
-  getCache(): SortKeyCache<ContractCache<any>>;
+  getCache(): SortKeyCache<ContractCache<unknown>>;
 
   getSrcCache(): SortKeyCache<SrcCache>;
 }

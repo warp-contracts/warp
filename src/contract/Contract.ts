@@ -41,6 +41,7 @@ export type WriteInteractionOptions = WarpOptions & ArweaveOptions & CommonOptio
  * Interface describing state for all Evolve-compatible contracts.
  */
 export interface EvolveState {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- compatibility with smartweave
   settings: any[] | unknown | null;
   /**
    * whether contract is allowed to evolve.
@@ -210,6 +211,7 @@ export interface Contract<State = unknown> {
    * @param params - by default only query param with `contractId` is set by SDK, any additional ones can be passed
    * in the `params` object
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- params can be anything
   syncState(externalUrl: string, params?: any): Promise<Contract>;
 
   /**
@@ -228,7 +230,7 @@ export interface Contract<State = unknown> {
 
   isRoot(): boolean;
 
-  getStorageValues(keys: string[]): Promise<SortKeyCacheResult<Map<string, any>>>;
+  getStorageValues(keys: string[]): Promise<SortKeyCacheResult<Map<string, unknown>>>;
 
   getUncommittedState(contractTxId: string): EvalStateResult<unknown>;
 

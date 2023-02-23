@@ -67,4 +67,5 @@ export function readJSON(path: string): JWKInterface {
   }
 }
 
+// eslint-disable-next-line no-console
 main().catch((e) => console.error(e));

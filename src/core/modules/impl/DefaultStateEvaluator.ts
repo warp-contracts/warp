@@ -49,8 +49,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     baseState: EvalStateResult<State>,
     executionContext: ExecutionContext<State, HandlerApi<State>>
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
-    const { ignoreExceptions, stackTrace, internalWrites, cacheEveryNInteractions } =
-      executionContext.evaluationOptions;
+    const { ignoreExceptions, stackTrace, internalWrites } = executionContext.evaluationOptions;
     const { contract, contractDefinition, sortedInteractions, warp } = executionContext;
 
     let currentState = baseState.state;
@@ -321,6 +320,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         arweave.utils.stringToBuffer(sortKey),
         arweave.utils.b64UrlToBuffer(vrf.proof)
       );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       return false;
     }
@@ -392,8 +392,14 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     state: EvalStateResult<State>
   ): Promise<void>;
 
-  abstract syncState(contractTxId: string, sortKey: string, state: any, validity: any): Promise<void>;
+  abstract syncState(
+    contractTxId: string,
+    sortKey: string,
+    state: unknown,
+    validity: Record<string, boolean>
+  ): Promise<void>;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   abstract dumpCache(): Promise<any>;
 
   abstract internalWriteState<State>(

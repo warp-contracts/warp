@@ -14,6 +14,7 @@ import { WarpEnvironment, Warp } from './Warp';
 import { CacheOptions, GatewayOptions } from './WarpFactory';
 import { SortKeyCache } from '../cache/SortKeyCache';
 import { LevelDbCache } from '../cache/impl/LevelDbCache';
+import { ContractCache, SrcCache } from './ContractDefinition';
 
 export class WarpBuilder {
   private _definitionLoader?: DefinitionLoader;
@@ -64,13 +65,13 @@ export class WarpBuilder {
       )
     );
 
-    const contractsCache = new LevelDbCache({
+    const contractsCache = new LevelDbCache<ContractCache<unknown>>({
       ...cacheOptions,
       dbLocation: `${cacheOptions.dbLocation}/contracts`
     });
 
     // Separate cache for sources to minimize duplicates
-    const sourceCache = new LevelDbCache({
+    const sourceCache = new LevelDbCache<SrcCache>({
       ...cacheOptions,
       dbLocation: `${cacheOptions.dbLocation}/source`
     });
