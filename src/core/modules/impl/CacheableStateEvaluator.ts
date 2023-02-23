@@ -187,11 +187,17 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     await this.cache.put(new CacheKey(contractTxId, transaction.sortKey), stateToCache);
   }
 
-  async syncState(contractTxId: string, sortKey: string, state: any, validity: any): Promise<void> {
+  async syncState(
+    contractTxId: string,
+    sortKey: string,
+    state: unknown,
+    validity: Record<string, boolean>
+  ): Promise<void> {
     const stateToCache = new EvalStateResult(state, validity, {});
     await this.cache.put(new CacheKey(contractTxId, sortKey), stateToCache);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async dumpCache(): Promise<any> {
     return await this.cache.dump();
   }

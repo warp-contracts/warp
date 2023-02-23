@@ -21,6 +21,6 @@ export class PstContractImpl extends HandlerBasedContract<PstState> implements P
   }
 
   async transfer(transfer: TransferInput, options?: WriteInteractionOptions): Promise<WriteInteractionResponse | null> {
-    return await this.writeInteraction<any>({ function: 'transfer', ...transfer }, options);
+    return await this.writeInteraction({ function: 'transfer', ...transfer }, options);
   }
 }

@@ -65,7 +65,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
 
     const extensionPlugins = warp.matchPlugins(`^smartweave-extension-`);
     extensionPlugins.forEach((ex) => {
-      const extension = warp.loadPlugin<any, void>(ex);
+      const extension = warp.loadPlugin<unknown, void>(ex);
       extension.process(swGlobal.extensions);
     });
 
@@ -299,5 +299,5 @@ export interface IvmPluginInput {
   evaluationOptions: EvaluationOptions;
   arweave: Arweave;
   swGlobal: SmartWeaveGlobal;
-  contractDefinition: ContractDefinition<any>;
+  contractDefinition: ContractDefinition<unknown>;
 }

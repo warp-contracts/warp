@@ -5,11 +5,11 @@ import { TagsParser } from '../core/modules/impl/TagsParser';
 import { SigningFunction } from '../contract/Signature';
 import { BlockData, CreateTransactionInterface, Transaction } from '../utils/types/arweave-types';
 
-export async function createInteractionTx(
+export async function createInteractionTx<Input>(
   arweave: Arweave,
   signer: SigningFunction,
   contractId: string,
-  input: any,
+  input: Input,
   tags: { name: string; value: string }[],
   target = '',
   winstonQty = '0',

@@ -3,8 +3,10 @@ import { WarpLogger } from './WarpLogger';
 import { ConsoleLoggerFactory } from './web/ConsoleLoggerFactory';
 
 export interface ILoggerFactory {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setOptions(newOptions: any, moduleName?: string): void;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getOptions(moduleName?: string): any;
 
   logLevel(level: LogLevel, moduleName?: string): void;
@@ -19,10 +21,12 @@ export class LoggerFactory implements ILoggerFactory {
     // not instantiable from outside
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setOptions(newOptions: any, moduleName?: string): void {
     LoggerFactory.INST.setOptions(newOptions, moduleName);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getOptions(moduleName?: string): any {
     return LoggerFactory.INST.getOptions(moduleName);
   }

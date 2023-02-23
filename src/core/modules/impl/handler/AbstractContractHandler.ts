@@ -91,7 +91,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
   }
 
   protected assignViewContractState<Input>(executionContext: ExecutionContext<State>) {
-    this.swGlobal.contracts.viewContractState = async <View>(contractTxId: string, input: any) => {
+    this.swGlobal.contracts.viewContractState = async <View>(contractTxId: string, input: Input) => {
       this.logger.debug('swGlobal.viewContractState call:', {
         from: this.contractDefinition.txId,
         to: contractTxId,
@@ -102,11 +102,11 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         callType: 'view'
       });
 
-      return await childContract.viewStateForTx(input, this.swGlobal._activeTx);
+      return await childContract.viewStateForTx<Input, View>(input, this.swGlobal._activeTx);
     };
   }
 
-  protected assignReadContractState<Input>(executionContext: ExecutionContext<State>, interactionTx: GQLNodeInterface) {
+  protected assignReadContractState(executionContext: ExecutionContext<State>, interactionTx: GQLNodeInterface) {
     this.swGlobal.contracts.readContractState = async (contractTxId: string, returnValidity?: boolean) => {
       this.logger.debug('swGlobal.readContractState call:', {
         from: this.contractDefinition.txId,

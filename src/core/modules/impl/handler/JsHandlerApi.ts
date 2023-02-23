@@ -1,4 +1,3 @@
-import { knownWarpPlugins, knownWarpPluginsPartial } from '../../../../core/WarpPlugin';
 import { ContractDefinition } from '../../../../core/ContractDefinition';
 import { ExecutionContext } from '../../../../core/ExecutionContext';
 import { EvalStateResult } from '../../../../core/modules/StateEvaluator';
@@ -33,7 +32,7 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
       this.swGlobal._activeTx = interactionTx;
       this.swGlobal.caller = interaction.caller; // either contract tx id (for internal writes) or transaction.owner
 
-      this.assignReadContractState<Input>(executionContext, interactionTx);
+      this.assignReadContractState(executionContext, interactionTx);
       this.assignViewContractState<Input>(executionContext);
       this.assignWrite(executionContext);
       this.assignRefreshState(executionContext);
@@ -86,6 +85,7 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   initState(state: State): void {
     // nth to do in this impl...
   }

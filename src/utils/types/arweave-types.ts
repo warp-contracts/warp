@@ -36,6 +36,7 @@ export interface Proof {
 }
 
 class BaseObject {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 
   public get(field: string): string;
@@ -163,6 +164,7 @@ export class Transaction extends BaseObject implements TransactionInterface {
     this.signature = signature;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public async prepareChunks(data: Uint8Array) {
     throw new Error('Should not be called, use arweave-js version.');
   }
@@ -194,6 +196,7 @@ export class Tag extends BaseObject {
   readonly name: string;
   readonly value: string;
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public constructor(name: string, value: string, decode = false) {
     super();
     this.name = name;
