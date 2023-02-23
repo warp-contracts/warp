@@ -140,7 +140,9 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
 
   // Gets ContractDefinition and ContractSource from two caches and returns a combined structure
   private async getFromCache<State>(contractTxId: string, srcTxId?: string): Promise<ContractDefinition<State> | null> {
-    const contract = await this.definitionCache.get(new CacheKey(contractTxId, 'cd')) as SortKeyCacheResult<ContractCache<State>>;
+    const contract = (await this.definitionCache.get(new CacheKey(contractTxId, 'cd'))) as SortKeyCacheResult<
+      ContractCache<State>
+    >;
     if (!contract) {
       return null;
     }
