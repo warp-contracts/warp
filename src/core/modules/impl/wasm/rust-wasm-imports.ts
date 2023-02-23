@@ -137,13 +137,13 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance, dtorVal
       return handleError(function (arg0, arg1) {
         var ret = rawImports.SmartWeave.readContractState(getStringFromWasm0(arg0, arg1));
         return addHeapObject(ret);
-      }, arguments)
+      }, arguments);
     },
     __wbg_viewContractState: function (arg0, arg1, arg2) {
       return handleError(function (arg0, arg1, arg2) {
         var ret = rawImports.SmartWeave.viewContractState(getStringFromWasm0(arg0, arg1), takeObject(arg2));
         return addHeapObject(ret);
-      }, arguments)
+      }, arguments);
     },
     __wbg_caller: function (arg0) {
       var ret = rawImports.SmartWeave.caller();
@@ -160,7 +160,7 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance, dtorVal
       return handleError(function (arg0, arg1, arg2) {
         var ret = rawImports.SmartWeave.write(getStringFromWasm0(arg0, arg1), takeObject(arg2));
         return addHeapObject(ret);
-      }, arguments)
+      }, arguments);
     },
     __wbg_refreshState: function (arg0, arg1) {
       // TODO
