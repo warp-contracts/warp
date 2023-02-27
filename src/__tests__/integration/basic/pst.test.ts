@@ -10,6 +10,7 @@ import { InteractionResult } from '../../../core/modules/impl/HandlerExecutorFac
 import { Warp } from '../../../core/Warp';
 import { WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 describe('Testing the Profit Sharing Token', () => {
   let contractSrc: string;
@@ -32,7 +33,7 @@ describe('Testing the Profit Sharing Token', () => {
     await arlocal.start();
     LoggerFactory.INST.logLevel('error');
 
-    warp = WarpFactory.forLocal(1820);
+    warp = WarpFactory.forLocal(1820).use(new DeployPlugin());
 
     ({ arweave } = warp);
     ({ jwk: wallet, address: walletAddress } = await warp.generateWallet());
@@ -52,7 +53,7 @@ describe('Testing the Profit Sharing Token', () => {
     };
 
     // deploying contract using the new SDK.
-    const { contractTxId } = await warp.createContract.deploy({
+    const { contractTxId } = await warp.deploy({
       wallet,
       initState: JSON.stringify(initialState),
       src: contractSrc
@@ -120,8 +121,8 @@ describe('Testing the Profit Sharing Token', () => {
 
     const newSource = fs.readFileSync(path.join(__dirname, '../data/token-evolve.js'), 'utf8');
 
-    const srcTx = await warp.createSourceTx({ src: newSource }, wallet);
-    const newSrcTxId = await warp.saveSourceTx(srcTx);
+    const srcTx = await warp.createSource({ src: newSource }, wallet);
+    const newSrcTxId = await warp.saveSource(srcTx);
     await mineBlock(warp);
 
     await pst.evolve(newSrcTxId);

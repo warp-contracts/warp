@@ -13,6 +13,7 @@ import { WarpGatewayContractDefinitionLoader } from '../../../core/modules/impl/
 import { DefaultEvaluationOptions } from '../../../core/modules/StateEvaluator';
 import { LexicographicalInteractionsSorter } from '../../../core/modules/impl/LexicographicalInteractionsSorter';
 import { LevelDbCache } from '../../../cache/impl/LevelDbCache';
+import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 interface ExampleContractState {
   counter: number;
@@ -39,7 +40,7 @@ describe('Testing WarpGatewayContractDefinitionLoader', () => {
     arlocal = new ArLocal(port, false);
     await arlocal.start();
 
-    warp = WarpFactory.forLocal(port);
+    warp = WarpFactory.forLocal(port).use(new DeployPlugin());
 
     const { arweave } = warp;
 
@@ -112,8 +113,8 @@ describe('Testing WarpGatewayContractDefinitionLoader', () => {
   it('loads contract definition with an evolved source code', async () => {
     const newSource = fs.readFileSync(path.join(__dirname, '../data/contract-load-second.js'), 'utf8');
 
-    const srcTx = await warp.createSourceTx({ src: newSource }, wallet);
-    const newSrcTxId = await warp.saveSourceTx(srcTx);
+    const srcTx = await warp.createSource({ src: newSource }, wallet);
+    const newSrcTxId = await warp.saveSource(srcTx);
     await mineBlock(warp);
 
     await contract.evolve(newSrcTxId);

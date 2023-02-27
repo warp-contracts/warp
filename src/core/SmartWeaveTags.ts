@@ -19,5 +19,6 @@ export enum SmartWeaveTags {
   REQUEST_VRF = 'Request-Vrf',
   SIGNATURE_TYPE = 'Signature-Type',
   WARP_TESTNET = 'Warp-Testnet',
-  MANIFEST = 'Contract-Manifest'
+  MANIFEST = 'Contract-Manifest',
+  NONCE = 'Nonce'
 }

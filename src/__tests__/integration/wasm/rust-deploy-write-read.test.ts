@@ -13,6 +13,7 @@ import { WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { ArweaveWrapper } from '../../../utils/ArweaveWrapper';
 import { TagsParser } from '../../../core/modules/impl/TagsParser';
+import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 describe('Testing the Rust WASM Profit Sharing Token', () => {
   let wallet: JWKInterface;
@@ -42,7 +43,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     LoggerFactory.INST.logLevel('error');
     tagsParser = new TagsParser();
 
-    warp = WarpFactory.forLocal(1201);
+    warp = WarpFactory.forLocal(1201).use(new DeployPlugin());
     ({ arweave } = warp);
     arweaveWrapper = new ArweaveWrapper(arweave);
 
@@ -64,7 +65,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     };
 
     // deploying contract using the new SDK.
-    ({ contractTxId } = await warp.createContract.deploy({
+    ({ contractTxId } = await warp.deploy({
       wallet,
       initState: JSON.stringify(initialState),
       src: contractSrc,
@@ -72,7 +73,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
       wasmGlueCode: path.join(__dirname, '../data/wasm/rust/rust-pst.js')
     }));
 
-    ({ contractTxId: properForeignContractTxId } = await warp.createContract.deploy({
+    ({ contractTxId: properForeignContractTxId } = await warp.deploy({
       wallet,
       initState: JSON.stringify({
         ...initialState,
@@ -86,7 +87,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
       wasmGlueCode: path.join(__dirname, '../data/wasm/rust/rust-pst.js')
     }));
 
-    ({ contractTxId: wrongForeignContractTxId } = await warp.createContract.deploy({
+    ({ contractTxId: wrongForeignContractTxId } = await warp.deploy({
       wallet,
       initState: JSON.stringify({
         ...initialState,
@@ -223,7 +224,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
 
     const newContractSrc = fs.readFileSync(path.join(__dirname, '../data/wasm/rust/rust-pst-evolve_bg.wasm'));
 
-    const srcTx = await warp.createSourceTx(
+    const srcTx = await warp.createSource(
       {
         src: newContractSrc,
         wasmSrcCodeDir: path.join(__dirname, '../data/wasm/rust/src-evolve'),
@@ -231,7 +232,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
       },
       wallet
     );
-    const newSrcTxId = await warp.saveSourceTx(srcTx);
+    const newSrcTxId = await warp.saveSource(srcTx);
 
     await mineBlock(warp);
 

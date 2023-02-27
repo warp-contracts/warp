@@ -12,6 +12,7 @@ import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { ArweaveGatewayInteractionsLoader } from '../../../core/modules/impl/ArweaveGatewayInteractionsLoader';
 import { DefaultEvaluationOptions } from '../../../core/modules/StateEvaluator';
 import { LexicographicalInteractionsSorter } from '../../../core/modules/impl/LexicographicalInteractionsSorter';
+import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 let arlocal: ArLocal;
 let warp: Warp;
@@ -37,7 +38,7 @@ describe('Testing the Arweave interactions loader', () => {
     arlocal = new ArLocal(1831, false);
     await arlocal.start();
 
-    warp = WarpFactory.forLocal(1831);
+    warp = WarpFactory.forLocal(1831).use(new DeployPlugin());
 
     const { arweave } = warp;
 
@@ -47,7 +48,7 @@ describe('Testing the Arweave interactions loader', () => {
     ({ jwk: wallet } = await warp.generateWallet());
 
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/inf-loop-contract.js'), 'utf8');
-    const { contractTxId } = await warp.createContract.deploy({
+    const { contractTxId } = await warp.deploy({
       wallet,
       initState: JSON.stringify({
         counter: 10

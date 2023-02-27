@@ -10,6 +10,7 @@ import { Warp } from '../../../core/Warp';
 import { WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import exp from 'constants';
+import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 describe('Testing unsafe client in nested contracts with "skip" option', () => {
   let safeContractSrc, unsafeContractSrc: string;
@@ -29,8 +30,8 @@ describe('Testing unsafe client in nested contracts with "skip" option', () => {
     arlocal = new ArLocal(1667, false);
     await arlocal.start();
     LoggerFactory.INST.logLevel('error');
-    warp = WarpFactory.forLocal(1667);
-    warpUnsafe = WarpFactory.forLocal(1667);
+    warp = WarpFactory.forLocal(1667).use(new DeployPlugin());
+    warpUnsafe = WarpFactory.forLocal(1667).use(new DeployPlugin());
 
     ({ arweave } = warp);
     ({ jwk: wallet, address: walletAddress } = await warp.generateWallet());
@@ -151,8 +152,8 @@ describe('Testing unsafe client in nested contracts with "skip" option', () => {
   });
 
   it('should block write from foreign safe contract that evolved to unsafe', async () => {
-    const srcTx = await warp.createSourceTx({ src: unsafeContractSrc }, wallet);
-    const unsafeSrcTxId = await warp.saveSourceTx(srcTx);
+    const srcTx = await warp.createSource({ src: unsafeContractSrc }, wallet);
+    const unsafeSrcTxId = await warp.saveSource(srcTx);
     await mineBlock(warp);
 
     await foreignSafePst.evolve(unsafeSrcTxId);

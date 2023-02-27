@@ -9,6 +9,7 @@ import { Warp } from '../../../core/Warp';
 import { WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { PstState } from '../../../contract/PstContract';
+import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 let arlocal: ArLocal;
 let warp: Warp;
@@ -31,7 +32,7 @@ describe('Testing the Warp client', () => {
     await arlocal.start();
 
     LoggerFactory.INST.logLevel('error');
-    warp = WarpFactory.forLocal(1801);
+    warp = WarpFactory.forLocal(1801).use(new DeployPlugin());
 
     ({ jwk: wallet, address: walletAddress } = await warp.generateWallet());
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/token-pst-unsafe.js'), 'utf8');
@@ -50,7 +51,7 @@ describe('Testing the Warp client', () => {
     };
 
     // deploying contract using the new SDK.
-    ({ contractTxId } = await warp.createContract.deploy({
+    ({ contractTxId } = await warp.deploy({
       wallet,
       initState: JSON.stringify(initialState),
       src: contractSrc
@@ -98,7 +99,7 @@ describe('Testing the Warp client', () => {
     await expect(contractWithUnsafeSkip.readState()).rejects.toThrow('[SkipUnsafeError]');
 
     // fresh warp instance - skip
-    const newWarp = WarpFactory.forLocal(1801);
+    const newWarp = WarpFactory.forLocal(1801).use(new DeployPlugin());
     const freshPst = newWarp.contract(contractTxId).setEvaluationOptions({
       unsafeClient: 'skip'
     });

@@ -4,7 +4,8 @@ export const knownWarpPlugins = [
   'subscription',
   'ivm-handler-api',
   'evaluation-progress',
-  'fetch-options'
+  'fetch-options',
+  'deploy'
 ] as const;
 type WarpPluginPartialType = `smartweave-extension-${string}`;
 export type WarpKnownPluginType = (typeof knownWarpPlugins)[number];

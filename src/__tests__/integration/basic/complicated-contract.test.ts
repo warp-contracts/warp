@@ -8,6 +8,7 @@ import { Contract } from '../../../contract/Contract';
 import { Warp } from '../../../core/Warp';
 import { WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 let arlocal: ArLocal;
 let warp: Warp;
@@ -27,13 +28,13 @@ describe('Testing the Warp client', () => {
 
     LoggerFactory.INST.logLevel('error');
 
-    warp = WarpFactory.forLocal(1800);
+    warp = WarpFactory.forLocal(1800).use(new DeployPlugin());
 
     ({ jwk: wallet } = await warp.generateWallet());
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/very-complicated-contract.js'), 'utf8');
 
     // deploying contract using the new SDK.
-    const { contractTxId } = await warp.createContract.deploy({
+    const { contractTxId } = await warp.deploy({
       wallet,
       initState: JSON.stringify({}),
       src: contractSrc

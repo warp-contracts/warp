@@ -10,6 +10,7 @@ import { Warp } from '../../../core/Warp';
 import { WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { timeout } from '../../../utils/utils';
+import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 let arweave: Arweave;
 let arlocal: ArLocal;
@@ -32,13 +33,13 @@ describe('Testing the Warp client', () => {
     await arlocal.start();
 
     LoggerFactory.INST.logLevel('error');
-    warp = WarpFactory.forLocal(1830);
+    warp = WarpFactory.forLocal(1830).use(new DeployPlugin());
     ({ jwk: wallet } = await warp.generateWallet());
 
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/inf-loop-contract.js'), 'utf8');
 
     // deploying contract using the new SDK.
-    const { contractTxId } = await warp.createContract.deploy({
+    const { contractTxId } = await warp.deploy({
       wallet,
       initState: JSON.stringify({
         counter: 10

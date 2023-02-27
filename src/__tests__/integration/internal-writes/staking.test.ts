@@ -10,6 +10,7 @@ import { Contract } from '../../../contract/Contract';
 import { WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { Warp } from '../../../core/Warp';
+import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 /**
  * This tests verifies a standard approve/transferFrom workflow for a ERC-20ish token contract
@@ -53,7 +54,7 @@ describe('Testing internal writes', () => {
   });
 
   async function deployContracts() {
-    warp = WarpFactory.forLocal(port);
+    warp = WarpFactory.forLocal(port).use(new DeployPlugin());
     ({ arweave } = warp);
 
     ({ jwk: wallet, address: walletAddress } = await warp.generateWallet());
@@ -66,7 +67,7 @@ describe('Testing internal writes', () => {
       'utf8'
     );
 
-    ({ contractTxId: tokenContractTxId } = await warp.createContract.deploy({
+    ({ contractTxId: tokenContractTxId } = await warp.deploy({
       wallet,
       initState: JSON.stringify({
         ...JSON.parse(tokenContractInitialState),
@@ -75,7 +76,7 @@ describe('Testing internal writes', () => {
       src: tokenContractSrc
     }));
 
-    ({ contractTxId: stakingContractTxId } = await warp.createContract.deploy({
+    ({ contractTxId: stakingContractTxId } = await warp.deploy({
       wallet,
       initState: JSON.stringify({
         ...JSON.parse(stakingContractInitialState),

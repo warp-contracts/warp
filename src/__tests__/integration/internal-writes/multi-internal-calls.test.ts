@@ -10,6 +10,7 @@ import { Contract } from '../../../contract/Contract';
 import { Warp } from '../../../core/Warp';
 import { WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 /**
  * This test verifies multiple internal calls from
@@ -79,7 +80,7 @@ describe('Testing internal writes', () => {
   });
 
   async function deployContracts() {
-    warp = WarpFactory.forLocal(port);
+    warp = WarpFactory.forLocal(port).use(new DeployPlugin());
     ({ jwk: wallet } = await warp.generateWallet());
 
     contractASrc = fs.readFileSync(path.join(__dirname, '../data/writing-contract.js'), 'utf8');
@@ -87,19 +88,19 @@ describe('Testing internal writes', () => {
     contractBSrc = fs.readFileSync(path.join(__dirname, '../data/example-contract.js'), 'utf8');
     contractBInitialState = fs.readFileSync(path.join(__dirname, '../data/example-contract-state.json'), 'utf8');
 
-    ({ contractTxId: contractATxId } = await warp.createContract.deploy({
+    ({ contractTxId: contractATxId } = await warp.deploy({
       wallet,
       initState: contractAInitialState,
       src: contractASrc
     }));
 
-    ({ contractTxId: contractBTxId } = await warp.createContract.deploy({
+    ({ contractTxId: contractBTxId } = await warp.deploy({
       wallet,
       initState: contractBInitialState,
       src: contractBSrc
     }));
 
-    ({ contractTxId: contractCTxId } = await warp.createContract.deploy({
+    ({ contractTxId: contractCTxId } = await warp.deploy({
       wallet,
       initState: JSON.stringify({ counter: 200 }),
       src: contractBSrc

@@ -8,6 +8,7 @@ import { Contract } from '../../../contract/Contract';
 import { Warp } from '../../../core/Warp';
 import { WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 interface ExampleContractState {
   counter: number;
@@ -41,20 +42,20 @@ describe('Testing the Warp client', () => {
     await arlocal.start();
 
     LoggerFactory.INST.logLevel('error');
-    warp = WarpFactory.forLocal(1810);
+    warp = WarpFactory.forLocal(1810).use(new DeployPlugin());
     ({ jwk: wallet } = await warp.generateWallet());
 
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/example-contract.js'), 'utf8');
     initialState = fs.readFileSync(path.join(__dirname, '../data/example-contract-state.json'), 'utf8');
 
     // deploying contract using the new SDK.
-    const { contractTxId } = await warp.createContract.deploy({
+    const { contractTxId } = await warp.deploy({
       wallet,
       initState: initialState,
       src: contractSrc
     });
 
-    const { contractTxId: contractInitDataTxId } = await warp.createContract.deploy({
+    const { contractTxId: contractInitDataTxId } = await warp.deploy({
       wallet,
       initState: initialState,
       data: { 'Content-Type': 'text/html', body: '<h1>HELLO WORLD</h1>' },

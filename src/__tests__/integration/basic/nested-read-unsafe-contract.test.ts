@@ -9,6 +9,7 @@ import { PstContract, PstState } from '../../../contract/PstContract';
 import { Warp } from '../../../core/Warp';
 import { WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 describe('Testing unsafe client in nested contracts with "skip" option', () => {
   let safeContractSrc, unsafeContractSrc: string;
@@ -28,7 +29,7 @@ describe('Testing unsafe client in nested contracts with "skip" option', () => {
     arlocal = new ArLocal(1666, false);
     await arlocal.start();
     LoggerFactory.INST.logLevel('error');
-    warp = WarpFactory.forLocal(1666);
+    warp = WarpFactory.forLocal(1666).use(new DeployPlugin());
 
     ({ arweave } = warp);
     ({ jwk: wallet, address: walletAddress } = await warp.generateWallet());
@@ -47,7 +48,7 @@ describe('Testing unsafe client in nested contracts with "skip" option', () => {
       }
     };
 
-    const { contractTxId } = await warp.createContract.deploy({
+    const { contractTxId } = await warp.deploy({
       wallet,
       initState: JSON.stringify(initialState),
       src: safeContractSrc
@@ -58,14 +59,14 @@ describe('Testing unsafe client in nested contracts with "skip" option', () => {
     pst.connect(wallet);
 
     unsafeContractSrc = fs.readFileSync(path.join(__dirname, '../data/token-pst-unsafe.js'), 'utf8');
-    ({ contractTxId: foreignUnsafeContractTxId } = await warp.createContract.deploy({
+    ({ contractTxId: foreignUnsafeContractTxId } = await warp.deploy({
       wallet,
       initState: JSON.stringify(initialState),
       src: unsafeContractSrc
     }));
     await mineBlock(warp);
 
-    ({ contractTxId: foreignSafeContractTxId } = await warp.createContract.deploy({
+    ({ contractTxId: foreignSafeContractTxId } = await warp.deploy({
       wallet,
       initState: JSON.stringify(initialState),
       src: safeContractSrc
@@ -145,8 +146,8 @@ describe('Testing unsafe client in nested contracts with "skip" option', () => {
     });
     await mineBlock(warp);
 
-    const srcTx = await warp.createSourceTx({ src: unsafeContractSrc }, wallet);
-    const unsafeSrcTxId = await warp.saveSourceTx(srcTx);
+    const srcTx = await warp.createSource({ src: unsafeContractSrc }, wallet);
+    const unsafeSrcTxId = await warp.saveSource(srcTx);
     await mineBlock(warp);
 
     await foreignSafePst.evolve(unsafeSrcTxId);

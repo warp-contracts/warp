@@ -8,7 +8,6 @@ import {
   CreateContract,
   FromSrcTxContractData
 } from '../contract/deploy/CreateContract';
-import { DefaultCreateContract } from '../contract/deploy/impl/DefaultCreateContract';
 import { HandlerBasedContract } from '../contract/HandlerBasedContract';
 import { PstContract } from '../contract/PstContract';
 import { PstContractImpl } from '../contract/PstContractImpl';
@@ -29,10 +28,11 @@ import {
 import { SortKeyCache } from '../cache/SortKeyCache';
 import { ContractDefinition, SrcCache } from './ContractDefinition';
 import { CustomSignature } from '../contract/Signature';
-import { SourceData } from '../contract/deploy/impl/SourceImpl';
+import { Transaction } from '../utils/types/arweave-types';
 import { DEFAULT_LEVEL_DB_LOCATION } from './WarpFactory';
 import { LevelDbCache } from '../cache/impl/LevelDbCache';
-import { Transaction } from '../utils/types/arweave-types';
+import { SourceData } from '../contract/deploy/Source';
+import { Signer, DataItem } from '../contract/deploy/DataItem';
 
 export type WarpEnvironment = 'local' | 'testnet' | 'mainnet' | 'custom';
 export type KVStorageFactory = (contractTxId: string) => SortKeyCache<unknown>;
@@ -47,10 +47,20 @@ export type KVStorageFactory = (contractTxId: string) => SortKeyCache<unknown>;
  */
 
 export class Warp {
-  /**
-   * @deprecated createContract will be a private field, please use its methods directly e.g. await warp.deploy(...)
-   */
-  readonly createContract: CreateContract;
+  private _createContract: CreateContract;
+
+  private get createContract(): CreateContract {
+    if (!this._createContract) {
+      if (this.plugins.has('deploy')) {
+        const deployPlugin = this.loadPlugin<Warp, CreateContract>('deploy');
+        this._createContract = deployPlugin.process(this);
+      } else {
+        throw new Error(`In order to use CreateContract methods please attach DeployPlugin.`);
+      }
+    }
+    return this._createContract;
+  }
+
   readonly testing: Testing;
   kvStorageFactory: KVStorageFactory;
 
@@ -64,7 +74,6 @@ export class Warp {
     readonly stateEvaluator: StateEvaluator,
     readonly environment: WarpEnvironment = 'custom'
   ) {
-    this.createContract = new DefaultCreateContract(arweave, this);
     this.testing = new Testing(arweave);
     this.kvStorageFactory = (contractTxId: string) => {
       return new LevelDbCache({
@@ -107,12 +116,15 @@ export class Warp {
     return await this.createContract.register(id, bundlrNode);
   }
 
-  async createSourceTx(sourceData: SourceData, wallet: ArWallet | CustomSignature): Promise<Transaction> {
-    return await this.createContract.createSourceTx(sourceData, wallet);
+  async createSource(
+    sourceData: SourceData,
+    wallet: ArWallet | CustomSignature | Signer
+  ): Promise<Transaction | DataItem> {
+    return await this.createContract.createSource(sourceData, wallet);
   }
 
-  async saveSourceTx(srcTx: Transaction, disableBundling?: boolean): Promise<string> {
-    return await this.createContract.saveSourceTx(srcTx, disableBundling);
+  async saveSource(src: Transaction | DataItem, disableBundling?: boolean): Promise<string> {
+    return await this.createContract.saveSource(src, disableBundling);
   }
 
   /**
@@ -140,7 +152,6 @@ export class Warp {
       throw new Error(`Unknown plugin type ${pluginType}.`);
     }
     this.plugins.set(pluginType, plugin);
-
     return this;
   }
 

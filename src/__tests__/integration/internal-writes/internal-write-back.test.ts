@@ -10,6 +10,7 @@ import { Contract } from '../../../contract/Contract';
 import { Warp } from '../../../core/Warp';
 import { WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 /**
  * This test verifies "write-backs" between contracts:
@@ -71,7 +72,7 @@ describe('Testing internal writes', () => {
   });
 
   async function deployContracts() {
-    warp = WarpFactory.forLocal(port);
+    warp = WarpFactory.forLocal(port).use(new DeployPlugin());
     ({ arweave } = warp);
 
     ({ jwk: wallet } = await warp.generateWallet());
@@ -81,13 +82,13 @@ describe('Testing internal writes', () => {
     contractBSrc = fs.readFileSync(path.join(__dirname, '../data/example-contract.js'), 'utf8');
     contractBInitialState = fs.readFileSync(path.join(__dirname, '../data/example-contract-state.json'), 'utf8');
 
-    ({ contractTxId: contractATxId } = await warp.createContract.deploy({
+    ({ contractTxId: contractATxId } = await warp.deploy({
       wallet,
       initState: contractAInitialState,
       src: contractASrc
     }));
 
-    ({ contractTxId: contractBTxId } = await warp.createContract.deploy({
+    ({ contractTxId: contractBTxId } = await warp.deploy({
       wallet,
       initState: contractBInitialState,
       src: contractBSrc
@@ -178,10 +179,12 @@ describe('Testing internal writes', () => {
 
     it('should properly evaluate state with a new client', async () => {
       const contractA2 = WarpFactory.forLocal(port)
+        .use(new DeployPlugin())
         .contract<any>(contractATxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
       const contractB2 = WarpFactory.forLocal(port)
+        .use(new DeployPlugin())
         .contract<any>(contractBTxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
@@ -218,6 +221,7 @@ describe('Testing internal writes', () => {
 
     it('should properly evaluate state with a new client', async () => {
       const contractA2 = WarpFactory.forLocal(port)
+        .use(new DeployPlugin())
         .contract<any>(contractATxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
@@ -281,10 +285,12 @@ describe('Testing internal writes', () => {
 
     it('should properly evaluate state with a new client', async () => {
       const contractA2 = WarpFactory.forLocal(port)
+        .use(new DeployPlugin())
         .contract<any>(contractATxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
       const contractB2 = WarpFactory.forLocal(port)
+        .use(new DeployPlugin())
         .contract<any>(contractBTxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
@@ -340,10 +346,12 @@ describe('Testing internal writes', () => {
 
     it('should properly evaluate state with a new client', async () => {
       const contractA2 = WarpFactory.forLocal(port)
+        .use(new DeployPlugin())
         .contract<any>(contractATxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
       const contractB2 = WarpFactory.forLocal(port)
+        .use(new DeployPlugin())
         .contract<any>(contractBTxId)
         .setEvaluationOptions({ internalWrites: true })
         .connect(wallet);
