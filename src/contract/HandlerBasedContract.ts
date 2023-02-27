@@ -506,11 +506,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
       sortedInteractions = interactions
         ? interactions
         : await interactionsLoader.load(
-          contractTxId,
-          cachedState?.sortKey,
-          this.getToSortKey(upToSortKey),
-          contractEvaluationOptions
-        );
+            contractTxId,
+            cachedState?.sortKey,
+            this.getToSortKey(upToSortKey),
+            contractEvaluationOptions
+          );
 
       // (2) ...but we still need to return only interactions up to original "upToSortKey"
       if (cachedState?.sortKey) {

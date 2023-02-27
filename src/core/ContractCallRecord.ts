@@ -45,7 +45,7 @@ export class ContractCallRecord {
 export class InteractionCall {
   interactionOutput: InteractionOutput;
 
-  private constructor(readonly interactionInput: InteractionInput) { }
+  private constructor(readonly interactionInput: InteractionInput) {}
 
   static create(interactionInput: InteractionInput): InteractionCall {
     return new InteractionCall(interactionInput);
@@ -67,7 +67,7 @@ export class InteractionInput {
     public readonly functionArguments: [],
     public readonly dryWrite: boolean,
     public readonly foreignContractCalls: { [key: string]: ContractCallRecord } = {}
-  ) { }
+  ) {}
 }
 
 export class InteractionOutput {
@@ -79,5 +79,5 @@ export class InteractionOutput {
     public readonly valid: boolean,
     public readonly errorMessage: string = '',
     public readonly gasUsed: number
-  ) { }
+  ) {}
 }
