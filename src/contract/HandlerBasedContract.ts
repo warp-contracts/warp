@@ -1,5 +1,4 @@
 import stringify from 'safe-stable-stringify';
-import * as crypto from 'crypto';
 import { SortKeyCacheResult } from '../cache/SortKeyCache';
 import { ContractCallRecord, InteractionCall } from '../core/ContractCallRecord';
 import { ExecutionContext } from '../core/ExecutionContext';
