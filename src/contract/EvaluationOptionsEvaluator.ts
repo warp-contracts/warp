@@ -104,6 +104,8 @@ export class EvaluationOptionsEvaluator {
     walletBalanceUrl: () => this.rootOptions['walletBalanceUrl'],
     mineArLocalBlocks: () => this.rootOptions['mineArLocalBlocks'],
     cacheEveryNInteractions: () => this.rootOptions['cacheEveryNInteractions'],
+    remoteStateSyncEnabled: () => this.rootOptions['remoteStateSyncEnabled'],
+    remoteStateSyncSource: () => this.rootOptions['remoteStateSyncSource'],
     useKVStorage: (foreignOptions) => foreignOptions['useKVStorage']
   };
 

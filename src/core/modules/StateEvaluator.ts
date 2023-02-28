@@ -68,7 +68,12 @@ export interface StateEvaluator {
   /**
    * allows to syncState with an external state source (like Warp Distributed Execution Network)
    */
-  syncState(contractTxId: string, sortKey: string, state: unknown, validity: Record<string, boolean>): Promise<void>;
+  syncState<State>(
+    contractTxId: string,
+    sortKey: string,
+    state: State,
+    validity: Record<string, boolean>
+  ): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
 
   internalWriteState<State>(
     contractTxId: string,
@@ -142,6 +147,10 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   cacheEveryNInteractions = -1;
 
   useKVStorage = false;
+
+  remoteStateSyncEnabled = false;
+
+  remoteStateSyncSource = 'https://dre-1.warp.cc/contract';
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some features.
@@ -226,4 +235,10 @@ export interface EvaluationOptions {
 
   // whether a separate key-value storage should be used for the contract
   useKVStorage: boolean;
+
+  // whether contract state should be acquired from remote source, e.g. D.R.E.
+  remoteStateSyncEnabled: boolean;
+
+  // remote source for fetching most recent contract state, only applicable if remoteStateSyncEnabled is set to true
+  remoteStateSyncSource: string;
 }
