@@ -142,7 +142,7 @@ export class SmartWeaveGlobal {
 
 // tslint:disable-next-line: max-classes-per-file
 class Transaction {
-  constructor(private readonly smartWeaveGlobal: SmartWeaveGlobal) {}
+  constructor(private readonly smartWeaveGlobal: SmartWeaveGlobal) { }
 
   get id() {
     if (!this.smartWeaveGlobal._activeTx) {
@@ -203,7 +203,7 @@ class Transaction {
 
 // tslint:disable-next-line: max-classes-per-file
 class Block {
-  constructor(private readonly smartWeaveGlobal: SmartWeaveGlobal) {}
+  constructor(private readonly smartWeaveGlobal: SmartWeaveGlobal) { }
 
   get height() {
     if (!this.smartWeaveGlobal._activeTx) {
@@ -228,7 +228,7 @@ class Block {
 }
 
 class Vrf {
-  constructor(private readonly smartWeaveGlobal: SmartWeaveGlobal) {}
+  constructor(private readonly smartWeaveGlobal: SmartWeaveGlobal) { }
 
   get data(): VrfData {
     return this.smartWeaveGlobal._activeTx.vrf;
@@ -257,7 +257,10 @@ class Vrf {
 export class KV {
   private _kvBatch: BatchDBOp<any>[] = [];
 
-  constructor(private readonly _storage: SortKeyCache<any> | null, private readonly _transaction: Transaction) {}
+  constructor(
+    private readonly _storage: SortKeyCache<any> | null,
+    private readonly _transaction: Transaction
+  ) { }
 
   async put(key: string, value: any): Promise<void> {
     this.checkStorageAvailable();

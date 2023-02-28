@@ -34,6 +34,7 @@
     "test:unit": "jest ./src/__tests__/unit",
     "test:unit:cache": "jest ./src/__tests__/unit/cache-leveldb.test.ts",
     "test:unit:cache:real": "jest ./src/__tests__/unit/cache-leveldb-real-data.test.ts",
+    "test:integration": "jest ./src/__tests__/integration",
     "test:integration:basic": "jest ./src/__tests__/integration/basic",
     "test:integration:basic:load": "jest --silent=false --detectOpenHandles ./src/__tests__/integration/basic/contract-loading.test.ts ",
     "test:integration:basic:arweave": "jest ./src/__tests__/integration/basic/arweave-transactions-loading",

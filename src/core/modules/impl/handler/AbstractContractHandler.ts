@@ -28,6 +28,8 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
 
   abstract initState(state: State): void;
 
+  abstract maybeCallStateConstructor(initialState: State, executionContext: ExecutionContext<State, unknown>): Promise<State>;
+
   async dispose(): Promise<void> {
     // noop by default;
   }
@@ -142,10 +144,10 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
       // in current contract's source code..:/
       return returnValidity
         ? {
-            state: deepCopy(stateWithValidity.cachedValue.state),
-            validity: stateWithValidity.cachedValue.validity,
-            errorMessages: stateWithValidity.cachedValue.errorMessages
-          }
+          state: deepCopy(stateWithValidity.cachedValue.state),
+          validity: stateWithValidity.cachedValue.validity,
+          errorMessages: stateWithValidity.cachedValue.errorMessages
+        }
         : deepCopy(stateWithValidity.cachedValue.state);
     };
   }

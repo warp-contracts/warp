@@ -32,7 +32,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
   protected constructor(
     protected readonly arweave: Arweave,
     private readonly executionContextModifiers: ExecutionContextModifier[] = []
-  ) {}
+  ) { }
 
   async eval<State>(
     executionContext: ExecutionContext<State, HandlerApi<State>>
@@ -47,7 +47,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
   protected async doReadState<State>(
     missingInteractions: GQLNodeInterface[],
     baseState: EvalStateResult<State>,
-    executionContext: ExecutionContext<State, HandlerApi<State>>
+    executionContext: ExecutionContext<State, HandlerApi<State>>,
+    isFirstEvaluation: boolean = false
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
     const { ignoreExceptions, stackTrace, internalWrites } = executionContext.evaluationOptions;
     const { contract, contractDefinition, sortedInteractions, warp } = executionContext;
@@ -59,12 +60,10 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
     // TODO: opt - reuse wasm handlers
     executionContext?.handler.initState(currentState);
-
     const depth = executionContext.contract.callDepth();
 
     this.logger.debug(
-      `${indent(depth)}Evaluating state for ${contractDefinition.txId} [${missingInteractions.length} non-cached of ${
-        sortedInteractions.length
+      `${indent(depth)}Evaluating state for ${contractDefinition.txId} [${missingInteractions.length} non-cached of ${sortedInteractions.length
       } all]`
     );
 
@@ -79,14 +78,14 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
     const progressPlugin = warp.hasPlugin('evaluation-progress')
       ? warp.loadPlugin<
-          {
-            contractTxId: string;
-            currentInteraction: number;
-            allInteractions: number;
-            lastInteractionProcessingTime: string;
-          },
-          void
-        >('evaluation-progress')
+        {
+          contractTxId: string;
+          currentInteraction: number;
+          allInteractions: number;
+          lastInteractionProcessingTime: string;
+        },
+        void
+      >('evaluation-progress')
       : null;
 
     let shouldBreakAfterEvolve = false;
@@ -121,8 +120,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       }
 
       this.logger.debug(
-        `${indent(depth)}[${contractDefinition.txId}][${missingInteraction.id}][${missingInteraction.block.height}]: ${
-          missingInteractions.indexOf(missingInteraction) + 1
+        `${indent(depth)}[${contractDefinition.txId}][${missingInteraction.id}][${missingInteraction.block.height}]: ${missingInteractions.indexOf(missingInteraction) + 1
         }/${missingInteractions.length} [of all:${sortedInteractions.length}]`
       );
 
@@ -224,11 +222,13 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         const interactionCall: InteractionCall = contract.getCallStack().addInteractionData(interactionData);
 
+
         const result = await executionContext.handler.handle(
           executionContext,
           new EvalStateResult(currentState, validity, errorMessages),
-          interactionData
+          interactionData,
         );
+
         errorMessage = result.errorMessage;
         if (result.type !== 'ok') {
           errorMessages[missingInteraction.id] = errorMessage;

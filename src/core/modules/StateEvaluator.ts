@@ -94,7 +94,7 @@ export class EvalStateResult<State> {
     readonly state: State,
     readonly validity: Record<string, boolean>,
     readonly errorMessages: Record<string, string>
-  ) {}
+  ) { }
 }
 
 export type UnsafeClientOptions = 'allow' | 'skip' | 'throw';
@@ -142,6 +142,8 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   cacheEveryNInteractions = -1;
 
   useKVStorage = false;
+
+  useConstructor = false;
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some features.
@@ -226,4 +228,6 @@ export interface EvaluationOptions {
 
   // whether a separate key-value storage should be used for the contract
   useKVStorage: boolean;
+
+  useConstructor: boolean;
 }
