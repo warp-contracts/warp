@@ -1,7 +1,7 @@
 import { ArWallet } from './CreateContract';
 import { CustomSignature } from '../../contract/Signature';
 import { Transaction } from '../../utils/types/arweave-types';
-import { Signer, DataItem } from './DataItem';
+import { BundlerSigner, DataItem } from './DataItem';
 
 export interface SourceData {
   src: string | Buffer;
@@ -23,7 +23,7 @@ export interface Source {
    */
   createSource(
     sourceData: SourceData,
-    wallet: ArWallet | CustomSignature | Signer,
+    wallet: ArWallet | CustomSignature | BundlerSigner,
     disableBundling?: boolean
   ): Promise<DataItem | Transaction>;
 

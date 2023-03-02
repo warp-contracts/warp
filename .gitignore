@@ -1,4 +1,5 @@
 # Dependency directories
+
 node_modules/
 
 # Optional eslint cache
@@ -26,3 +27,4 @@ yalc.lock
 bundles/
 
 .secrets
+logs

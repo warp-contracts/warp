@@ -1,4 +1,4 @@
-import { Signature } from '../../contract/Signature';
+import { CustomSignature, Signature } from '../../contract/Signature';
 import { defaultCacheOptions, WarpFactory } from '../../core/WarpFactory';
 
 describe('Wallet', () => {
@@ -151,5 +151,65 @@ describe('Wallet', () => {
       expect(sut.signer.toString().replace(/\s+/g, '')).toEqual(sampleFunction.toString().replace(/\s+/g, ''));
       expect(sut.signer).toEqual(sampleFunction);
     });
+  });
+
+  describe('getAddress', () => {
+
+    it('should getAddress for ArWallet signer', async () => {
+      const warp = WarpFactory.forMainnet();
+      const arWallet = await warp.generateWallet();
+
+      const signature = new Signature(warp, arWallet.jwk);
+
+      const address = await signature.getAddress();
+      expect(address).toStrictEqual(arWallet.address);
+    });
+
+    it('should call getAddress for customSignature, if getAddress provided', async () => {
+      const warp = WarpFactory.forMainnet();
+      const customSignature: CustomSignature = {
+        type: 'ethereum',
+        signer: sampleFunction,
+        getAddress: () => Promise.resolve("owner")
+      }
+
+      const signature = new Signature(warp, customSignature);
+
+      const address = await signature.getAddress();
+      expect(address).toStrictEqual("owner");
+    });
+
+    it('should call getAddress for customSignature, if getAddress NOT provided', async () => {
+      const warp = WarpFactory.forMainnet();
+      const customSignature: CustomSignature = {
+        type: 'ethereum',
+        signer: async (tx) => { tx.owner = "owner" },
+      }
+
+      const signature = new Signature(warp, customSignature);
+
+      const address = await signature.getAddress();
+      expect(address).toStrictEqual("owner");
+    });
+
+    it('should use cached valued from getAddress', async () => {
+      const warp = WarpFactory.forMainnet();
+      const mockedSigner = jest.fn(async (tx) => { tx.owner = "owner" });
+      const customSignature: CustomSignature = {
+        type: 'ethereum',
+        signer: mockedSigner,
+      }
+
+      const signature = new Signature(warp, customSignature);
+
+      const address = await signature.getAddress();
+      expect(address).toStrictEqual("owner");
+
+      const cachedAddress = await signature.getAddress();
+      expect(cachedAddress).toStrictEqual("owner");
+
+      expect(mockedSigner).toBeCalledTimes(1);
+    });
+
   });
 });
