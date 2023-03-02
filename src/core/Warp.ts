@@ -32,7 +32,7 @@ import { Transaction } from '../utils/types/arweave-types';
 import { DEFAULT_LEVEL_DB_LOCATION } from './WarpFactory';
 import { LevelDbCache } from '../cache/impl/LevelDbCache';
 import { SourceData } from '../contract/deploy/Source';
-import { Signer, DataItem } from '../contract/deploy/DataItem';
+import { BundlerSigner, DataItem } from '../contract/deploy/DataItem';
 
 export type WarpEnvironment = 'local' | 'testnet' | 'mainnet' | 'custom';
 export type KVStorageFactory = (contractTxId: string) => SortKeyCache<unknown>;
@@ -118,7 +118,7 @@ export class Warp {
 
   async createSource(
     sourceData: SourceData,
-    wallet: ArWallet | CustomSignature | Signer
+    wallet: ArWallet | CustomSignature | BundlerSigner
   ): Promise<Transaction | DataItem> {
     return await this.createContract.createSource(sourceData, wallet);
   }

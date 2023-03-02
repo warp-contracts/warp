@@ -668,15 +668,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     if (caller) {
       effectiveCaller = caller;
     } else if (this.signature) {
-      // we're creating this transaction just to call the signing function on it
-      // - and retrieve the caller/owner
-      const dummyTx = await arweave.createTransaction({
-        data: Math.random().toString().slice(-4),
-        reward: '72600854',
-        last_tx: 'p7vc1iSP6bvH_fCeUFa9LqoV5qiyW-jdEKouAT0XMoSwrNraB9mgpi29Q10waEpO'
-      });
-      await this.signature.signer(dummyTx);
-      effectiveCaller = await arweave.wallets.ownerToAddress(dummyTx.owner);
+      effectiveCaller = await this.signature.getAddress();
     } else {
       effectiveCaller = '';
     }

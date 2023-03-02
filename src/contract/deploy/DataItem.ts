@@ -1,5 +1,5 @@
 /* eslint-disable */
-export declare abstract class Signer {
+export declare abstract class BundlerSigner {
   readonly publicKey: Buffer;
   readonly signatureType: number;
   readonly signatureLength: number;
@@ -28,7 +28,7 @@ export abstract class DataItem {
   readonly tags: ResolvesTo<{ name: string; value: string }[]>;
   readonly rawData: ResolvesTo<Buffer>;
   readonly data: ResolvesTo<string>;
-  abstract sign(signer: Signer): Promise<Buffer>;
+  abstract sign(signer: BundlerSigner): Promise<Buffer>;
   abstract isValid(): Promise<boolean>;
   static async verify(..._: any[]): Promise<boolean> {
     throw new Error('You must implement `verify`');
