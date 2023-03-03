@@ -16,6 +16,7 @@ export type GatewayOptions = {
 export type CacheOptions = {
   inMemory: boolean;
   dbLocation: string;
+  subLevelSeparator?: string | undefined;
 };
 
 export const defaultWarpGwOptions: GatewayOptions = {

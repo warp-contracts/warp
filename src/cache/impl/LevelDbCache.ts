@@ -1,8 +1,11 @@
-import { BatchDBOp, CacheKey, SortKeyCache, SortKeyCacheResult } from '../SortKeyCache';
+import { BatchDBOp, CacheKey, SortKeyCache, SortKeyCacheEntry, SortKeyCacheResult } from '../SortKeyCache';
 import { Level } from 'level';
 import { MemoryLevel } from 'memory-level';
 import { CacheOptions } from '../../core/WarpFactory';
 import { LoggerFactory } from '../../logging/LoggerFactory';
+import { SortKeyCacheRangeOptions } from '../SortKeyCacheRangeOptions';
+import { RangeOptions } from 'abstract-level/types/interfaces';
+import { AbstractSublevelOptions } from 'abstract-level/types/abstract-sublevel';
 
 /**
  * The LevelDB is a lexicographically sorted key-value database - so it's ideal for this use case
@@ -17,6 +20,8 @@ import { LoggerFactory } from '../../logging/LoggerFactory';
 
 export class LevelDbCache<V> implements SortKeyCache<V> {
   private readonly logger = LoggerFactory.INST.create('LevelDbCache');
+  private readonly subLevelSeparator: string;
+  private readonly subLevelOptions: AbstractSublevelOptions<string, V>;
 
   /**
    * not using the Level type, as it is not compatible with MemoryLevel (i.e. has more properties)
@@ -29,24 +34,31 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
   private get db(): MemoryLevel<string, V> {
     if (!this._db) {
       if (this.cacheOptions.inMemory) {
-        this._db = new MemoryLevel({ valueEncoding: 'json' });
+        this._db = new MemoryLevel(this.subLevelOptions);
       } else {
         if (!this.cacheOptions.dbLocation) {
           throw new Error('LevelDb cache configuration error - no db location specified');
         }
         const dbLocation = this.cacheOptions.dbLocation;
         this.logger.info(`Using location ${dbLocation}`);
-        this._db = new Level<string, V>(dbLocation, { valueEncoding: 'json' });
+        this._db = new Level<string, V>(dbLocation, this.subLevelOptions);
       }
     }
     return this._db;
   }
 
-  constructor(private readonly cacheOptions: CacheOptions) {}
+  constructor(private readonly cacheOptions: CacheOptions) {
+    this.subLevelSeparator = cacheOptions.subLevelSeparator || '!';
+    this.subLevelOptions = {
+      valueEncoding: 'json',
+      separator: this.subLevelSeparator
+    };
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async get(cacheKey: CacheKey, returnDeepCopy?: boolean): Promise<SortKeyCacheResult<V> | null> {
-    const contractCache = this.db.sublevel<string, V>(cacheKey.key, { valueEncoding: 'json' });
+    this.validateKey(cacheKey.key);
+    const contractCache = this.db.sublevel<string, V>(cacheKey.key, this.subLevelOptions);
     // manually opening to fix https://github.com/Level/level/issues/221
     await contractCache.open();
     try {
@@ -67,7 +79,7 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
   }
 
   async getLast(key: string): Promise<SortKeyCacheResult<V> | null> {
-    const contractCache = this.db.sublevel<string, V>(key, { valueEncoding: 'json' });
+    const contractCache = this.db.sublevel<string, V>(key, this.subLevelOptions);
     // manually opening to fix https://github.com/Level/level/issues/221
     await contractCache.open();
     const keys = await contractCache.keys({ reverse: true, limit: 1 }).all();
@@ -82,7 +94,7 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
   }
 
   async getLessOrEqual(key: string, sortKey: string): Promise<SortKeyCacheResult<V> | null> {
-    const contractCache = this.db.sublevel<string, V>(key, { valueEncoding: 'json' });
+    const contractCache = this.db.sublevel<string, V>(key, this.subLevelOptions);
     // manually opening to fix https://github.com/Level/level/issues/221
     await contractCache.open();
     const keys = await contractCache.keys({ reverse: true, lte: sortKey, limit: 1 }).all();
@@ -97,14 +109,15 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
   }
 
   async put(stateCacheKey: CacheKey, value: V): Promise<void> {
-    const contractCache = this.db.sublevel<string, V>(stateCacheKey.key, { valueEncoding: 'json' });
+    this.validateKey(stateCacheKey.key);
+    const contractCache = this.db.sublevel<string, V>(stateCacheKey.key, this.subLevelOptions);
     // manually opening to fix https://github.com/Level/level/issues/221
     await contractCache.open();
     await contractCache.put(stateCacheKey.sortKey, value);
   }
 
   async delete(key: string): Promise<void> {
-    const contractCache = this.db.sublevel<string, V>(key, { valueEncoding: 'json' });
+    const contractCache = this.db.sublevel<string, V>(key, this.subLevelOptions);
     await contractCache.open();
     await contractCache.clear();
   }
@@ -154,14 +167,54 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
     return lastSortKey == '' ? null : lastSortKey;
   }
 
-  async keys(): Promise<string[]> {
-    await this.db.open();
-    const keys = await this.db.keys().all();
+  async keys(sortKey?: string, options?: SortKeyCacheRangeOptions): Promise<string[]> {
+    const distinctKeys = new Set<string>();
+    const rangeOptions: RangeOptions<string> = this.levelRangeOptions(options);
 
-    const result = new Set<string>();
-    keys.forEach((k) => result.add(k.substring(1, 44)));
+    (await this.db.keys(rangeOptions).all())
+      .filter((k) => !sortKey || this.extractSortKey(k).localeCompare(sortKey) <= 0)
+      .map((k) => this.extractOriginalKey(k))
+      .forEach((k) => distinctKeys.add(k));
 
-    return Array.from(result);
+    return Array.from(distinctKeys);
+  }
+
+  validateKey(key: string) {
+    if (key.includes(this.subLevelSeparator)) {
+      throw new Error(`Validation error: key ${key} contains db separator ${this.subLevelSeparator}`);
+    }
+  }
+
+  extractOriginalKey(joinedKey: string): string {
+    return joinedKey.split(this.subLevelSeparator)[1];
+  }
+
+  extractSortKey(joinedKey: string): string {
+    return joinedKey.split(this.subLevelSeparator)[2];
+  }
+
+  async entries(sortKey: string, options?: SortKeyCacheRangeOptions): Promise<SortKeyCacheEntry<V>[]> {
+    const keys: string[] = await this.keys(sortKey, options);
+
+    return Promise.all(
+      keys.map(async (k): Promise<SortKeyCacheEntry<V>> => {
+        return {
+          key: k,
+          value: (await this.getLessOrEqual(k, sortKey)).cachedValue
+        };
+      })
+    );
+  }
+
+  private levelRangeOptions(options?: SortKeyCacheRangeOptions): RangeOptions<string> | undefined {
+    if (options?.gte) {
+      options.gte = this.subLevelSeparator + options.gte;
+    }
+
+    if (options?.lte) {
+      options.lte = this.subLevelSeparator + options.lte;
+    }
+    return options;
   }
 
   storage<S>(): S {
@@ -192,7 +245,7 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
 
     const contracts = await this.keys();
     for (let i = 0; i < contracts.length; i++) {
-      const contractCache = this.db.sublevel<string, V>(contracts[i], { valueEncoding: 'json' });
+      const contractCache = this.db.sublevel<string, V>(contracts[i], this.subLevelOptions);
 
       // manually opening to fix https://github.com/Level/level/issues/221
       await contractCache.open();
