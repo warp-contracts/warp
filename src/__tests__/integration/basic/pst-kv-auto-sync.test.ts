@@ -7,14 +7,13 @@ import path from 'path';
 import { mineBlock } from '../_helpers';
 import { PstState, PstContract } from '../../../contract/PstContract';
 import { Warp } from '../../../core/Warp';
-import { DEFAULT_LEVEL_DB_LOCATION, defaultCacheOptions, WarpFactory } from "../../../core/WarpFactory";
+import { DEFAULT_LEVEL_DB_LOCATION, defaultCacheOptions, WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
-import { DeployPlugin } from "warp-contracts-plugin-deploy";
+import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 // note: each tests suit (i.e. file with tests that Jest is running concurrently
 // with another files has to have ArLocal set to a different port!)
 const AR_PORT = 1826;
-
 
 describe('Testing the Profit Sharing Token', () => {
   let contractSrc: string;
@@ -30,23 +29,23 @@ describe('Testing the Profit Sharing Token', () => {
   let contractTxId: string;
   let pst: PstContract;
 
-  const actualFetch = global.fetch
+  const actualFetch = global.fetch;
   let responseData = {
-    sortKey: "",
+    sortKey: '',
     state: {}
-  }
+  };
   const remoteCalls = {
     total: 0,
-    measure: function() {
+    measure: function () {
       const self = this;
       const start = self.total;
       return {
         diff: () => self.total - start
-      }
+      };
     }
-  }
+  };
 
-  const localWarp = async function() {
+  const localWarp = async function () {
     if (!arlocal) {
       arlocal = new ArLocal(AR_PORT, false);
       await arlocal.start();
@@ -55,20 +54,20 @@ describe('Testing the Profit Sharing Token', () => {
         host: 'localhost',
         port: AR_PORT,
         protocol: 'http'
-      })
+      });
     }
 
     return WarpFactory.forLocal(AR_PORT, arweave, { ...defaultCacheOptions, inMemory: true }).use(new DeployPlugin());
-  }
+  };
 
-  const autoSyncPst = async function() {
+  const autoSyncPst = async function () {
     // const autoSyncPst = warp.pst(contractTxId);
     const autoSyncPst = (await localWarp()).pst(contractTxId);
     autoSyncPst.setEvaluationOptions({
       remoteStateSyncEnabled: true
-    })
+    });
     return autoSyncPst;
-  }
+  };
 
   beforeAll(async () => {
     LoggerFactory.INST.logLevel('error');
@@ -93,7 +92,7 @@ describe('Testing the Profit Sharing Token', () => {
       src: contractSrc,
       evaluationManifest: {
         evaluationOptions: {
-          useKVStorage: true,
+          useKVStorage: true
         }
       }
     }));
@@ -103,15 +102,17 @@ describe('Testing the Profit Sharing Token', () => {
 
     await mineBlock(warp);
 
-    jest
-      .spyOn(global, 'fetch')
-      .mockImplementation( async (input: string, init) => {
-        if (input.includes(pst.evaluationOptions().remoteStateSyncSource)) {
-          remoteCalls.total++;
-          return Promise.resolve({ json: () => Promise.resolve(responseData), ok: true, status: 200 }) as Promise<Response>;
-        }
-        return actualFetch(input, init);
-      })
+    jest.spyOn(global, 'fetch').mockImplementation(async (input: string, init) => {
+      if (input.includes(pst.evaluationOptions().remoteStateSyncSource)) {
+        remoteCalls.total++;
+        return Promise.resolve({
+          json: () => Promise.resolve(responseData),
+          ok: true,
+          status: 200
+        }) as Promise<Response>;
+      }
+      return actualFetch(input, init);
+    });
   });
 
   afterAll(async () => {
@@ -199,7 +200,9 @@ describe('Testing the Profit Sharing Token', () => {
 
     expect(await syncPst.currentState()).toEqual(initialState);
     expect((await syncPst.currentBalance(walletAddress)).balance).toEqual(555669 - 500);
-    expect((await syncPst.currentBalance('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M')).balance).toEqual(10000000 + 500);
+    expect((await syncPst.currentBalance('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M')).balance).toEqual(
+      10000000 + 500
+    );
 
     expect((await syncPst.getStorageValues([walletAddress])).cachedValue.get(walletAddress)).toEqual(555669 - 500);
     expect(
@@ -215,5 +218,4 @@ describe('Testing the Profit Sharing Token', () => {
     expect((await syncPst.getStorageValues(['foo'])).cachedValue.get('foo')).toBeNull();
     expect(dreCalls.diff()).toEqual(0);
   });
-
 });

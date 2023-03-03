@@ -18,7 +18,7 @@ describe('Evaluation options evaluator', () => {
       maxInteractionEvaluationTimeSeconds: 60,
       mineArLocalBlocks: true,
       remoteStateSyncEnabled: false,
-      remoteStateSyncSource: "https://dre-1.warp.cc/contract",
+      remoteStateSyncSource: 'https://dre-1.warp.cc/contract',
       sequencerUrl: 'https://d1o5nlqr4okus2.cloudfront.net/',
       sourceType: SourceType.BOTH,
       stackTrace: {
@@ -57,7 +57,7 @@ describe('Evaluation options evaluator', () => {
       maxInteractionEvaluationTimeSeconds: 60,
       mineArLocalBlocks: true,
       remoteStateSyncEnabled: false,
-      remoteStateSyncSource: "https://dre-1.warp.cc/contract",
+      remoteStateSyncSource: 'https://dre-1.warp.cc/contract',
       sequencerUrl: 'https://d1o5nlqr4okus2.cloudfront.net/',
       sourceType: SourceType.BOTH,
       stackTrace: {
@@ -90,7 +90,8 @@ describe('Evaluation options evaluator', () => {
       maxInteractionEvaluationTimeSeconds: 60,
       mineArLocalBlocks: true,
       remoteStateSyncEnabled: false,
-      remoteStateSyncSource: "https://dre-1.warp.cc/contract",      sequencerUrl: 'https://d1o5nlqr4okus2.cloudfront.net/',
+      remoteStateSyncSource: 'https://dre-1.warp.cc/contract',
+      sequencerUrl: 'https://d1o5nlqr4okus2.cloudfront.net/',
       sourceType: 'both',
       stackTrace: {
         saveState: false

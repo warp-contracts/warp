@@ -9,7 +9,7 @@ import { PstState, PstContract } from '../../../contract/PstContract';
 import { Warp } from '../../../core/Warp';
 import { WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
-import { DeployPlugin } from "warp-contracts-plugin-deploy";
+import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 // note: each tests suit (i.e. file with tests that Jest is running concurrently
 // with another files has to have ArLocal set to a different port!)
@@ -29,38 +29,38 @@ describe('Testing the Profit Sharing Token', () => {
   let contractTxId: string;
   let pst: PstContract;
 
-  const actualFetch = global.fetch
+  const actualFetch = global.fetch;
   let responseData = {
-    sortKey: "",
+    sortKey: '',
     state: {}
-  }
-  let firstSortKey = ''
+  };
+  let firstSortKey = '';
   const remoteCalls = {
     total: 0,
-    measure: function() {
+    measure: function () {
       const self = this;
       const start = self.total;
       return {
         diff: () => self.total - start
-      }
+      };
     }
-  }
+  };
 
-  const localWarp = async function() {
+  const localWarp = async function () {
     if (!arlocal) {
       arlocal = new ArLocal(AR_PORT, false);
       await arlocal.start();
     }
     return WarpFactory.forLocal(AR_PORT).use(new DeployPlugin());
-  }
+  };
 
-  const autoSyncPst = async function() {
+  const autoSyncPst = async function () {
     const autoSyncPst = (await localWarp()).pst(contractTxId);
     autoSyncPst.setEvaluationOptions({
       remoteStateSyncEnabled: true
-    })
+    });
     return autoSyncPst;
-  }
+  };
 
   beforeAll(async () => {
     LoggerFactory.INST.logLevel('error');
@@ -98,15 +98,17 @@ describe('Testing the Profit Sharing Token', () => {
 
     await mineBlock(warp);
 
-    jest
-      .spyOn(global, 'fetch')
-      .mockImplementation( async (input: string, init) => {
-        if (input.includes(pst.evaluationOptions().remoteStateSyncSource)) {
-          remoteCalls.total++;
-          return Promise.resolve({ json: () => Promise.resolve(responseData), ok: true, status: 200 }) as Promise<Response>;
-        }
-        return actualFetch(input, init);
-      })
+    jest.spyOn(global, 'fetch').mockImplementation(async (input: string, init) => {
+      if (input.includes(pst.evaluationOptions().remoteStateSyncSource)) {
+        remoteCalls.total++;
+        return Promise.resolve({
+          json: () => Promise.resolve(responseData),
+          ok: true,
+          status: 200
+        }) as Promise<Response>;
+      }
+      return actualFetch(input, init);
+    });
   });
 
   afterAll(async () => {
@@ -164,15 +166,18 @@ describe('Testing the Profit Sharing Token', () => {
     expect((await pst.currentState()).balances['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']).toEqual(10000000 + 550);
 
     const syncPst = await autoSyncPst();
-    expect((await syncPst.currentState()).balances['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']).toEqual(10000000 + 100);
+    expect((await syncPst.currentState()).balances['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']).toEqual(
+      10000000 + 100
+    );
     expect((await syncPst.currentState()).balances[walletAddress]).toEqual(555669 - 100);
 
     syncPst.setEvaluationOptions({
       remoteStateSyncEnabled: false
-    })
+    });
     expect((await syncPst.currentState()).balances[walletAddress]).toEqual(555669 - 550);
     expect((await syncPst.currentState()).balances['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']).toEqual(
-      10000000 + 550);
+      10000000 + 550
+    );
     expect(dreCalls.diff()).toEqual(2);
   });
 
@@ -186,12 +191,10 @@ describe('Testing the Profit Sharing Token', () => {
     expect(state.cachedValue.state).toEqual(initialState);
     const syncPst = await autoSyncPst();
 
-
-    const syncState = (await syncPst.readState(firstSortKey));
+    const syncState = await syncPst.readState(firstSortKey);
     expect(await syncState.cachedValue.state).toEqual(initialState);
     expect(syncState.cachedValue.state.balances['uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']).toEqual(10000000);
     expect(syncState.cachedValue.state.balances['33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA']).toEqual(23111222);
     expect(dreCalls.diff()).toEqual(1);
   });
-
 });
