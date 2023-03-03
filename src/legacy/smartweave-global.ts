@@ -2,8 +2,9 @@
 import Arweave from 'arweave';
 import { EvaluationOptions } from '../core/modules/StateEvaluator';
 import { GQLNodeInterface, GQLTagInterface, VrfData } from './gqlResult';
-import { BatchDBOp, CacheKey, PutBatch, SortKeyCache } from '../cache/SortKeyCache';
- import {InteractionState} from "../contract/states/InteractionState";
+import { BatchDBOp, CacheKey, PutBatch, SortKeyCache, SortKeyCacheEntry } from '../cache/SortKeyCache';
+import { SortKeyCacheRangeOptions } from '../cache/SortKeyCacheRangeOptions';
+import {InteractionState} from "../contract/states/InteractionState";
 
 /**
  *
@@ -306,6 +307,16 @@ export class KV {
     }) as PutBatch<V>;
 
     return matchingPutBatch?.value;
+  }
+
+  async keys(options?: SortKeyCacheRangeOptions): Promise<string[]> {
+    const sortKey = this._transaction.sortKey;
+    return this._storage.keys(sortKey, options)
+  }
+
+  async entries<V>(options?: SortKeyCacheRangeOptions): Promise<SortKeyCacheEntry<V>[]> {
+    const sortKey = this._transaction.sortKey;
+    return this._storage.entries(sortKey, options)
   }
 
   async commit(): Promise<void> {
