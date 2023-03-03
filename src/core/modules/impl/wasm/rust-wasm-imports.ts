@@ -245,7 +245,7 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance, dtorVal
         return addHeapObject(ret);
       }, arguments);
     },
-    __wbg_new: function (arg0, arg1) {
+    __wbg_new_4: function (arg0, arg1) {
       try {
         var state0 = { a: arg0, b: arg1 };
         var cb0 = (arg0, arg1) => {
@@ -261,6 +261,27 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance, dtorVal
         return addHeapObject(ret);
       } finally {
         state0.a = state0.b = 0;
+      }
+    },
+    __wbg_new_6: function() {
+      var ret = new Error();
+      return addHeapObject(ret);
+    },
+    __wbg_stack: function(arg0, arg1) {
+      let limit = Error.stackTraceLimit;
+      Error.stackTraceLimit = 25;
+      var ret = getObject(arg1).stack;
+      var ptr0 = passStringToWasm0(ret, wasmInstance.exports.__wbindgen_malloc, wasmInstance.exports.__wbindgen_realloc);
+      var len0 = WASM_VECTOR_LEN;
+      getInt32Memory0()[arg0 / 4 + 1] = len0;
+      getInt32Memory0()[arg0 / 4 + 0] = ptr0;
+      Error.stackTraceLimit = limit;
+    },
+    __wbg_error: function(arg0, arg1) {
+      try {
+          rawImports.console.log(getStringFromWasm0(arg0, arg1));
+      } finally {
+        wasmInstance.exports.__wbindgen_free(arg0, arg1);
       }
     },
     __wbg_resolve: function (arg0) {
