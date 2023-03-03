@@ -27,7 +27,7 @@ async function main() {
     const jsContractSrc = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.js'), 'utf8');
     const initialState = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.json'), 'utf8');
 
-    // case 1 - full deploy, js contract
+    /*// case 1 - full deploy, js contract
     const {contractTxId, srcTxId} = await warp.deploy({
       wallet,
       initState: initialState,
@@ -35,9 +35,9 @@ async function main() {
     });
 
     console.log('contractTxId:', contractTxId);
-    console.log('srcTxId:', srcTxId);
+    console.log('srcTxId:', srcTxId);*/
 
-    const contract = warp.contract<any>(contractTxId)
+    const contract = warp.contract<any>("SG9sKOZvKFQ7EcpJU3bS0pQWp2idQf3VY2Ki_5-hDjo")
       .setEvaluationOptions({internalWrites: true, unsafeClient: 'skip', sequencerUrl: 'http://localhost:5666/'})
       .connect(wallet);
 
@@ -49,11 +49,6 @@ async function main() {
         target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
         qty: 100
       }),
-/*      contract.writeInteraction<any>({
-        function: "transfer",
-        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
-        qty: 100
-      }),
       contract.writeInteraction<any>({
         function: "transfer",
         target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
@@ -93,7 +88,219 @@ async function main() {
         function: "transfer",
         target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
         qty: 100
-      })*/
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+      contract.writeInteraction<any>({
+        function: "transfer",
+        target: "M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI",
+        qty: 100
+      }),
+
+
+
     ]);
 
     console.log("Total", benchmark.elapsed());
