@@ -2,7 +2,8 @@
 import Arweave from 'arweave';
 import { EvaluationOptions } from '../core/modules/StateEvaluator';
 import { GQLNodeInterface, GQLTagInterface, VrfData } from './gqlResult';
-import { BatchDBOp, CacheKey, PutBatch, SortKeyCache } from '../cache/SortKeyCache';
+import { BatchDBOp, CacheKey, PutBatch, SortKeyCache, SortKeyCacheEntry } from '../cache/SortKeyCache';
+import { SortKeyCacheRangeOptions } from '../cache/SortKeyCacheRangeOptions';
 
 /**
  *
@@ -284,6 +285,16 @@ export class KV {
 
     const result = await this._storage.getLessOrEqual(key, this._transaction.sortKey);
     return result?.cachedValue || null;
+  }
+
+  async keys(options?: SortKeyCacheRangeOptions): Promise<string[]> {
+    const sortKey = this._transaction.sortKey;
+    return this._storage.keys(sortKey, options)
+  }
+
+  async entries<V>(options?: SortKeyCacheRangeOptions): Promise<SortKeyCacheEntry<V>[]> {
+    const sortKey = this._transaction.sortKey;
+    return this._storage.entries(sortKey, options)
   }
 
   async commit(): Promise<void> {

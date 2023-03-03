@@ -1,8 +1,10 @@
-import { BatchDBOp, CacheKey, SortKeyCache, SortKeyCacheResult } from '../SortKeyCache';
+import { BatchDBOp, CacheKey, SortKeyCache, SortKeyCacheEntry, SortKeyCacheResult } from '../SortKeyCache';
 import { Level } from 'level';
 import { MemoryLevel } from 'memory-level';
 import { CacheOptions } from '../../core/WarpFactory';
 import { LoggerFactory } from '../../logging/LoggerFactory';
+import { SortKeyCacheRangeOptions } from '../SortKeyCacheRangeOptions';
+import { RangeOptions } from 'abstract-level/types/interfaces';
 
 /**
  * The LevelDB is a lexicographically sorted key-value database - so it's ideal for this use case
@@ -17,6 +19,7 @@ import { LoggerFactory } from '../../logging/LoggerFactory';
 
 export class LevelDbCache<V> implements SortKeyCache<V> {
   private readonly logger = LoggerFactory.INST.create('LevelDbCache');
+  private readonly dbSeparator: string = '!';
 
   /**
    * not using the Level type, as it is not compatible with MemoryLevel (i.e. has more properties)
@@ -154,14 +157,48 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
     return lastSortKey == '' ? null : lastSortKey;
   }
 
-  async keys(): Promise<string[]> {
-    await this.db.open();
-    const keys = await this.db.keys().all();
+  async keys(sortKey?: string, options?: SortKeyCacheRangeOptions): Promise<string[]> {
+    const distinctKeys = new Set<string>();
+    const rangeOptions: RangeOptions<string> = this.levelRangeOptions(options);
 
-    const result = new Set<string>();
-    keys.forEach((k) => result.add(k.substring(1, 44)));
+    (await this.db.keys(rangeOptions).all())
+      .filter((k) => !sortKey || this.extractSortKey(k).localeCompare(sortKey) <= 0)
+      .map((k) => this.extractOriginalKey(k))
+      .forEach((k) => distinctKeys.add(k));
 
-    return Array.from(result);
+    return Array.from(distinctKeys);
+  }
+
+  extractOriginalKey(joinedKey: string): string {
+    return joinedKey.split('!')[1];
+  }
+
+  extractSortKey(joinedKey: string): string {
+    return joinedKey.split('!')[2];
+  }
+
+  async entries(sortKey: string, options?: SortKeyCacheRangeOptions): Promise<SortKeyCacheEntry<V>[]> {
+    const keys: string[] = await this.keys(sortKey, options);
+
+    return Promise.all(
+      keys.map(async (k): Promise<SortKeyCacheEntry<V>> => {
+        return {
+          key: k,
+          value: (await this.getLessOrEqual(k, sortKey)).cachedValue
+        };
+      })
+    );
+  }
+
+  private levelRangeOptions(options?: SortKeyCacheRangeOptions): RangeOptions<string> | undefined {
+    if (options?.gte) {
+      options.gte = this.dbSeparator + options.gte;
+    }
+
+    if (options?.lte) {
+      options.lte = this.dbSeparator + options.lte;
+    }
+    return options;
   }
 
   storage<S>(): S {
