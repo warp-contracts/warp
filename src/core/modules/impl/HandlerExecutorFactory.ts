@@ -243,7 +243,7 @@ async function getWasmModule(wasmResponse: Response, binary: Buffer): Promise<We
 }
 
 export interface InteractionData<Input> {
-  interaction?: ContractInteraction<Input>;
+  interaction: ContractInteraction<Input>;
   interactionTx: GQLNodeInterface;
 }
 
@@ -281,9 +281,12 @@ export type InteractionResult<State, Result> = HandlerResult<State, Result> & {
   originalErrorMessages?: Record<string, string>;
 };
 
+export type InteractionType = 'view' | 'write';
+
 export type ContractInteraction<Input> = {
   input: Input;
   caller: string;
+  interactionType: InteractionType;
 };
 
 export type InteractionResultType = 'ok' | 'error' | 'exception';

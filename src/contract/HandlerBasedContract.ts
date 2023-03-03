@@ -6,7 +6,8 @@ import {
   ContractInteraction,
   HandlerApi,
   InteractionData,
-  InteractionResult
+  InteractionResult,
+  InteractionType
 } from '../core/modules/impl/HandlerExecutorFactory';
 import { LexicographicalInteractionsSorter } from '../core/modules/impl/LexicographicalInteractionsSorter';
 import { InteractionsSorter } from '../core/modules/InteractionsSorter';
@@ -212,7 +213,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     transfer: ArTransfer = emptyTransfer
   ): Promise<InteractionResult<State, View>> {
     this.logger.info('View state for', this._contractTxId);
-    return await this.callContract<Input, View>(input, undefined, undefined, tags, transfer);
+    return await this.callContract<Input, View>(input, 'view', undefined, undefined, tags, transfer);
   }
 
   async viewStateForTx<Input, View>(
@@ -220,7 +221,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     interactionTx: GQLNodeInterface
   ): Promise<InteractionResult<State, View>> {
     this.logger.info(`View state for ${this._contractTxId}`);
-    return await this.doApplyInputOnTx<Input, View>(input, interactionTx);
+    return await this.doApplyInputOnTx<Input, View>(input, interactionTx, 'view');
   }
 
   async dryWrite<Input>(
@@ -230,12 +231,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
     transfer?: ArTransfer
   ): Promise<InteractionResult<State, unknown>> {
     this.logger.info('Dry-write for', this._contractTxId);
-    return await this.callContract<Input>(input, caller, undefined, tags, transfer);
+    return await this.callContract<Input>(input, 'write', caller, undefined, tags, transfer);
   }
 
   async applyInput<Input>(input: Input, transaction: GQLNodeInterface): Promise<InteractionResult<State, unknown>> {
     this.logger.info(`Apply-input from transaction ${transaction.id} for ${this._contractTxId}`);
-    return await this.doApplyInputOnTx<Input>(input, transaction);
+    return await this.doApplyInputOnTx<Input>(input, transaction, 'write');
   }
 
   async writeInteraction<Input>(
@@ -370,7 +371,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     reward?: string
   ) {
     if (this._evaluationOptions.internalWrites) {
-      // it modifies tags
+     // it modifies tags
       await this.discoverInternalWrites<Input>(input, tags, transfer, strict, vrf);
     }
 
@@ -400,7 +401,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
         this.signature.type == 'arweave'
           ? await arweave.wallets.ownerToAddress(interactionTx.owner)
           : interactionTx.owner;
-      const handlerResult = await this.callContract(input, caller, undefined, tags, transfer, strict, vrf);
+      const handlerResult = await this.callContract(input, 'write', caller, undefined, tags, transfer, strict, vrf);
       if (handlerResult.type !== 'ok') {
         throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
       }
@@ -622,6 +623,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   private async callContract<Input, View = unknown>(
     input: Input,
+    interactionType: InteractionType,
     caller?: string,
     sortKey?: string,
     tags: Tags = [],
@@ -665,7 +667,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     // create interaction transaction
     const interaction: ContractInteraction<Input> = {
       input,
-      caller: executionContext.caller
+      caller: executionContext.caller,
+      interactionType
     };
 
     this.logger.debug('interaction', interaction);
@@ -715,7 +718,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   private async doApplyInputOnTx<Input, View = unknown>(
     input: Input,
-    interactionTx: GQLNodeInterface
+    interactionTx: GQLNodeInterface,
+    interactionType: InteractionType
   ): Promise<InteractionResult<State, View>> {
     this.maybeResetRootContract();
 
@@ -740,7 +744,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     const interaction: ContractInteraction<Input> = {
       input,
-      caller: this._parentContract.txId()
+      caller: this._parentContract.txId(),
+      interactionType
     };
 
     const interactionData: InteractionData<Input> = {
@@ -982,7 +987,17 @@ export class HandlerBasedContract<State> implements Contract<State> {
     strict: boolean,
     vrf: boolean
   ) {
-    const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer, strict, vrf, false);
+    const handlerResult = await this.callContract(
+      input,
+      'write',
+      undefined,
+      undefined,
+      tags,
+      transfer,
+      strict,
+      vrf,
+      false
+    );
 
     if (strict && handlerResult.type !== 'ok') {
       throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);

@@ -213,7 +213,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         const interaction: ContractInteraction<unknown> = {
           input,
-          caller: missingInteraction.owner.address
+          caller: missingInteraction.owner.address,
+          interactionType: 'write'
         };
 
         const interactionData = {

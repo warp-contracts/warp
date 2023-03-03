@@ -585,11 +585,20 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance, dtorVal
    * @param {any} interaction
    * @returns {Promise<any>}
    */
-  module.handle = function (interaction) {
-    var ret = wasmInstance.exports.handle(addHeapObject(interaction));
+  module.warpContractWrite = function (interaction) {
+    var ret = wasmInstance.exports.warpContractWrite(addHeapObject(interaction));
     return takeObject(ret);
   };
 
+    /**
+   * @param {any} interaction
+   * @returns {Promise<any>}
+   */
+    module.warpContractView = function (interaction) {
+      var ret = wasmInstance.exports.warpContractView(addHeapObject(interaction));
+      return takeObject(ret);
+    };
+  
   let stack_pointer = 32;
 
   function addBorrowedObject(obj) {

@@ -52,9 +52,10 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
     executionContext: ExecutionContext<State>
   ): Promise<State> {
     if (this.contractDefinition.manifest?.evaluationOptions?.useConstructor) {
-      const interaction = {
+      const interaction: ContractInteraction<Input> = {
         input: { function: INIT_FUNC_NAME, args: initialState } as Input,
-        caller: this.contractDefinition.owner
+        caller: this.contractDefinition.owner,
+        interactionType: 'write'
       };
 
       const interactionTx = (await this.makeInteractionTxFromContractTx(
