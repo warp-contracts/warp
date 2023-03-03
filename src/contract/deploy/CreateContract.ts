@@ -27,7 +27,7 @@ export type EvaluationManifest = {
 };
 
 export const BUNDLR_NODES = ['node1', 'node2'] as const;
-export type BundlrNodeType = (typeof BUNDLR_NODES)[number];
+export type BundlrNodeType = typeof BUNDLR_NODES[number];
 
 export interface CommonContractData {
   wallet: ArWallet | CustomSignature | Signer;
