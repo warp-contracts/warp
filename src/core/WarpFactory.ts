@@ -17,6 +17,7 @@ export type GatewayOptions = {
 export type CacheOptions = {
   inMemory: boolean;
   dbLocation: string;
+  subLevelSeparator?: string | undefined;
 };
 
 export const WARP_GW_URL = 'https://d1o5nlqr4okus2.cloudfront.net';

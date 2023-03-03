@@ -1,3 +1,5 @@
+import { SortKeyCacheRangeOptions } from './SortKeyCacheRangeOptions';
+
 /**
  * A cache that stores its values per dedicated key and sort key.
  * A sort key is a value that the SmartWeave protocol is using
@@ -55,6 +57,13 @@ export interface SortKeyCache<V> {
   keys(): Promise<string[]>;
 
   /**
+   * Return filtered keys, based on range options
+   */
+  keys(sortKey?: string, options?: SortKeyCacheRangeOptions): Promise<string[]>;
+
+  entries(sortKey: string, options?: SortKeyCacheRangeOptions): Promise<SortKeyCacheEntry<V>[]>;
+
+  /**
    * returns underlying storage (LevelDB, LMDB, sqlite...)
    * - useful for performing low-level operations
    */
@@ -81,6 +90,11 @@ export interface PruneStats {
 
 export class CacheKey {
   constructor(readonly key: string, readonly sortKey: string) {}
+}
+
+export interface SortKeyCacheEntry<V> {
+  key: string;
+  value: V;
 }
 
 // tslint:disable-next-line:max-classes-per-file
