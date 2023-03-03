@@ -3,7 +3,7 @@ import { ContractDefinition } from '../../../../core/ContractDefinition';
 import { ExecutionContext } from '../../../../core/ExecutionContext';
 import { EvalStateResult } from '../../../../core/modules/StateEvaluator';
 import { SmartWeaveGlobal } from '../../../../legacy/smartweave-global';
-import { InteractionData, InteractionResult } from '../HandlerExecutorFactory';
+import { ContractInteraction, InteractionData, InteractionResult } from '../HandlerExecutorFactory';
 import { AbstractContractHandler } from './AbstractContractHandler';
 
 export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
@@ -89,17 +89,20 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
     }
   }
 
-  private async doHandle(action: any): Promise<any> {
+  private async doHandle(action: ContractInteraction<unknown>): Promise<any> {
     switch (this.contractDefinition.srcWasmLang) {
       case 'rust': {
-        let handleResult = await this.wasmExports.handle(action.input);
-        if (!handleResult) {
-          return;
+
+        const handleResult = action.interactionType === 'write' ? await this.wasmExports.warpContractWrite(action.input) : await this.wasmExports.warpContractView(action.input);
+
+        if (Object.prototype.hasOwnProperty.call(handleResult, 'WriteResponse')) {
+          return handleResult.WriteResponse;
         }
-        if (Object.prototype.hasOwnProperty.call(handleResult, 'Ok')) {
-          return handleResult.Ok;
-        } else {
-          this.logger.debug('Error from rust', handleResult.Err);
+        if (Object.prototype.hasOwnProperty.call(handleResult, 'ViewResponse')) {
+          return handleResult.ViewResponse;
+        }
+        {
+          this.logger.error('Error from rust', handleResult);
           let errorKey;
           let errorArgs = '';
           if (typeof handleResult.Err === 'string' || handleResult.Err instanceof String) {
