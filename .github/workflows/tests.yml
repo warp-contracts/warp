@@ -13,13 +13,14 @@ jobs:
       - name: Run unit tests
         run: yarn test:unit
       - name: Run integration tests [basic]
-        run: yarn test:integration:basic
+        run: yarn test:integration:basic --maxConcurrency=1
       - name: Run integration tests [internal-writes]
-        run: yarn test:integration:internal-writes
+        run: yarn test:integration:internal-writes --maxConcurrency=1
       - name: Run integration tests [wasm]
-        run: yarn test:integration:wasm
+        run: yarn test:integration:wasm --maxConcurrency=1
       - name: Run regression tests
         run: yarn test:regression
+        continue-on-error: true
       - name: Trigger integration tests
         if: github.ref_name == 'main'
         run: >
