@@ -51,13 +51,13 @@ describe('Constructor', () => {
       src: src,
       evaluationManifest: withConstructor
         ? {
-          evaluationOptions: {
-            useConstructor: true,
-            useKVStorage: withKv,
-            internalWrites: !withKv,
-            ignoreExceptions: false
+            evaluationOptions: {
+              useConstructor: true,
+              useKVStorage: withKv,
+              internalWrites: !withKv,
+              ignoreExceptions: false
+            }
           }
-        }
         : undefined
     });
 
