@@ -106,8 +106,15 @@ export class EvaluationOptionsEvaluator {
     cacheEveryNInteractions: () => this.rootOptions['cacheEveryNInteractions'],
     remoteStateSyncEnabled: () => this.rootOptions['remoteStateSyncEnabled'],
     remoteStateSyncSource: () => this.rootOptions['remoteStateSyncSource'],
-    useKVStorage: (foreignOptions) => foreignOptions['useKVStorage']
+    useKVStorage: (foreignOptions) => foreignOptions['useKVStorage'],
+    useConstructor: (foreignOptions) => foreignOptions['useConstructor']
   };
+
+  private readonly notConflictingEvaluationOptions: (keyof EvaluationOptions)[] = [
+    'useKVStorage',
+    'sourceType',
+    'useConstructor'
+  ];
 
   /**
    * @param userSetOptions evaluation options set via {@link Contract.setEvaluationOptions}
@@ -118,7 +125,7 @@ export class EvaluationOptionsEvaluator {
     if (manifestOptions) {
       const errors = [];
       for (const k in manifestOptions) {
-        if (['useKVStorage', 'sourceType'].includes(k)) {
+        if (this.notConflictingEvaluationOptions.includes(k as keyof EvaluationOptions)) {
           continue;
         }
         if (userSetOptions[k] !== manifestOptions[k]) {

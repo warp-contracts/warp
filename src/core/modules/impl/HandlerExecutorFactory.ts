@@ -258,6 +258,8 @@ export interface HandlerApi<State> {
   ): Promise<InteractionResult<State, Result>>;
 
   initState(state: State): void;
+
+  maybeCallStateConstructor(initialState: State, executionContext: ExecutionContext<State>): Promise<State>;
 }
 
 export type HandlerFunction<State, Input, Result> = (

@@ -99,7 +99,7 @@ export class EvalStateResult<State> {
     readonly state: State,
     readonly validity: Record<string, boolean>,
     readonly errorMessages: Record<string, string>
-  ) {}
+  ) { }
 }
 
 export type UnsafeClientOptions = 'allow' | 'skip' | 'throw';
@@ -151,6 +151,8 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   remoteStateSyncEnabled = false;
 
   remoteStateSyncSource = 'https://dre-1.warp.cc/contract';
+
+  useConstructor = false;
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some features.
@@ -235,6 +237,10 @@ export interface EvaluationOptions {
 
   // whether a separate key-value storage should be used for the contract
   useKVStorage: boolean;
+
+  // If set to true, __init function will be called before any interaction on first evaluation of contract.
+  // Contract has to expose __init function in handler.
+  useConstructor: boolean;
 
   // whether contract state should be acquired from remote source, e.g. D.R.E.
   remoteStateSyncEnabled: boolean;
