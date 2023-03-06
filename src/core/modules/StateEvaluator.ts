@@ -68,7 +68,12 @@ export interface StateEvaluator {
   /**
    * allows to syncState with an external state source (like Warp Distributed Execution Network)
    */
-  syncState(contractTxId: string, sortKey: string, state: unknown, validity: Record<string, boolean>): Promise<void>;
+  syncState<State>(
+    contractTxId: string,
+    sortKey: string,
+    state: State,
+    validity: Record<string, boolean>
+  ): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
 
   internalWriteState<State>(
     contractTxId: string,
@@ -94,7 +99,7 @@ export class EvalStateResult<State> {
     readonly state: State,
     readonly validity: Record<string, boolean>,
     readonly errorMessages: Record<string, string>
-  ) { }
+  ) {}
 }
 
 export type UnsafeClientOptions = 'allow' | 'skip' | 'throw';
@@ -144,6 +149,10 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   useKVStorage = false;
 
   useConstructor = false;
+
+  remoteStateSyncEnabled = false;
+
+  remoteStateSyncSource = 'https://dre-1.warp.cc/contract';
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some features.
@@ -229,5 +238,13 @@ export interface EvaluationOptions {
   // whether a separate key-value storage should be used for the contract
   useKVStorage: boolean;
 
+  // If set to true, __init function will be called before any interaction on first evaluation of contract.
+  // Contract has to expose __init function in handler.
   useConstructor: boolean;
+
+  // whether contract state should be acquired from remote source, e.g. D.R.E.
+  remoteStateSyncEnabled: boolean;
+
+  // remote source for fetching most recent contract state, only applicable if remoteStateSyncEnabled is set to true
+  remoteStateSyncSource: string;
 }

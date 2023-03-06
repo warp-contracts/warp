@@ -40,7 +40,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
   // TODO: cache compiled wasm binaries here.
   private readonly cache: WarpCache<string, WebAssembly.Module> = new MemCache();
 
-  constructor(private readonly arweave: Arweave) { }
+  constructor(private readonly arweave: Arweave) {}
 
   async create<State>(
     contractDefinition: ContractDefinition<State>,
@@ -254,15 +254,12 @@ export interface HandlerApi<State> {
   handle<Input, Result>(
     executionContext: ExecutionContext<State>,
     currentResult: EvalStateResult<State>,
-    interactionData: InteractionData<Input>,
+    interactionData: InteractionData<Input>
   ): Promise<InteractionResult<State, Result>>;
 
   initState(state: State): void;
 
-  maybeCallStateConstructor(
-    initialState: State,
-    executionContext: ExecutionContext<State>
-  ): Promise<State>
+  maybeCallStateConstructor(initialState: State, executionContext: ExecutionContext<State>): Promise<State>;
 }
 
 export type HandlerFunction<State, Input, Result> = (

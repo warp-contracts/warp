@@ -50,28 +50,24 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     }
 
     const isFirstEvaluation = cachedState == null;
-    let baseState = isFirstEvaluation
-      ? executionContext.contractDefinition.initState
-      : cachedState.cachedValue.state;
+    let baseState = isFirstEvaluation ? executionContext.contractDefinition.initState : cachedState.cachedValue.state;
+    const baseValidity = isFirstEvaluation ? {} : cachedState.cachedValue.validity;
+    const baseErrorMessages = isFirstEvaluation ? {} : cachedState.cachedValue.errorMessages;
 
     if (isFirstEvaluation) {
-      baseState = await executionContext
-        .handler
-        .maybeCallStateConstructor(
-          executionContext.contractDefinition.initState,
-          executionContext
-        );
+      baseState = await executionContext.handler.maybeCallStateConstructor(
+        executionContext.contractDefinition.initState,
+        executionContext
+      );
     }
 
-    const baseValidity = cachedState == null ? {} : cachedState.cachedValue.validity;
-    const baseErrorMessages = cachedState == null ? {} : cachedState.cachedValue.errorMessages;
     if (missingInteractions.length == 0) {
       this.cLogger.info(`No missing interactions ${contractTxId}`);
-      if (cachedState) {
-        executionContext.handler.initState(cachedState.cachedValue.state);
+      if (!isFirstEvaluation) {
+        executionContext.handler?.initState(cachedState.cachedValue.state);
         return cachedState;
       } else {
-        executionContext.handler.initState(executionContext.contractDefinition.initState);
+        executionContext.handler?.initState(baseState);
 
         this.cLogger.debug('Inserting initial state into cache');
         const stateToCache = new EvalStateResult(baseState, {}, {});
@@ -81,15 +77,11 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
         return new SortKeyCacheResult<EvalStateResult<State>>(genesisSortKey, stateToCache);
       }
     }
-
-
-
     // eval state for the missing transactions - starting from the latest value from cache.
     return await this.doReadState(
       missingInteractions,
       new EvalStateResult(baseState, baseValidity, baseErrorMessages || {}),
-      executionContext,
-      isFirstEvaluation
+      executionContext
     );
   }
 
@@ -100,7 +92,8 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
   ): Promise<void> {
     const contractTxId = executionContext.contractDefinition.txId;
     this.cLogger.debug(
-      `${indent(executionContext.contract.callDepth())}onStateEvaluated: cache update for contract ${contractTxId} [${transaction.sortKey
+      `${indent(executionContext.contract.callDepth())}onStateEvaluated: cache update for contract ${contractTxId} [${
+        transaction.sortKey
       }]`
     );
 
@@ -200,14 +193,15 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     await this.cache.put(new CacheKey(contractTxId, transaction.sortKey), stateToCache);
   }
 
-  async syncState(
+  async syncState<State>(
     contractTxId: string,
     sortKey: string,
-    state: unknown,
+    state: State,
     validity: Record<string, boolean>
-  ): Promise<void> {
+  ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
     const stateToCache = new EvalStateResult(state, validity, {});
     await this.cache.put(new CacheKey(contractTxId, sortKey), stateToCache);
+    return new SortKeyCacheResult(sortKey, stateToCache);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

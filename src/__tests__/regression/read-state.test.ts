@@ -70,7 +70,7 @@ describe.each(chunked)('v1 compare.suite %#', (contracts: string[]) => {
             }
           )
           .build()
-          .use(new DeployPlugin())
+          .use(new DeployPlugin());
 
         const result2 = await warp
           .use(new DeployPlugin())
