@@ -59,7 +59,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
     // TODO: opt - reuse wasm handlers
     executionContext?.handler.initState(currentState);
-
     const depth = executionContext.contract.callDepth();
 
     this.logger.debug(
@@ -229,6 +228,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           new EvalStateResult(currentState, validity, errorMessages),
           interactionData
         );
+
         errorMessage = result.errorMessage;
         if (result.type !== 'ok') {
           errorMessages[missingInteraction.id] = errorMessage;

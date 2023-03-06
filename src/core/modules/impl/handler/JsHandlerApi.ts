@@ -1,10 +1,23 @@
+import { GQLNodeInterface } from 'legacy/gqlResult';
 import { ContractDefinition } from '../../../../core/ContractDefinition';
 import { ExecutionContext } from '../../../../core/ExecutionContext';
 import { EvalStateResult } from '../../../../core/modules/StateEvaluator';
 import { SmartWeaveGlobal } from '../../../../legacy/smartweave-global';
 import { deepCopy, timeout } from '../../../../utils/utils';
-import { InteractionData, InteractionResult } from '../HandlerExecutorFactory';
+import { ContractInteraction, InteractionData, InteractionResult } from '../HandlerExecutorFactory';
+import { genesisSortKey } from '../LexicographicalInteractionsSorter';
 import { AbstractContractHandler } from './AbstractContractHandler';
+
+const INIT_FUNC_NAME = '__init';
+const throwErrorWithName = (name: string, message: string) => {
+  const error = new Error(message);
+  error.name = name;
+  throw error;
+};
+enum KnownErrors {
+  ContractError = 'ContractError',
+  ConstructorError = 'ConstructorError'
+}
 
 export class JsHandlerApi<State> extends AbstractContractHandler<State> {
   constructor(
@@ -21,31 +34,87 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
     currentResult: EvalStateResult<State>,
     interactionData: InteractionData<Input>
   ): Promise<InteractionResult<State, Result>> {
+    const { interaction, interactionTx } = interactionData;
+
+    this.setupSwGlobal(interactionData);
+    this.enableInternalWrites(executionContext, interactionTx);
+
+    this.assertNotConstructorCall<Input>(interaction);
+
+    return await this.runContractFunction(executionContext, interaction, currentResult.state);
+  }
+
+  // eslint-disable-next-line
+  initState(state: State): void {}
+
+  async maybeCallStateConstructor<Input>(
+    initialState: State,
+    executionContext: ExecutionContext<State>
+  ): Promise<State> {
+    if (this.contractDefinition.manifest?.evaluationOptions.useConstructor) {
+      const interaction = {
+        input: { function: INIT_FUNC_NAME, args: initialState } as Input,
+        caller: this.contractDefinition.owner
+      };
+      const interactionTx = { ...this.contractDefinition.contractTx, sortKey: genesisSortKey };
+      // this is hard corded sortKey to make KV possible
+      const interactionData: InteractionData<Input> = { interaction, interactionTx };
+
+      this.setupSwGlobal(interactionData);
+      this.disableInternalWritesForConstructor();
+
+      const result = await this.runContractFunction(executionContext, interaction, {} as State);
+      if (result.type !== 'ok') {
+        throw new Error(`Exception while calling constructor: ${JSON.stringify(interaction)}:\n${result.errorMessage}`);
+      }
+      return result.state;
+    } else {
+      return initialState;
+    }
+  }
+
+  private assertNotConstructorCall<Input>(interaction: ContractInteraction<Input>) {
+    if (
+      this.contractDefinition.manifest?.evaluationOptions.useConstructor &&
+      interaction.input['function'] === INIT_FUNC_NAME
+    ) {
+      throw new Error(`You have enabled {useConstructor: true} option, so you can't call function ${INIT_FUNC_NAME}`);
+    }
+  }
+
+  private disableInternalWritesForConstructor() {
+    const templateErrorMessage = (op) =>
+      `Can't ${op} foreign contract state: Internal writes feature is not available in constructor`;
+    this.swGlobal.contracts.readContractState = () =>
+      throwErrorWithName('ConstructorError', templateErrorMessage('readContractState'));
+    this.swGlobal.contracts.write = () => throwErrorWithName('ConstructorError', templateErrorMessage('write'));
+    this.swGlobal.contracts.refreshState = () =>
+      throwErrorWithName('ConstructorError', templateErrorMessage('refreshState'));
+    this.swGlobal.contracts.viewContractState = () =>
+      throwErrorWithName('ConstructorError', templateErrorMessage('viewContractState'));
+  }
+
+  private async runContractFunction<Input>(
+    executionContext: ExecutionContext<State>,
+    interaction: InteractionData<Input>['interaction'],
+    state: State
+  ) {
+    const stateClone = deepCopy(state);
     const { timeoutId, timeoutPromise } = timeout(
       executionContext.evaluationOptions.maxInteractionEvaluationTimeSeconds
     );
 
     try {
-      const { interaction, interactionTx } = interactionData;
-
-      const stateCopy = deepCopy(currentResult.state);
-      this.swGlobal._activeTx = interactionTx;
-      this.swGlobal.caller = interaction.caller; // either contract tx id (for internal writes) or transaction.owner
-
-      this.assignReadContractState(executionContext, interactionTx);
-      this.assignViewContractState<Input>(executionContext);
-      this.assignWrite(executionContext);
-      this.assignRefreshState(executionContext);
-
       await this.swGlobal.kv.open();
-      const handlerResult = await Promise.race([timeoutPromise, this.contractFunction(stateCopy, interaction)]);
+
+      const handlerResult = await Promise.race([timeoutPromise, this.contractFunction(stateClone, interaction)]);
 
       if (handlerResult && (handlerResult.state !== undefined || handlerResult.result !== undefined)) {
         await this.swGlobal.kv.commit();
         return {
-          type: 'ok',
+          type: 'ok' as const,
           result: handlerResult.result,
-          state: handlerResult.state || currentResult.state
+          state: handlerResult.state || stateClone
         };
       }
 
@@ -54,39 +123,43 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
     } catch (err) {
       await this.swGlobal.kv.rollback();
       switch (err.name) {
-        case 'ContractError':
+        case KnownErrors.ContractError:
           return {
-            type: 'error',
+            type: 'error' as const,
             errorMessage: err.message,
-            state: currentResult.state,
-            // note: previous version was writing error message to a "result" field,
-            // which fucks-up the HandlerResult type definition -
-            // HandlerResult.result had to be declared as 'Result | string' - and that led to a poor dev exp.
-            // TODO: this might be breaking change!
+            state: state,
             result: null
           };
+        case KnownErrors.ConstructorError:
+          throw Error(`ConstructorError: ${err.message}`);
         default:
           return {
-            type: 'exception',
+            type: 'exception' as const,
             errorMessage: `${(err && err.stack) || (err && err.message) || err}`,
-            state: currentResult.state,
+            state: state,
             result: null
           };
       }
     } finally {
-      await this.swGlobal.kv.close();
-      if (timeoutId !== null) {
-        // it is important to clear the timeout promise
-        // - promise.race won't "cancel" it automatically if the "handler" promise "wins"
-        // - and this would ofc. cause a waste in cpu cycles
-        // (+ Jest complains about async operations not being stopped properly).
+      if (timeoutId) {
         clearTimeout(timeoutId);
       }
+      await this.swGlobal.kv.close();
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  initState(state: State): void {
-    // nth to do in this impl...
+  private setupSwGlobal<Input>({ interaction, interactionTx }: InteractionData<Input>) {
+    this.swGlobal._activeTx = interactionTx;
+    this.swGlobal.caller = interaction.caller; // either contract tx id (for internal writes) or transaction.owner
+  }
+
+  private enableInternalWrites<Input>(
+    executionContext: ExecutionContext<State, unknown>,
+    interactionTx: GQLNodeInterface
+  ) {
+    this.assignReadContractState(executionContext, interactionTx);
+    this.assignViewContractState<Input>(executionContext);
+    this.assignWrite(executionContext);
+    this.assignRefreshState(executionContext);
   }
 }

@@ -39,7 +39,7 @@ export type ExecutionContext<State, Api = unknown> = {
    * A handle to the contract's "handle" function - ie. main function of the given SWC - that actually
    * performs all the computation.
    */
-  handler: Api;
+  handler?: Api;
   caller?: string; // note: this is only set for "viewState" and "write" operations
   cachedState?: SortKeyCacheResult<EvalStateResult<State>>;
   requestedSortKey?: string;

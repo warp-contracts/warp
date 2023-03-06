@@ -49,28 +49,34 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       throw new Error('Contract tx id not set in the execution context');
     }
 
+    const isFirstEvaluation = cachedState == null;
+    let baseState = isFirstEvaluation ? executionContext.contractDefinition.initState : cachedState.cachedValue.state;
+    const baseValidity = isFirstEvaluation ? {} : cachedState.cachedValue.validity;
+    const baseErrorMessages = isFirstEvaluation ? {} : cachedState.cachedValue.errorMessages;
+
+    if (isFirstEvaluation) {
+      baseState = await executionContext.handler.maybeCallStateConstructor(
+        executionContext.contractDefinition.initState,
+        executionContext
+      );
+    }
+
     if (missingInteractions.length == 0) {
       this.cLogger.info(`No missing interactions ${contractTxId}`);
-      if (cachedState) {
+      if (!isFirstEvaluation) {
         executionContext.handler?.initState(cachedState.cachedValue.state);
         return cachedState;
       } else {
-        executionContext.handler?.initState(executionContext.contractDefinition.initState);
+        executionContext.handler?.initState(baseState);
+
         this.cLogger.debug('Inserting initial state into cache');
-        const stateToCache = new EvalStateResult(executionContext.contractDefinition.initState, {}, {});
+        const stateToCache = new EvalStateResult(baseState, {}, {});
         // no real sort-key - as we're returning the initial state
         await this.cache.put(new CacheKey(contractTxId, genesisSortKey), stateToCache);
 
         return new SortKeyCacheResult<EvalStateResult<State>>(genesisSortKey, stateToCache);
       }
     }
-
-    const baseState =
-      cachedState == null ? executionContext.contractDefinition.initState : cachedState.cachedValue.state;
-
-    const baseValidity = cachedState == null ? {} : cachedState.cachedValue.validity;
-    const baseErrorMessages = cachedState == null ? {} : cachedState.cachedValue.errorMessages;
-
     // eval state for the missing transactions - starting from the latest value from cache.
     return await this.doReadState(
       missingInteractions,
