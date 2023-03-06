@@ -99,7 +99,7 @@ export class EvalStateResult<State> {
     readonly state: State,
     readonly validity: Record<string, boolean>,
     readonly errorMessages: Record<string, string>
-  ) { }
+  ) {}
 }
 
 export type UnsafeClientOptions = 'allow' | 'skip' | 'throw';
