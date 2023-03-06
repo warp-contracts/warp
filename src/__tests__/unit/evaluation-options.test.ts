@@ -30,6 +30,7 @@ describe('Evaluation options evaluator', () => {
       useKVStorage: false,
       useVM2: false,
       waitForConfirmation: false,
+      useConstructor: false,
       walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/'
     });
 
@@ -69,6 +70,7 @@ describe('Evaluation options evaluator', () => {
       useKVStorage: false,
       useVM2: true,
       waitForConfirmation: false,
+      useConstructor: false,
       walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/'
     });
 
@@ -102,6 +104,7 @@ describe('Evaluation options evaluator', () => {
       useKVStorage: false,
       useVM2: true,
       waitForConfirmation: false,
+      useConstructor: false,
       walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/'
     });
 

@@ -28,6 +28,11 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
 
   abstract initState(state: State): void;
 
+  abstract maybeCallStateConstructor(
+    initialState: State,
+    executionContext: ExecutionContext<State, unknown>
+  ): Promise<State>;
+
   async dispose(): Promise<void> {
     // noop by default;
   }
