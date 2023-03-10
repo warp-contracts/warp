@@ -1,6 +1,7 @@
 # Dependency directories
 
 node_modules/
+crates/warp-contracts/target
 
 # Optional eslint cache
 .eslintcache
