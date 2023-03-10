@@ -310,7 +310,7 @@ describe('Testing internal writes', () => {
           },
           { strict: true }
         )
-      ).rejects.toThrowError(/^Cannot create interaction: Internal write auto error for call/);
+      ).rejects.toThrowError(/Internal write auto error for call/);
     });
 
     it('should not auto throw on default settings during writeInteraction if strict and IW call force to NOT throw an exception', async () => {

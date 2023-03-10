@@ -3,7 +3,7 @@ import { ContractDefinition } from '../../../../core/ContractDefinition';
 import { ExecutionContext } from '../../../../core/ExecutionContext';
 import { EvalStateResult } from '../../../../core/modules/StateEvaluator';
 import { SmartWeaveGlobal } from '../../../../legacy/smartweave-global';
-import { ContractInteraction, InteractionData, InteractionResult } from '../HandlerExecutorFactory';
+import { ContractError, ContractInteraction, InteractionData, InteractionResult } from '../HandlerExecutorFactory';
 import { AbstractContractHandler } from './AbstractContractHandler';
 
 export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
@@ -44,32 +44,21 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
       };
     } catch (e) {
       await this.swGlobal.kv.rollback();
-      // note: as exceptions handling in WASM is currently somewhat non-existent
-      // https://www.assemblyscript.org/status.html#exceptions
-      // and since we have to somehow differentiate different types of exceptions
-      // - each exception message has to have a proper prefix added.
-
-      // exceptions with prefix [RE:] ("Runtime Exceptions") should break the execution immediately
-      // - eg: [RE:OOG] - [RuntimeException: OutOfGas]
-
-      // exception with prefix [CE:] ("Contract Exceptions") should be logged, but should not break
-      // the state evaluation - as they are considered as contracts' business exception (eg. validation errors)
-      // - eg: [CE:ITT] - [ContractException: InvalidTokenTransfer]
       const result = {
         errorMessage: e.message,
         state: currentResult.state,
         result: null
       };
-      if (e.message.startsWith('[RE:')) {
-        this.logger.fatal(e);
+      if (e instanceof ContractError) {
         return {
           ...result,
-          type: 'exception'
+          error: e.error,
+          type: 'error'
         };
       } else {
         return {
           ...result,
-          type: 'error'
+          type: 'exception'
         };
       }
     } finally {
@@ -95,32 +84,15 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
 
         const handleResult = action.interactionType === 'write' ? await this.wasmExports.warpContractWrite(action.input) : await this.wasmExports.warpContractView(action.input);
 
-        if (Object.prototype.hasOwnProperty.call(handleResult, 'WriteResponse')) {
-          return handleResult.WriteResponse;
+        if (!handleResult) {
+          return;
         }
-        if (Object.prototype.hasOwnProperty.call(handleResult, 'ViewResponse')) {
-          return handleResult.ViewResponse;
+        if (handleResult.type === 'ok') {
+          return handleResult.result;
         }
-        {
-          this.logger.error('Error from rust', handleResult);
-          let errorKey;
-          let errorArgs = '';
-          if (typeof handleResult.Err === 'string' || handleResult.Err instanceof String) {
-            errorKey = handleResult.Err;
-          } else if ('kind' in handleResult.Err) {
-            errorKey = handleResult.Err.kind;
-            errorArgs = 'data' in handleResult.Err ? ' ' + handleResult.Err.data : '';
-          } else {
-            errorKey = Object.keys(handleResult.Err)[0];
-            errorArgs = ' ' + handleResult.Err[errorKey];
-          }
-
-          if (errorKey == 'RuntimeError') {
-            throw new Error(`[RE:RE]${errorArgs}`);
-          } else {
-            throw new Error(`[CE:${errorKey}${errorArgs}]`);
-          }
-        }
+        this.logger.error('Error from rust', handleResult);
+        if (handleResult.type === 'error') throw new ContractError(handleResult.error);
+        throw new Error(handleResult.errorMessage);
       }
       default: {
         throw new Error(`Support for ${this.contractDefinition.srcWasmLang} not implemented yet.`);

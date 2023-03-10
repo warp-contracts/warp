@@ -371,7 +371,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     reward?: string
   ) {
     if (this._evaluationOptions.internalWrites) {
-     // it modifies tags
+      // it modifies tags
       await this.discoverInternalWrites<Input>(input, tags, transfer, strict, vrf);
     }
 
@@ -403,7 +403,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
           : interactionTx.owner;
       const handlerResult = await this.callContract(input, 'write', caller, undefined, tags, transfer, strict, vrf);
       if (handlerResult.type !== 'ok') {
-        throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
+        throw Error('Cannot create interaction: ' + JSON.stringify(handlerResult.error || handlerResult.errorMessage));
       }
     }
 
@@ -1008,7 +1008,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     );
 
     if (strict && handlerResult.type !== 'ok') {
-      throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
+      throw Error('Cannot create interaction: ' + JSON.stringify(handlerResult.error || handlerResult.errorMessage));
     }
     const callStack: ContractCallRecord = this.getCallStack();
     const innerWrites = this._innerWritesEvaluator.eval(callStack);

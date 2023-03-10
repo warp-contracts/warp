@@ -88,7 +88,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
       });
 
       if (shouldAutoThrow) {
-        throw new ContractError(effectiveErrorMessage);
+        throw new ContractError(result.type === 'error' && result.error ? result.error : effectiveErrorMessage);
       }
 
       return result;
