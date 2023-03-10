@@ -720,7 +720,7 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance, dtorVal
     },
 
 
-    __wbg_log_3: function () {
+    __wbg_log: function () {
       return logError(function (arg0, arg1) {
         rawImports.console.log(getStringFromWasm0(arg0, arg1));
       }, arguments)
@@ -737,13 +737,11 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance, dtorVal
       return ret;
     },
 
-    __wbg_log_7: function () {
+    __wbg_debug: function () {
       return logError(function (arg0) {
         console.log(getObject(arg0));
       }, arguments)
     },
-
-
 
     __wbg_String: function () {
       return logError(function (arg0, arg1) {
