@@ -23,9 +23,9 @@ import { Buffer } from 'warp-isomorphic';
 // eslint-disable-next-line
 const BigNumber = require('bignumber.js');
 
-export class ContractError extends Error {
-  constructor(message, readonly subtype?: string) {
-    super(message);
+export class ContractError<T> extends Error {
+  constructor(readonly error: T, readonly subtype?: string) {
+    super(error.toString());
     this.name = 'ContractError';
   }
 }
@@ -277,6 +277,7 @@ export type HandlerResult<State, Result> = {
 export type InteractionResult<State, Result> = HandlerResult<State, Result> & {
   type: InteractionResultType;
   errorMessage?: string;
+  error?: unknown;
   originalValidity?: Record<string, boolean>;
   originalErrorMessages?: Record<string, string>;
 };
