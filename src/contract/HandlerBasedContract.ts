@@ -370,30 +370,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     reward?: string
   ) {
     if (this._evaluationOptions.internalWrites) {
-      // Call contract and verify if there are any internal writes:
-      // 1. Evaluate current contract state
-      // 2. Apply input as "dry-run" transaction
-      // 3. Verify the callStack and search for any "internalWrites" transactions
-      // 4. For each found "internalWrite" transaction - generate additional tag:
-      // {name: 'InternalWrite', value: callingContractTxId}
-      const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer, strict, vrf);
-
-      if (strict && handlerResult.type !== 'ok') {
-        throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
-      }
-      const callStack: ContractCallRecord = this.getCallStack();
-      const innerWrites = this._innerWritesEvaluator.eval(callStack);
-      this.logger.debug('Input', input);
-      this.logger.debug('Callstack', callStack.print());
-
-      innerWrites.forEach((contractTxId) => {
-        tags.push({
-          name: SmartWeaveTags.INTERACT_WRITE,
-          value: contractTxId
-        });
-      });
-
-      this.logger.debug('Tags with inner calls', tags);
+      // it modifies tags
+      await this.discoverInternalWrites<Input>(input, tags, transfer, strict, vrf);
     }
 
     if (vrf) {
@@ -649,7 +627,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     tags: Tags = [],
     transfer: ArTransfer = emptyTransfer,
     strict = false,
-    vrf = false
+    vrf = false,
+    sign = true
   ): Promise<InteractionResult<State, View>> {
     this.logger.info('Call contract input', input);
     this.maybeResetRootContract();
@@ -692,7 +671,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     this.logger.debug('interaction', interaction);
     const tx = await createInteractionTx(
       arweave,
-      this.signature?.signer,
+      sign ? this.signature?.signer : undefined,
       this._contractTxId,
       input,
       tags,
@@ -988,5 +967,38 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
 
     return result as HandlerBasedContract<unknown>;
+  }
+
+  // Call contract and verify if there are any internal writes:
+  // 1. Evaluate current contract state
+  // 2. Apply input as "dry-run" transaction
+  // 3. Verify the callStack and search for any "internalWrites" transactions
+  // 4. For each found "internalWrite" transaction - generate additional tag:
+  // {name: 'InternalWrite', value: callingContractTxId}
+  private async discoverInternalWrites<Input>(
+    input: Input,
+    tags: Tags,
+    transfer: ArTransfer,
+    strict: boolean,
+    vrf: boolean
+  ) {
+    const handlerResult = await this.callContract(input, undefined, undefined, tags, transfer, strict, vrf, false);
+
+    if (strict && handlerResult.type !== 'ok') {
+      throw Error(`Cannot create interaction: ${handlerResult.errorMessage}`);
+    }
+    const callStack: ContractCallRecord = this.getCallStack();
+    const innerWrites = this._innerWritesEvaluator.eval(callStack);
+    this.logger.debug('Input', input);
+    this.logger.debug('Callstack', callStack.print());
+
+    innerWrites.forEach((contractTxId) => {
+      tags.push({
+        name: SmartWeaveTags.INTERACT_WRITE,
+        value: contractTxId
+      });
+    });
+
+    this.logger.debug('Tags with inner calls', tags);
   }
 }
