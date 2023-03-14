@@ -1,6 +1,7 @@
-import { BatchDBOp } from '../../cache/SortKeyCache';
+import { CacheKey, SortKeyCacheEntry } from '../../cache/SortKeyCache';
 import { EvalStateResult } from '../../core/modules/StateEvaluator';
 import { GQLNodeInterface } from '../../legacy/gqlResult';
+import { SortKeyCacheRangeOptions } from '../../cache/SortKeyCacheRangeOptions';
 
 // Handles contracts state (both the json-based and kv-based) during interaction evaluation
 export interface InteractionState {
@@ -20,7 +21,7 @@ export interface InteractionState {
   /**
    * Updates the kv-state for a given contract during interaction evaluation
    */
-  updateKV(contractTxId: string, ops: BatchDBOp<unknown>[]): void;
+  updateKV(contractTxId: string, key: CacheKey, value: unknown): Promise<void>;
 
   /**
    * commits all the state changes made for all contracts within given interaction evaluation.
@@ -43,8 +44,13 @@ export interface InteractionState {
 
   get(contractTxId: string): EvalStateResult<unknown> | null;
 
-  getKV<T>(contractTxId: string): BatchDBOp<T>[] | null;
+  getKV(contractTxId: string, cacheKey: CacheKey): Promise<unknown>;
 
-  // TODO
-  getKVRange(contractTxId: string, key: string): unknown | null;
+  getKvKeys(contractTxId: string, sortKey?: string, options?: SortKeyCacheRangeOptions): Promise<string[]>;
+
+  getKvRange(
+    contractTxId: string,
+    sortKey?: string,
+    options?: SortKeyCacheRangeOptions
+  ): Promise<SortKeyCacheEntry<unknown>[]>;
 }
