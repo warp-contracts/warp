@@ -121,7 +121,7 @@ describe('Constructor', () => {
       });
     });
 
-    describe('Constructor has access to all smartweave globals', () => {
+    describe('Constructor has access to part of smartweave globals', () => {
       it('should assign as caller deployer of contract', async () => {
         const contract = await deployContract({});
 
@@ -179,6 +179,22 @@ describe('Constructor', () => {
         cachedValue: { state: state2 }
       } = await contract.readState();
       expect(state2.counter).toStrictEqual(2);
+    });
+
+    it('should fail to access block data', async () => {
+      const contract = await deployContract({ addToState: { accessBlock: true } });
+
+      await expect(contract.readState()).rejects.toThrowError(
+        'ConstructorError: SmartWeave.block object is not accessible in constructor'
+      );
+    });
+
+    it('should fail to access vrf data', async () => {
+      const contract = await deployContract({ addToState: { accessVrf: true } });
+
+      await expect(contract.readState()).rejects.toThrowError(
+        'ConstructorError: SmartWeave.vrf object is not accessible in constructor'
+      );
     });
 
     describe('Internal writes', () => {

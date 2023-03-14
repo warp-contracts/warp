@@ -129,7 +129,7 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
     initialState: State,
     executionContext: ExecutionContext<State, unknown>
   ): Promise<State> {
-    if (this.contractDefinition.manifest?.evaluationOptions.useConstructor) {
+    if (this.contractDefinition.manifest?.evaluationOptions?.useConstructor) {
       throw Error('Constructor is not implemented for wasm');
     }
     return initialState;
