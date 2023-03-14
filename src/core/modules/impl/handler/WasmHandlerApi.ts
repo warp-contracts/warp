@@ -66,11 +66,15 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
     }
   }
 
-  initState(state: State): void {
+  initState(state: State) {
     switch (this.contractDefinition.srcWasmLang) {
       case 'rust': {
-        this.wasmExports.initState(state);
-        break;
+        const ret = this.wasmExports.initState(state);
+        if (ret) {
+          throw new Error(ret);
+        } else {
+          return;
+        }
       }
       default: {
         throw new Error(`Support for ${this.contractDefinition.srcWasmLang} not implemented yet.`);
