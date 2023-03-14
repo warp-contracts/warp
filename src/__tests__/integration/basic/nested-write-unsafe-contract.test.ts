@@ -2,7 +2,7 @@ import fs from 'fs';
 
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
-import { JWKInterface } from 'arweave/node/lib/wallet';
+import {JWKInterface} from 'arweave/node/lib/wallet';
 import path from 'path';
 import { mineBlock } from '../_helpers';
 import { PstContract, PstState } from '../../../contract/PstContract';
@@ -33,8 +33,8 @@ describe('Testing unsafe client in nested contracts with "skip" option', () => {
     warp = WarpFactory.forLocal(1667).use(new DeployPlugin());
     warpUnsafe = WarpFactory.forLocal(1667).use(new DeployPlugin());
 
-    ({ arweave } = warp);
-    ({ jwk: wallet, address: walletAddress } = await warp.generateWallet());
+    ({arweave} = warp);
+    ({jwk: wallet, address: walletAddress} = await warp.generateWallet());
 
     safeContractSrc = fs.readFileSync(path.join(__dirname, '../data/token-pst.js'), 'utf8');
     const stateFromFile: PstState = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/token-pst.json'), 'utf8'));
@@ -50,7 +50,7 @@ describe('Testing unsafe client in nested contracts with "skip" option', () => {
       }
     };
 
-    ({ contractTxId } = await warp.createContract.deploy({
+    ({contractTxId} = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify(initialState),
       src: safeContractSrc
@@ -62,14 +62,14 @@ describe('Testing unsafe client in nested contracts with "skip" option', () => {
     pst.connect(wallet);
 
     unsafeContractSrc = fs.readFileSync(path.join(__dirname, '../data/token-pst-unsafe.js'), 'utf8');
-    ({ contractTxId: foreignUnsafeContractTxId } = await warp.createContract.deploy({
+    ({contractTxId: foreignUnsafeContractTxId} = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify(initialState),
       src: unsafeContractSrc
     }));
     await mineBlock(warp);
 
-    ({ contractTxId: foreignSafeContractTxId } = await warp.createContract.deploy({
+    ({contractTxId: foreignSafeContractTxId} = await warp.createContract.deploy({
       wallet,
       initState: JSON.stringify(initialState),
       src: safeContractSrc

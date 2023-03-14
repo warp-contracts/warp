@@ -75,7 +75,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         ? `Internal write auto error for call [${JSON.stringify(debugData)}]: ${result.errorMessage}`
         : result.errorMessage;
 
-      calleeContract.setUncommittedState(calleeContract.txId(), {
+      calleeContract.interactionState().update(calleeContract.txId(), {
         state: result.state as State,
         validity: {
           ...result.originalValidity,
@@ -145,19 +145,21 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
       // (by simply using destructuring operator)...
       // but this (i.e. returning always stateWithValidity from here) would break backwards compatibility
       // in current contract's source code..:/
-      return returnValidity
+      const result = returnValidity
         ? {
             state: deepCopy(stateWithValidity.cachedValue.state),
             validity: stateWithValidity.cachedValue.validity,
             errorMessages: stateWithValidity.cachedValue.errorMessages
           }
         : deepCopy(stateWithValidity.cachedValue.state);
+
+      return result;
     };
   }
 
   protected assignRefreshState(executionContext: ExecutionContext<State>) {
     this.swGlobal.contracts.refreshState = async () => {
-      return executionContext.contract.getUncommittedState(this.swGlobal.contract.id)?.state;
+      return executionContext.contract.interactionState().get(this.swGlobal.contract.id)?.state;
     };
   }
 }

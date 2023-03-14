@@ -1,7 +1,6 @@
 import Arweave from 'arweave';
 import { rustWasmImports, WarpContractsCrateVersion } from './wasm/rust-wasm-imports';
 import * as vm2 from 'vm2';
-import { WarpCache } from '../../../cache/WarpCache';
 import { ContractDefinition } from '../../../core/ContractDefinition';
 import { ExecutionContext } from '../../../core/ExecutionContext';
 import { GQLNodeInterface } from '../../../legacy/gqlResult';
@@ -13,10 +12,10 @@ import { EvalStateResult, EvaluationOptions } from '../StateEvaluator';
 import { JsHandlerApi } from './handler/JsHandlerApi';
 import { WasmHandlerApi } from './handler/WasmHandlerApi';
 import { normalizeContractSource } from './normalize-source';
-import { MemCache } from '../../../cache/impl/MemCache';
 import { Warp } from '../../Warp';
 import { isBrowser } from '../../../utils/utils';
 import { Buffer } from 'warp-isomorphic';
+import { InteractionState } from '../../../contract/states/InteractionState';
 
 // 'require' to fix esbuild adding same lib in both cjs and esm format
 // https://github.com/evanw/esbuild/issues/1950
@@ -37,15 +36,13 @@ export class ContractError<T> extends Error {
 export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknown>> {
   private readonly logger = LoggerFactory.INST.create('HandlerExecutorFactory');
 
-  // TODO: cache compiled wasm binaries here.
-  private readonly cache: WarpCache<string, WebAssembly.Module> = new MemCache();
-
   constructor(private readonly arweave: Arweave) {}
 
   async create<State>(
     contractDefinition: ContractDefinition<State>,
     evaluationOptions: EvaluationOptions,
-    warp: Warp
+    warp: Warp,
+    interactionState: InteractionState
   ): Promise<HandlerApi<State>> {
     let kvStorage = null;
 
@@ -60,6 +57,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
         owner: contractDefinition.owner
       },
       evaluationOptions,
+      interactionState,
       kvStorage
     );
 

@@ -1,7 +1,5 @@
 import Arweave from 'arweave';
 import { LevelDbCache } from '../cache/impl/LevelDbCache';
-import { MemCache } from '../cache/impl/MemCache';
-import { CacheableExecutorFactory } from '../plugins/CacheableExecutorFactory';
 import { Evolve } from '../plugins/Evolve';
 import { CacheableStateEvaluator } from './modules/impl/CacheableStateEvaluator';
 import { HandlerExecutorFactory } from './modules/impl/HandlerExecutorFactory';
@@ -121,7 +119,7 @@ export class WarpFactory {
       dbLocation: `${cacheOptions.dbLocation}/state`
     });
 
-    const executorFactory = new CacheableExecutorFactory(arweave, new HandlerExecutorFactory(arweave), new MemCache());
+    const executorFactory = new HandlerExecutorFactory(arweave);
     const stateEvaluator = new CacheableStateEvaluator(arweave, stateCache, [new Evolve()]);
 
     return Warp.builder(arweave, stateCache, environment)
