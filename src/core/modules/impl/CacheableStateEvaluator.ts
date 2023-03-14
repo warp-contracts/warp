@@ -1,14 +1,14 @@
 import Arweave from 'arweave';
-import { SortKeyCache, SortKeyCacheResult, CacheKey } from '../../../cache/SortKeyCache';
-import { ExecutionContext } from '../../../core/ExecutionContext';
-import { ExecutionContextModifier } from '../../../core/ExecutionContextModifier';
-import { GQLNodeInterface } from '../../../legacy/gqlResult';
-import { LoggerFactory } from '../../../logging/LoggerFactory';
-import { indent } from '../../../utils/utils';
-import { EvalStateResult } from '../StateEvaluator';
-import { DefaultStateEvaluator } from './DefaultStateEvaluator';
-import { HandlerApi } from './HandlerExecutorFactory';
-import { genesisSortKey } from './LexicographicalInteractionsSorter';
+import {CacheKey, SortKeyCache, SortKeyCacheResult} from '../../../cache/SortKeyCache';
+import {ExecutionContext} from '../../../core/ExecutionContext';
+import {ExecutionContextModifier} from '../../../core/ExecutionContextModifier';
+import {GQLNodeInterface} from '../../../legacy/gqlResult';
+import {LoggerFactory} from '../../../logging/LoggerFactory';
+import {indent} from '../../../utils/utils';
+import {EvalStateResult} from '../StateEvaluator';
+import {DefaultStateEvaluator} from './DefaultStateEvaluator';
+import {HandlerApi} from './HandlerExecutorFactory';
+import {genesisSortKey} from './LexicographicalInteractionsSorter';
 
 /**
  * An implementation of DefaultStateEvaluator that adds caching capabilities.
@@ -32,7 +32,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
   async eval<State>(
     executionContext: ExecutionContext<State, HandlerApi<State>>
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
-    const cachedState = executionContext.cachedState;
+    const {cachedState, contract} = executionContext;
     const missingInteractions = executionContext.sortedInteractions;
 
     if (cachedState && cachedState.sortKey == executionContext.requestedSortKey && !missingInteractions?.length) {
@@ -59,22 +59,22 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
         executionContext.contractDefinition.initState,
         executionContext
       );
+      await contract.interactionState().commitKV();
     }
 
     if (missingInteractions.length == 0) {
       this.cLogger.info(`No missing interactions ${contractTxId}`);
-      if (!isFirstEvaluation) {
-        executionContext.handler?.initState(cachedState.cachedValue.state);
-        return cachedState;
-      } else {
+      if (isFirstEvaluation) {
         executionContext.handler?.initState(baseState);
-
         this.cLogger.debug('Inserting initial state into cache');
         const stateToCache = new EvalStateResult(baseState, {}, {});
         // no real sort-key - as we're returning the initial state
         await this.cache.put(new CacheKey(contractTxId, genesisSortKey), stateToCache);
 
         return new SortKeyCacheResult<EvalStateResult<State>>(genesisSortKey, stateToCache);
+      } else {
+        executionContext.handler?.initState(cachedState.cachedValue.state);
+        return cachedState;
       }
     }
     // eval state for the missing transactions - starting from the latest value from cache.
@@ -123,11 +123,9 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     contractTxId: string,
     sortKey?: string
   ): Promise<SortKeyCacheResult<EvalStateResult<State>> | null> {
-    this.cLogger.debug('Searching for', { contractTxId, sortKey });
+    this.cLogger.debug('Searching for', {contractTxId, sortKey});
     if (sortKey) {
-      const stateCache = (await this.cache.getLessOrEqual(contractTxId, sortKey)) as SortKeyCacheResult<
-        EvalStateResult<State>
-      >;
+      const stateCache = (await this.cache.getLessOrEqual(contractTxId, sortKey)) as SortKeyCacheResult<EvalStateResult<State>>;
       if (stateCache) {
         this.cLogger.debug(`Latest available state at ${contractTxId}: ${stateCache.sortKey}`);
       }

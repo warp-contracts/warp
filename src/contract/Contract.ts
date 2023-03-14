@@ -6,6 +6,7 @@ import { GQLNodeInterface } from '../legacy/gqlResult';
 import { ArTransfer, Tags, ArWallet } from './deploy/CreateContract';
 import { CustomSignature } from './Signature';
 import { EvaluationOptionsEvaluator } from './EvaluationOptionsEvaluator';
+import { InteractionState } from './states/InteractionState';
 
 export type BenchmarkStats = { gatewayCommunication: number; stateEvaluation: number; total: number };
 
@@ -245,7 +246,9 @@ export interface Contract<State = unknown> {
 
   getStorageValues(keys: string[]): Promise<SortKeyCacheResult<Map<string, unknown>>>;
 
-  getUncommittedState(contractTxId: string): EvalStateResult<unknown>;
+  interactionState(): InteractionState;
+
+  /*  getUncommittedState(contractTxId: string): EvalStateResult<unknown>;
 
   setUncommittedState(contractTxId: string, result: EvalStateResult<unknown>): void;
 
@@ -253,5 +256,5 @@ export interface Contract<State = unknown> {
 
   resetUncommittedState(): void;
 
-  commitStates(interaction: GQLNodeInterface): Promise<void>;
+  commitStates(interaction: GQLNodeInterface): Promise<void>;*/
 }
