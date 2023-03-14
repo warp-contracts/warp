@@ -1,6 +1,7 @@
 import { ContractDefinition } from '../../core/ContractDefinition';
 import { EvaluationOptions } from './StateEvaluator';
 import { Warp } from '../Warp';
+import { InteractionState } from '../../contract/states/InteractionState';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ContractApi {}
@@ -13,6 +14,7 @@ export interface ExecutorFactory<Api> {
   create<State>(
     contractDefinition: ContractDefinition<State>,
     evaluationOptions: EvaluationOptions,
-    warp: Warp
+    warp: Warp,
+    interactionState: InteractionState
   ): Promise<Api>;
 }
