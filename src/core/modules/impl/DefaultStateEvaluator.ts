@@ -95,7 +95,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         break;
       }
 
-      contract.setUncommittedState(contract.txId(), new EvalStateResult(currentState, validity, errorMessages));
+      contract.interactionState().setInitial(contract.txId(), new EvalStateResult(currentState, validity, errorMessages));
 
       const missingInteraction = missingInteractions[i];
       const singleInteractionBenchmark = Benchmark.measure();
@@ -151,7 +151,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         let newState: EvalStateResult<unknown> = null;
         try {
           await writingContract.readState(missingInteraction.sortKey);
-          newState = contract.getUncommittedState(contract.txId());
+          newState = contract.interactionState().get(contract.txId());
         } catch (e) {
           if (e.name == 'ContractError' && e.subtype == 'unsafeClientSkip') {
             this.logger.warn('Skipping unsafe contract in internal write');
@@ -291,12 +291,16 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       if (contract.isRoot()) {
         // update the uncommitted state of the root contract
         if (lastConfirmedTxState) {
-          contract.setUncommittedState(contract.txId(), lastConfirmedTxState.state);
-          await contract.commitStates(missingInteraction);
+          contract.interactionState().update(contract.txId(), lastConfirmedTxState.state);
+          if (validity[missingInteraction.id]) {
+            await contract.interactionState().commit(missingInteraction);
+         } else {
+            await contract.interactionState().rollback(missingInteraction);
+          }
         }
       } else {
         // if that's an inner contract call - only update the state in the uncommitted states
-        contract.setUncommittedState(contract.txId(), new EvalStateResult(currentState, validity, errorMessages));
+        contract.interactionState().update(contract.txId(), new EvalStateResult(currentState, validity, errorMessages));
       }
     }
     const evalStateResult = new EvalStateResult<State>(currentState, validity, errorMessages);

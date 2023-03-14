@@ -3,6 +3,7 @@ import Arweave from 'arweave';
 import { EvaluationOptions } from '../core/modules/StateEvaluator';
 import { GQLNodeInterface, GQLTagInterface, VrfData } from './gqlResult';
 import { BatchDBOp, CacheKey, PutBatch, SortKeyCache } from '../cache/SortKeyCache';
+ import {InteractionState} from "../contract/states/InteractionState";
 
 /**
  *
@@ -63,6 +64,7 @@ export class SmartWeaveGlobal {
     arweave: Arweave,
     contract: { id: string; owner: string },
     evaluationOptions: EvaluationOptions,
+    interactionState: InteractionState,
     storage: SortKeyCache<any> | null
   ) {
     this.gasUsed = 0;
@@ -104,7 +106,7 @@ export class SmartWeaveGlobal {
 
     this.extensions = {};
 
-    this.kv = new KV(storage, this.transaction);
+    this.kv = new KV(storage, interactionState, this.transaction, this.contract.id);
   }
 
   useGas(gas: number) {
@@ -257,7 +259,11 @@ export class SWVrf {
 export class KV {
   private _kvBatch: BatchDBOp<any>[] = [];
 
-  constructor(private readonly _storage: SortKeyCache<any> | null, private readonly _transaction: SWTransaction) {}
+  constructor(
+    private readonly _storage: SortKeyCache<any> | null,
+    private readonly _interactionState: InteractionState,
+    private readonly _transaction: SWTransaction,
+    private readonly _contractTxId: string) {}
 
   async put(key: string, value: any): Promise<void> {
     this.checkStorageAvailable();
@@ -272,13 +278,20 @@ export class KV {
     this.checkStorageAvailable();
     const sortKey = this._transaction.sortKey;
 
+    // first we're checking if the value exists in changes registered for the activeTx
     if (this._kvBatch.length > 0) {
-      const putBatches = this._kvBatch.filter((batchOp) => batchOp.type === 'put') as PutBatch<any>[];
-      const matchingPutBatch = putBatches.reverse().find((batchOp) => {
-        return batchOp.key.key === key && batchOp.key.sortKey === sortKey;
-      }) as PutBatch<V>;
-      if (matchingPutBatch !== undefined) {
-        return matchingPutBatch.value;
+      const activeTxValue = this.findInBatches<V>(this._kvBatch, key, sortKey);
+      if (activeTxValue !== undefined) {
+        return activeTxValue;
+      }
+    }
+
+    // then we're checking if the values exists in the interactionState
+    const interactionStateBatch = this._interactionState.getKV(this._contractTxId);
+    if (interactionStateBatch?.length > 0) {
+      const interactionStateValue = this.findInBatches<V>(interactionStateBatch, key, sortKey);
+      if (interactionStateValue !== undefined) {
+        return interactionStateValue;
       }
     }
 
@@ -286,11 +299,18 @@ export class KV {
     return result?.cachedValue || null;
   }
 
+  private findInBatches<V>(batches: BatchDBOp<any>[], key: string, sortKey: string): V | undefined {
+    const putBatches = batches.filter((batchOp) => batchOp.type === 'put') as PutBatch<any>[];
+    const matchingPutBatch = putBatches.reverse().find((batchOp) => {
+      return batchOp.key.key === key && batchOp.key.sortKey === sortKey;
+    }) as PutBatch<V>;
+
+    return matchingPutBatch?.value;
+  }
+
   async commit(): Promise<void> {
     if (this._storage) {
-      if (!this._transaction.dryRun) {
-        await this._storage.batch(this._kvBatch);
-      }
+      this._interactionState.updateKV(this._contractTxId, [...this._kvBatch])
       this._kvBatch = [];
     }
   }
