@@ -6,6 +6,7 @@ import { LoggerFactory } from '../../logging/LoggerFactory';
 import { SortKeyCacheRangeOptions } from '../SortKeyCacheRangeOptions';
 import { RangeOptions } from 'abstract-level/types/interfaces';
 import { AbstractSublevelOptions } from 'abstract-level/types/abstract-sublevel';
+import { AbstractChainedBatch } from 'abstract-level/types/abstract-chained-batch';
 
 /**
  * The LevelDB is a lexicographically sorted key-value database - so it's ideal for this use case
@@ -29,6 +30,7 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
    * (the AbstractLevel is not exported from the package...)
    */
   private _db: MemoryLevel<string, V>;
+  private _rollbackBatch: AbstractChainedBatch<MemoryLevel<string, V>, string, V>;
 
   // Lazy initialization upon first access
   private get db(): MemoryLevel<string, V> {
@@ -114,6 +116,10 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
     // manually opening to fix https://github.com/Level/level/issues/221
     await contractCache.open();
     await contractCache.put(stateCacheKey.sortKey, value);
+    if (!this._rollbackBatch) {
+      this.begin();
+    }
+    this._rollbackBatch.del(stateCacheKey.sortKey, { sublevel: contractCache });
   }
 
   async delete(key: string): Promise<void> {
@@ -134,11 +140,28 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
 
   async open(): Promise<void> {
     await this.db.open();
+    await this.begin();
   }
 
   async close(): Promise<void> {
     if (this._db) {
       await this._db.close();
+    }
+  }
+
+  begin() {
+    this._rollbackBatch = this.db.batch();
+  }
+
+  async rollback() {
+    if (this._rollbackBatch && this._rollbackBatch.length > 0) {
+      await this._rollbackBatch.write();
+    }
+  }
+
+  async commit() {
+    if (this._rollbackBatch) {
+      await this._rollbackBatch.clear().close();
     }
   }
 
@@ -155,10 +178,10 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
     await this.db.open();
     const keys = await this.db.keys().all();
 
-    for (const key of keys) {
-      // default key format used by sub-levels:
-      // !<contract_tx_id (43 chars)>!<sort_key>
-      const sortKey = key.substring(45);
+    for (const joinedKey of keys) {
+      // default joined key format used by sub-levels:
+      // <separator><contract_tx_id (43 chars)><separator><sort_key>
+      const sortKey = joinedKey.substring(45);
       if (sortKey.localeCompare(lastSortKey) > 0) {
         lastSortKey = sortKey;
       }
@@ -170,8 +193,9 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
   async keys(sortKey?: string, options?: SortKeyCacheRangeOptions): Promise<string[]> {
     const distinctKeys = new Set<string>();
     const rangeOptions: RangeOptions<string> = this.levelRangeOptions(options);
+    const joinedKeys = await this.db.keys(rangeOptions).all();
 
-    (await this.db.keys(rangeOptions).all())
+    joinedKeys
       .filter((k) => !sortKey || this.extractSortKey(k).localeCompare(sortKey) <= 0)
       .map((k) => this.extractOriginalKey(k))
       .forEach((k) => distinctKeys.add(k));

@@ -1,14 +1,14 @@
 import { InteractionState } from './InteractionState';
-import { BatchDBOp } from '../../cache/SortKeyCache';
+import { CacheKey, SortKeyCache, SortKeyCacheEntry } from '../../cache/SortKeyCache';
 import { EvalStateResult } from '../../core/modules/StateEvaluator';
 import { GQLNodeInterface } from '../../legacy/gqlResult';
 import { Warp } from '../../core/Warp';
+import { SortKeyCacheRangeOptions } from '../../cache/SortKeyCacheRangeOptions';
 
 export class ContractInteractionState implements InteractionState {
   private readonly _json = new Map<string, EvalStateResult<unknown>>();
   private readonly _initialJson = new Map<string, EvalStateResult<unknown>>();
-
-  private readonly _kv = new Map<string, BatchDBOp<unknown>[]>();
+  private readonly _kv = new Map<string, SortKeyCache<unknown>>();
 
   constructor(private readonly _warp: Warp) {}
 
@@ -20,36 +20,48 @@ export class ContractInteractionState implements InteractionState {
     return this._json.get(contractTxId) || null;
   }
 
-  getKV<T>(contractTxId: string): BatchDBOp<T>[] | null {
-    return this._kv.get(contractTxId) as BatchDBOp<T>[] || null;
+  async getKV(contractTxId: string, cacheKey: CacheKey): Promise<unknown> {
+    if (this._kv.has(contractTxId)) {
+      return (await this._kv.get(contractTxId).get(cacheKey))?.cachedValue || null;
+    }
+    return null;
   }
 
-  // TODO. TWL good luck with this one :-)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  getKVRange(contractTxId: string, key: string): unknown {
-    throw new Error('Method not implemented.');
+  getKvKeys(contractTxId: string, sortKey?: string, options?: SortKeyCacheRangeOptions): Promise<string[]> {
+    const storage = this._warp.kvStorageFactory(contractTxId);
+    return storage.keys(sortKey, options);
+  }
+
+  getKvRange(
+    contractTxId: string,
+    sortKey?: string,
+    options?: SortKeyCacheRangeOptions
+  ): Promise<SortKeyCacheEntry<unknown>[]> {
+    const storage = this._warp.kvStorageFactory(contractTxId);
+    return storage.entries(sortKey, options);
   }
 
   async commit(interaction: GQLNodeInterface): Promise<void> {
     if (interaction.dry) {
-      return;
+      return await this.rollbackKVs();
     }
     try {
       await this.doStoreJson(this._json, interaction);
-      await this.doStoreKV();
+      await this.commitKVs();
     } finally {
       this.reset();
     }
   }
 
   async commitKV(): Promise<void> {
-    await this.doStoreKV();
+    await this.commitKVs();
     this._kv.clear();
   }
 
   async rollback(interaction: GQLNodeInterface): Promise<void> {
     try {
       await this.doStoreJson(this._initialJson, interaction);
+      await this.rollbackKVs();
     } finally {
       this.reset();
     }
@@ -65,12 +77,18 @@ export class ContractInteractionState implements InteractionState {
     this._json.set(contractTxId, state);
   }
 
-  updateKV(contractTxId: string, ops: BatchDBOp<unknown>[]): void {
-    if (!this._kv.has(contractTxId)) {
-      this._kv.set(contractTxId, ops);
-    } else {
-      this._kv.set(contractTxId, this._kv.get(contractTxId).concat(ops));
+  async updateKV(contractTxId: string, key: CacheKey, value: unknown): Promise<void> {
+    await (await this.getOrInitKvStorage(contractTxId)).put(key, value);
+  }
+
+  private async getOrInitKvStorage(contractTxId: string): Promise<SortKeyCache<unknown>> {
+    if (this._kv.has(contractTxId)) {
+      return this._kv.get(contractTxId);
     }
+    const storage = this._warp.kvStorageFactory(contractTxId);
+    this._kv.set(contractTxId, storage);
+    await storage.open();
+    return storage;
   }
 
   private reset(): void {
@@ -87,13 +105,20 @@ export class ContractInteractionState implements InteractionState {
     }
   }
 
-  private async doStoreKV(): Promise<void> {
-    for (const [contractTxId, batch] of this._kv) {
-      const storage = this._warp.kvStorageFactory(contractTxId);
-
+  private async rollbackKVs(): Promise<void> {
+    for (const storage of this._kv.values()) {
       try {
-        await storage.open();
-        await storage.batch(batch);
+        await storage.rollback();
+      } finally {
+        await storage.close();
+      }
+    }
+  }
+
+  private async commitKVs(): Promise<void> {
+    for (const storage of this._kv.values()) {
+      try {
+        await storage.commit();
       } finally {
         await storage.close();
       }
