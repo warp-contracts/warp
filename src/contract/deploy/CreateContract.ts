@@ -22,7 +22,7 @@ export const emptyTransfer: ArTransfer = {
 };
 
 export type EvaluationManifest = {
-  evaluationOptions: Partial<EvaluationOptions>;
+  evaluationOptions?: Partial<EvaluationOptions>;
   plugins?: WarpPluginType[];
 };
 

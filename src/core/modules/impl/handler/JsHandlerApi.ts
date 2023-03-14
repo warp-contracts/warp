@@ -51,17 +51,20 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
     initialState: State,
     executionContext: ExecutionContext<State>
   ): Promise<State> {
-    if (this.contractDefinition.manifest?.evaluationOptions.useConstructor) {
+    if (this.contractDefinition.manifest?.evaluationOptions?.useConstructor) {
       const interaction = {
         input: { function: INIT_FUNC_NAME, args: initialState } as Input,
         caller: this.contractDefinition.owner
       };
-      const interactionTx = { ...this.contractDefinition.contractTx, sortKey: genesisSortKey };
-      // this is hard corded sortKey to make KV possible
+
+      const interactionTx = (await this.makeInteractionTxFromContractTx(
+        this.contractDefinition.contractTx,
+        this.contractDefinition.owner
+      )) as GQLNodeInterface;
       const interactionData: InteractionData<Input> = { interaction, interactionTx };
 
       this.setupSwGlobal(interactionData);
-      this.disableInternalWritesForConstructor();
+      this.configureSwGlobalForConstructor();
 
       const result = await this.runContractFunction(executionContext, interaction, {} as State);
       if (result.type !== 'ok') {
@@ -73,16 +76,32 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
     }
   }
 
+  private async makeInteractionTxFromContractTx(
+    contractTx: ContractDefinition<unknown>['contractTx'],
+    owner: string
+  ): Promise<Omit<GQLNodeInterface, 'anchor' | 'signature' | 'parent' | 'bundledIn' | 'data' | 'block'>> {
+    return {
+      id: contractTx.id,
+      tags: contractTx.tags,
+      recipient: contractTx.target,
+      owner: { address: owner, key: null },
+      quantity: { winston: contractTx.quantity, ar: null },
+      fee: { winston: contractTx.fee, ar: null },
+      sortKey: genesisSortKey
+    };
+  }
+
   private assertNotConstructorCall<Input>(interaction: ContractInteraction<Input>) {
     if (
-      this.contractDefinition.manifest?.evaluationOptions.useConstructor &&
+      this.contractDefinition.manifest?.evaluationOptions?.useConstructor &&
       interaction.input['function'] === INIT_FUNC_NAME
     ) {
       throw new Error(`You have enabled {useConstructor: true} option, so you can't call function ${INIT_FUNC_NAME}`);
     }
   }
 
-  private disableInternalWritesForConstructor() {
+  private configureSwGlobalForConstructor() {
+    // disable internal writes
     const templateErrorMessage = (op) =>
       `Can't ${op} foreign contract state: Internal writes feature is not available in constructor`;
     this.swGlobal.contracts.readContractState = () =>
@@ -92,6 +111,17 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
       throwErrorWithName('ConstructorError', templateErrorMessage('refreshState'));
     this.swGlobal.contracts.viewContractState = () =>
       throwErrorWithName('ConstructorError', templateErrorMessage('viewContractState'));
+
+    const disabledVrf = new Proxy(this.swGlobal.vrf, {
+      get: () => throwErrorWithName('ConstructorError', `SmartWeave.vrf object is not accessible in constructor`)
+    });
+
+    const disabledBlock = new Proxy(this.swGlobal.block, {
+      get: () => throwErrorWithName('ConstructorError', 'SmartWeave.block object is not accessible in constructor')
+    });
+
+    this.swGlobal.vrf = disabledVrf;
+    this.swGlobal.block = disabledBlock;
   }
 
   private async runContractFunction<Input>(
