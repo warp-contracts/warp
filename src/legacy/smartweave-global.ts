@@ -258,8 +258,6 @@ export class SWVrf {
 }
 
 export class KV {
-  private _kvBatch: BatchDBOp<any>[] = [];
-
   constructor(
     private readonly _storage: SortKeyCache<any> | null,
     private readonly _interactionState: InteractionState,
@@ -268,50 +266,26 @@ export class KV {
 
   async put(key: string, value: any): Promise<void> {
     this.checkStorageAvailable();
-    this._kvBatch.push({
-      type: 'put',
-      key: new CacheKey(key, this._transaction.sortKey),
-      value: value
-    });
+    await this._storage.put(new CacheKey(key, this._transaction.sortKey), value)
   }
 
-  async get<V>(key: string): Promise<V | null> {
+  async get(key: string): Promise<unknown | null> {
     this.checkStorageAvailable();
     const sortKey = this._transaction.sortKey;
 
-    // first we're checking if the value exists in changes registered for the activeTx
-    if (this._kvBatch.length > 0) {
-      const activeTxValue = this.findInBatches<V>(this._kvBatch, key, sortKey);
-      if (activeTxValue !== undefined) {
-        return activeTxValue;
-      }
-    }
-
     // then we're checking if the values exists in the interactionState
-    const interactionStateBatch = this._interactionState.getKV(this._contractTxId);
-    if (interactionStateBatch?.length > 0) {
-      const interactionStateValue = this.findInBatches<V>(interactionStateBatch, key, sortKey);
-      if (interactionStateValue !== undefined) {
-        return interactionStateValue;
-      }
+    const interactionStateValue = await this._interactionState.getKV(this._contractTxId, new CacheKey(key, this._transaction.sortKey));
+    if (interactionStateValue != null) {
+      return interactionStateValue;
     }
 
     const result = await this._storage.getLessOrEqual(key, this._transaction.sortKey);
     return result?.cachedValue || null;
   }
 
-  private findInBatches<V>(batches: BatchDBOp<any>[], key: string, sortKey: string): V | undefined {
-    const putBatches = batches.filter((batchOp) => batchOp.type === 'put') as PutBatch<any>[];
-    const matchingPutBatch = putBatches.reverse().find((batchOp) => {
-      return batchOp.key.key === key && batchOp.key.sortKey === sortKey;
-    }) as PutBatch<V>;
-
-    return matchingPutBatch?.value;
-  }
-
   async keys(options?: SortKeyCacheRangeOptions): Promise<string[]> {
     const sortKey = this._transaction.sortKey;
-    return this._storage.keys(sortKey, options)
+    return await this._storage.keys(sortKey, options)
   }
 
   async entries<V>(options?: SortKeyCacheRangeOptions): Promise<SortKeyCacheEntry<V>[]> {
@@ -321,17 +295,18 @@ export class KV {
 
   async commit(): Promise<void> {
     if (this._storage) {
-      this._interactionState.updateKV(this._contractTxId, [...this._kvBatch])
-      this._kvBatch = [];
+      if (this._transaction.dryRun) {
+        this._storage.rollback()
+      } else {
+        this._storage.commit()
+      }
     }
   }
 
-  rollback(): void {
-    this._kvBatch = [];
-  }
-
-  ops(): BatchDBOp<any>[] {
-    return structuredClone(this._kvBatch);
+  async rollback(): Promise<void> {
+    if (this._storage) {
+      this._storage.rollback()
+    }
   }
 
   open(): Promise<void> {
