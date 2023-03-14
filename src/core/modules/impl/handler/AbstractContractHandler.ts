@@ -26,7 +26,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
     interactionData: InteractionData<Input>
   ): Promise<InteractionResult<State, Result>>;
 
-  abstract initState(state: State): void;
+  abstract initState(state: State);
 
   abstract maybeCallStateConstructor(
     initialState: State,

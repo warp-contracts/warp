@@ -45,7 +45,8 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
   }
 
   // eslint-disable-next-line
-  initState(state: State): void {}
+  initState(state: State) {
+  }
 
   async maybeCallStateConstructor<Input>(
     initialState: State,

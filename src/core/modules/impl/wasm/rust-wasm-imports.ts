@@ -369,11 +369,22 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance, dtorVal
   }
   /**
    * @param {any} state
+   * @returns {boolean}
    */
   function initState(state) {
     try {
-      wasmInstance.exports.initState(addBorrowedObject(state));
+      const retptr = wasmInstance.exports.__wbindgen_add_to_stack_pointer(-16);
+      wasmInstance.exports.initState(retptr, addBorrowedObject(state));
+      var r0 = getInt32Memory0()[retptr / 4 + 0];
+      var r1 = getInt32Memory0()[retptr / 4 + 1];
+      let v0;
+      if (r0 !== 0) {
+        v0 = getStringFromWasm0(r0, r1).slice();
+        wasmInstance.exports.__wbindgen_free(r0, r1 * 1);
+      }
+      return v0;
     } finally {
+      wasmInstance.exports.__wbindgen_add_to_stack_pointer(16);
       heap[stack_pointer++] = undefined;
     }
   };
@@ -772,6 +783,7 @@ export const rustWasmImports = (swGlobal, wbindgenImports, wasmInstance, dtorVal
       const ret = arg0;
       return addHeapObject(ret);
     },
+
     __wbindgen_jsval_loose_eq: function (arg0, arg1) {
       const ret = getObject(arg0) == getObject(arg1);
       _assertBoolean(ret);
