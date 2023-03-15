@@ -6,6 +6,16 @@ export const sleep = (ms: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
+export const safeParseInt = (str: string): number => {
+  const maybeInt = Number.parseInt(str);
+
+  if (Number.isNaN(maybeInt) && !Number.isSafeInteger(maybeInt)) {
+    throw Error(`Failed to cast ${str} to integer`);
+  }
+
+  return maybeInt;
+};
+
 export const deepCopy = (input: unknown): any => {
   return copy(input);
 };

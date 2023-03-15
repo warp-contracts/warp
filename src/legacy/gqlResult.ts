@@ -29,6 +29,9 @@ export interface GQLBlockInterface {
   previous: string;
 }
 
+// For the first interaction processed by sequencer will be set to 'null' <- yes, this is string
+type LastSortKey = 'null' | string;
+
 export interface GQLNodeInterface {
   id: string;
   anchor: string;
@@ -48,6 +51,7 @@ export interface GQLNodeInterface {
   };
   dry?: boolean;
   sortKey?: string; // added dynamically by Warp Sequencer
+  lastSortKey?: LastSortKey; // added dynamically by Warp Sequencer
   strict?: boolean;
   confirmationStatus?: string;
   source?: string;
@@ -76,4 +80,21 @@ export interface GQLResultInterface {
   data: {
     transactions: GQLTransactionsResultInterface;
   };
+}
+
+export interface GQLTransaction {
+  id: string;
+  owner: GQLOwnerInterface;
+  recipient: string;
+  tags: GQLTagInterface[];
+  block: GQLBlockInterface;
+  fee: GQLAmountInterface;
+  quantity: GQLAmountInterface;
+  bundledIn: { id: string };
+  parent: { id: string };
+  signature: string;
+}
+
+export interface GQLTransactionResponse {
+  transaction: GQLTransaction;
 }

@@ -1,6 +1,12 @@
 import Arweave from 'arweave';
 import { ContractType } from '../../../contract/deploy/CreateContract';
-import { ContractDefinition, ContractSource, ContractCache, SrcCache } from '../../../core/ContractDefinition';
+import {
+  ContractDefinition,
+  ContractSource,
+  ContractCache,
+  SrcCache,
+  SUPPORTED_SRC_CONTENT_TYPES
+} from '../../../core/ContractDefinition';
 import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
 import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
@@ -12,8 +18,6 @@ import { WasmSrc } from './wasm/WasmSrc';
 import { WarpEnvironment } from '../../Warp';
 import { SortKeyCache } from '../../../cache/SortKeyCache';
 import { Transaction } from '../../../utils/types/arweave-types';
-
-const supportedSrcContentTypes = ['application/javascript', 'application/wasm'];
 
 export class ContractDefinitionLoader implements DefinitionLoader {
   private readonly logger = LoggerFactory.INST.create('ContractDefinitionLoader');
@@ -63,7 +67,7 @@ export class ContractDefinitionLoader implements DefinitionLoader {
     benchmark.reset();
     const s = await this.evalInitialState(contractTx);
     this.logger.debug('init state', s);
-    const initState = JSON.parse(await this.evalInitialState(contractTx));
+    const initState = JSON.parse(s);
     this.logger.debug('Parsing src and init state', benchmark.elapsed());
 
     const { src, srcBinary, srcWasmLang, contractType, metadata, srcTx } = await this.loadContractSource(
@@ -93,7 +97,7 @@ export class ContractDefinitionLoader implements DefinitionLoader {
 
     const contractSrcTx = await this.arweaveWrapper.tx(contractSrcTxId);
     const srcContentType = this.tagsParser.getTag(contractSrcTx, SmartWeaveTags.CONTENT_TYPE);
-    if (!supportedSrcContentTypes.includes(srcContentType)) {
+    if (!SUPPORTED_SRC_CONTENT_TYPES.includes(srcContentType)) {
       throw new Error(`Contract source content type ${srcContentType} not supported`);
     }
     const contractType: ContractType = srcContentType == 'application/javascript' ? 'js' : 'wasm';

@@ -68,8 +68,8 @@ export class Warp {
 
   constructor(
     readonly arweave: Arweave,
-    readonly definitionLoader: DefinitionLoader,
-    readonly interactionsLoader: InteractionsLoader,
+    public definitionLoader: DefinitionLoader,
+    public interactionsLoader: InteractionsLoader,
     readonly executorFactory: ExecutorFactory<HandlerApi<unknown>>,
     readonly stateEvaluator: StateEvaluator,
     readonly environment: WarpEnvironment = 'custom'

@@ -1,9 +1,10 @@
 import Arweave from 'arweave';
+import { WARP_SEQUENCER_TAGS } from '../../../core/WarpSequencerTags';
+import { Tag } from 'utils/types/arweave-types';
 import { GQLEdgeInterface } from '../../../legacy/gqlResult';
 import { arrayToHex } from '../../../legacy/utils';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { InteractionsSorter } from '../InteractionsSorter';
-import { SourceType } from './WarpGatewayInteractionsLoader';
 
 // note: this (i.e. padding to 13 digits) should be safe between years ~1966 and ~2286
 const firstSortKeyMs = ''.padEnd(13, '0');
@@ -54,7 +55,12 @@ export class LexicographicalInteractionsSorter implements InteractionsSorter {
     const { node } = txInfo;
 
     // might have been already set by the Warp Sequencer
-    if (txInfo.node.sortKey !== undefined && txInfo.node.source == SourceType.WARP_SEQUENCER) {
+    const sortKey =
+      txInfo.node.sortKey ||
+      txInfo.node?.tags?.find((tag: Tag) => tag.name === WARP_SEQUENCER_TAGS.SequencerSortKey)?.value;
+
+    if (sortKey) {
+      txInfo.node.sortKey = sortKey;
       this.logger.debug('Using sortKey from sequencer', txInfo.node.sortKey);
     } else {
       txInfo.node.sortKey = await this.createSortKey(node.block.id, node.id, node.block.height);

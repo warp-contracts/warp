@@ -1,7 +1,6 @@
 import Arweave from 'arweave';
 import { AxiosResponse } from 'axios';
 import { Buffer as isomorphicBuffer } from 'warp-isomorphic';
-import { GqlReqVariables } from '../core/modules/impl/ArweaveGatewayInteractionsLoader';
 import { WARP_GW_URL } from '../core/WarpFactory';
 import { LoggerFactory } from '../logging/LoggerFactory';
 import { BlockData, NetworkInfoInterface, Transaction } from './types/arweave-types';
@@ -29,8 +28,14 @@ export class ArweaveWrapper {
     return await this.doFetchInfo<NetworkInfoInterface>(`${this.baseUrl}/info`);
   }
 
+  /**
+   *
+   * @param query graphql query string
+   * @param variables variables depends on provided query
+   * @returns axios response from graphql
+   */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async gql(query: string, variables: GqlReqVariables): Promise<Partial<AxiosResponse<any>>> {
+  async gql(query: string, variables: unknown): Promise<Partial<AxiosResponse<any>>> {
     try {
       const data = JSON.stringify({
         query: query,

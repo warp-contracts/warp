@@ -4,6 +4,8 @@
 
 import { ContractType, EvaluationManifest } from '../contract/deploy/CreateContract';
 
+export const SUPPORTED_SRC_CONTENT_TYPES = ['application/javascript', 'application/wasm'];
+
 export class ContractMetadata {
   dtor: number;
 }

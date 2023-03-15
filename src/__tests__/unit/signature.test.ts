@@ -154,7 +154,6 @@ describe('Wallet', () => {
   });
 
   describe('getAddress', () => {
-
     it('should getAddress for ArWallet signer', async () => {
       const warp = WarpFactory.forMainnet();
       const arWallet = await warp.generateWallet();
@@ -170,46 +169,49 @@ describe('Wallet', () => {
       const customSignature: CustomSignature = {
         type: 'ethereum',
         signer: sampleFunction,
-        getAddress: () => Promise.resolve("owner")
-      }
+        getAddress: () => Promise.resolve('owner')
+      };
 
       const signature = new Signature(warp, customSignature);
 
       const address = await signature.getAddress();
-      expect(address).toStrictEqual("owner");
+      expect(address).toStrictEqual('owner');
     });
 
     it('should call getAddress for customSignature, if getAddress NOT provided', async () => {
       const warp = WarpFactory.forMainnet();
       const customSignature: CustomSignature = {
         type: 'ethereum',
-        signer: async (tx) => { tx.owner = "owner" },
-      }
+        signer: async (tx) => {
+          tx.owner = 'owner';
+        }
+      };
 
       const signature = new Signature(warp, customSignature);
 
       const address = await signature.getAddress();
-      expect(address).toStrictEqual("owner");
+      expect(address).toStrictEqual('owner');
     });
 
     it('should use cached valued from getAddress', async () => {
       const warp = WarpFactory.forMainnet();
-      const mockedSigner = jest.fn(async (tx) => { tx.owner = "owner" });
+      const mockedSigner = jest.fn(async (tx) => {
+        tx.owner = 'owner';
+      });
       const customSignature: CustomSignature = {
         type: 'ethereum',
-        signer: mockedSigner,
-      }
+        signer: mockedSigner
+      };
 
       const signature = new Signature(warp, customSignature);
 
       const address = await signature.getAddress();
-      expect(address).toStrictEqual("owner");
+      expect(address).toStrictEqual('owner');
 
       const cachedAddress = await signature.getAddress();
-      expect(cachedAddress).toStrictEqual("owner");
+      expect(cachedAddress).toStrictEqual('owner');
 
       expect(mockedSigner).toBeCalledTimes(1);
     });
-
   });
 });
