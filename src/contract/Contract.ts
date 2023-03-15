@@ -166,7 +166,8 @@ export interface Contract<State = unknown> {
     input: Input,
     caller?: string,
     tags?: Tags,
-    transfer?: ArTransfer
+    transfer?: ArTransfer,
+    vrf?: boolean
   ): Promise<InteractionResult<State, unknown>>;
 
   applyInput<Input>(input: Input, transaction: GQLNodeInterface): Promise<InteractionResult<State, unknown>>;
