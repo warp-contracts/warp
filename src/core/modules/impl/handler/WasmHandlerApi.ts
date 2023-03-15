@@ -62,6 +62,10 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
         };
       }
     } finally {
+      if (interactionData.interaction.interactionType === 'view') {
+        // view calls are not allowed to perform any KV modifications
+        await this.swGlobal.kv.rollback();
+      }
       await this.swGlobal.kv.close();
     }
   }
