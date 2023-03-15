@@ -228,10 +228,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
     input: Input,
     caller?: string,
     tags?: Tags,
-    transfer?: ArTransfer
+    transfer?: ArTransfer,
+    vrf?: boolean
   ): Promise<InteractionResult<State, unknown>> {
     this.logger.info('Dry-write for', this._contractTxId);
-    return await this.callContract<Input>(input, 'write', caller, undefined, tags, transfer);
+    return await this.callContract<Input>(input, 'write', caller, undefined, tags, transfer, undefined, vrf);
   }
 
   async applyInput<Input>(input: Input, transaction: GQLNodeInterface): Promise<InteractionResult<State, unknown>> {
