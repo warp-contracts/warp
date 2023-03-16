@@ -94,9 +94,24 @@ describe('Arweave Gateway interaction loader', () => {
       });
 
       it('warp interaction loader and arweave interaction loader evaluates to same state', async () => {
+        const contractsCache = new LevelDbCache<ContractCache<unknown>>({
+          inMemory: true,
+          dbLocation: ''
+        });
+
+        // Separate cache for sources to minimize duplicates
+        const sourceCache = new LevelDbCache<SrcCache>({
+          inMemory: true,
+          dbLocation: ''
+        });
+
         const arweave = Arweave.init({ host: 'arweave.net', port: 443, protocol: 'https' });
         const withArLoader = WarpFactory.custom(arweave, { inMemory: true, dbLocation: '' }, 'mainnet')
           .setInteractionsLoader(new ArweaveGatewayBundledInteractionLoader(arweave, 'mainnet'))
+
+          .setDefinitionLoader(
+            new WarpGatewayContractDefinitionLoader(WARP_GW_URL, arweave, contractsCache, sourceCache, 'mainnet')
+          )
           .build();
 
         const arResult = await withArLoader

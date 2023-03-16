@@ -1,5 +1,5 @@
 import Arweave from 'arweave';
-import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
+import { SMART_WEAVE_TAGS, WARP_TAGS } from '../../KnownTags';
 import { GQLEdgeInterface, GQLNodeInterface } from '../../../legacy/gqlResult';
 import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
@@ -42,11 +42,11 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
     const mainTransactionsQuery: ArweaveTransactionQuery = {
       tags: [
         {
-          name: SmartWeaveTags.APP_NAME,
+          name: SMART_WEAVE_TAGS.APP_NAME,
           values: ['SmartWeaveAction']
         },
         {
-          name: SmartWeaveTags.CONTRACT_TX_ID,
+          name: SMART_WEAVE_TAGS.CONTRACT_TX_ID,
           values: [contractId]
         }
       ],
@@ -58,14 +58,16 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
     };
 
     const loadingBenchmark = Benchmark.measure();
-    let interactions = await this.arweaveTransactionQuery.transactions(mainTransactionsQuery);
+    let interactions = (await this.arweaveTransactionQuery.transactions(mainTransactionsQuery)).filter(
+      bundledTxsFilter
+    );
     loadingBenchmark.stop();
 
     if (evaluationOptions.internalWrites) {
       const innerWritesVariables: ArweaveTransactionQuery = {
         tags: [
           {
-            name: SmartWeaveTags.INTERACT_WRITE,
+            name: WARP_TAGS.INTERACT_WRITE,
             values: [contractId]
           }
         ],
@@ -75,7 +77,9 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
         },
         first: MAX_REQUEST
       };
-      const innerWritesInteractions = await this.arweaveTransactionQuery.transactions(innerWritesVariables);
+      const innerWritesInteractions = await (
+        await this.arweaveTransactionQuery.transactions(innerWritesVariables)
+      ).filter(bundledTxsFilter);
 
       this.logger.debug('Inner writes interactions length:', innerWritesInteractions.length);
       interactions = interactions.concat(innerWritesInteractions);
@@ -118,7 +122,7 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
       if (isLocalOrTestnetEnv) {
         if (
           interaction.tags.some((t) => {
-            return t.name == SmartWeaveTags.REQUEST_VRF && t.value === 'true';
+            return t.name == WARP_TAGS.REQUEST_VRF && t.value === 'true';
           })
         ) {
           interaction.vrf = generateMockVrf(interaction.sortKey, this.arweave);

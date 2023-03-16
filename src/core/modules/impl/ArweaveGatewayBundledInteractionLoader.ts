@@ -1,5 +1,5 @@
 import Arweave from 'arweave';
-import { SmartWeaveTags } from '../../SmartWeaveTags';
+import { SMART_WEAVE_TAGS } from '../../KnownTags';
 import { GQLEdgeInterface, GQLNodeInterface } from '../../../legacy/gqlResult';
 import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
@@ -12,7 +12,7 @@ import { WarpEnvironment } from '../../Warp';
 import { generateMockVrf } from '../../../utils/vrf';
 import { Tag } from 'utils/types/arweave-types';
 import { ArweaveGQLTxsFetcher } from './ArweaveGQLTxsFetcher';
-import { WarpSequencerTags, WARP_SEQUENCER_TAGS } from '../../WarpSequencerTags';
+import { WarpTags, WARP_TAGS } from '../../KnownTags';
 import { safeParseInt } from '../../../utils/utils';
 
 const MAX_REQUEST = 100;
@@ -66,11 +66,11 @@ export class ArweaveGatewayBundledInteractionLoader implements InteractionsLoade
     const mainTransactionsQuery: GqlReqVariables = {
       tags: [
         {
-          name: SmartWeaveTags.APP_NAME,
+          name: SMART_WEAVE_TAGS.APP_NAME,
           values: ['SmartWeaveAction']
         },
         {
-          name: SmartWeaveTags.CONTRACT_TX_ID,
+          name: SMART_WEAVE_TAGS.CONTRACT_TX_ID,
           values: [contractId]
         }
       ],
@@ -99,6 +99,13 @@ export class ArweaveGatewayBundledInteractionLoader implements InteractionsLoade
       to: toSortKey,
       loaded: interactions.length,
       time: loadingBenchmark.elapsed()
+    });
+
+    // add sortKey from sequencer tag
+    interactions.forEach((interaction) => {
+      interaction.node.sortKey =
+        interaction.node.sortKey ??
+        interaction.node?.tags?.find((tag: Tag) => tag.name === WARP_TAGS.SEQUENCER_SORT_KEY)?.value;
     });
 
     const sortedInteractions = await this.sorter.sort(interactions);
@@ -147,16 +154,15 @@ export class ArweaveGatewayBundledInteractionLoader implements InteractionsLoade
   }
 
   private attachSequencerDataToInteraction(interaction: GQLEdgeInterface): GQLEdgeInterface {
-    const extractTag = (tagName: WarpSequencerTags) =>
-      interaction.node.tags.find((tag: Tag) => tag.name === tagName)?.value;
-    const sequencerOwner = extractTag(WARP_SEQUENCER_TAGS.SequencerOwner);
-    const sequencerBlockId = extractTag(WARP_SEQUENCER_TAGS.SequencerBlockId);
-    const sequencerBlockHeight = extractTag(WARP_SEQUENCER_TAGS.SequencerBlockHeight);
-    const sequencerLastSortKey = extractTag(WARP_SEQUENCER_TAGS.SequencerLastSortKey);
-    const sequencerSortKey = extractTag(WARP_SEQUENCER_TAGS.SequencerSortKey);
-    const sequencerTxId = extractTag(WARP_SEQUENCER_TAGS.SequencerTxId);
+    const extractTag = (tagName: WarpTags) => interaction.node.tags.find((tag: Tag) => tag.name === tagName)?.value;
+    const sequencerOwner = extractTag(WARP_TAGS.SEQUENCER_OWNER);
+    const sequencerBlockId = extractTag(WARP_TAGS.SEQUENCER_BLOCK_ID);
+    const sequencerBlockHeight = extractTag(WARP_TAGS.SEQUENCER_BLOCK_HEIGHT);
+    const sequencerLastSortKey = extractTag(WARP_TAGS.SEQUENCER_LAST_SORT_KEY);
+    const sequencerSortKey = extractTag(WARP_TAGS.SEQUENCER_SORT_KEY);
+    const sequencerTxId = extractTag(WARP_TAGS.SEQUENCER_TX_ID);
     // this field was added in sequencer from 15.03.2023
-    const sequencerBlockTimestamp = extractTag(WARP_SEQUENCER_TAGS.SequencerBlockTimestamp);
+    const sequencerBlockTimestamp = extractTag(WARP_TAGS.SEQUENCER_BLOCK_TIMESTAMP);
 
     if (
       !sequencerOwner ||
@@ -198,7 +204,7 @@ export class ArweaveGatewayBundledInteractionLoader implements InteractionsLoade
     const innerWritesVariables: GqlReqVariables = {
       tags: [
         {
-          name: SmartWeaveTags.INTERACT_WRITE,
+          name: WARP_TAGS.INTERACT_WRITE,
           values: [contractId]
         }
       ],
@@ -218,7 +224,7 @@ export class ArweaveGatewayBundledInteractionLoader implements InteractionsLoade
     if (isLocalOrTestnetEnv) {
       if (
         interaction.node.tags.some((t) => {
-          return t.name == SmartWeaveTags.REQUEST_VRF && t.value === 'true';
+          return t.name == WARP_TAGS.REQUEST_VRF && t.value === 'true';
         })
       ) {
         interaction.node.vrf = generateMockVrf(interaction.node.sortKey, this.arweave);

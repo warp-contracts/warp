@@ -1,6 +1,4 @@
 import Arweave from 'arweave';
-import { WARP_SEQUENCER_TAGS } from '../../../core/WarpSequencerTags';
-import { Tag } from 'utils/types/arweave-types';
 import { GQLEdgeInterface } from '../../../legacy/gqlResult';
 import { arrayToHex } from '../../../legacy/utils';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
@@ -55,9 +53,7 @@ export class LexicographicalInteractionsSorter implements InteractionsSorter {
     const { node } = txInfo;
 
     // might have been already set by the Warp Sequencer
-    const sortKey =
-      txInfo.node.sortKey ||
-      txInfo.node?.tags?.find((tag: Tag) => tag.name === WARP_SEQUENCER_TAGS.SequencerSortKey)?.value;
+    const sortKey = txInfo.node.sortKey;
 
     if (sortKey) {
       txInfo.node.sortKey = sortKey;

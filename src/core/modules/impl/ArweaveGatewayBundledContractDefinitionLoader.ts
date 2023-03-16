@@ -9,7 +9,7 @@ import {
   SrcCache,
   SUPPORTED_SRC_CONTENT_TYPES
 } from '../../../core/ContractDefinition';
-import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
+import { SMART_WEAVE_TAGS, WARP_TAGS } from '../../KnownTags';
 import { GQLTagInterface, GQLTransaction } from '../../../legacy/gqlResult';
 import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
@@ -42,8 +42,8 @@ export class ArweaveGatewayBundledContractDefinitionLoader implements Definition
 
     const contractSrcTxId = evolvedSrcTxId
       ? evolvedSrcTxId
-      : getTagValue(contractTx.tags, SmartWeaveTags.CONTRACT_SRC_TX_ID);
-    const testnet = getTagValue(contractTx.tags, SmartWeaveTags.WARP_TESTNET) || null;
+      : getTagValue(contractTx.tags, SMART_WEAVE_TAGS.CONTRACT_SRC_TX_ID);
+    const testnet = getTagValue(contractTx.tags, WARP_TAGS.WARP_TESTNET) || null;
 
     if (testnet && this.env !== 'testnet') {
       throw new Error('Trying to use testnet contract in a non-testnet env. Use the "forTestnet" factory method.');
@@ -52,9 +52,9 @@ export class ArweaveGatewayBundledContractDefinitionLoader implements Definition
       throw new Error('Trying to use non-testnet contract in a testnet env.');
     }
 
-    const minFee = getTagValue(contractTx.tags, SmartWeaveTags.MIN_FEE);
-    const manifest = getTagValue(contractTx.tags, SmartWeaveTags.MANIFEST)
-      ? JSON.parse(getTagValue(contractTx.tags, SmartWeaveTags.MANIFEST))
+    const minFee = getTagValue(contractTx.tags, SMART_WEAVE_TAGS.MIN_FEE);
+    const manifest = getTagValue(contractTx.tags, WARP_TAGS.MANIFEST)
+      ? JSON.parse(getTagValue(contractTx.tags, WARP_TAGS.MANIFEST))
       : null;
 
     this.logger.debug('Tags decoding', benchmark.elapsed());
@@ -108,7 +108,7 @@ export class ArweaveGatewayBundledContractDefinitionLoader implements Definition
     const benchmark = Benchmark.measure();
 
     const contractSrcTx = await this.arweaveTransactions.transaction(srcTxId);
-    const srcContentType = getTagValue(contractSrcTx.tags, SmartWeaveTags.CONTENT_TYPE);
+    const srcContentType = getTagValue(contractSrcTx.tags, SMART_WEAVE_TAGS.CONTENT_TYPE);
 
     if (!SUPPORTED_SRC_CONTENT_TYPES.includes(srcContentType)) {
       throw new Error(`Contract source content type ${srcContentType} not supported`);
@@ -126,11 +126,11 @@ export class ArweaveGatewayBundledContractDefinitionLoader implements Definition
     let srcMetaData;
     if (contractType == 'wasm') {
       wasmSrc = new WasmSrc(src as Buffer);
-      srcWasmLang = getTagValue(contractSrcTx.tags, SmartWeaveTags.WASM_LANG);
+      srcWasmLang = getTagValue(contractSrcTx.tags, WARP_TAGS.WASM_LANG);
       if (!srcWasmLang) {
         throw new Error(`Wasm lang not set for wasm contract src ${srcTxId}`);
       }
-      srcMetaData = JSON.parse(getTagValue(contractSrcTx.tags, SmartWeaveTags.WASM_META));
+      srcMetaData = JSON.parse(getTagValue(contractSrcTx.tags, WARP_TAGS.WASM_META));
     }
 
     this.logger.debug('Contract src tx load', benchmark.elapsed());
@@ -147,10 +147,10 @@ export class ArweaveGatewayBundledContractDefinitionLoader implements Definition
   }
 
   private async evalInitialState(contractTx: GQLTransaction): Promise<string> {
-    if (getTagValue(contractTx.tags, SmartWeaveTags.INIT_STATE)) {
-      return getTagValue(contractTx.tags, SmartWeaveTags.INIT_STATE);
-    } else if (getTagValue(contractTx.tags, SmartWeaveTags.INIT_STATE_TX)) {
-      const stateTX = getTagValue(contractTx.tags, SmartWeaveTags.INIT_STATE_TX);
+    if (getTagValue(contractTx.tags, WARP_TAGS.INIT_STATE)) {
+      return getTagValue(contractTx.tags, WARP_TAGS.INIT_STATE);
+    } else if (getTagValue(contractTx.tags, WARP_TAGS.INIT_STATE_TX)) {
+      const stateTX = getTagValue(contractTx.tags, WARP_TAGS.INIT_STATE_TX);
       return this.arweaveWrapper.txDataString(stateTX);
     } else {
       return this.arweaveWrapper.txDataString(contractTx.id);

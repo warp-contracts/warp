@@ -7,13 +7,13 @@ import path from 'path';
 import { mineBlock } from '../_helpers';
 import { WasmSrc } from '../../../core/modules/impl/wasm/WasmSrc';
 import { PstState, PstContract } from '../../../contract/PstContract';
-import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
 import { Warp } from '../../../core/Warp';
 import { WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { ArweaveWrapper } from '../../../utils/ArweaveWrapper';
 import { TagsParser } from '../../../core/modules/impl/TagsParser';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
+import { SMART_WEAVE_TAGS, WARP_TAGS } from '../../../core/KnownTags';
 
 describe('Testing the Rust WASM Profit Sharing Token', () => {
   let wallet: JWKInterface;
@@ -118,11 +118,11 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     const contractTx = await arweave.transactions.get(contractTxId);
     expect(contractTx).not.toBeNull();
 
-    const contractSrcTxId = tagsParser.getTag(contractTx, SmartWeaveTags.CONTRACT_SRC_TX_ID);
+    const contractSrcTxId = tagsParser.getTag(contractTx, SMART_WEAVE_TAGS.CONTRACT_SRC_TX_ID);
     const contractSrcTx = await arweave.transactions.get(contractSrcTxId);
-    expect(tagsParser.getTag(contractSrcTx, SmartWeaveTags.CONTENT_TYPE)).toEqual('application/wasm');
-    expect(tagsParser.getTag(contractSrcTx, SmartWeaveTags.WASM_LANG)).toEqual('rust');
-    expect(tagsParser.getTag(contractSrcTx, SmartWeaveTags.WASM_META)).toEqual(JSON.stringify({ dtor: 74 }));
+    expect(tagsParser.getTag(contractSrcTx, SMART_WEAVE_TAGS.CONTENT_TYPE)).toEqual('application/wasm');
+    expect(tagsParser.getTag(contractSrcTx, WARP_TAGS.WASM_LANG)).toEqual('rust');
+    expect(tagsParser.getTag(contractSrcTx, WARP_TAGS.WASM_META)).toEqual(JSON.stringify({ dtor: 74 }));
 
     const srcTxData = await arweaveWrapper.txData(contractSrcTxId);
     const wasmSrc = new WasmSrc(srcTxData);

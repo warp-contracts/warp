@@ -1,5 +1,5 @@
 import Arweave from 'arweave';
-import { SmartWeaveTags } from '../core/SmartWeaveTags';
+import { SMART_WEAVE_TAGS, WARP_TAGS } from '../core/KnownTags';
 import { GQLNodeInterface } from './gqlResult';
 import { TagsParser } from '../core/modules/impl/TagsParser';
 import { SigningFunction } from '../contract/Signature';
@@ -51,14 +51,14 @@ export async function createInteractionTx<Input>(
       interactionTx.addTag(tag.name.toString(), tag.value.toString());
     }
   }
-  interactionTx.addTag(SmartWeaveTags.APP_NAME, 'SmartWeaveAction');
+  interactionTx.addTag(SMART_WEAVE_TAGS.APP_NAME, 'SmartWeaveAction');
   // use real SDK version here?
-  interactionTx.addTag(SmartWeaveTags.APP_VERSION, '0.3.0');
-  interactionTx.addTag(SmartWeaveTags.SDK, 'Warp');
-  interactionTx.addTag(SmartWeaveTags.CONTRACT_TX_ID, contractId);
-  interactionTx.addTag(SmartWeaveTags.INPUT, JSON.stringify(input));
+  interactionTx.addTag(SMART_WEAVE_TAGS.APP_VERSION, '0.3.0');
+  interactionTx.addTag(SMART_WEAVE_TAGS.SDK, 'Warp');
+  interactionTx.addTag(SMART_WEAVE_TAGS.CONTRACT_TX_ID, contractId);
+  interactionTx.addTag(SMART_WEAVE_TAGS.INPUT, JSON.stringify(input));
   if (isTestnet) {
-    interactionTx.addTag(SmartWeaveTags.WARP_TESTNET, '1.0.0');
+    interactionTx.addTag(WARP_TAGS.WARP_TESTNET, '1.0.0');
   }
 
   if (signer) {

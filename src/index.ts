@@ -34,7 +34,7 @@ export * from './core/modules/impl/handler/JsHandlerApi';
 export * from './core/modules/impl/handler/WasmHandlerApi';
 
 export * from './core/ExecutionContextModifier';
-export * from './core/SmartWeaveTags';
+export * from './core/KnownTags';
 export * from './core/ExecutionContext';
 export * from './core/ContractDefinition';
 export * from './core/ContractCallRecord';
@@ -69,3 +69,6 @@ export * from './utils/types/arweave-types';
 export * from './core/modules/impl/wasm/WasmSrc';
 export * from './core/modules/impl/wasm/rust-wasm-imports';
 export * from './core/modules/impl/wasm/wasm-bindgen-tools';
+
+export * from './core/modules/impl/ArweaveGatewayBundledContractDefinitionLoader';
+export * from './core/modules/impl/ArweaveGatewayBundledInteractionLoader';

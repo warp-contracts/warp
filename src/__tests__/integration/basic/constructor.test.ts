@@ -242,7 +242,6 @@ describe('Constructor', () => {
         }
       });
 
-      console.log((foreignContract as any)._contractTxId);
       const response = await contract.viewState({
         function: 'read'
       });
