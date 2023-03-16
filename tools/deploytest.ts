@@ -21,7 +21,7 @@ async function main() {
     const cacheOptions = {...defaultCacheOptions, inMemory: true}
     const warp = WarpFactory
       .custom(arweave, cacheOptions, 'mainnet')
-      .useWarpGateway({...defaultWarpGwOptions, address: 'http://localhost:5666'}, cacheOptions)
+      .useWarpGateway({...defaultWarpGwOptions, address: 'http://35.228.110.3:5666'}, cacheOptions)
       .build();
 
     const jsContractSrc = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.js'), 'utf8');
@@ -38,7 +38,7 @@ async function main() {
     console.log('srcTxId:', srcTxId);
 
     const contract = warp.contract<any>(contractTxId)
-      .setEvaluationOptions({internalWrites: true, unsafeClient: 'skip', sequencerUrl: 'http://localhost:5666/'})
+      .setEvaluationOptions({internalWrites: true, unsafeClient: 'skip', sequencerUrl: 'http://35.228.110.3:5666/'})
       .connect(wallet);
 
 

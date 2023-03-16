@@ -22,7 +22,7 @@ export type CacheOptions = {
   dbLocation: string;
 };
 
-export const WARP_GW_URL = 'http://localhost:5666';
+export const WARP_GW_URL = 'http://35.228.110.3:5666';
 
 export const defaultWarpGwOptions: GatewayOptions = {
   confirmationStatus: { notCorrupted: true },
