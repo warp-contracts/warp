@@ -14,6 +14,7 @@ import { ArweaveWrapper } from '../../../utils/ArweaveWrapper';
 import { TagsParser } from '../../../core/modules/impl/TagsParser';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 import { SMART_WEAVE_TAGS, WARP_TAGS } from '../../../core/KnownTags';
+import { InteractionResult } from '../../../core/modules/impl/HandlerExecutorFactory';
 
 describe('Testing the Rust WASM Profit Sharing Token', () => {
   let wallet: JWKInterface;
@@ -181,7 +182,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
   });
 
   xit('should return stable gas results', async () => {
-    const results = [];
+    const results: InteractionResult<PstState, unknown>[] = [];
 
     for (let i = 0; i < 10; i++) {
       const result = await pst.dryWrite({
@@ -264,6 +265,6 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     });
 
     expect(result.type).toEqual('exception');
-    expect(result.errorMessage.startsWith('[RE:OOG] Out of gas!')).toBeTruthy();
+    expect(result.errorMessage?.startsWith('[RE:OOG] Out of gas!')).toBeTruthy();
   });
 });
