@@ -2,6 +2,8 @@
 
 node_modules/
 crates/warp-contracts/target
+crates/pst/contract/definition/bindings/
+crates/pst/cache/
 
 # Optional eslint cache
 .eslintcache
@@ -29,3 +31,5 @@ bundles/
 
 .secrets
 logs
+
+target

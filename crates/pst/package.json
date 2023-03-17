@@ -1,0 +1,63 @@
+{
+  "name": "warp-rust-template",
+  "version": "0.0.1",
+  "description": "Warp WASM Rust contract template",
+  "main": "index.js",
+  "author": "Redstone Team <dev@redstone.finance>",
+  "license": "MIT",
+  "scripts": {
+    "build": "wasm-pack build --target nodejs --release --out-name rust-contract contract/implementation",
+    "build:dev": "wasm-pack build --target nodejs --dev --out-name rust-contract contract/implementation",
+    "gen-bindings": "yarn gen-json && yarn gen-ts",
+    "gen-json": "GENERATE_JSON=1 cargo test generate_json -- --nocapture && yarn format:json-bindings",
+    "gen-ts": "ts-node --transpileOnly ./scripts/generate-ts.ts && yarn format:ts-bindings",
+    "test": "jest ./tests",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "format:json-bindings": "eslint 'contract/definition/bindings/json/*.json' --fix",
+    "format:ts-bindings": "eslint 'contract/definition/bindings/ts/*.ts' --fix",
+    "prettier:format": "prettier --config .prettierrc '**/**/*.ts' --write",
+    "deploy:local": "yarn build && node deploy/local/deploy-local.js",
+    "deploy:testnet": "yarn build && node deploy/testnet/deploy-test.js",
+    "deploy:mainnet": "yarn build && node deploy/mainnet/deploy-mainnet.js",
+    "read:local": "node deploy/local/read-contract-state-local.js",
+    "read:testnet": "node deploy/testnet/read-contract-state-testnet.js",
+    "read:mainnet": "node deploy/mainnet/read-contract-state-mainnet.js",
+    "transfer:local": "node deploy/local/interact-transfer-local.js",
+    "transfer:testnet": "node deploy/testnet/interact-transfer-testnet.js",
+    "transfer:mainnet": "node deploy/mainnet/interact-transfer-mainnet.js",
+    "balance:local": "node deploy/local/interact-balance-local.js",
+    "balance:testnet": "node deploy/testnet/interact-balance-testnet.js",
+    "balance:mainnet": "node deploy/mainnet/interact-balance-mainnet.js"
+  },
+  "engines": {
+    "node": ">=16.5"
+  },
+  "dependencies": {
+    "arlocal": "^1.1.59",
+    "arweave": "1.12.4",
+    "json-schema-to-typescript": "^11.0.1",
+    "typescript": "^4.6.2",
+    "warp-contracts": "1.2.56",
+    "warp-contracts-plugin-deploy": "1.0"
+  },
+  "resolutions": {
+    "arweave": "1.12.4"
+  },
+  "overrides": {
+    "arweave": "1.12.4"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.4.1",
+    "@types/node": "^18.6.3",
+    "@typescript-eslint/eslint-plugin": "^5.40.0",
+    "@typescript-eslint/parser": "^5.40.0",
+    "eslint": "^8.25.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^3.4.1",
+    "jest": "^28.1.3",
+    "prettier": "^2.3.2",
+    "ts-jest": "^28.0.7",
+    "ts-node": "^10.9.1"
+  }
+}

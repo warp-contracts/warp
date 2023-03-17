@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "Node",
+    "target": "ES2018",
+    "lib": ["dom"],
+    "esModuleInterop": true,
+    "downlevelIteration": true
+  },
+  "exclude": ["node_modules", "tools", "contract/implementation/pkg"]
+}
