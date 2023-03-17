@@ -106,7 +106,7 @@ checksum = "84a22b9f218b40614adcb3f4ff08b703773ad44fa9423e4e0d346d5db86e4ebc"
 
 [[package]]
 name = "warp-contracts"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "js-sys",
  "serde",
@@ -119,7 +119,7 @@ dependencies = [
 
 [[package]]
 name = "warp-contracts-core"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "serde",
  "serde-wasm-bindgen",
@@ -130,7 +130,7 @@ dependencies = [
 
 [[package]]
 name = "warp-contracts-macro"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "quote",
  "syn",

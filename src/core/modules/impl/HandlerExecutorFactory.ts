@@ -1,5 +1,5 @@
 import Arweave from 'arweave';
-import { rustWasmImports } from './wasm/rust-wasm-imports';
+import { rustWasmImports, WarpContractsCrateVersion } from './wasm/rust-wasm-imports';
 import * as vm2 from 'vm2';
 import { WarpCache } from '../../../cache/WarpCache';
 import { ContractDefinition } from '../../../core/ContractDefinition';
@@ -73,7 +73,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
       this.logger.info('Creating handler for wasm contract', contractDefinition.txId);
       const benchmark = Benchmark.measure();
 
-      let wasmInstance;
+      let wasmInstance: WebAssembly.Instance;
       let jsExports = null;
 
       const wasmResponse = generateResponse(contractDefinition.srcBinary);
@@ -102,8 +102,13 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
            * - https://github.com/rustwasm/wasm-bindgen/issues/1128
            */
           const wasmModule = await getWasmModule(wasmResponse, contractDefinition.srcBinary);
-          const moduleImports = WebAssembly.Module.imports(wasmModule);
-          const wbindgenImports = moduleImports
+          const warpContractsCrateVersion =
+            WebAssembly.Module.exports(wasmModule)
+              .filter((exp) => exp.kind === 'global' && exp.name.startsWith('__WARP_CONTRACTS_VERSION_'))
+              .map((exp) => exp.name)
+              .shift() || '__WARP_CONTRACTS_VERSION_LEGACY';
+
+          const wbindgenImports = WebAssembly.Module.imports(wasmModule)
             .filter((imp) => {
               return imp.module === '__wbindgen_placeholder__';
             })
@@ -113,7 +118,8 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
             swGlobal,
             wbindgenImports,
             wasmInstanceExports,
-            contractDefinition.metadata.dtor
+            contractDefinition.metadata.dtor,
+            warpContractsCrateVersion as WarpContractsCrateVersion
           );
           jsExports = exports;
 

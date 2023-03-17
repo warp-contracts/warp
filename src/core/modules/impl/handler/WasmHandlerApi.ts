@@ -73,6 +73,10 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
   initState(state: State) {
     switch (this.contractDefinition.srcWasmLang) {
       case 'rust': {
+        if ('initStateLegacy' in this.wasmExports) {
+          this.wasmExports.initStateLegacy(state);
+          return;
+        }
         const ret = this.wasmExports.initState(state);
         if (ret) {
           throw new Error(ret);
@@ -86,12 +90,41 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
     }
   }
 
+  private async doHandleLegacy(action: ContractInteraction<unknown>): Promise<any> {
+    // pre- warp_contract macro contracts
+    const handleResult = await this.wasmExports.handle(action.input);
+    if (!handleResult) {
+      return;
+    }
+    if (Object.prototype.hasOwnProperty.call(handleResult, 'Ok')) {
+      return handleResult.Ok;
+    }
+    let errorKey: string;
+    let errorArgs = '';
+    if (typeof handleResult.Err === 'string' || handleResult.Err instanceof String) {
+      errorKey = handleResult.Err;
+    } else if ('kind' in handleResult.Err) {
+      errorKey = handleResult.Err.kind;
+      errorArgs = 'data' in handleResult.Err ? ' ' + handleResult.Err.data : '';
+    } else {
+      errorKey = Object.keys(handleResult.Err)[0];
+      errorArgs = ' ' + handleResult.Err[errorKey];
+    }
+
+    if (errorKey == 'RuntimeError') {
+      throw new Error(`[RE:RE]${errorArgs}`);
+    } else {
+      throw new ContractError(`[CE:${errorKey}${errorArgs}]`);
+    }
+  }
+
   private async doHandle(action: ContractInteraction<unknown>): Promise<any> {
     switch (this.contractDefinition.srcWasmLang) {
       case 'rust': {
-
+        if ('handle' in this.wasmExports) {
+          return await this.doHandleLegacy(action);
+        }
         const handleResult = action.interactionType === 'write' ? await this.wasmExports.warpContractWrite(action.input) : await this.wasmExports.warpContractView(action.input);
-
         if (!handleResult) {
           return;
         }

@@ -1,6 +1,6 @@
 [package]
 name = "warp-contracts-macro"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 description = "warp_contract macro definition"
 license = "MIT"
@@ -16,4 +16,4 @@ proc-macro = true
 [dependencies]
 quote = "1.0"
 syn = { version = "1.0", features = ["extra-traits"] }
-warp-contracts-core = { version = "0.1.1", path = "../warp-contracts-core" }
+warp-contracts-core = { version = "0.1.2", path = "../warp-contracts-core" }
