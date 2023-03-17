@@ -6,7 +6,7 @@ export async function handle(state, action) {
     if (action.input.function == '__init') {
         state.caller = action.caller;
         state.caller2 = SmartWeave.caller;
-        await SmartWeave.kv.put("__init", SmartWeave.transaction.id);
+        await SmartWeave.kv.put("__init", 'KV welcome to');
 
         state.counter = action.input.args.counter + 1;
 
@@ -20,6 +20,22 @@ export async function handle(state, action) {
 
         if (action.input.args.accessVrf) {
             SmartWeave.vrf.data;
+        }
+
+        if (action.input.args.accessTx) {
+            SmartWeave.transaction.id;
+        }
+    }
+
+    if (action.input.function == 'callMe') {
+        await SmartWeave.kv.put("okey", "okey");
+        return {
+            state: {
+                ...state,
+                blockId: SmartWeave.block.height,
+                txId: SmartWeave.transaction.id,
+                vrf: SmartWeave.vrf.data
+            }
         }
     }
 

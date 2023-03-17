@@ -2,7 +2,7 @@ import { GQLNodeInterface } from 'legacy/gqlResult';
 import { ContractDefinition } from '../../../../core/ContractDefinition';
 import { ExecutionContext } from '../../../../core/ExecutionContext';
 import { EvalStateResult } from '../../../../core/modules/StateEvaluator';
-import { SmartWeaveGlobal } from '../../../../legacy/smartweave-global';
+import { SWBlock, SmartWeaveGlobal, SWTransaction, SWVrf } from '../../../../legacy/smartweave-global';
 import { deepCopy, timeout } from '../../../../utils/utils';
 import { ContractInteraction, InteractionData, InteractionResult } from '../HandlerExecutorFactory';
 import { genesisSortKey } from '../LexicographicalInteractionsSorter';
@@ -57,16 +57,18 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
         caller: this.contractDefinition.owner
       };
 
-      const interactionTx = (await this.makeInteractionTxFromContractTx(
-        this.contractDefinition.contractTx,
-        this.contractDefinition.owner
-      )) as GQLNodeInterface;
+      const interactionTx = {
+        owner: { address: executionContext.caller, key: null },
+        sortKey: genesisSortKey
+      } as GQLNodeInterface;
       const interactionData: InteractionData<Input> = { interaction, interactionTx };
 
       this.setupSwGlobal(interactionData);
-      this.configureSwGlobalForConstructor();
+      const cleanUpSwGlobal = this.configureSwGlobalForConstructor();
 
       const result = await this.runContractFunction(executionContext, interaction, {} as State);
+
+      cleanUpSwGlobal();
       if (result.type !== 'ok') {
         throw new Error(`Exception while calling constructor: ${JSON.stringify(interaction)}:\n${result.errorMessage}`);
       }
@@ -74,21 +76,6 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
     } else {
       return initialState;
     }
-  }
-
-  private async makeInteractionTxFromContractTx(
-    contractTx: ContractDefinition<unknown>['contractTx'],
-    owner: string
-  ): Promise<Omit<GQLNodeInterface, 'anchor' | 'signature' | 'parent' | 'bundledIn' | 'data' | 'block'>> {
-    return {
-      id: contractTx.id,
-      tags: contractTx.tags,
-      recipient: contractTx.target,
-      owner: { address: owner, key: null },
-      quantity: { winston: contractTx.quantity, ar: null },
-      fee: { winston: contractTx.fee, ar: null },
-      sortKey: genesisSortKey
-    };
   }
 
   private assertNotConstructorCall<Input>(interaction: ContractInteraction<Input>) {
@@ -101,27 +88,37 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
   }
 
   private configureSwGlobalForConstructor() {
-    // disable internal writes
-    const templateErrorMessage = (op) =>
-      `Can't ${op} foreign contract state: Internal writes feature is not available in constructor`;
+    const handler = (prop) => ({
+      get: (target, property) =>
+        throwErrorWithName(
+          'ConstructorError',
+          `SmartWeave.${prop}.${String(property)} is not accessible in constructor context`
+        )
+    });
+
     this.swGlobal.contracts.readContractState = () =>
-      throwErrorWithName('ConstructorError', templateErrorMessage('readContractState'));
-    this.swGlobal.contracts.write = () => throwErrorWithName('ConstructorError', templateErrorMessage('write'));
-    this.swGlobal.contracts.refreshState = () =>
-      throwErrorWithName('ConstructorError', templateErrorMessage('refreshState'));
+      throwErrorWithName('ConstructorError', 'Internal writes feature is not available in constructor');
     this.swGlobal.contracts.viewContractState = () =>
-      throwErrorWithName('ConstructorError', templateErrorMessage('viewContractState'));
+      throwErrorWithName('ConstructorError', 'Internal writes feature is not available in constructor');
+    this.swGlobal.contracts.refreshState = () =>
+      throwErrorWithName('ConstructorError', 'Internal writes feature is not available in constructor');
+    this.swGlobal.contracts.write = () =>
+      throwErrorWithName('ConstructorError', 'Internal writes feature is not available in constructor');
 
-    const disabledVrf = new Proxy(this.swGlobal.vrf, {
-      get: () => throwErrorWithName('ConstructorError', `SmartWeave.vrf object is not accessible in constructor`)
-    });
+    const originalBlock = new SWBlock(this.swGlobal);
+    this.swGlobal.block = new Proxy(this.swGlobal.block, handler('block'));
 
-    const disabledBlock = new Proxy(this.swGlobal.block, {
-      get: () => throwErrorWithName('ConstructorError', 'SmartWeave.block object is not accessible in constructor')
-    });
+    const originalVrf = new SWVrf(this.swGlobal);
+    this.swGlobal.vrf = new Proxy(this.swGlobal.vrf, handler('vrf'));
 
-    this.swGlobal.vrf = disabledVrf;
-    this.swGlobal.block = disabledBlock;
+    const originalTransaction = new SWTransaction(this.swGlobal);
+    this.swGlobal.transaction = new Proxy(this.swGlobal.vrf, handler('transaction'));
+
+    return () => {
+      this.swGlobal.block = originalBlock;
+      this.swGlobal.vrf = originalVrf;
+      this.swGlobal.transaction = originalTransaction;
+    };
   }
 
   private async runContractFunction<Input>(

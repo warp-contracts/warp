@@ -8,6 +8,7 @@ import { WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 import { mineBlock } from '../_helpers';
+import { WriteInteractionResponse } from '../../../contract/Contract';
 
 describe('Constructor', () => {
   let contractSrc: string;
@@ -145,7 +146,7 @@ describe('Constructor', () => {
 
         await contract.readState();
         const { cachedValue: kv } = await contract.getStorageValues(['__init']);
-        expect(kv.get('__init')).toEqual(contract.txId());
+        expect(kv.get('__init')).toEqual('KV welcome to');
       });
     });
 
@@ -185,16 +186,59 @@ describe('Constructor', () => {
       const contract = await deployContract({ addToState: { accessBlock: true } });
 
       await expect(contract.readState()).rejects.toThrowError(
-        'ConstructorError: SmartWeave.block object is not accessible in constructor'
+        'ConstructorError: SmartWeave.block.timestamp is not accessible in constructor context'
       );
     });
 
-    it('should fail to access vrf data', async () => {
+    it('should fail to access vrf data in constructor', async () => {
       const contract = await deployContract({ addToState: { accessVrf: true } });
 
       await expect(contract.readState()).rejects.toThrowError(
-        'ConstructorError: SmartWeave.vrf object is not accessible in constructor'
+        'ConstructorError: SmartWeave.vrf.data is not accessible in constructor context'
       );
+    });
+
+    it('should fail to access transaction data in constructor', async () => {
+      const contract = await deployContract({ addToState: { accessTx: true } });
+
+      await expect(contract.readState()).rejects.toThrowError(
+        'ConstructorError: SmartWeave.transaction.id is not accessible in constructor context'
+      );
+    });
+
+    it('should be able to access SmartWeave global after constructor', async () => {
+      const contract = await deployContract({});
+      const contractB = await deployContract({});
+
+      const { originalTxId } = (await contract.writeInteraction({
+        function: 'callMe',
+        contractB: (contractB as any)._contractTxId
+      })) as WriteInteractionResponse;
+
+      const {
+        cachedValue: { state }
+      } = await contract.readState();
+
+      expect(state.blockId).toBeDefined();
+      expect(state.txId).toBe(originalTxId);
+      expect(state.vrf).toBe(undefined);
+    });
+
+    it('XX should be able to access SmartWeave internal writes after constructor', async () => {
+      const foreignContract = await deployContract({ withKv: false, src: contractIrSrc });
+      const contract = await deployContract({
+        withKv: false,
+        src: contractIrSrc,
+        addToState: {
+          foreignContract: foreignContract.txId()
+        }
+      });
+
+      console.log((foreignContract as any)._contractTxId);
+      const response = await contract.viewState({
+        function: 'read'
+      });
+      expect(response.type).toEqual('ok');
     });
 
     describe('Internal writes', () => {

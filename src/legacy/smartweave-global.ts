@@ -33,9 +33,9 @@ import { BatchDBOp, CacheKey, PutBatch, SortKeyCache } from '../cache/SortKeyCac
 export class SmartWeaveGlobal {
   gasUsed: number;
   gasLimit: number;
-  transaction: Transaction;
-  block: Block;
-  vrf: Vrf;
+  transaction: SWTransaction;
+  block: SWBlock;
+  vrf: SWVrf;
   evaluationOptions: EvaluationOptions;
   arweave: Pick<Arweave, 'ar' | 'wallets' | 'utils' | 'crypto'>;
   contract: {
@@ -78,8 +78,8 @@ export class SmartWeaveGlobal {
     this.evaluationOptions = evaluationOptions;
 
     this.contract = contract;
-    this.transaction = new Transaction(this);
-    this.block = new Block(this);
+    this.transaction = new SWTransaction(this);
+    this.block = new SWBlock(this);
     this.contracts = {
       readContractState: (contractId: string, height?: number, returnValidity?: boolean) => {
         throw new Error('Not implemented - should be set by HandlerApi implementor');
@@ -97,7 +97,7 @@ export class SmartWeaveGlobal {
         throw new Error('Not implemented - should be set by HandlerApi implementor');
       }
     };
-    this.vrf = new Vrf(this);
+    this.vrf = new SWVrf(this);
 
     this.useGas = this.useGas.bind(this);
     this.getBalance = this.getBalance.bind(this);
@@ -141,7 +141,7 @@ export class SmartWeaveGlobal {
 }
 
 // tslint:disable-next-line: max-classes-per-file
-class Transaction {
+export class SWTransaction {
   constructor(private readonly smartWeaveGlobal: SmartWeaveGlobal) {}
 
   get id() {
@@ -202,7 +202,7 @@ class Transaction {
 }
 
 // tslint:disable-next-line: max-classes-per-file
-class Block {
+export class SWBlock {
   constructor(private readonly smartWeaveGlobal: SmartWeaveGlobal) {}
 
   get height() {
@@ -227,7 +227,7 @@ class Block {
   }
 }
 
-class Vrf {
+export class SWVrf {
   constructor(private readonly smartWeaveGlobal: SmartWeaveGlobal) {}
 
   get data(): VrfData {
@@ -257,7 +257,7 @@ class Vrf {
 export class KV {
   private _kvBatch: BatchDBOp<any>[] = [];
 
-  constructor(private readonly _storage: SortKeyCache<any> | null, private readonly _transaction: Transaction) {}
+  constructor(private readonly _storage: SortKeyCache<any> | null, private readonly _transaction: SWTransaction) {}
 
   async put(key: string, value: any): Promise<void> {
     this.checkStorageAvailable();
