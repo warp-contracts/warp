@@ -65,7 +65,6 @@ describe('Testing the Profit Sharing Token', () => {
 
   afterAll(async () => {
     await arlocal.stop();
-    fs.rmSync(`${DEFAULT_LEVEL_DB_LOCATION}/kv/ldb/${contractTxId}`, { recursive: true });
   });
 
   it('should initialize', async () => {
