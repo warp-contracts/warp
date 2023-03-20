@@ -11,7 +11,7 @@ import {
 import { LexicographicalInteractionsSorter } from '../core/modules/impl/LexicographicalInteractionsSorter';
 import { InteractionsSorter } from '../core/modules/InteractionsSorter';
 import { DefaultEvaluationOptions, EvalStateResult, EvaluationOptions } from '../core/modules/StateEvaluator';
-import { SmartWeaveTags } from '../core/SmartWeaveTags';
+import { WARP_TAGS } from '../core/KnownTags';
 import { Warp } from '../core/Warp';
 import { createDummyTx, createInteractionTx } from '../legacy/create-interaction-tx';
 import { GQLNodeInterface } from '../legacy/gqlResult';
@@ -376,7 +376,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     if (vrf) {
       tags.push({
-        name: SmartWeaveTags.REQUEST_VRF,
+        name: WARP_TAGS.REQUEST_VRF,
         value: 'true'
       });
     }
@@ -994,7 +994,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     innerWrites.forEach((contractTxId) => {
       tags.push({
-        name: SmartWeaveTags.INTERACT_WRITE,
+        name: WARP_TAGS.INTERACT_WRITE,
         value: contractTxId
       });
     });

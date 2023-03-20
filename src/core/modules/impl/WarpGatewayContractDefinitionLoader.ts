@@ -3,7 +3,7 @@ import { ContractDefinitionLoader } from './ContractDefinitionLoader';
 import { Buffer } from 'warp-isomorphic';
 import { GW_TYPE } from '../InteractionsLoader';
 import { ContractDefinition, ContractSource, SrcCache, ContractCache } from '../../../core/ContractDefinition';
-import { SmartWeaveTags } from '../../../core/SmartWeaveTags';
+import { WARP_TAGS } from '../../KnownTags';
 import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { ArweaveWrapper } from '../../../utils/ArweaveWrapper';
@@ -94,7 +94,7 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
         } else {
           sourceTx = await this.arweaveWrapper.tx(result.srcTxId);
         }
-        const srcMetaData = JSON.parse(this.tagsParser.getTag(sourceTx, SmartWeaveTags.WASM_META));
+        const srcMetaData = JSON.parse(this.tagsParser.getTag(sourceTx, WARP_TAGS.WASM_META));
         result.metadata = srcMetaData;
       }
       result.contractType = result.src ? 'js' : 'wasm';

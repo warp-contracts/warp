@@ -146,7 +146,7 @@ describe('Constructor', () => {
 
         await contract.readState();
         const { cachedValue: kv } = await contract.getStorageValues(['__init']);
-        expect(kv.get('__init')).toEqual('KV welcome to');
+        expect(kv.get('__init')).toEqual('Welcome to kv');
       });
     });
 
@@ -190,7 +190,15 @@ describe('Constructor', () => {
       );
     });
 
-    it('should fail to access vrf data in constructor', async () => {
+    it('should fail to access transaction data', async () => {
+      const contract = await deployContract({ addToState: { accessTx: true } });
+
+      await expect(contract.readState()).rejects.toThrowError(
+        'ConstructorError: SmartWeave.transaction.id is not accessible in constructor context'
+      );
+    });
+
+    it('should fail to access vrf data', async () => {
       const contract = await deployContract({ addToState: { accessVrf: true } });
 
       await expect(contract.readState()).rejects.toThrowError(
@@ -234,7 +242,6 @@ describe('Constructor', () => {
         }
       });
 
-      console.log((foreignContract as any)._contractTxId);
       const response = await contract.viewState({
         function: 'read'
       });

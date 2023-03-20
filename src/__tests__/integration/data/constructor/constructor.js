@@ -6,7 +6,7 @@ export async function handle(state, action) {
     if (action.input.function == '__init') {
         state.caller = action.caller;
         state.caller2 = SmartWeave.caller;
-        await SmartWeave.kv.put("__init", 'KV welcome to');
+        await SmartWeave.kv.put("__init", 'Welcome to kv');
 
         state.counter = action.input.args.counter + 1;
 
