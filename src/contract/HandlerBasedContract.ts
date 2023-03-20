@@ -492,6 +492,14 @@ export class HandlerBasedContract<State> implements Contract<State> {
       if (contractEvaluationOptions.remoteStateSyncEnabled && !contractEvaluationOptions.useKVStorage) {
         remoteState = await this.getRemoteContractState(contractTxId);
         cachedState = await this.maybeSyncStateWithRemoteSource(remoteState, upToSortKey, cachedState);
+        const maybeEvolvedSrcTxId = Evolve.evolvedSrcTxId(cachedState?.cachedValue?.state);
+        if (maybeEvolvedSrcTxId && maybeEvolvedSrcTxId !== contractDefinition.srcTxId) {
+          // even though the state will be synced, the CacheableStateEvaluator will
+          // still try to init it in the WASM module (https://github.com/warp-contracts/warp/issues/372)
+          // if the state struct definition has changed via evolve - there is a risk of panic in Rust.
+          // that's why the contract definition has to be updated.
+          contractDefinition = await definitionLoader.load<State>(contractTxId, maybeEvolvedSrcTxId);
+        }
       }
 
       if (!remoteState && sortedInteractions.length == 0) {
