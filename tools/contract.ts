@@ -19,21 +19,20 @@ async function main() {
   const rssUsedBefore = Math.round((process.memoryUsage().rss / 1024 / 1024) * 100) / 100;
 
   const warp = WarpFactory
-    .forMainnet({...defaultCacheOptions, inMemory: false});
+    .forMainnet({...defaultCacheOptions, inMemory: true});
 
   let wallet: JWKInterface = readJSON('./.secrets/33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA.json');
 
   try {
     const contract = warp
-      .contract("f86Qw3vp6TlgxI3mABFnWDQNqR8mPVkVTBN04hwywqc")
+      .contract("dD1DuvgM_Vigtnv4vl2H1IYn9CgLvYuhbEWPOL-_4Mw")
     const cacheResult = await contract
       .setEvaluationOptions({
-        allowBigInt: true,
-        useVM2: true,
+        remoteStateSyncEnabled: true
       })
       .readState(/*'000001110120,1675251724861,1e1115cbd63aaf205584e2dcb2ca669b40409a0392e0ebf15ff7efac1ecbb24b'*/);
     console.log(cacheResult.sortKey);
-    console.dir(cacheResult.cachedValue.state, {depth: null});
+    //console.dir(cacheResult.cachedValue.state, {depth: null});
   } catch (e) {
     console.error(e);
   }
