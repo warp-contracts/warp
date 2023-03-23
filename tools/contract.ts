@@ -19,7 +19,7 @@ async function main() {
   const rssUsedBefore = Math.round((process.memoryUsage().rss / 1024 / 1024) * 100) / 100;
 
   const warp = WarpFactory
-    .forMainnet({...defaultCacheOptions, inMemory: true});
+    .forMainnet({...defaultCacheOptions, inMemory: true})
 
   let wallet: JWKInterface = readJSON('./.secrets/33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA.json');
 
