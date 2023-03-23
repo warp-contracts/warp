@@ -12,7 +12,7 @@ export const writeImplementationFile = async (bindings: any, actions: any[]) => 
   /**
  * This file was automatically generated. Do not modify it, if you encounter any problems \n- please raise an issue: https://github.com/warp-contracts/warp-wasm-templates/issues.
  */\n\n
-  import { WriteInteractionOptions, WriteInteractionResponse, Contract, Warp, ArWallet, ContractError, EvaluationOptions } from 'warp-contracts';\nimport { ${actionsView} } from './View';\nimport { ${actionsWrite} } from './WriteAction';\nimport { State } from './ContractState';\n\n`;
+  import { WriteInteractionOptions, WriteInteractionResponse, Contract, Warp, ArWallet, ContractError, EvaluationOptions } from '../../../../../..';\nimport { ${actionsView} } from './View';\nimport { ${actionsWrite} } from './WriteAction';\nimport { State } from './ContractState';\n\n`;
   resImpl += `
   export interface BaseInput {
     function: string;
@@ -89,7 +89,7 @@ export const interfaceString = (interfaceName: string, properties: string) => {
 
 // eslint-disable-next-line
 const getFunctionNames = (list: any[]) => {
-  const functionNames = [];
+  const functionNames = [] as string[];
   for (const typeObj of list) {
     const functionName = typeObj.title;
     functionName != 'function' && functionNames.push(functionName.charAt(0).toUpperCase() + functionName.slice(1));
@@ -99,7 +99,7 @@ const getFunctionNames = (list: any[]) => {
 
 const getActionsName = (action) => {
   let actionsName = ``;
-  let actionsFunctions = [];
+  let actionsFunctions = [] as string[];
   actionsFunctions = [...actionsFunctions, ...getFunctionNames(action.oneOf || action.anyOf)];
   actionsFunctions.forEach((a) => {
     actionsFunctions.indexOf(a) == actionsFunctions.length - 1 ? (actionsName += a) : (actionsName += `${a}, `);
@@ -107,7 +107,8 @@ const getActionsName = (action) => {
   return actionsName;
 };
 
-const implName = path.basename(process.cwd());
+// const implName = path.basename(process.cwd());
+const implName = 'pst';
 
 const makeFirstCharUpper = (s: string) => {
   return s.charAt(0).toUpperCase() + s.slice(1);

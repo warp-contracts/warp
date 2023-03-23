@@ -8,6 +8,9 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '18'
+      - uses: jetli/wasm-pack-action@v0.4.0
+        with:
+          version: 'latest'
       - name: Install modules
         run: yarn
       - name: Run unit tests
@@ -20,6 +23,8 @@ jobs:
         run: yarn test:integration:wasm
       - name: Run regression tests
         run: yarn test:regression
+      - name: Test example rust contracts
+        run: yarn build:test:wasm
       - name: Trigger integration tests
         if: github.ref_name == 'main'
         run: >
