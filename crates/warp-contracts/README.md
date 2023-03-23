@@ -1,6 +1,6 @@
 # Warp contracts
 
-`warp-contracts` is an inherent part of [Warp SDK](https://github.com/warp-contracts/warp). This library allows for smooth integration with Warp implementation of SmartWeave protocol.
+`warp-contracts` crate is an inherent part of [Warp SDK](https://github.com/warp-contracts/warp). This library allows for smooth integration with Warp implementation of SmartWeave protocol.
 
 | Feature                |   Yes/No    |
 | ---------------------- | ----------- |

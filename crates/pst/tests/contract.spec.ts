@@ -8,12 +8,13 @@ import {
   LoggerFactory,
   PstState,
   Warp,
-  SmartWeaveTags,
+  SMART_WEAVE_TAGS,
+  WARP_TAGS,
   WarpFactory,
   TagsParser,
   ArweaveWrapper,
   WasmSrc
-} from 'warp-contracts';
+} from '../../..';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 import path from 'path';
 import { PstContract } from '../contract/definition/bindings/ts/PstContract';
@@ -134,11 +135,11 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     const contractTx = await arweave.transactions.get(contractTxId);
     expect(contractTx).not.toBeNull();
 
-    const contractSrcTxId = tagsParser.getTag(contractTx, SmartWeaveTags.CONTRACT_SRC_TX_ID);
+    const contractSrcTxId = tagsParser.getTag(contractTx, SMART_WEAVE_TAGS.CONTRACT_SRC_TX_ID);
     const contractSrcTx = await arweave.transactions.get(contractSrcTxId);
-    expect(tagsParser.getTag(contractSrcTx, SmartWeaveTags.CONTENT_TYPE)).toEqual('application/wasm');
-    expect(tagsParser.getTag(contractSrcTx, SmartWeaveTags.WASM_LANG)).toEqual('rust');
-    expect(tagsParser.getTag(contractSrcTx, SmartWeaveTags.WASM_META)).toBeTruthy();
+    expect(tagsParser.getTag(contractSrcTx, SMART_WEAVE_TAGS.CONTENT_TYPE)).toEqual('application/wasm');
+    expect(tagsParser.getTag(contractSrcTx, WARP_TAGS.WASM_LANG)).toEqual('rust');
+    expect(tagsParser.getTag(contractSrcTx, WARP_TAGS.WASM_META)).toBeTruthy();
 
     const srcTxData = await arweaveWrapper.txData(contractSrcTxId);
     const wasmSrc = new WasmSrc(srcTxData);
@@ -318,7 +319,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
   });
 
   xit('should return stable gas results', async () => {
-    const results = [];
+    const results: InteractionResult<State, unknown>[] = [];
 
     for (let i = 0; i < 10; i++) {
       const result = await pst.contract.dryWrite(
@@ -358,7 +359,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     );
 
     expect(result.type).toEqual('exception');
-    expect(result.errorMessage.startsWith('[RE:OOG] Out of gas!')).toBeTruthy();
+    expect(result.errorMessage?.startsWith('[RE:OOG] Out of gas!')).toBeTruthy();
   });
 
   it("should properly evolve contract's source code", async () => {

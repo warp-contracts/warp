@@ -7,7 +7,7 @@ import { readdirSync, writeFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { compileFromFile } from 'json-schema-to-typescript';
 import { writeImplementationFile } from './generation-utils';
 
-const BINDINGS_ROOT = './contract/definition/bindings';
+const BINDINGS_ROOT = './crates/pst/contract/definition/bindings';
 const BINDINGS_JSON = join(BINDINGS_ROOT, 'json');
 const BINDINGS_TS = join(BINDINGS_ROOT, 'ts');
 
