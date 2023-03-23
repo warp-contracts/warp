@@ -20,7 +20,7 @@ import path from 'path';
 jest.setTimeout(30000);
 
 class State {
-  constructor(public x: number) {}
+  constructor(public x: Array<number>) {}
 }
 
 class View {
@@ -37,7 +37,9 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
 
   let wallet: JWKInterface;
 
-  const initialState = new State(0);
+  let a = new Array();
+  a.push(0);
+  const initialState = new State(a);
 
   let arweave: Arweave;
   let arlocal: ArLocal;
@@ -111,7 +113,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
 
   it('should write/view state', async () => {
     await toyContract.writeInteraction<Action>(new Action(4));
-    const interactionResult = await toyContract.viewState<Action, View>(new Action(17));
+    const interactionResult = await toyContract.viewState<Action, View>(new Action(1));
     expect(interactionResult.result.x).toEqual(4);
   });
 });

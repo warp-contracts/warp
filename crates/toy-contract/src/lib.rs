@@ -3,7 +3,7 @@ use warp_contracts::{warp_contract, handler_result::{WriteResult, ViewResult}};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct State {
-    x: u8,
+    x: Vec<u8>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -18,11 +18,11 @@ pub struct View {
 
 #[warp_contract(write)]
 pub fn handle(mut state: State, action: Action) -> WriteResult<State, ()> {
-    state.x = action.x;
+    state.x.push(action.x);
     WriteResult::Success(state)
 }
 
 #[warp_contract(view)]
-pub fn view(state: &State, _action: Action) -> ViewResult<View, ()> {
-    ViewResult::Success(View { x: state.x })
+pub fn view(state: &State, action: Action) -> ViewResult<View, ()> {
+    ViewResult::Success(View { x: state.x[action.x as usize] })
 }
