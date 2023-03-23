@@ -124,7 +124,10 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
         if ('handle' in this.wasmExports) {
           return await this.doHandleLegacy(action);
         }
-        const handleResult = action.interactionType === 'write' ? await this.wasmExports.warpContractWrite(action.input) : await this.wasmExports.warpContractView(action.input);
+        const handleResult =
+          action.interactionType === 'write'
+            ? await this.wasmExports.warpContractWrite(action.input)
+            : await this.wasmExports.warpContractView(action.input);
         if (!handleResult) {
           return;
         }
