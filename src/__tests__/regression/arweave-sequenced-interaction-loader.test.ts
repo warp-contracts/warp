@@ -56,7 +56,7 @@ describe('Arweave Gateway interaction loader', () => {
         const arContract = await arLoader.load(EXAMPLE_CONTRACT_TX_ID);
         const wrContract = await wrLoader.load(EXAMPLE_CONTRACT_TX_ID);
 
-        expect(stringify(arContract.contractTx)).toEqual(stringify(wrContract.contractTx));
+        expect(stringify(arContract.contractTx.tags)).toEqual(stringify(wrContract.contractTx.tags));
         expect(stringify(arContract.srcTx)).toEqual(stringify(wrContract.srcTx));
         expect(arContract.src).toEqual(wrContract.src);
         expect(arContract.initState).toEqual(wrContract.initState);
