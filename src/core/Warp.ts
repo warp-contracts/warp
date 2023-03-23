@@ -119,7 +119,7 @@ export class Warp {
   async createSource(
     sourceData: SourceData,
     wallet: ArWallet | CustomSignature | BundlerSigner,
-    disableBundling: boolean = false
+    disableBundling = false
   ): Promise<Transaction | DataItem> {
     return await this.createContract.createSource(sourceData, wallet, disableBundling);
   }
