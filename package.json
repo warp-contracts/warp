@@ -28,7 +28,7 @@
     "prepublishOnly": "yarn lint",
     "preversion": "yarn lint && yarn build",
     "version": "yarn format && git add -A src",
-    "postversion": "git push && git push --tags",
+    "postversion": "git push origin HEAD && git push --tags",
     "yalc:publish": "yarn build && yalc publish --push",
     "test": "jest",
     "test:unit": "jest ./src/__tests__/unit",
