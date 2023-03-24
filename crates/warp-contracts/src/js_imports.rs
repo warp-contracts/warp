@@ -85,7 +85,7 @@ extern "C" {
     #[wasm_bindgen]
     pub type Vrf;
 
-    #[wasm_bindgen(static_method_of = Vrf, js_name = value)]
+    #[wasm_bindgen(static_method_of = Vrf, js_name = vrfValue)]
     pub fn value() -> String;
 
     #[wasm_bindgen(static_method_of = Vrf, js_name = randomInt)]

@@ -825,6 +825,20 @@ export const rustWasmImports = (
       }, arguments);
     },
 
+    __wbg_vrfValue: function () {
+      return logError(function (arg0) {
+        const ret = rawImports.Vrf.value();
+        const ptr0 = passStringToWasm0(
+          ret,
+          wasmInstance.exports.__wbindgen_malloc,
+          wasmInstance.exports.__wbindgen_realloc
+        );
+        const len0 = WASM_VECTOR_LEN;
+        getInt32Memory0()[arg0 / 4 + 1] = len0;
+        getInt32Memory0()[arg0 / 4 + 0] = ptr0;
+      }, arguments);
+    },
+
     __wbg_randomInt: function () {
       return logError(function (arg0) {
         const ret = rawImports.Vrf.randomInt(arg0);
