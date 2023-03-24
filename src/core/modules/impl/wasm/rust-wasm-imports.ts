@@ -200,16 +200,16 @@ export const rustWasmImports = (
   const encodeString =
     typeof cachedTextEncoder.encodeInto === 'function'
       ? function (arg, view) {
-        return cachedTextEncoder.encodeInto(arg, view);
-      }
+          return cachedTextEncoder.encodeInto(arg, view);
+        }
       : function (arg, view) {
-        const buf = cachedTextEncoder.encode(arg);
-        view.set(buf);
-        return {
-          read: arg.length,
-          written: buf.length
+          const buf = cachedTextEncoder.encode(arg);
+          view.set(buf);
+          return {
+            read: arg.length,
+            written: buf.length
+          };
         };
-      };
 
   function passStringToWasm0(arg, malloc, realloc) {
     if (typeof arg !== 'string') throw new Error('expected a string argument');
@@ -901,11 +901,11 @@ export const rustWasmImports = (
       }, arguments);
     },
 
-    __wbg_set_17224bc548dd1d7b: function() {
+    __wbg_set_17224bc548dd1d7b: function () {
       return logError(function (arg0, arg1, arg2) {
         getObject(arg0)[arg1 >>> 0] = takeObject(arg2);
       }, arguments);
-     },
+    },
 
     __wbg_isArray: function () {
       return logError(function (arg0) {
