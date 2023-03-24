@@ -1,3 +1,5 @@
+//! Type safe wrappers over <https://docs.warp.cc/docs/sdk/basic/smartweave-global> API
+
 use super::js_imports::SmartWeave;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -9,6 +11,7 @@ use warp_contracts_core::{
     warp_result::{transmission::from_json, WarpResult},
 };
 
+/// returns the current state (`Ok(State)`) of contract identified ty `contract_address` or `Err(String)` in case of runtime error
 pub async fn read_foreign_contract_state<T: DeserializeOwned>(
     contract_address: &str,
 ) -> Result<T, String> {
@@ -21,6 +24,7 @@ pub async fn read_foreign_contract_state<T: DeserializeOwned>(
     }
 }
 
+/// returns the 'view' identified by `input` on the current state of the contract identified by `contract_address`
 pub async fn view_foreign_contract_state<
     V: DeserializeOwned + Debug,
     I: Serialize,
@@ -44,6 +48,7 @@ pub async fn view_foreign_contract_state<
     }
 }
 
+/// performs 'write' operation identified by `input` on the current state of the contract identified by `contract_address`
 pub async fn write_foreign_contract<I: Serialize, E: DeserializeOwned + Debug>(
     contract_address: &str,
     input: I,

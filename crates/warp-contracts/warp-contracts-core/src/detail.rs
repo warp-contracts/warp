@@ -1,6 +1,6 @@
-// What we try to achieve here is setting common lifetime for State and Future objects
+// What we try to achieve here is setting a common lifetime for State and Future objects
 // but using higher-ranked trait bounds (https://doc.rust-lang.org/reference/trait-bounds.html#higher-ranked-trait-bounds),
-// i.e. impossible to specify on the call side (see use of this trait).
+// i.e. impossible to specify on the call side (see the use of this trait).
 // The effect is somewhat opposite to 'static lifetime, the lifetime shorter than anything passed by the user.
 // Inspired by https://stackoverflow.com/a/63558160/3021277
 pub trait BorrowingFn<'a, S, A, V> {

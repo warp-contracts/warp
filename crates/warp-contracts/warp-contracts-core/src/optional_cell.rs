@@ -1,10 +1,13 @@
+#[doc(hidden)]
 use core::cell::RefCell;
 
-/// Tiny wrapper over RefCell that:
-/// - allow for uninitialized values (by storing Option)
-/// - allow static usage (by implementing Sync and providing const constructor)
+/// Tiny wrapper over RefCell.
 ///
-/// Because WASM is single threaded, we don't need to worry much about inter-thread communication
+/// It allows
+/// - allow for uninitialized values (by storing Option)
+/// - allow static usage (by implementing Sync and providing a const constructor)
+///
+/// Because WASM is single-threaded, we don't need to worry much about inter-thread communication
 pub struct OptionalCell<T> {
     pub cell: RefCell<Option<T>>,
 }
@@ -21,7 +24,7 @@ impl<T> OptionalCell<T> {
 }
 
 // Add clone_content to OptionalCell only if T is known to implement Clone.
-// In particular to to use is_empty on OptionalCell trait Clone is not required on T.
+// In particular to use is_empty on OptionalCell trait Clone is not required on T.
 pub trait CloneContents<T: Clone> {
     fn clone_contents(&self) -> T;
 }

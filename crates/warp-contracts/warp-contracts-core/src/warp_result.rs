@@ -1,3 +1,4 @@
+#[doc(hidden)]
 use crate::handler_result::{ViewResult, WriteResult};
 
 pub enum WarpResult<View, Error> {
@@ -49,7 +50,7 @@ impl<V, E> From<WarpResult<V, E>> for WriteResult<(), E> {
     }
 }
 
-// Module defining format as expected by SDK, covers (de)serialization.
+// Module defining format as expected by SDK. It covers (de)serialization.
 // We have this separated from WarpResult above (visible to contract code) to
 // keep WarpResult interface clean
 pub mod transmission {

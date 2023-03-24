@@ -1,3 +1,6 @@
+//! This module provides an implementation of <https://docs.warp.cc/docs/sdk/basic/smartweave-global> API
+//! This is a low-level API. See [`super::foreign_call`] and [`super::kv_operations`] for high-level counterparts.
+
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsValue;
 
@@ -92,5 +95,6 @@ extern "C" {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace = console)]
+    /// wrapper for JS `console.log`
     pub fn log(s: &str);
 }
