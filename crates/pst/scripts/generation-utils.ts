@@ -1,6 +1,6 @@
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import path from 'path';
+// import path from 'path';
 
 // eslint-disable-next-line
 export const writeImplementationFile = async (bindings: any, actions: any[]) => {

@@ -37,9 +37,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
 
   let wallet: JWKInterface;
 
-  let a = new Array();
-  a.push(0);
-  const initialState = new State(a);
+  const initialState = new State([0]);
 
   let arweave: Arweave;
   let arlocal: ArLocal;
