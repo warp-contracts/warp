@@ -200,16 +200,16 @@ export const rustWasmImports = (
   const encodeString =
     typeof cachedTextEncoder.encodeInto === 'function'
       ? function (arg, view) {
-          return cachedTextEncoder.encodeInto(arg, view);
-        }
+        return cachedTextEncoder.encodeInto(arg, view);
+      }
       : function (arg, view) {
-          const buf = cachedTextEncoder.encode(arg);
-          view.set(buf);
-          return {
-            read: arg.length,
-            written: buf.length
-          };
+        const buf = cachedTextEncoder.encode(arg);
+        view.set(buf);
+        return {
+          read: arg.length,
+          written: buf.length
         };
+      };
 
   function passStringToWasm0(arg, malloc, realloc) {
     if (typeof arg !== 'string') throw new Error('expected a string argument');
@@ -494,6 +494,10 @@ export const rustWasmImports = (
       addHeapObject(arg2),
       addHeapObject(arg3)
     );
+  }
+
+  function notDefined(what) {
+    return () => { throw new Error(`${what} is not defined`); };
   }
 
   // mapping from base function names (without mangled suffixes)
@@ -1224,8 +1228,53 @@ export const rustWasmImports = (
     }
   };
 
-  const baseImportsKeys = Object.keys(baseImports);
+  const helpers = {
+    _assertBoolean,
+    _assertNum,
+    addBorrowedObject,
+    addHeapObject,
+    getInt32Memory0,
+    getObject,
+    getStringFromWasm0,
+    handleError,
+    heap: () => heap,
+    logError,
+    notDefined,
+    passStringToWasm0,
+    takeObject,
+    wasm: () => wasmInstance.exports,
+    WASM_VECTOR_LEN: () => WASM_VECTOR_LEN,
+    __wbg_adapter_4: __wbg_adapter_42,
+    __wbg_adapter_3: __wbg_adapter_52,
+  };
 
+  function wrapPluginMethod(f: (_: Object) => Object) {
+    return function () {
+      return logError(function (arg0) {
+        const ret = f(takeObject(arg0));
+        return addHeapObject(ret);
+      }, arguments)
+    }
+  }
+
+  function extensionsDefinedImports(swGlobal, helpers) {
+    let res = {};
+    for (const [_, extension] of Object.entries<any>(swGlobal.extensions)) {
+      let imports = extension.rustImports?.(helpers) ?? {};
+      for (const [fName, f] of Object.entries(imports)) {
+        if (fName.startsWith('__wbg_')) {
+          res[fName] = f;
+        } else {
+          res['__wbg_' + fName] = wrapPluginMethod(f as (_: Object) => Object);
+        }
+      }
+    }
+    return res;
+  }
+
+
+  const allBaseImports = { ...baseImports, ...extensionsDefinedImports(swGlobal, helpers) };
+  const baseImportsKeys = Object.keys(allBaseImports);
   // assigning functions to "real" import names from the currently
   // compiled wasm module
   let module: any = wbindgenImports.reduce(
@@ -1240,7 +1289,7 @@ export const rustWasmImports = (
       if (acc.usedKeys.has(baseImportsKey)) {
         throw new Error(`Multiple methods maps to ${baseImportsKey}. Please file a bug.`);
       }
-      acc.res[wbindgenKey] = baseImports[baseImportsKey];
+      acc.res[wbindgenKey] = allBaseImports[baseImportsKey];
       acc.usedKeys.add(baseImportsKey);
       return acc;
     },

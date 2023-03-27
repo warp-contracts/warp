@@ -3,6 +3,7 @@ import fs from 'fs';
 import ArLocal from 'arlocal';
 import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
+
 import {
   InteractionResult,
   LoggerFactory,
@@ -19,6 +20,7 @@ import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 import path from 'path';
 import { PstContract } from '../contract/definition/bindings/ts/PstContract';
 import { State } from '../contract/definition/bindings/ts/ContractState';
+import { TheAnswerExtension } from './the-answer-plugin';
 
 jest.setTimeout(30000);
 
@@ -58,7 +60,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     LoggerFactory.INST.logLevel('debug', 'WASM:Rust');
     //LoggerFactory.INST.logLevel('debug', 'WasmContractHandlerApi');
 
-    warp = WarpFactory.forLocal(1820).use(new DeployPlugin());
+    warp = WarpFactory.forLocal(1820).use(new DeployPlugin()).use(new TheAnswerExtension());
     ({ arweave } = warp);
     arweaveWrapper = new ArweaveWrapper(arweave);
 
@@ -145,7 +147,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     const wasmSrc = new WasmSrc(srcTxData);
     expect(wasmSrc.wasmBinary()).not.toBeNull();
     expect(wasmSrc.additionalCode()).toEqual(fs.readFileSync(contractGlueCodeFile, 'utf-8'));
-    expect((await wasmSrc.sourceCode()).size).toEqual(11);
+    expect((await wasmSrc.sourceCode()).size).toEqual(12);
   });
 
   it('should read pst state and balance data', async () => {
@@ -153,6 +155,13 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     expect((await pst.balance({ target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M' })).balance).toEqual(10000000);
     expect((await pst.balance({ target: '33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA' })).balance).toEqual(23111222);
     expect((await pst.balance({ target: walletAddress })).balance).toEqual(555669);
+  });
+
+  it('should properly use the_answer plugin', async () => {
+    expect((await pst.balance({ target: 'the_answer' })).balance).toEqual(42);
+    expect((await pst.balance({ target: 'double_the_answer' })).balance).toEqual(2 * 42);
+    expect((await pst.kvGet({ key: 'the_answer' })).value).toEqual('the_answer_is_42');
+    expect((await pst.kvGet({ key: 'the_answer_wrapped' })).value).toEqual('the_answer_for_context_is_42');
   });
 
   it('should properly transfer tokens', async () => {
