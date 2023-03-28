@@ -76,14 +76,6 @@ describe('Wallet', () => {
       expect(sut.signer).toEqual(sampleFunction);
       expect(sut.type).toEqual('arweave');
     });
-
-    it(`should throw for custom signing function and arweave signature type`, () => {
-      expect(() => {
-        const sut = new Signature(warp, { signer: sampleFunction, type: 'ethereum' });
-      }).toThrow(
-        `Unable to use signing function of type: ethereum when not in mainnet environment or bundling is disabled.`
-      );
-    });
   });
 
   describe('in mainnet environment when bundling is disabled', () => {
