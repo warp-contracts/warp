@@ -108,10 +108,11 @@ export class Signature {
   }
 
   private assertEnvForCustomSigner(signatureType: SignatureType) {
-    if (
-      signatureType !== 'arweave' &&
-      (!(this.warp.environment == 'mainnet') || !(this.warp.interactionsLoader.type() == 'warp'))
-    ) {
+    if (signatureType === 'arweave') {
+      return;
+    }
+
+    if (!['mainnet', 'testnet'].includes(this.warp.environment) || this.warp.interactionsLoader.type() !== 'warp') {
       throw new Error(
         `Unable to use signing function of type: ${signatureType} when not in mainnet environment or bundling is disabled.`
       );
