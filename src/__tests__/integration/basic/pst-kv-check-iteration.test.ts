@@ -12,7 +12,7 @@ import { LoggerFactory } from "../../../logging/LoggerFactory";
 import { WriteInteractionResponse } from "../../../contract/Contract";
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
-describe('Testing the Profit Sharing Token', () => {
+describe('Testing the PST kv storage range access', () => {
   let contractSrc: string;
 
   let wallet: JWKInterface;
@@ -177,7 +177,7 @@ describe('Testing the Profit Sharing Token', () => {
     expect((await pst.currentBalance(aliceWalletAddress)).balance).toEqual(200_000);
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(555669 - 655 - 200_000);
     expect((await pst.getStorageValues(['check.' + walletAddress + '.' + aliceWalletAddress]))
-      .cachedValue.get('check.' + walletAddress + '.' + aliceWalletAddress)).toBe(0)
+      .cachedValue.get('check.' + walletAddress + '.' + aliceWalletAddress)).toBeNull()
   });
 
   it('should not be able to write check', async () => {

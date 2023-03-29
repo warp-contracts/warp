@@ -32,6 +32,12 @@ export interface SortKeyCache<V> {
   put(cacheKey: CacheKey, value: V): Promise<void>;
 
   /**
+   * deletes value in cache under given {@link CacheKey.key} from {@link CacheKey.sortKey}.
+   * the value will be still available if fetched using a lower sortKey
+   */
+  del(cacheKey: CacheKey): Promise<void>;
+
+  /**
    * removes all data stored under a specified key
    */
   delete(key: string): Promise<void>;
@@ -63,11 +69,14 @@ export interface SortKeyCache<V> {
   keys(): Promise<string[]>;
 
   /**
-   * Return filtered keys, based on range options
+   * Returns keys for a specified range
    */
   keys(sortKey?: string, options?: SortKeyCacheRangeOptions): Promise<string[]>;
 
-  entries(sortKey: string, options?: SortKeyCacheRangeOptions): Promise<SortKeyCacheEntry<V>[]>;
+  /**
+   * Returns a key value map for a specified range
+   */
+  kvMap(sortKey: string, options?: SortKeyCacheRangeOptions): Promise<Map<string, V>>;
 
   /**
    * returns underlying storage (LevelDB, LMDB, sqlite...)
@@ -98,12 +107,6 @@ export class CacheKey {
   constructor(readonly key: string, readonly sortKey: string) {}
 }
 
-export interface SortKeyCacheEntry<V> {
-  key: string;
-  value: V;
-}
-
-// tslint:disable-next-line:max-classes-per-file
 export class SortKeyCacheResult<V> {
   constructor(readonly sortKey: string, readonly cachedValue: V) {}
 }
