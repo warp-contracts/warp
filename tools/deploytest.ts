@@ -4,6 +4,7 @@ import { defaultCacheOptions, LoggerFactory, WarpFactory } from '../src';
 import fs from 'fs';
 import path from 'path';
 import { JWKInterface } from 'arweave/node/lib/wallet';
+import {ArweaveSigner, DeployPlugin} from "warp-contracts-plugin-deploy";
 
 async function main() {
   let wallet: JWKInterface = readJSON('./.secrets/33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA.json');
@@ -18,14 +19,15 @@ async function main() {
   });
 
   try {
-    const warp = WarpFactory.forMainnet({ ...defaultCacheOptions, inMemory: true });
+    const warp = WarpFactory.forMainnet({...defaultCacheOptions, inMemory: true})
+      .use(new DeployPlugin());
 
     const jsContractSrc = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.js'), 'utf8');
     const initialState = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.json'), 'utf8');
 
     // case 1 - full deploy, js contract
     const { contractTxId, srcTxId } = await warp.deploy({
-      wallet,
+      wallet: new ArweaveSigner(wallet),
       initState: initialState,
       src: jsContractSrc
       /*evaluationManifest: {
@@ -77,6 +79,8 @@ async function main() {
         function: 'transfer',
         target: 'M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI',
         qty: 100
+      }, {
+        disableBundling: true
       })
       /*contract.writeInteraction<any>({
         function: "mint",
@@ -85,7 +89,7 @@ async function main() {
       }),*/
     ]);
 
-    //const {cachedValue} = await contract.readState();
+    const {cachedValue} = await contract.readState();
 
     //logger.info("Result", await contract.getStorageValue('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA'));
     //console.dir(cachedValue.state);
