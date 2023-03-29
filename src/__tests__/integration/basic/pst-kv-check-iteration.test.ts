@@ -18,6 +18,9 @@ describe('Testing the Profit Sharing Token', () => {
   let wallet: JWKInterface;
   let walletAddress: string;
 
+  let aliceWallet: JWKInterface;
+  let aliceWalletAddress: string;
+
   let initialState: PstState;
 
   let arweave: Arweave;
@@ -38,6 +41,7 @@ describe('Testing the Profit Sharing Token', () => {
 
     ({ arweave } = warp);
     ({ jwk: wallet, address: walletAddress } = await warp.generateWallet());
+    ({ jwk: aliceWallet, address: aliceWalletAddress } = await warp.generateWallet());
 
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/kv-storage-range.js'), 'utf8');
     const stateFromFile: PstState = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/token-pst.json'), 'utf8'));
@@ -138,12 +142,57 @@ describe('Testing the Profit Sharing Token', () => {
 
   it('should properly check minted status', async () => {
     const viewResult = await pst.viewState<unknown, MintedResult>({ function: 'minted' });
-    const interactionState = await pst.readState(interaction.originalTxId)
-    console.log(interactionState);
 
     await mineBlock(warp);
 
     expect(viewResult.result.minted).toEqual(23676891);
+  });
+
+
+  it('should write check', async () => {
+    await pst.writeInteraction({ function: 'writeCheck',
+      target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M',
+      qty: 200_000 });
+
+    await pst.writeInteraction({ function: 'writeCheck',
+      target: aliceWalletAddress,
+      qty: 200_000 });
+
+    await mineBlock(warp);
+
+    expect((await pst.currentBalance(walletAddress)).balance).toEqual(555669 - 655);
+    expect((await pst.currentBalance(aliceWalletAddress)).balance).toEqual(0);
+  });
+
+  it('should cash check', async () => {
+    const alicePst = warp.pst(contractTxId).setEvaluationOptions({
+      useKVStorage: true
+    }) as PstContract;
+
+    alicePst.connect(aliceWallet);
+    await alicePst.writeInteraction({ function: 'cashCheck', target: walletAddress });
+
+    await mineBlock(warp);
+
+    expect((await pst.currentBalance(aliceWalletAddress)).balance).toEqual(200_000);
+    expect((await pst.currentBalance(walletAddress)).balance).toEqual(555669 - 655 - 200_000);
+    expect((await pst.getStorageValues(['check.' + walletAddress + '.' + aliceWalletAddress]))
+      .cachedValue.get('check.' + walletAddress + '.' + aliceWalletAddress)).toBe(0)
+  });
+
+  it('should not be able to write check', async () => {
+    const wrongCheck = await pst.writeInteraction({ function: 'writeCheck',
+      target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M',
+      qty: 360_000 });
+
+    await mineBlock(warp);
+
+    expect((await pst.getStorageValues(['check.' + walletAddress + '.uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']))
+      .cachedValue.get('check.' + walletAddress + '.uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M')).toBe(200_000);
+    expect((await pst.readState()).cachedValue.errorMessages[wrongCheck.originalTxId]).toMatch(
+      'Caller balance 355014 not high enough to write check for 360000!'
+    );
+    expect((await pst.currentBalance(walletAddress)).balance).toEqual(555669 - 655 - 200_000);
   });
 
 });
