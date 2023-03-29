@@ -200,16 +200,16 @@ export const rustWasmImports = (
   const encodeString =
     typeof cachedTextEncoder.encodeInto === 'function'
       ? function (arg, view) {
-        return cachedTextEncoder.encodeInto(arg, view);
-      }
+          return cachedTextEncoder.encodeInto(arg, view);
+        }
       : function (arg, view) {
-        const buf = cachedTextEncoder.encode(arg);
-        view.set(buf);
-        return {
-          read: arg.length,
-          written: buf.length
+          const buf = cachedTextEncoder.encode(arg);
+          view.set(buf);
+          return {
+            read: arg.length,
+            written: buf.length
+          };
         };
-      };
 
   function passStringToWasm0(arg, malloc, realloc) {
     if (typeof arg !== 'string') throw new Error('expected a string argument');
@@ -497,7 +497,9 @@ export const rustWasmImports = (
   }
 
   function notDefined(what) {
-    return () => { throw new Error(`${what} is not defined`); };
+    return () => {
+      throw new Error(`${what} is not defined`);
+    };
   }
 
   // mapping from base function names (without mangled suffixes)
@@ -1245,7 +1247,7 @@ export const rustWasmImports = (
     wasm: () => wasmInstance.exports,
     WASM_VECTOR_LEN: () => WASM_VECTOR_LEN,
     __wbg_adapter_4: __wbg_adapter_42,
-    __wbg_adapter_3: __wbg_adapter_52,
+    __wbg_adapter_3: __wbg_adapter_52
   };
 
   function wrapPluginMethod(f: (_: Object) => Object) {
@@ -1253,8 +1255,8 @@ export const rustWasmImports = (
       return logError(function (arg0) {
         const ret = f(takeObject(arg0));
         return addHeapObject(ret);
-      }, arguments)
-    }
+      }, arguments);
+    };
   }
 
   function extensionsDefinedImports(swGlobal, helpers) {
@@ -1271,7 +1273,6 @@ export const rustWasmImports = (
     }
     return res;
   }
-
 
   const allBaseImports = { ...baseImports, ...extensionsDefinedImports(swGlobal, helpers) };
   const baseImportsKeys = Object.keys(allBaseImports);
