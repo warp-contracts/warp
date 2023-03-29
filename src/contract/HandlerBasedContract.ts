@@ -150,10 +150,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     if (sortKey && !this.isRoot() && this.interactionState().has(this.txId())) {
       const result = this.interactionState().get(this.txId());
-      return {
-        sortKey,
-        cachedValue: result as EvalStateResult<State>
-      };
+      return new SortKeyCacheResult<EvalStateResult<State>>(sortKey, result as EvalStateResult<State>);
     }
 
     // TODO: not sure if we should synchronize on a contract instance or contractTxId
@@ -734,10 +731,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const executionContext = await this.createExecutionContextFromTx(this._contractTxId, interactionTx);
 
     if (!this.isRoot() && this.interactionState().has(this.txId())) {
-      evalStateResult = {
-        sortKey: interactionTx.sortKey,
-        cachedValue: this.interactionState().get(this.txId()) as EvalStateResult<State>
-      };
+      evalStateResult = new SortKeyCacheResult<EvalStateResult<State>>(
+        interactionTx.sortKey,
+        this.interactionState().get(this.txId()) as EvalStateResult<State>
+      );
     } else {
       evalStateResult = await this.warp.stateEvaluator.eval<State>(executionContext);
       this.interactionState().update(this.txId(), evalStateResult.cachedValue);
@@ -867,10 +864,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   async getStorageValues(keys: string[]): Promise<SortKeyCacheResult<Map<string, unknown>>> {
     const lastCached = await this.warp.stateEvaluator.getCache().getLast(this.txId());
     if (lastCached == null) {
-      return {
-        sortKey: null,
-        cachedValue: new Map()
-      };
+      return new SortKeyCacheResult<Map<string, unknown>>(null, new Map());
     }
 
     const storage = this.warp.kvStorageFactory(this.txId());
@@ -881,10 +875,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
         const lastValue = await storage.getLessOrEqual(key, lastCached.sortKey);
         result.set(key, lastValue == null ? null : lastValue.cachedValue);
       }
-      return {
-        sortKey: lastCached.sortKey,
-        cachedValue: result
-      };
+      return new SortKeyCacheResult<Map<string, unknown>>(lastCached.sortKey, result);
     } finally {
       await storage.close();
     }
@@ -902,7 +893,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     return result as HandlerBasedContract<unknown>;
   }
-
 
   private async maybeSyncStateWithRemoteSource(
     remoteState: SortKeyCacheResult<EvalStateResult<State>>,

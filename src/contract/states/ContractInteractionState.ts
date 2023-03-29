@@ -1,5 +1,5 @@
 import { InteractionState } from './InteractionState';
-import { CacheKey, SortKeyCache, SortKeyCacheEntry } from '../../cache/SortKeyCache';
+import { CacheKey, SortKeyCache } from '../../cache/SortKeyCache';
 import { EvalStateResult } from '../../core/modules/StateEvaluator';
 import { GQLNodeInterface } from '../../legacy/gqlResult';
 import { Warp } from '../../core/Warp';
@@ -27,6 +27,12 @@ export class ContractInteractionState implements InteractionState {
     return null;
   }
 
+  async delKV(contractTxId: string, cacheKey: CacheKey): Promise<void> {
+    if (this._kv.has(contractTxId)) {
+      await this._kv.get(contractTxId).del(cacheKey);
+    }
+  }
+
   getKvKeys(contractTxId: string, sortKey?: string, options?: SortKeyCacheRangeOptions): Promise<string[]> {
     const storage = this._warp.kvStorageFactory(contractTxId);
     return storage.keys(sortKey, options);
@@ -36,9 +42,9 @@ export class ContractInteractionState implements InteractionState {
     contractTxId: string,
     sortKey?: string,
     options?: SortKeyCacheRangeOptions
-  ): Promise<SortKeyCacheEntry<unknown>[]> {
+  ): Promise<Map<string, unknown>> {
     const storage = this._warp.kvStorageFactory(contractTxId);
-    return storage.entries(sortKey, options);
+    return storage.kvMap(sortKey, options);
   }
 
   async commit(interaction: GQLNodeInterface): Promise<void> {
