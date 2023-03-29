@@ -20,10 +20,12 @@ export async function handle(state, action) {
       throw new ContractError(`Caller balance ${callerBalance} not high enough to write check for ${qty}!`);
     }
 
-    const allChecks = (await SmartWeave.kv.entries({ gte: 'check.' + caller, lte: 'check.' + caller + '.\xff'}))
-      .reduce((acc, entry) => acc + parseInt(entry.value), 0)
+    let sumChecks = 0;
+    for await (let part of (await SmartWeave.kv.kvMap({ gte: 'check.' + caller, lte: 'check.' + caller + '.\xff'})).values()) {
+      sumChecks = sumChecks + parseInt(part);
+    }
 
-    if (callerBalance < allChecks + qty) {
+    if (callerBalance < sumChecks + qty) {
       throw new ContractError(`Caller balance ${callerBalance} not high enough to write next check ${qty}!`);
     }
 
@@ -49,7 +51,7 @@ export async function handle(state, action) {
     callerBalance = callerBalance + check;
     await SmartWeave.kv.put(caller, callerBalance);
 
-    await SmartWeave.kv.put('check.' + target + '.' + caller, 0);
+    await SmartWeave.kv.del('check.' + target + '.' + caller);
 
     return {state};
   }
@@ -104,8 +106,10 @@ export async function handle(state, action) {
   }
 
   if (input.function === 'minted') {
-    const sumMinted = (await SmartWeave.kv.entries({ gte: 'mint.', lte: 'mint.\xff'}))
-      .reduce((acc, entry) => acc + parseInt(entry.value), 0)
+    let sumMinted = 0;
+    for await (let part of (await SmartWeave.kv.kvMap({ gte: 'mint.', lte: 'mint.\xff'})).values()) {
+      sumMinted = sumMinted + parseInt(part);
+    }
 
     return {result: {minted: sumMinted}};
   }

@@ -1,4 +1,4 @@
-import { BatchDBOp, CacheKey, SortKeyCache, SortKeyCacheEntry, SortKeyCacheResult } from '../SortKeyCache';
+import { BatchDBOp, CacheKey, SortKeyCache, SortKeyCacheResult } from '../SortKeyCache';
 import { Level } from 'level';
 import { MemoryLevel } from 'memory-level';
 import { CacheOptions } from '../../core/WarpFactory';
@@ -19,21 +19,35 @@ import { AbstractChainedBatch } from 'abstract-level/types/abstract-chained-batc
  * In order to reduce the cache size, the oldest entries are automatically pruned.
  */
 
+class ClientValueWrapper<V> {
+  constructor(readonly value: V, readonly tombstone: boolean = false) {}
+}
+
 export class LevelDbCache<V> implements SortKeyCache<V> {
   private readonly logger = LoggerFactory.INST.create('LevelDbCache');
   private readonly subLevelSeparator: string;
-  private readonly subLevelOptions: AbstractSublevelOptions<string, V>;
+  private readonly subLevelOptions: AbstractSublevelOptions<string, ClientValueWrapper<V>>;
 
   /**
    * not using the Level type, as it is not compatible with MemoryLevel (i.e. has more properties)
    * and there doesn't seem to be any public interface/abstract type for all Level implementations
    * (the AbstractLevel is not exported from the package...)
    */
-  private _db: MemoryLevel<string, V>;
-  private _rollbackBatch: AbstractChainedBatch<MemoryLevel<string, V>, string, V>;
+  private _db: MemoryLevel<string, ClientValueWrapper<V>>;
+
+  /**
+   * Rollback batch is way of recovering kv storage state from before a failed interaction.
+   * Currently, all operations performed during active transaction are directly saved to kv storage.
+   * In case the transaction fails the changes will be reverted using the rollback batch.
+   */
+  private _rollbackBatch: AbstractChainedBatch<
+    MemoryLevel<string, ClientValueWrapper<V>>,
+    string,
+    ClientValueWrapper<V>
+  >;
 
   // Lazy initialization upon first access
-  private get db(): MemoryLevel<string, V> {
+  private get db(): MemoryLevel<string, ClientValueWrapper<V>> {
     if (!this._db) {
       if (this.cacheOptions.inMemory) {
         this._db = new MemoryLevel(this.subLevelOptions);
@@ -43,7 +57,7 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
         }
         const dbLocation = this.cacheOptions.dbLocation;
         this.logger.info(`Using location ${dbLocation}`);
-        this._db = new Level<string, V>(dbLocation, this.subLevelOptions);
+        this._db = new Level<string, ClientValueWrapper<V>>(dbLocation, this.subLevelOptions);
       }
     }
     return this._db;
@@ -60,16 +74,13 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async get(cacheKey: CacheKey, returnDeepCopy?: boolean): Promise<SortKeyCacheResult<V> | null> {
     this.validateKey(cacheKey.key);
-    const contractCache = this.db.sublevel<string, V>(cacheKey.key, this.subLevelOptions);
+    const contractCache = this.db.sublevel<string, ClientValueWrapper<V>>(cacheKey.key, this.subLevelOptions);
     // manually opening to fix https://github.com/Level/level/issues/221
     await contractCache.open();
     try {
-      const result = await contractCache.get(cacheKey.sortKey);
-
-      return {
-        sortKey: cacheKey.sortKey,
-        cachedValue: result
-      };
+      const result: ClientValueWrapper<V> = await contractCache.get(cacheKey.sortKey);
+      const resultValue = result.tombstone ? null : result.value;
+      return new SortKeyCacheResult<V>(cacheKey.sortKey, resultValue);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       if (e.code == 'LEVEL_NOT_FOUND') {
@@ -81,41 +92,56 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
   }
 
   async getLast(key: string): Promise<SortKeyCacheResult<V> | null> {
-    const contractCache = this.db.sublevel<string, V>(key, this.subLevelOptions);
+    const contractCache = this.db.sublevel<string, ClientValueWrapper<V>>(key, this.subLevelOptions);
     // manually opening to fix https://github.com/Level/level/issues/221
     await contractCache.open();
     const keys = await contractCache.keys({ reverse: true, limit: 1 }).all();
     if (keys.length) {
-      return {
-        sortKey: keys[0],
-        cachedValue: await contractCache.get(keys[0])
-      };
-    } else {
-      return null;
+      const lastValueWrap = await contractCache.get(keys[0]);
+      if (!lastValueWrap.tombstone) {
+        return new SortKeyCacheResult<V>(keys[0], lastValueWrap.value);
+      }
     }
+    return null;
   }
 
   async getLessOrEqual(key: string, sortKey: string): Promise<SortKeyCacheResult<V> | null> {
-    const contractCache = this.db.sublevel<string, V>(key, this.subLevelOptions);
+    const contractCache = this.db.sublevel<string, ClientValueWrapper<V>>(key, this.subLevelOptions);
     // manually opening to fix https://github.com/Level/level/issues/221
     await contractCache.open();
     const keys = await contractCache.keys({ reverse: true, lte: sortKey, limit: 1 }).all();
     if (keys.length) {
-      return {
-        sortKey: keys[0],
-        cachedValue: await contractCache.get(keys[0])
-      };
-    } else {
-      return null;
+      const cachedVal = await contractCache.get(keys[0]);
+      if (!cachedVal.tombstone) {
+        return new SortKeyCacheResult<V>(keys[0], cachedVal.value);
+      }
     }
+    return null;
   }
 
   async put(stateCacheKey: CacheKey, value: V): Promise<void> {
+    await this.setClientValue(stateCacheKey, new ClientValueWrapper(value));
+  }
+
+  /**
+   * Delete operation under the hood is a write operation with setting tombstone flag to true.
+   * The idea behind is based on Cassandra Tombstone
+   * https://www.instaclustr.com/support/documentation/cassandra/using-cassandra/managing-tombstones-in-cassandra/
+   * There is a couple of benefits to this approach:
+   * This allows to use kv storage range operations with ease.
+   * The value will not be accessible only to the next interactions. Interactions reading state for lower sortKey will be able to access it.
+   * Revert operation for rollback is much easier to implement
+   */
+  async del(cacheKey: CacheKey): Promise<void> {
+    await this.setClientValue(cacheKey, new ClientValueWrapper(null, true));
+  }
+
+  private async setClientValue(stateCacheKey: CacheKey, valueWrapper: ClientValueWrapper<V>): Promise<void> {
     this.validateKey(stateCacheKey.key);
-    const contractCache = this.db.sublevel<string, V>(stateCacheKey.key, this.subLevelOptions);
+    const contractCache = this.db.sublevel<string, ClientValueWrapper<V>>(stateCacheKey.key, this.subLevelOptions);
     // manually opening to fix https://github.com/Level/level/issues/221
     await contractCache.open();
-    await contractCache.put(stateCacheKey.sortKey, value);
+    await contractCache.put(stateCacheKey.sortKey, valueWrapper);
     if (!this._rollbackBatch) {
       this.begin();
     }
@@ -123,7 +149,7 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
   }
 
   async delete(key: string): Promise<void> {
-    const contractCache = this.db.sublevel<string, V>(key, this.subLevelOptions);
+    const contractCache = this.db.sublevel<string, ClientValueWrapper<V>>(key, this.subLevelOptions);
     await contractCache.open();
     await contractCache.clear();
   }
@@ -191,16 +217,7 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
   }
 
   async keys(sortKey?: string, options?: SortKeyCacheRangeOptions): Promise<string[]> {
-    const distinctKeys = new Set<string>();
-    const rangeOptions: RangeOptions<string> = this.levelRangeOptions(options);
-    const joinedKeys = await this.db.keys(rangeOptions).all();
-
-    joinedKeys
-      .filter((k) => !sortKey || this.extractSortKey(k).localeCompare(sortKey) <= 0)
-      .map((k) => this.extractOriginalKey(k))
-      .forEach((k) => distinctKeys.add(k));
-
-    return Array.from(distinctKeys);
+    return Array.from((await this.kvMap(sortKey, options)).keys());
   }
 
   validateKey(key: string) {
@@ -217,17 +234,20 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
     return joinedKey.split(this.subLevelSeparator)[2];
   }
 
-  async entries(sortKey: string, options?: SortKeyCacheRangeOptions): Promise<SortKeyCacheEntry<V>[]> {
-    const keys: string[] = await this.keys(sortKey, options);
+  async kvMap(sortKey: string, options?: SortKeyCacheRangeOptions): Promise<Map<string, V>> {
+    const entries: Map<string, V> = new Map();
+    const allKeys = (await this.db.keys(this.levelRangeOptions(options)).all())
+      .filter((k) => !sortKey || this.extractSortKey(k).localeCompare(sortKey) <= 0)
+      .map((k) => this.extractOriginalKey(k));
 
-    return Promise.all(
-      keys.map(async (k): Promise<SortKeyCacheEntry<V>> => {
-        return {
-          key: k,
-          value: (await this.getLessOrEqual(k, sortKey)).cachedValue
-        };
-      })
-    );
+    for (const k of allKeys) {
+      const lastValue = await this.getLessOrEqual(k, sortKey);
+      if (lastValue) {
+        entries.set(k, lastValue.cachedValue);
+      }
+    }
+
+    return entries;
   }
 
   private levelRangeOptions(options?: SortKeyCacheRangeOptions): RangeOptions<string> | undefined {
@@ -269,7 +289,7 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
 
     const contracts = await this.keys();
     for (let i = 0; i < contracts.length; i++) {
-      const contractCache = this.db.sublevel<string, V>(contracts[i], this.subLevelOptions);
+      const contractCache = this.db.sublevel<string, ClientValueWrapper<V>>(contracts[i], this.subLevelOptions);
 
       // manually opening to fix https://github.com/Level/level/issues/221
       await contractCache.open();

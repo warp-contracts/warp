@@ -1,4 +1,4 @@
-import { CacheKey, SortKeyCacheEntry } from '../../cache/SortKeyCache';
+import { CacheKey } from '../../cache/SortKeyCache';
 import { EvalStateResult } from '../../core/modules/StateEvaluator';
 import { GQLNodeInterface } from '../../legacy/gqlResult';
 import { SortKeyCacheRangeOptions } from '../../cache/SortKeyCacheRangeOptions';
@@ -46,11 +46,9 @@ export interface InteractionState {
 
   getKV(contractTxId: string, cacheKey: CacheKey): Promise<unknown>;
 
+  delKV(contractTxId: string, cacheKey: CacheKey): Promise<void>;
+
   getKvKeys(contractTxId: string, sortKey?: string, options?: SortKeyCacheRangeOptions): Promise<string[]>;
 
-  getKvRange(
-    contractTxId: string,
-    sortKey?: string,
-    options?: SortKeyCacheRangeOptions
-  ): Promise<SortKeyCacheEntry<unknown>[]>;
+  getKvRange(contractTxId: string, sortKey?: string, options?: SortKeyCacheRangeOptions): Promise<Map<string, unknown>>;
 }

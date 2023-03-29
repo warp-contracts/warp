@@ -2,7 +2,7 @@
 import Arweave from 'arweave';
 import { EvaluationOptions } from '../core/modules/StateEvaluator';
 import { GQLNodeInterface, GQLTagInterface, VrfData } from './gqlResult';
-import { BatchDBOp, CacheKey, PutBatch, SortKeyCache, SortKeyCacheEntry } from '../cache/SortKeyCache';
+import { CacheKey, SortKeyCache } from '../cache/SortKeyCache';
 import { SortKeyCacheRangeOptions } from '../cache/SortKeyCacheRangeOptions';
 import {InteractionState} from "../contract/states/InteractionState";
 
@@ -283,14 +283,27 @@ export class KV {
     return result?.cachedValue || null;
   }
 
+  async del(key: string): Promise<void> {
+    this.checkStorageAvailable();
+    const sortKey = this._transaction.sortKey;
+
+    // then we're checking if the values exists in the interactionState
+    const interactionStateValue = await this._interactionState.delKV(this._contractTxId, new CacheKey(key, this._transaction.sortKey));
+    if (interactionStateValue != null) {
+      return interactionStateValue;
+    }
+
+    await this._storage.del(new CacheKey(key, this._transaction.sortKey));
+  }
+
   async keys(options?: SortKeyCacheRangeOptions): Promise<string[]> {
     const sortKey = this._transaction.sortKey;
     return await this._storage.keys(sortKey, options)
   }
 
-  async entries<V>(options?: SortKeyCacheRangeOptions): Promise<SortKeyCacheEntry<V>[]> {
+  async kvMap<V>(options?: SortKeyCacheRangeOptions): Promise<Map<string, V>> {
     const sortKey = this._transaction.sortKey;
-    return this._storage.entries(sortKey, options)
+    return this._storage.kvMap(sortKey, options)
   }
 
   async commit(): Promise<void> {
