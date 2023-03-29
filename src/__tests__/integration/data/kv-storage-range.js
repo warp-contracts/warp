@@ -5,15 +5,51 @@ export async function handle(state, action) {
   if (input.function === 'mint') {
     await SmartWeave.kv.put('mint.' + input.target, input.qty);
     await SmartWeave.kv.put(input.target, input.qty);
-    // console.log(`lets get crazy`)
-    // await SmartWeave.kv.put('!!', 'asd')
-    // await SmartWeave.kv.put('aa!!aa', 'aa')
-    // await SmartWeave.kv.put('!!12', 44)
-    // await SmartWeave.kv.put('!!!!', 45)
-    console.log((await SmartWeave.kv.keys()))
 
-    // console.log(`!! ${(await SmartWeave.kv.get('!!'))} ${(await SmartWeave.kv.get('!!12'))}`)
-    // console.log(`!! ${(await SmartWeave.kv.get('!!!!'))} ${(await SmartWeave.kv.get('!!!'))}`)
+    return {state};
+  }
+
+  if (input.function === 'writeCheck') {
+    const target = input.target;
+    const qty = input.qty;
+
+    let callerBalance = await SmartWeave.kv.get(caller);
+    callerBalance = callerBalance ? callerBalance : 0;
+
+    if (callerBalance < qty) {
+      throw new ContractError(`Caller balance ${callerBalance} not high enough to write check for ${qty}!`);
+    }
+
+    const allChecks = (await SmartWeave.kv.entries({ gte: 'check.' + caller, lte: 'check.' + caller + '.\xff'}))
+      .reduce((acc, entry) => acc + parseInt(entry.value), 0)
+
+    if (callerBalance < allChecks + qty) {
+      throw new ContractError(`Caller balance ${callerBalance} not high enough to write next check ${qty}!`);
+    }
+
+    await SmartWeave.kv.put('check.' + caller + '.' + target, qty);
+
+    return {state};
+  }
+
+
+  if (input.function === 'cashCheck') {
+    const target = input.target;
+
+    const check = await SmartWeave.kv.get('check.' + target + '.' + caller);
+
+    let targetBalance = await SmartWeave.kv.get(target);
+    if (targetBalance < check) {
+      throw new ContractError(`Target balance ${targetBalance} not high enough to cash check for ${check}!`);
+    }
+    targetBalance = targetBalance - check;
+    await SmartWeave.kv.put(target, targetBalance);
+
+    let callerBalance = await SmartWeave.kv.get(caller);
+    callerBalance = callerBalance + check;
+    await SmartWeave.kv.put(caller, callerBalance);
+
+    await SmartWeave.kv.put('check.' + target + '.' + caller, 0);
 
     return {state};
   }
@@ -68,15 +104,6 @@ export async function handle(state, action) {
   }
 
   if (input.function === 'minted') {
-
-    // console.log(`!! ${(await SmartWeave.kv.get('!!'))} ${(await SmartWeave.kv.get('!!12'))}`)
-    // console.log(`!! ${(await SmartWeave.kv.get('!!!!'))} ${(await SmartWeave.kv.get('!!!'))}`)
-    // console.log(`'aa!!aa' ${(await SmartWeave.kv.get('aa!!aa'))} ${(await SmartWeave.kv.get('aa'))}`)
-
-    for (const entry of await await SmartWeave.kv.entries()) {
-      console.log(`getting value ${entry.value} for key ${entry.key}`)
-    }
-
     const sumMinted = (await SmartWeave.kv.entries({ gte: 'mint.', lte: 'mint.\xff'}))
       .reduce((acc, entry) => acc + parseInt(entry.value), 0)
 
