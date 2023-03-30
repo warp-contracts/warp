@@ -247,14 +247,4 @@ export interface Contract<State = unknown> {
   getStorageValues(keys: string[]): Promise<SortKeyCacheResult<Map<string, unknown>>>;
 
   interactionState(): InteractionState;
-
-  /*  getUncommittedState(contractTxId: string): EvalStateResult<unknown>;
-
-  setUncommittedState(contractTxId: string, result: EvalStateResult<unknown>): void;
-
-  hasUncommittedState(contractTxId: string): boolean;
-
-  resetUncommittedState(): void;
-
-  commitStates(interaction: GQLNodeInterface): Promise<void>;*/
 }
