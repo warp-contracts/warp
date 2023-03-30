@@ -1,15 +1,15 @@
-import fs from "fs";
+import fs from 'fs';
 
-import ArLocal from "arlocal";
-import Arweave from "arweave";
-import { JWKInterface } from "arweave/node/lib/wallet";
-import path from "path";
-import { mineBlock } from "../_helpers";
-import { PstContract, PstState } from "../../../contract/PstContract";
-import { Warp } from "../../../core/Warp";
-import { DEFAULT_LEVEL_DB_LOCATION, WarpFactory } from "../../../core/WarpFactory";
-import { LoggerFactory } from "../../../logging/LoggerFactory";
-import { WriteInteractionResponse } from "../../../contract/Contract";
+import ArLocal from 'arlocal';
+import Arweave from 'arweave';
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import path from 'path';
+import { mineBlock } from '../_helpers';
+import { PstContract, PstState } from '../../../contract/PstContract';
+import { Warp } from '../../../core/Warp';
+import { DEFAULT_LEVEL_DB_LOCATION, WarpFactory } from '../../../core/WarpFactory';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { WriteInteractionResponse } from '../../../contract/Contract';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 describe('Testing the PST kv storage range access', () => {
@@ -139,7 +139,6 @@ describe('Testing the PST kv storage range access', () => {
     expect((await pst.currentBalance('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M')).balance).toEqual(10_000 + 655);
   });
 
-
   it('should properly check minted status', async () => {
     const viewResult = await pst.viewState<unknown, MintedResult>({ function: 'minted' });
 
@@ -148,15 +147,14 @@ describe('Testing the PST kv storage range access', () => {
     expect(viewResult.result.minted).toEqual(23676891);
   });
 
-
   it('should write check', async () => {
-    await pst.writeInteraction({ function: 'writeCheck',
+    await pst.writeInteraction({
+      function: 'writeCheck',
       target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M',
-      qty: 200_000 });
+      qty: 200_000
+    });
 
-    await pst.writeInteraction({ function: 'writeCheck',
-      target: aliceWalletAddress,
-      qty: 200_000 });
+    await pst.writeInteraction({ function: 'writeCheck', target: aliceWalletAddress, qty: 200_000 });
 
     await mineBlock(warp);
 
@@ -176,25 +174,32 @@ describe('Testing the PST kv storage range access', () => {
 
     expect((await pst.currentBalance(aliceWalletAddress)).balance).toEqual(200_000);
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(555669 - 655 - 200_000);
-    expect((await pst.getStorageValues(['check.' + walletAddress + '.' + aliceWalletAddress]))
-      .cachedValue.get('check.' + walletAddress + '.' + aliceWalletAddress)).toBeNull()
+    expect(
+      (await pst.getStorageValues(['check.' + walletAddress + '.' + aliceWalletAddress])).cachedValue.get(
+        'check.' + walletAddress + '.' + aliceWalletAddress
+      )
+    ).toBeNull();
   });
 
   it('should not be able to write check', async () => {
-    const wrongCheck = await pst.writeInteraction({ function: 'writeCheck',
+    const wrongCheck = await pst.writeInteraction({
+      function: 'writeCheck',
       target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M',
-      qty: 360_000 });
+      qty: 360_000
+    });
 
     await mineBlock(warp);
 
-    expect((await pst.getStorageValues(['check.' + walletAddress + '.uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M']))
-      .cachedValue.get('check.' + walletAddress + '.uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M')).toBe(200_000);
+    expect(
+      (
+        await pst.getStorageValues(['check.' + walletAddress + '.uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M'])
+      ).cachedValue.get('check.' + walletAddress + '.uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M')
+    ).toBe(200_000);
     expect((await pst.readState()).cachedValue.errorMessages[wrongCheck.originalTxId]).toMatch(
       'Caller balance 355014 not high enough to write check for 360000!'
     );
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(555669 - 655 - 200_000);
   });
-
 });
 
 export interface MintedResult {
