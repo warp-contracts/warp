@@ -4,7 +4,7 @@ import { EvaluationOptions } from '../core/modules/StateEvaluator';
 import { GQLNodeInterface, GQLTagInterface, VrfData } from './gqlResult';
 import { CacheKey, SortKeyCache } from '../cache/SortKeyCache';
 import { SortKeyCacheRangeOptions } from '../cache/SortKeyCacheRangeOptions';
-import {InteractionState} from "../contract/states/InteractionState";
+import { InteractionState } from '../contract/states/InteractionState';
 
 /**
  *
@@ -262,11 +262,12 @@ export class KV {
     private readonly _storage: SortKeyCache<any> | null,
     private readonly _interactionState: InteractionState,
     private readonly _transaction: SWTransaction,
-    private readonly _contractTxId: string) {}
+    private readonly _contractTxId: string
+  ) {}
 
   async put(key: string, value: any): Promise<void> {
     this.checkStorageAvailable();
-    await this._storage.put(new CacheKey(key, this._transaction.sortKey), value)
+    await this._storage.put(new CacheKey(key, this._transaction.sortKey), value);
   }
 
   async get(key: string): Promise<unknown | null> {
@@ -274,7 +275,10 @@ export class KV {
     const sortKey = this._transaction.sortKey;
 
     // then we're checking if the values exists in the interactionState
-    const interactionStateValue = await this._interactionState.getKV(this._contractTxId, new CacheKey(key, this._transaction.sortKey));
+    const interactionStateValue = await this._interactionState.getKV(
+      this._contractTxId,
+      new CacheKey(key, this._transaction.sortKey)
+    );
     if (interactionStateValue != null) {
       return interactionStateValue;
     }
@@ -288,7 +292,10 @@ export class KV {
     const sortKey = this._transaction.sortKey;
 
     // then we're checking if the values exists in the interactionState
-    const interactionStateValue = await this._interactionState.delKV(this._contractTxId, new CacheKey(key, this._transaction.sortKey));
+    const interactionStateValue = await this._interactionState.delKV(
+      this._contractTxId,
+      new CacheKey(key, this._transaction.sortKey)
+    );
     if (interactionStateValue != null) {
       return interactionStateValue;
     }
@@ -298,27 +305,27 @@ export class KV {
 
   async keys(options?: SortKeyCacheRangeOptions): Promise<string[]> {
     const sortKey = this._transaction.sortKey;
-    return await this._storage.keys(sortKey, options)
+    return await this._storage.keys(sortKey, options);
   }
 
   async kvMap<V>(options?: SortKeyCacheRangeOptions): Promise<Map<string, V>> {
     const sortKey = this._transaction.sortKey;
-    return this._storage.kvMap(sortKey, options)
+    return this._storage.kvMap(sortKey, options);
   }
 
   async commit(): Promise<void> {
     if (this._storage) {
       if (this._transaction.dryRun) {
-        this._storage.rollback()
+        this._storage.rollback();
       } else {
-        this._storage.commit()
+        this._storage.commit();
       }
     }
   }
 
   async rollback(): Promise<void> {
     if (this._storage) {
-      this._storage.rollback()
+      this._storage.rollback();
     }
   }
 

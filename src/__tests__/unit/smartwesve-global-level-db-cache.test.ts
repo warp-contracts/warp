@@ -1,4 +1,4 @@
-import {DEFAULT_LEVEL_DB_LOCATION, WarpFactory} from '../../core/WarpFactory';
+import { DEFAULT_LEVEL_DB_LOCATION, WarpFactory } from '../../core/WarpFactory';
 import fs from 'fs';
 import { SmartWeaveGlobal } from '../../legacy/smartweave-global';
 import Arweave from 'arweave';
@@ -6,7 +6,7 @@ import { DefaultEvaluationOptions } from '../../core/modules/StateEvaluator';
 import { LevelDbCache } from '../../cache/impl/LevelDbCache';
 import { GQLNodeInterface } from '../../legacy/gqlResult';
 import { CacheKey } from '../../cache/SortKeyCache';
-import {ContractInteractionState} from "../../contract/states/ContractInteractionState";
+import { ContractInteractionState } from '../../contract/states/ContractInteractionState';
 
 describe('KV database', () => {
   describe('with the SmartWeave Global KV implementation', () => {
@@ -18,7 +18,13 @@ describe('KV database', () => {
 
     const interactionState = new ContractInteractionState(WarpFactory.forTestnet());
 
-    const sut = new SmartWeaveGlobal(arweave, { id: 'KV_TRIE_TEST_SW_GLOBAL', owner: '' }, new DefaultEvaluationOptions(), interactionState, db);
+    const sut = new SmartWeaveGlobal(
+      arweave,
+      { id: 'KV_TRIE_TEST_SW_GLOBAL', owner: '' },
+      new DefaultEvaluationOptions(),
+      interactionState,
+      db
+    );
 
     it('should set values', async () => {
       sut._activeTx = { sortKey: '123' } as GQLNodeInterface;
@@ -40,7 +46,7 @@ describe('KV database', () => {
       await sut.kv.put('one', '1');
       await sut.kv.put('three', 3);
       await sut.kv.commit();
-       await db.close();
+      await db.close();
       await interactionState.commit(sut._activeTx);
       await db.open();
 
