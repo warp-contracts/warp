@@ -95,7 +95,9 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         break;
       }
 
-      contract.interactionState().setInitial(contract.txId(), new EvalStateResult(currentState, validity, errorMessages));
+      contract
+        .interactionState()
+        .setInitial(contract.txId(), new EvalStateResult(currentState, validity, errorMessages));
 
       const missingInteraction = missingInteractions[i];
       const singleInteractionBenchmark = Benchmark.measure();
@@ -294,7 +296,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           contract.interactionState().update(contract.txId(), lastConfirmedTxState.state);
           if (validity[missingInteraction.id]) {
             await contract.interactionState().commit(missingInteraction);
-         } else {
+          } else {
             await contract.interactionState().rollback(missingInteraction);
           }
         }
