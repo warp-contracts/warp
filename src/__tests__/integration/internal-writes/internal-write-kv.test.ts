@@ -2,14 +2,14 @@
 import fs from 'fs';
 
 import ArLocal from 'arlocal';
-import {JWKInterface} from 'arweave/node/lib/wallet';
+import { JWKInterface } from 'arweave/node/lib/wallet';
 import path from 'path';
-import {mineBlock} from '../_helpers';
-import {Contract} from '../../../contract/Contract';
-import {Warp} from '../../../core/Warp';
-import {WarpFactory} from '../../../core/WarpFactory';
-import {LoggerFactory} from '../../../logging/LoggerFactory';
-import {DeployPlugin} from 'warp-contracts-plugin-deploy';
+import { mineBlock } from '../_helpers';
+import { Contract } from '../../../contract/Contract';
+import { Warp } from '../../../core/Warp';
+import { WarpFactory } from '../../../core/WarpFactory';
+import { LoggerFactory } from '../../../logging/LoggerFactory';
+import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 interface ExampleContractState {
   counter: number;
@@ -74,20 +74,20 @@ describe('Testing internal writes', () => {
 
   async function deployContracts() {
     warp = WarpFactory.forLocal(port).use(new DeployPlugin());
-    ({jwk: wallet, address: walletAddress} = await warp.generateWallet());
+    ({ jwk: wallet, address: walletAddress } = await warp.generateWallet());
 
     callingContractSrc = fs.readFileSync(path.join(__dirname, '../data/kv-storage-inner-calls.js'), 'utf8');
     callingContractInitialState = fs.readFileSync(path.join(__dirname, '../data/token-pst.json'), 'utf8');
     calleeContractSrc = fs.readFileSync(path.join(__dirname, '../data/kv-storage-inner-calls.js'), 'utf8');
     calleeInitialState = fs.readFileSync(path.join(__dirname, '../data/token-pst.json'), 'utf8');
 
-    ({contractTxId: calleeTxId} = await warp.deploy({
+    ({ contractTxId: calleeTxId } = await warp.deploy({
       wallet,
       initState: calleeInitialState,
       src: calleeContractSrc
     }));
 
-    ({contractTxId: callingTxId} = await warp.deploy({
+    ({ contractTxId: callingTxId } = await warp.deploy({
       wallet,
       initState: callingContractInitialState,
       src: callingContractSrc
@@ -120,7 +120,7 @@ describe('Testing internal writes', () => {
     });
 
     it('should write direct interactions', async () => {
-      await calleeContract.writeInteraction({function: 'mintAdd', target: walletAddress, qty: 100});
+      await calleeContract.writeInteraction({ function: 'mintAdd', target: walletAddress, qty: 100 });
       await mineBlock(warp);
 
       await calleeContract.readState();
@@ -145,7 +145,7 @@ describe('Testing internal writes', () => {
     });
 
     it('should write another direct interaction', async () => {
-      await calleeContract.writeInteraction({function: 'mintAdd', target: walletAddress, qty: 100});
+      await calleeContract.writeInteraction({ function: 'mintAdd', target: walletAddress, qty: 100 });
       await mineBlock(warp);
 
       await calleeContract.readState();
@@ -173,7 +173,7 @@ describe('Testing internal writes', () => {
       const kvValues = await calleeContract.getStorageValues([walletAddress]);
       expect(kvValues.cachedValue.get(walletAddress)).toEqual(500);
 
-      await calleeContract.writeInteraction({function: 'mintAdd', target: walletAddress, qty: 100});
+      await calleeContract.writeInteraction({ function: 'mintAdd', target: walletAddress, qty: 100 });
       await mineBlock(warp);
       await calleeContract.readState();
 
@@ -190,7 +190,7 @@ describe('Testing internal writes', () => {
       });
       await mineBlock(warp);
 
-      await calleeContract.writeInteraction({function: 'mintAdd', target: walletAddress, qty: 100});
+      await calleeContract.writeInteraction({ function: 'mintAdd', target: walletAddress, qty: 100 });
       await mineBlock(warp);
 
       await calleeContract.readState();
@@ -207,7 +207,7 @@ describe('Testing internal writes', () => {
       });
       await mineBlock(warp);
 
-      await calleeContract.writeInteraction({function: 'mintAdd', target: walletAddress, qty: 100});
+      await calleeContract.writeInteraction({ function: 'mintAdd', target: walletAddress, qty: 100 });
       await mineBlock(warp);
 
       await calleeContract.readState();
@@ -216,7 +216,7 @@ describe('Testing internal writes', () => {
     });
 
     it('should write combination of direct and internal interaction - at one block', async () => {
-      await calleeContract.writeInteraction({function: 'mintAdd', target: walletAddress, qty: 100});
+      await calleeContract.writeInteraction({ function: 'mintAdd', target: walletAddress, qty: 100 });
       await callingContract.writeInteraction({
         function: 'innerWriteKV',
         txId: calleeTxId,
@@ -239,7 +239,7 @@ describe('Testing internal writes', () => {
       });
       await mineBlock(warp);
 
-      await calleeContract.writeInteraction({function: 'mintAdd', target: walletAddress, qty: 100});
+      await calleeContract.writeInteraction({ function: 'mintAdd', target: walletAddress, qty: 100 });
       await mineBlock(warp);
 
       await calleeContract.readState();
@@ -253,7 +253,6 @@ describe('Testing internal writes', () => {
       expect(kvValues.cachedValue.get(walletAddress)).toEqual(1400);
     });
   });
-
 
   describe('with read state at the end', () => {
     beforeAll(async () => {
@@ -261,7 +260,7 @@ describe('Testing internal writes', () => {
     });
 
     it('should properly write a combination of direct and internal interactions', async () => {
-      await calleeContract.writeInteraction({function: 'mintAdd', target: walletAddress, qty: 100});
+      await calleeContract.writeInteraction({ function: 'mintAdd', target: walletAddress, qty: 100 });
       await mineBlock(warp);
 
       await callingContract.writeInteraction({
@@ -272,7 +271,7 @@ describe('Testing internal writes', () => {
       });
       await mineBlock(warp);
 
-      await calleeContract.writeInteraction({function: 'mintAdd', target: walletAddress, qty: 100});
+      await calleeContract.writeInteraction({ function: 'mintAdd', target: walletAddress, qty: 100 });
       await mineBlock(warp);
 
       await callingContract.writeInteraction({
@@ -289,7 +288,7 @@ describe('Testing internal writes', () => {
       });
       await mineBlock(warp);
 
-      await calleeContract.writeInteraction({function: 'mintAdd', target: walletAddress, qty: 100});
+      await calleeContract.writeInteraction({ function: 'mintAdd', target: walletAddress, qty: 100 });
       await mineBlock(warp);
 
       await callingContract.writeInteraction({
@@ -300,7 +299,7 @@ describe('Testing internal writes', () => {
       });
       await mineBlock(warp);
 
-      await calleeContract.writeInteraction({function: 'mintAdd', target: walletAddress, qty: 100});
+      await calleeContract.writeInteraction({ function: 'mintAdd', target: walletAddress, qty: 100 });
       await mineBlock(warp);
 
       await callingContract.writeInteraction({
@@ -311,10 +310,10 @@ describe('Testing internal writes', () => {
       });
       await mineBlock(warp);
 
-      await calleeContract.writeInteraction({function: 'mintAdd', target: walletAddress, qty: 100});
+      await calleeContract.writeInteraction({ function: 'mintAdd', target: walletAddress, qty: 100 });
       await mineBlock(warp);
 
-      await calleeContract.writeInteraction({function: 'mintAdd', target: walletAddress, qty: 100});
+      await calleeContract.writeInteraction({ function: 'mintAdd', target: walletAddress, qty: 100 });
       await callingContract.writeInteraction({
         function: 'innerWriteKV',
         txId: calleeTxId,
@@ -331,7 +330,7 @@ describe('Testing internal writes', () => {
       });
       await mineBlock(warp);
 
-      await calleeContract.writeInteraction({function: 'mintAdd', target: walletAddress, qty: 100});
+      await calleeContract.writeInteraction({ function: 'mintAdd', target: walletAddress, qty: 100 });
       await mineBlock(warp);
 
       await calleeContract.readState();
@@ -344,7 +343,5 @@ describe('Testing internal writes', () => {
       const kvValues = await calleeContract.getStorageValues([walletAddress]);
       expect(kvValues.cachedValue.get(walletAddress)).toEqual(1400);
     });
-
   });
-
 });
