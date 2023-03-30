@@ -96,7 +96,10 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
   }
 
   protected assignViewContractState<Input>(executionContext: ExecutionContext<State>) {
-    this.swGlobal.contracts.viewContractState = async <View>(contractTxId: string, input: Input) => {
+    this.swGlobal.contracts.viewContractState = async <View>(
+      contractTxId: string,
+      input: Input
+    ): Promise<InteractionResult<unknown, View>> => {
       this.logger.debug('swGlobal.viewContractState call:', {
         from: this.contractDefinition.txId,
         to: contractTxId,
