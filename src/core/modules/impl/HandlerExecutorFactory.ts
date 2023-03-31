@@ -153,6 +153,16 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
       this.logger.info(`WASM ${contractDefinition.srcWasmLang} handler created in ${benchmark.elapsed()}`);
       return new WasmHandlerApi(swGlobal, contractDefinition, jsExports || wasmInstance.exports);
     } else {
+      if (warp.hasPlugin('contract-blacklist')) {
+        const blacklistPlugin = warp.loadPlugin('contract-blacklist');
+        const blacklisted = blacklistPlugin.process(contractDefinition.txId);
+        if (blacklisted) {
+          throw new ContractError(
+            `[SkipUnsafeError] Skipping evaluation of the blaclisted contract ${contractDefinition.txId}.`,
+            `blacklistedSkip`
+          );
+        }
+      }
       const normalizedSource = normalizeContractSource(contractDefinition.src, evaluationOptions.useVM2);
       if (normalizedSource.includes('unsafeClient')) {
         switch (evaluationOptions.unsafeClient) {
