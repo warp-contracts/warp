@@ -47,6 +47,21 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
     evaluationOptions: EvaluationOptions,
     warp: Warp
   ): Promise<HandlerApi<State>> {
+    if (warp.hasPlugin('contract-blacklist')) {
+      const blacklistPlugin = warp.loadPlugin<string, Promise<boolean>>('contract-blacklist');
+      let blacklisted = false;
+      try {
+        blacklisted = await blacklistPlugin.process(contractDefinition.txId);
+      } catch (e) {
+        this.logger.error(e);
+      }
+      if (blacklisted == true) {
+        throw new ContractError(
+          `[SkipUnsafeError] Skipping evaluation of the blacklisted contract ${contractDefinition.txId}.`,
+          `blacklistedSkip`
+        );
+      }
+    }
     let kvStorage = null;
 
     if (evaluationOptions.useKVStorage) {
