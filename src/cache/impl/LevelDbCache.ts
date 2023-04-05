@@ -4,9 +4,9 @@ import { MemoryLevel } from 'memory-level';
 import { CacheOptions } from '../../core/WarpFactory';
 import { LoggerFactory } from '../../logging/LoggerFactory';
 import { SortKeyCacheRangeOptions } from '../SortKeyCacheRangeOptions';
-import { RangeOptions } from 'abstract-level/types/interfaces';
 import { AbstractSublevelOptions } from 'abstract-level/types/abstract-sublevel';
 import { AbstractChainedBatch } from 'abstract-level/types/abstract-chained-batch';
+import { AbstractKeyIteratorOptions } from 'abstract-level/types/abstract-iterator';
 
 /**
  * The LevelDB is a lexicographically sorted key-value database - so it's ideal for this use case
@@ -235,7 +235,7 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
   }
 
   async kvMap(sortKey: string, options?: SortKeyCacheRangeOptions): Promise<Map<string, V>> {
-    const entries: Map<string, V> = new Map();
+    const result: Map<string, V> = new Map();
     const allKeys = (await this.db.keys(this.levelRangeOptions(options)).all())
       .filter((k) => !sortKey || this.extractSortKey(k).localeCompare(sortKey) <= 0)
       .map((k) => this.extractOriginalKey(k));
@@ -243,22 +243,35 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
     for (const k of allKeys) {
       const lastValue = await this.getLessOrEqual(k, sortKey);
       if (lastValue) {
-        entries.set(k, lastValue.cachedValue);
+        result.set(k, lastValue.cachedValue);
       }
     }
 
-    return entries;
+    if (options?.limit) {
+      const limitedResult: Map<string, V> = new Map();
+      for (const item of Array.from(result.entries()).slice(0, options.limit)) {
+        limitedResult.set(item[0], item[1]);
+      }
+      return limitedResult;
+    }
+
+    return result;
   }
 
-  private levelRangeOptions(options?: SortKeyCacheRangeOptions): RangeOptions<string> | undefined {
+  private levelRangeOptions(options?: SortKeyCacheRangeOptions): AbstractKeyIteratorOptions<string> {
+    const rangeOptions: AbstractKeyIteratorOptions<string> = {
+      reverse: options?.reverse
+    };
+
     if (options?.gte) {
-      options.gte = this.subLevelSeparator + options.gte;
+      rangeOptions.gte = this.subLevelSeparator + options.gte;
     }
 
-    if (options?.lte) {
-      options.lte = this.subLevelSeparator + options.lte;
+    if (options?.lt) {
+      rangeOptions.lt = this.subLevelSeparator + options.lt;
     }
-    return options;
+
+    return rangeOptions;
   }
 
   storage<S>(): S {
