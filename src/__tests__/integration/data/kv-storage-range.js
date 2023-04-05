@@ -2,6 +2,10 @@ export async function handle(state, action) {
   const input = action.input;
   const caller = action.caller;
 
+  if (state.counter === undefined) {
+    state.counter = 0;
+  }
+
   if (input.function === 'mint') {
     await SmartWeave.kv.put('mint.' + input.target, input.qty);
     await SmartWeave.kv.put(input.target, input.qty);
@@ -21,15 +25,18 @@ export async function handle(state, action) {
     }
 
     let sumChecks = 0;
-    for await (let part of (await SmartWeave.kv.kvMap({ gte: 'check.' + caller, lte: 'check.' + caller + '.\xff'})).values()) {
-      sumChecks = sumChecks + parseInt(part);
+    for await (let part of (await SmartWeave.kv.kvMap({ gte: `check.${caller}`, lt: `check.${caller}.\xff`})).values()) {
+      sumChecks = sumChecks + part;
     }
 
     if (callerBalance < sumChecks + qty) {
       throw new ContractError(`Caller balance ${callerBalance} not high enough to write next check ${qty}!`);
     }
 
-    await SmartWeave.kv.put('check.' + caller + '.' + target, qty);
+    let checkCounter = String(++state.counter).padStart(4, '0');
+
+    await SmartWeave.kv.put(`history.check.${checkCounter}.${caller}.${target}`, qty);
+    await SmartWeave.kv.put(`check.${caller}.${target}.${checkCounter}`, qty);
 
     return {state};
   }
@@ -38,20 +45,40 @@ export async function handle(state, action) {
   if (input.function === 'cashCheck') {
     const target = input.target;
 
-    const check = await SmartWeave.kv.get('check.' + target + '.' + caller);
+    const firstPendingCheck =
+      (await SmartWeave.kv.kvMap({ gte: `check.${target}.${caller}`, lt: `check.${target}.${caller}\xff`}))
+        .entries().next()
+    const firstPendingCheckKey = firstPendingCheck.value[0]
+    const firstPendingCheckValue = firstPendingCheck.value[1]
 
     let targetBalance = await SmartWeave.kv.get(target);
-    if (targetBalance < check) {
-      throw new ContractError(`Target balance ${targetBalance} not high enough to cash check for ${check}!`);
+    if (targetBalance < firstPendingCheckValue) {
+      throw new ContractError(`Target balance ${targetBalance} not high enough to cash check for ${firstPendingCheckValue}!`);
     }
-    targetBalance = targetBalance - check;
+    targetBalance = targetBalance - firstPendingCheckValue;
     await SmartWeave.kv.put(target, targetBalance);
 
     let callerBalance = await SmartWeave.kv.get(caller);
-    callerBalance = callerBalance + check;
+    callerBalance = callerBalance + firstPendingCheckValue;
     await SmartWeave.kv.put(caller, callerBalance);
 
-    await SmartWeave.kv.del('check.' + target + '.' + caller);
+    await SmartWeave.kv.del(firstPendingCheckKey);
+
+    return {state};
+  }
+
+
+  if (input.function === 'withdrawLastCheck') {
+    const target = input.target;
+
+    const lastCheck =
+      (await SmartWeave.kv.kvMap({
+        gte: `check.${caller}.${target}`,
+        lt: `check.${caller}.${target}\xff`,
+        reverse: true,
+        limit: 1 })).keys().next().value
+
+    await SmartWeave.kv.del(lastCheck);
 
     return {state};
   }
@@ -92,6 +119,15 @@ export async function handle(state, action) {
     return {state};
   }
 
+  if (input.function === 'checksActive') {
+    let sumChecks = 0;
+    for await (let part of (await SmartWeave.kv.kvMap({ gte: `check.${caller}`, lt: `check.${caller}.\xff`})).values()) {
+      sumChecks = sumChecks + parseInt(part);
+    }
+
+    return {result: {total: sumChecks ? sumChecks : 0}};
+  }
+
   if (input.function === 'balance') {
     const target = input.target;
     const ticker = state.ticker;
@@ -107,7 +143,7 @@ export async function handle(state, action) {
 
   if (input.function === 'minted') {
     let sumMinted = 0;
-    for await (let part of (await SmartWeave.kv.kvMap({ gte: 'mint.', lte: 'mint.\xff'})).values()) {
+    for await (let part of (await SmartWeave.kv.kvMap({ gte: 'mint.', lt: 'mint.\xff'})).values()) {
       sumMinted = sumMinted + parseInt(part);
     }
 
