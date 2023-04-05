@@ -1,6 +1,6 @@
 export interface SortKeyCacheRangeOptions {
   gte?: string;
-  lte?: string;
+  lt?: string;
   reverse?: boolean | undefined;
   limit?: number | undefined;
 }

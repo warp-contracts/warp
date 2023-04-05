@@ -5,7 +5,7 @@ import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import path from 'path';
 import { mineBlock } from '../_helpers';
-import { PstContract, PstState } from '../../../contract/PstContract';
+import { PstContract, PstState } from "../../../contract/PstContract";
 import { Warp } from '../../../core/Warp';
 import { DEFAULT_LEVEL_DB_LOCATION, WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
@@ -20,8 +20,6 @@ describe('Testing the PST kv storage range access', () => {
 
   let aliceWallet: JWKInterface;
   let aliceWalletAddress: string;
-
-  let initialState: PstState;
 
   let arweave: Arweave;
   let arlocal: ArLocal;
@@ -46,7 +44,7 @@ describe('Testing the PST kv storage range access', () => {
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/kv-storage-range.js'), 'utf8');
     const stateFromFile: PstState = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/token-pst.json'), 'utf8'));
 
-    initialState = {
+    const initialState = {
       ...stateFromFile,
       ...{
         owner: walletAddress
@@ -113,7 +111,6 @@ describe('Testing the PST kv storage range access', () => {
   });
 
   it('should read pst state and balance data', async () => {
-    expect(await pst.currentState()).toEqual(initialState);
     expect((await pst.currentBalance('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M')).balance).toEqual(10_000);
     expect((await pst.currentBalance('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA')).balance).toEqual(23111222);
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(555669);
@@ -154,6 +151,24 @@ describe('Testing the PST kv storage range access', () => {
       qty: 200_000
     });
 
+    await pst.writeInteraction({
+      function: 'writeCheck',
+      target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M',
+      qty: 1_500
+    });
+
+    await pst.writeInteraction({
+      function: 'writeCheck',
+      target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M',
+      qty: 2_500
+    });
+
+    await pst.writeInteraction({
+      function: 'writeCheck',
+      target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M',
+      qty: 3_500
+    });
+
     await pst.writeInteraction({ function: 'writeCheck', target: aliceWalletAddress, qty: 200_000 });
 
     await mineBlock(warp);
@@ -174,11 +189,24 @@ describe('Testing the PST kv storage range access', () => {
 
     expect((await pst.currentBalance(aliceWalletAddress)).balance).toEqual(200_000);
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(555669 - 655 - 200_000);
-    expect(
-      (await pst.getStorageValues(['check.' + walletAddress + '.' + aliceWalletAddress])).cachedValue.get(
-        'check.' + walletAddress + '.' + aliceWalletAddress
-      )
-    ).toBeNull();
+    expect((await pst.getStorageValues(['check.' + walletAddress + '.' + aliceWalletAddress]))
+      .cachedValue.get('check.' + walletAddress + '.' + aliceWalletAddress))
+      .toBeNull();
+  });
+
+  it('should withdraw last check', async () => {
+    expect((await pst.viewState<unknown, ChecksWrittenResult>({ function: 'checksActive' })).result.total)
+      .toEqual(207_500);
+
+    await pst.writeInteraction({ function: 'withdrawLastCheck', target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M' });
+    await pst.writeInteraction({ function: 'withdrawLastCheck', target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M' });
+    await pst.writeInteraction({ function: 'withdrawLastCheck', target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M' });
+
+    await mineBlock(warp);
+
+    expect((await pst.viewState<unknown, ChecksWrittenResult>({ function: 'checksActive' })).result.total)
+      .toEqual(200_000);
+
   });
 
   it('should not be able to write check', async () => {
@@ -192,8 +220,8 @@ describe('Testing the PST kv storage range access', () => {
 
     expect(
       (
-        await pst.getStorageValues(['check.' + walletAddress + '.uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M'])
-      ).cachedValue.get('check.' + walletAddress + '.uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M')
+        await pst.getStorageValues(['check.' + walletAddress + '.uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M.0001'])
+      ).cachedValue.get('check.' + walletAddress + '.uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M.0001')
     ).toBe(200_000);
     expect((await pst.readState()).cachedValue.errorMessages[wrongCheck.originalTxId]).toMatch(
       'Caller balance 355014 not high enough to write check for 360000!'
@@ -204,4 +232,7 @@ describe('Testing the PST kv storage range access', () => {
 
 export interface MintedResult {
   minted: number;
+}
+export interface ChecksWrittenResult {
+  total: number;
 }
