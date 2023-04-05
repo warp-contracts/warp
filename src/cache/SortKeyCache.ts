@@ -64,11 +64,6 @@ export interface SortKeyCache<V> {
   dump(): Promise<any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
   /**
-   * Return all cached keys.
-   */
-  keys(): Promise<string[]>;
-
-  /**
    * Returns keys for a specified range
    */
   keys(sortKey?: string, options?: SortKeyCacheRangeOptions): Promise<string[]>;
