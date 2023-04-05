@@ -43,7 +43,7 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
         gasUsed: this.swGlobal.gasUsed
       };
     } catch (e) {
-      await this.swGlobal.kv.rollback();
+      this.swGlobal.kv.rollback();
       const result = {
         errorMessage: e.message,
         state: currentResult.state,
