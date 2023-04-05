@@ -174,7 +174,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           currentState = newState.state as State;
           // we need to update the state in the wasm module
           // TODO: opt - reuse wasm handlers...
-          executionContext?.handler.initState(currentState);
+          executionContext.handler.initState(currentState);
 
           validity[missingInteraction.id] = newState.validity[missingInteraction.id];
           if (newState.errorMessages?.[missingInteraction.id]) {

@@ -1,3 +1,4 @@
+import { EvolveState } from 'contract/Contract';
 import { ContractDefinition } from '../../../../core/ContractDefinition';
 import { ExecutionContext } from '../../../../core/ExecutionContext';
 import { EvalStateResult } from '../../../../core/modules/StateEvaluator';
@@ -26,7 +27,9 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
     interactionData: InteractionData<Input>
   ): Promise<InteractionResult<State, Result>>;
 
-  abstract initState(state: State);
+  abstract initState(state: State): void;
+
+  abstract evolveState(): Promise<EvolveState>;
 
   abstract maybeCallStateConstructor(
     initialState: State,

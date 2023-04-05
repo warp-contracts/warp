@@ -1,3 +1,4 @@
+import { EvolveState } from 'contract/Contract';
 import { GQLNodeInterface } from 'legacy/gqlResult';
 import { ContractDefinition } from '../../../../core/ContractDefinition';
 import { ExecutionContext } from '../../../../core/ExecutionContext';
@@ -46,6 +47,12 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
 
   // eslint-disable-next-line
   initState(state: State) {}
+
+  evolveState(): Promise<EvolveState> {
+    // implement me
+    // how to implement is? For JS contracts we have no snapshot of 'current' state
+    return null;
+  }
 
   async maybeCallStateConstructor<Input>(
     initialState: State,
@@ -149,7 +156,7 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
       // Will be caught below as unexpected exception.
       throw new Error(`Unexpected result from contract: ${JSON.stringify(handlerResult)}`);
     } catch (err) {
-      await this.swGlobal.kv.rollback();
+      this.swGlobal.kv.rollback();
       switch (err.name) {
         case KnownErrors.ContractError:
           return {

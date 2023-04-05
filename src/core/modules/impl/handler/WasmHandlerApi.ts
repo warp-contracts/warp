@@ -90,6 +90,14 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
     }
   }
 
+  evolveState() {
+    if ('evolveState' in this.wasmExports) {
+      return this.wasmExports.evolveState();
+    } else {
+      return this.doGetCurrentState();
+    }
+  }
+
   private async doHandleLegacy(action: ContractInteraction<unknown>): Promise<any> {
     // pre- warp_contract macro contracts
     const handleResult = await this.wasmExports.handle(action.input);
