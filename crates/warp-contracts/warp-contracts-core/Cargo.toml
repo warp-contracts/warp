@@ -1,6 +1,6 @@
 [package]
 name = "warp-contracts-core"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 description = "warp-contracts helper crate"
 license = "MIT"
