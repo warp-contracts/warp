@@ -781,7 +781,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const interactionCall: InteractionCall = this.getCallStack().addInteractionData(interactionData);
     const benchmark = Benchmark.measure();
 
-    await executionContext.handler.initState(evalStateResult.state);
+    executionContext.handler.initState(evalStateResult.state);
 
     const result = await executionContext.handler.handle<Input, View>(
       executionContext,

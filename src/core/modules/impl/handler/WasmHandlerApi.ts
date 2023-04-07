@@ -43,7 +43,7 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
         gasUsed: this.swGlobal.gasUsed
       };
     } catch (e) {
-      await this.swGlobal.kv.rollback();
+      this.swGlobal.kv.rollback();
       const result = {
         errorMessage: e.message,
         state: currentResult.state,
@@ -87,6 +87,14 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
       default: {
         throw new Error(`Support for ${this.contractDefinition.srcWasmLang} not implemented yet.`);
       }
+    }
+  }
+
+  evolveState() {
+    if ('evolveState' in this.wasmExports) {
+      return this.wasmExports.evolveState();
+    } else {
+      return this.doGetCurrentState();
     }
   }
 

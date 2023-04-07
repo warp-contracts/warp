@@ -4,6 +4,8 @@ use warp_contracts::{warp_contract, handler_result::{WriteResult, ViewResult}};
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct State {
     x: Vec<u8>,
+    can_evolve: bool,
+    evolve: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]

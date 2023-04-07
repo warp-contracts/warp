@@ -39,7 +39,6 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       this.cLogger.info(
         `Exact cache hit for sortKey ${executionContext?.contractDefinition?.txId}:${cachedState.sortKey}`
       );
-      executionContext.handler?.initState(cachedState.cachedValue.state);
       return cachedState;
     }
 
@@ -64,11 +63,8 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     if (missingInteractions.length == 0) {
       this.cLogger.info(`No missing interactions ${contractTxId}`);
       if (!isFirstEvaluation) {
-        executionContext.handler?.initState(cachedState.cachedValue.state);
         return cachedState;
       } else {
-        executionContext.handler?.initState(baseState);
-
         this.cLogger.debug('Inserting initial state into cache');
         const stateToCache = new EvalStateResult(baseState, {}, {});
         // no real sort-key - as we're returning the initial state

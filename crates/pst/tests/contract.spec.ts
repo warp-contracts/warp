@@ -383,5 +383,25 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
 
     // note: the evolved balance always adds 555 to the result
     expect((await pst.balance({ target: walletAddress })).balance).toEqual(balance + 555);
+
+    // TODO how to check that evolveState returns proper value
+    // evolve back
+    contractSrc = fs.readFileSync(path.join(__dirname, '../contract/implementation/pkg/rust-contract_bg.wasm'));
+    const contractSrcCodeDir: string = path.join(__dirname, '../contract/implementation/src');
+    contractGlueCodeFile = path.join(__dirname, '../contract/implementation/pkg/rust-contract.js');
+    const srcTx2 = await warp.createSource(
+      {
+        src: contractSrc,
+        wasmSrcCodeDir: contractSrcCodeDir,
+        wasmGlueCode: contractGlueCodeFile
+      },
+      wallet
+    );
+    const newSrcTxId2 = await warp.saveSource(srcTx2);
+
+    await pst.evolve({ value: newSrcTxId2 }, { vrf: true });
+
+    expect((await pst.balance({ target: walletAddress })).balance).toEqual(balance);
+
   });
 });

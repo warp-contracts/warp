@@ -10,7 +10,7 @@ export class Testing {
   constructor(private readonly arweave: Arweave) {}
 
   async mineBlock(): Promise<void> {
-    this.validateEnv();
+    await this.validateEnv();
     await this.arweave.api.get('mine');
   }
 

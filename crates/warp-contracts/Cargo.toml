@@ -1,6 +1,6 @@
 [package]
 name = "warp-contracts"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 description = "Warp WASM contract utils for rust contracts"
 license = "MIT"
@@ -16,8 +16,8 @@ wasm-bindgen-futures = { workspace = true }
 js-sys = { workspace = true }
 serde = { workspace = true }
 serde-wasm-bindgen = { workspace = true }
-warp-contracts-macro = { version = "=0.1.3", path = "warp-contracts-macro" }
-warp-contracts-core = { version = "=0.1.3", path = "warp-contracts-core" }
+warp-contracts-macro = { version = "=0.1.4", path = "warp-contracts-macro" }
+warp-contracts-core = { version = "=0.1.4", path = "warp-contracts-core" }
 
 [features]
 debug = ["warp-contracts-core/debug"]
