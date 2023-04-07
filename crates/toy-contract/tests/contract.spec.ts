@@ -20,7 +20,9 @@ import path from 'path';
 jest.setTimeout(30000);
 
 class State {
-  constructor(public x: Array<number>) {}
+  constructor(public x: Array<number>) {
+  }
+  public can_evolve: boolean = true
 }
 
 class View {

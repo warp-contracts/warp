@@ -75,6 +75,7 @@ pub(crate) fn warp_contract(attr: TokenStream, input: TokenStream) -> TokenStrea
                 use ::serde::{Deserialize, Serialize};
                 use ::serde_wasm_bindgen::from_value;
                 use ::warp_contracts::{
+                    evolve_state::EvolveState,
                     optional_cell::OptionalCell,
                     warp_result::{transmission::Transmission, WarpResult},
                     js_imports::log,
@@ -111,6 +112,19 @@ pub(crate) fn warp_contract(attr: TokenStream, input: TokenStream) -> TokenStrea
                 #[wasm_bindgen(js_name = lang)]
                 pub fn __warp_contracts_generated_lang() -> i32 {
                     return 2;
+                }
+
+                #[wasm_bindgen(js_name = evolveState)]
+                pub fn __warp_contracts_generated_evolve_state() -> JsValue {
+                    to_json_value(
+                        &__WARP_CONTRACT_STATE
+                            .cell
+                            .borrow()
+                            .as_ref()
+                            .map(|s| EvolveState { can_evolve: s.can_evolve, source_transaction_id: s.evolve.clone() })
+                            .unwrap_or_default(),
+                    )
+                    .unwrap()
                 }
                 ()
             };

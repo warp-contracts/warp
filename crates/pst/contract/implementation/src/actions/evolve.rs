@@ -8,16 +8,15 @@ use warp_pst::{
 
 impl WriteActionable for Evolve {
     fn action(self, _caller: String, mut state: PstState) -> PstWriteResult {
-        match state.can_evolve {
-            Some(true) => {
-                if state.owner == Transaction::owner() {
-                    state.evolve = Option::from(self.value);
-                    PstWriteResult::Success(state)
-                } else {
-                    PstWriteResult::ContractError(OnlyOwnerCanEvolve)
-                }
+        if state.can_evolve {
+            if state.owner == Transaction::owner() {
+                state.evolve = Option::from(self.value);
+                PstWriteResult::Success(state)
+            } else {
+                PstWriteResult::ContractError(OnlyOwnerCanEvolve)
             }
-            _ => PstWriteResult::ContractError(EvolveNotAllowed),
+        } else {
+            PstWriteResult::ContractError(EvolveNotAllowed)
         }
     }
 }
