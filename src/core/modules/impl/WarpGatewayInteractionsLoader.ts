@@ -2,7 +2,7 @@ import { GQLNodeInterface } from '../../../legacy/gqlResult';
 import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import 'warp-isomorphic';
-import { stripTrailingSlash } from '../../../utils/utils';
+import { getJsonResponse, stripTrailingSlash } from '../../../utils/utils';
 import { GW_TYPE, InteractionsLoader } from '../InteractionsLoader';
 import { EvaluationOptions } from '../StateEvaluator';
 import { Warp } from '../../Warp';
@@ -22,6 +22,14 @@ export const enum SourceType {
   WARP_SEQUENCER = 'redstone-sequencer',
   BOTH = 'both'
 }
+
+type InteractionsResult = {
+  interactions: GQLNodeInterface[];
+  paging: {
+    limit: number;
+    items: number;
+  };
+};
 
 /**
  * The aim of this implementation of the {@link InteractionsLoader} is to make use of
@@ -75,29 +83,24 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
 
       const url = `${baseUrl}/gateway/v2/interactions-sort-key`;
 
-      const response = await fetch(
-        `${url}?${new URLSearchParams({
-          contractId: contractId,
-          ...(fromSortKey ? { from: fromSortKey } : ''),
-          ...(toSortKey ? { to: toSortKey } : ''),
-          page: (++page).toString(),
-          fromSdk: 'true',
-          ...(this.confirmationStatus && this.confirmationStatus.confirmed ? { confirmationStatus: 'confirmed' } : ''),
-          ...(this.confirmationStatus && this.confirmationStatus.notCorrupted
-            ? { confirmationStatus: 'not_corrupted' }
-            : ''),
-          ...(effectiveSourceType == SourceType.BOTH ? '' : { source: effectiveSourceType })
-        })}`
-      )
-        .then((res) => {
-          return res.ok ? res.json() : Promise.reject(res);
-        })
-        .catch((error) => {
-          if (error.body?.message) {
-            this.logger.error(error.body.message);
-          }
-          throw new Error(`Unable to retrieve transactions. Warp gateway responded with status ${error.status}.`);
-        });
+      const response = await getJsonResponse<InteractionsResult>(
+        fetch(
+          `${url}?${new URLSearchParams({
+            contractId: contractId,
+            ...(fromSortKey ? { from: fromSortKey } : ''),
+            ...(toSortKey ? { to: toSortKey } : ''),
+            page: (++page).toString(),
+            fromSdk: 'true',
+            ...(this.confirmationStatus && this.confirmationStatus.confirmed
+              ? { confirmationStatus: 'confirmed' }
+              : ''),
+            ...(this.confirmationStatus && this.confirmationStatus.notCorrupted
+              ? { confirmationStatus: 'not_corrupted' }
+              : ''),
+            ...(effectiveSourceType == SourceType.BOTH ? '' : { source: effectiveSourceType })
+          })}`
+        )
+      );
       this.logger.debug(`Loading interactions: page ${page} loaded in ${benchmarkRequestTime.elapsed()}`);
 
       interactions.push(...response.interactions);

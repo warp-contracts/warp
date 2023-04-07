@@ -13,7 +13,7 @@ import { Warp, WarpEnvironment } from '../../Warp';
 import { TagsParser } from './TagsParser';
 import { CacheKey, SortKeyCache, SortKeyCacheResult } from '../../../cache/SortKeyCache';
 import { Transaction } from '../../../utils/types/arweave-types';
-import { stripTrailingSlash } from '../../../utils/utils';
+import { getJsonResponse, stripTrailingSlash } from '../../../utils/utils';
 
 /**
  * An extension to {@link ContractDefinitionLoader} that makes use of
@@ -66,20 +66,10 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
   async doLoad<State>(contractTxId: string, forcedSrcTxId?: string): Promise<ContractDefinition<State>> {
     try {
       const baseUrl = stripTrailingSlash(this._warp.gwUrl());
-      const result: ContractDefinition<State> = await fetch(
-        `${baseUrl}/gateway/contract?txId=${contractTxId}${forcedSrcTxId ? `&srcTxId=${forcedSrcTxId}` : ''}`
-      )
-        .then((res) => {
-          return res.ok ? res.json() : Promise.reject(res);
-        })
-        .catch((error) => {
-          if (error.body?.message) {
-            this.rLogger.error(error.body.message);
-          }
-          throw new Error(
-            `Unable to retrieve contract data. Warp gateway responded with status ${error.status}:${error.body?.message}`
-          );
-        });
+      const result: ContractDefinition<State> = await getJsonResponse(
+        fetch(`${baseUrl}/gateway/contract?txId=${contractTxId}${forcedSrcTxId ? `&srcTxId=${forcedSrcTxId}` : ''}`)
+      );
+
       if (result.srcBinary != null && !(result.srcBinary instanceof Buffer)) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         result.srcBinary = Buffer.from((result.srcBinary as any).data);
