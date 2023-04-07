@@ -3,7 +3,7 @@ import { WarpPluginType } from '../../core/WarpPlugin';
 import { EvaluationOptions } from '../../core/modules/StateEvaluator';
 import { Source } from './Source';
 import { BundlerSigner } from './DataItem';
-import { CustomSignature } from 'contract/Signature';
+import { CustomSignature } from '../Signature';
 
 export type Tags = { name: string; value: string }[];
 

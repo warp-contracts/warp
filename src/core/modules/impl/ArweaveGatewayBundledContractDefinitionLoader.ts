@@ -1,5 +1,5 @@
 import Arweave from 'arweave';
-import { WarpEnvironment } from 'core/Warp';
+import { WarpEnvironment } from '../..//Warp';
 import { SortKeyCache } from '../../../cache/SortKeyCache';
 import { ContractType } from '../../../contract/deploy/CreateContract';
 import {
