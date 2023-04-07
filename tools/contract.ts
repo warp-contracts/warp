@@ -20,18 +20,14 @@ async function main() {
 
   const warp = WarpFactory
     .forMainnet({...defaultCacheOptions, inMemory: true})
+    .useGwUrl("http://localhost:5666/")
 
   let wallet: JWKInterface = readJSON('./.secrets/33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA.json');
 
   try {
     const contract = warp
-      .contract("dD1DuvgM_Vigtnv4vl2H1IYn9CgLvYuhbEWPOL-_4Mw")
-    const cacheResult = await contract
-      .setEvaluationOptions({
-        remoteStateSyncEnabled: true
-      })
-      .readState(/*'000001110120,1675251724861,1e1115cbd63aaf205584e2dcb2ca669b40409a0392e0ebf15ff7efac1ecbb24b'*/);
-    console.log(cacheResult.sortKey);
+      .contract("G89hzE_P9xCWErQebDuIRdB6zsrmAIjw-WU0g0e8J3M")
+    await contract.readState();
     //console.dir(cacheResult.cachedValue.state, {depth: null});
   } catch (e) {
     console.error(e);

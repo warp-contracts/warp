@@ -20,25 +20,26 @@ async function main() {
 
   try {
     const warp = WarpFactory.forMainnet({...defaultCacheOptions, inMemory: true})
-      .use(new DeployPlugin());
+      .use(new DeployPlugin())
+      .useGwUrl("http://localhost:5666/");
 
     const jsContractSrc = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.js'), 'utf8');
     const initialState = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.json'), 'utf8');
 
     // case 1 - full deploy, js contract
-    const { contractTxId, srcTxId } = await warp.deploy({
+   /* const { contractTxId, srcTxId } = await warp.deploy({
       wallet: new ArweaveSigner(wallet),
       initState: initialState,
       src: jsContractSrc
-      /*evaluationManifest: {
+      /!*evaluationManifest: {
         evaluationOptions: {
           useKVStorage: true
         }
-      }*/
+      }*!/
     });
 
     console.log('contractTxId:', contractTxId);
-    console.log('srcTxId:', srcTxId);
+    console.log('srcTxId:', srcTxId);*/
     // case 2 - deploy from source, js contract
     /*const {contractTxId} = await warp.createContract.deployFromSourceTx({
       wallet,
@@ -62,15 +63,17 @@ async function main() {
       srcTxId: "5wXT-A0iugP9pWEyw-iTbB0plZ_AbmvlNKyBfGS3AUY",
     });*/
 
-    const contract = warp.contract<any>(contractTxId).setEvaluationOptions({}).connect(wallet);
+    const contract = warp.contract<any>('SG9sKOZvKFQ7EcpJU3bS0pQWp2idQf3VY2Ki_5-hDjo').setEvaluationOptions({
+      sequencerUrl: 'http://localhost:5666/'
+    }).connect(wallet);
 
     await Promise.all([
-      contract.writeInteraction<any>({
+     /* contract.writeInteraction<any>({
         function: 'transfer',
         target: 'M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI',
         qty: 100
-      }),
-      contract.writeInteraction<any>({
+      }),*/
+      /*contract.writeInteraction<any>({
         function: 'transfer',
         target: 'M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI',
         qty: 100
@@ -81,14 +84,8 @@ async function main() {
         qty: 100
       }, {
         disableBundling: true
-      })
-      /*contract.writeInteraction<any>({
-        function: "mint",
-        target: 'follows:0xe0',
-        qty: 100
-      }),*/
+      })*/
     ]);
-
     const {cachedValue} = await contract.readState();
 
     //logger.info("Result", await contract.getStorageValue('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA'));

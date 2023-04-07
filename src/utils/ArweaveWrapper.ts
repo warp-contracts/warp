@@ -4,7 +4,7 @@ import { Buffer as isomorphicBuffer } from 'warp-isomorphic';
 import { LoggerFactory } from '../logging/LoggerFactory';
 import { BlockData, NetworkInfoInterface, Transaction } from './types/arweave-types';
 import { Warp } from '../core/Warp';
-import { stripTrailingSlash } from './utils';
+import { getJsonResponse, stripTrailingSlash } from './utils';
 
 export class ArweaveWrapper {
   private readonly logger = LoggerFactory.INST.create('ArweaveWrapper');
@@ -115,22 +115,6 @@ export class ArweaveWrapper {
   }
 
   private async doFetchInfo<R>(url: string): Promise<R> {
-    try {
-      const response = await fetch(url)
-        .then((res) => {
-          return res.ok ? res.json() : Promise.reject(res);
-        })
-        .catch((error) => {
-          if (error.body?.message) {
-            this.logger.error(error.body.message);
-          }
-          throw new Error(`Unable to retrieve info. ${error.status}: ${error.body?.message}`);
-        });
-
-      return response;
-    } catch (e) {
-      this.logger.error('Error while loading info', e);
-      throw e;
-    }
+    return await getJsonResponse<R>(fetch(url));
   }
 }

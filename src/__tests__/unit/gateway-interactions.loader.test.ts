@@ -137,7 +137,7 @@ describe('WarpGatewayInteractionsLoader -> load', () => {
     try {
       await loader.load(contractId, fromBlockHeight, toBlockHeight);
     } catch (e) {
-      expect(e).toEqual(new Error('Unable to retrieve transactions. Warp gateway responded with status 504.'));
+      expect(e).toEqual(new Error('Error while communicating with gateway: {"status":504,"ok":false}'));
     }
   });
   it('should throw an error when request fails', async () => {
@@ -148,7 +148,7 @@ describe('WarpGatewayInteractionsLoader -> load', () => {
     try {
       await loader.load(contractId, fromBlockHeight, toBlockHeight);
     } catch (e) {
-      expect(e).toEqual(new Error('Unable to retrieve transactions. Warp gateway responded with status 500.'));
+      expect(e).toEqual(new Error('Error while communicating with gateway: {"status":500,"ok":false,"body":{"message":"request fails"}}'));
     }
   });
 });

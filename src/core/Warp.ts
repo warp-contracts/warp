@@ -29,7 +29,7 @@ import { SortKeyCache } from '../cache/SortKeyCache';
 import { ContractDefinition, SrcCache } from './ContractDefinition';
 import { CustomSignature } from '../contract/Signature';
 import { Transaction } from '../utils/types/arweave-types';
-import {DEFAULT_LEVEL_DB_LOCATION, WARP_GW_URL} from './WarpFactory';
+import { DEFAULT_LEVEL_DB_LOCATION, WARP_GW_URL } from './WarpFactory';
 import { LevelDbCache } from '../cache/impl/LevelDbCache';
 import { SourceData } from '../contract/deploy/Source';
 import { BundlerSigner, DataItem } from '../contract/deploy/DataItem';

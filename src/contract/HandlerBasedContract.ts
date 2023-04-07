@@ -20,7 +20,7 @@ import { Benchmark } from '../logging/Benchmark';
 import { LoggerFactory } from '../logging/LoggerFactory';
 import { Evolve } from '../plugins/Evolve';
 import { ArweaveWrapper } from '../utils/ArweaveWrapper';
-import { sleep, stripTrailingSlash } from '../utils/utils';
+import { getJsonResponse, sleep, stripTrailingSlash } from '../utils/utils';
 import {
   BenchmarkStats,
   Contract,
@@ -32,7 +32,7 @@ import {
 import { ArTransfer, ArWallet, emptyTransfer, Tags } from './deploy/CreateContract';
 import { InnerWritesEvaluator } from './InnerWritesEvaluator';
 import { generateMockVrf } from '../utils/vrf';
-import { Signature, CustomSignature } from './Signature';
+import { CustomSignature, Signature } from './Signature';
 import { EvaluationOptionsEvaluator } from './EvaluationOptionsEvaluator';
 import { WarpFetchWrapper } from '../core/WarpFetchWrapper';
 import { Mutex } from 'async-mutex';
@@ -334,8 +334,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
       options.vrf
     );
 
-    const response = await this.warpFetchWrapper
-      .fetch(`${stripTrailingSlash(this._evaluationOptions.sequencerUrl)}/gateway/sequencer/register`, {
+    const response = this.warpFetchWrapper.fetch(
+      `${stripTrailingSlash(this._evaluationOptions.sequencerUrl)}/gateway/sequencer/register`,
+      {
         method: 'POST',
         body: JSON.stringify(interactionTx),
         headers: {
@@ -343,21 +344,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
           'Content-Type': 'application/json',
           Accept: 'application/json'
         }
-      })
-      .then((res) => {
-        this.logger.debug(res);
-        return res.ok ? res.json() : Promise.reject(res);
-      })
-      .catch((error) => {
-        this.logger.error(error);
-        if (error.body?.message) {
-          this.logger.error(error.body.message);
-        }
-        throw new Error(`Unable to bundle interaction: ${JSON.stringify(error)}`);
-      });
+      }
+    );
 
     return {
-      bundlrResponse: response,
+      bundlrResponse: await getJsonResponse(response),
       originalTxId: interactionTx.id
     };
   }

@@ -1,6 +1,6 @@
 /* eslint-disable */
 import copy from 'fast-copy';
-import { Buffer } from 'warp-isomorphic';
+import {Buffer} from 'warp-isomorphic';
 
 export const sleep = (ms: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -86,3 +86,20 @@ export function bufToBn(buf: Buffer) {
 }
 
 export const isBrowser = new Function('try {return this===window;}catch(e){ return false;}');
+
+export async function getJsonResponse<T>(response: Promise<Response>): Promise<T> {
+  let r: Response;
+  try {
+    r = await response;
+  } catch (e) {
+    throw new Error(`Error while communicating with gateway: ${JSON.stringify(e)}`);
+  }
+
+  if (!r?.ok) {
+    const text = await r.text();
+    throw new Error(`${r.status}: ${text}`);
+  }
+  const result = await r.json();
+  return result as T;
+
+}
