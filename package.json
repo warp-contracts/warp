@@ -88,7 +88,7 @@
     "safe-stable-stringify": "2.4.1",
     "stream-buffers": "^3.0.2",
     "unzipit": "^1.4.0",
-    "vm2": "3.9.13",
+    "vm2": "3.9.15",
     "warp-isomorphic": "1.0.4",
     "warp-wasm-metering": "1.0.1"
   },
