@@ -1,27 +1,31 @@
 import Arweave from 'arweave';
 import { AxiosResponse } from 'axios';
 import { Buffer as isomorphicBuffer } from 'warp-isomorphic';
-import { WARP_GW_URL } from '../core/WarpFactory';
 import { LoggerFactory } from '../logging/LoggerFactory';
 import { BlockData, NetworkInfoInterface, Transaction } from './types/arweave-types';
+import { Warp } from '../core/Warp';
+import { stripTrailingSlash } from './utils';
 
 export class ArweaveWrapper {
   private readonly logger = LoggerFactory.INST.create('ArweaveWrapper');
 
   private readonly baseUrl;
 
-  constructor(private readonly arweave: Arweave) {
+  constructor(private readonly warp: Warp) {
+    const { arweave } = warp;
     this.baseUrl = `${arweave.api.config.protocol}://${arweave.api.config.host}:${arweave.api.config.port}`;
     this.logger.debug('baseurl', this.baseUrl);
   }
 
   async warpGwInfo(): Promise<NetworkInfoInterface> {
-    return await this.doFetchInfo<NetworkInfoInterface>(`${WARP_GW_URL}/gateway/arweave/info`);
+    return await this.doFetchInfo<NetworkInfoInterface>(
+      `${stripTrailingSlash(this.warp.gwUrl())}/gateway/arweave/info`
+    );
   }
 
   async warpGwBlock(): Promise<BlockData> {
     this.logger.debug('Calling warp gw block info');
-    return await this.doFetchInfo<BlockData>(`${WARP_GW_URL}/gateway/arweave/block`);
+    return await this.doFetchInfo<BlockData>(`${stripTrailingSlash(this.warp.gwUrl())}/gateway/arweave/block`);
   }
 
   async info(): Promise<NetworkInfoInterface> {
@@ -95,7 +99,7 @@ export class ArweaveWrapper {
     if (!response.ok) {
       this.logger.warn(`Unable to load data from arweave.net/${id} endpoint, falling back to arweave.js`);
       // fallback to arweave-js as a last resort..
-      const txData = (await this.arweave.transactions.getData(id, {
+      const txData = (await this.warp.arweave.transactions.getData(id, {
         decode: true
       })) as Uint8Array;
       return isomorphicBuffer.from(txData);

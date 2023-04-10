@@ -2,6 +2,7 @@ import { GQLNodeInterface } from '../../../legacy/gqlResult';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { InteractionsLoader, GW_TYPE } from '../InteractionsLoader';
 import { EvaluationOptions } from '../StateEvaluator';
+import { Warp } from '../../Warp';
 
 export class CacheableInteractionsLoader implements InteractionsLoader {
   private readonly logger = LoggerFactory.INST.create('CacheableInteractionsLoader');
@@ -54,5 +55,9 @@ export class CacheableInteractionsLoader implements InteractionsLoader {
 
   clearCache(): void {
     this.interactionsCache.clear();
+  }
+
+  set warp(warp: Warp) {
+    this.delegate.warp = warp;
   }
 }

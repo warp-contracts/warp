@@ -58,11 +58,7 @@ export class WarpBuilder {
 
   public useWarpGateway(gatewayOptions: GatewayOptions, cacheOptions: CacheOptions): WarpBuilder {
     this._interactionsLoader = new CacheableInteractionsLoader(
-      new WarpGatewayInteractionsLoader(
-        gatewayOptions.address,
-        gatewayOptions.confirmationStatus,
-        gatewayOptions.source
-      )
+      new WarpGatewayInteractionsLoader(gatewayOptions.confirmationStatus, gatewayOptions.source)
     );
 
     const contractsCache = new LevelDbCache<ContractCache<unknown>>({
@@ -77,7 +73,6 @@ export class WarpBuilder {
     });
 
     this._definitionLoader = new WarpGatewayContractDefinitionLoader(
-      gatewayOptions.address,
       this._arweave,
       contractsCache,
       sourceCache,
@@ -95,7 +90,7 @@ export class WarpBuilder {
   }
 
   build(): Warp {
-    return new Warp(
+    const warp = new Warp(
       this._arweave,
       this._definitionLoader,
       this._interactionsLoader,
@@ -103,5 +98,10 @@ export class WarpBuilder {
       this._stateEvaluator,
       this._environment
     );
+
+    this._definitionLoader.warp = warp;
+    this._interactionsLoader.warp = warp;
+
+    return warp;
   }
 }

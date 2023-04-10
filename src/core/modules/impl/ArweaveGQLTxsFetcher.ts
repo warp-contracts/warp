@@ -1,9 +1,9 @@
-import Arweave from 'arweave/node/common';
 import { GQLEdgeInterface, GQLResultInterface, GQLTransaction, GQLTransactionResponse } from 'legacy/gqlResult';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { ArweaveWrapper } from '../../../utils/ArweaveWrapper';
 import { sleep } from '../../../utils/utils';
 import { Benchmark } from '../../../logging/Benchmark';
+import { Warp } from '../../Warp';
 
 const TRANSACTIONS_QUERY = `query Transactions($tags: [TagFilter!]!, $blockFilter: BlockFilter!, $first: Int!, $after: String) {
     transactions(tags: $tags, block: $blockFilter, first: $first, sort: HEIGHT_ASC, after: $after) {
@@ -83,8 +83,8 @@ export class ArweaveGQLTxsFetcher {
   private readonly arweaveWrapper: ArweaveWrapper;
   private readonly logger = LoggerFactory.INST.create(ArweaveGQLTxsFetcher.name);
 
-  constructor(protected readonly arweave: Arweave) {
-    this.arweaveWrapper = new ArweaveWrapper(arweave);
+  constructor(protected readonly warp: Warp) {
+    this.arweaveWrapper = new ArweaveWrapper(warp);
   }
 
   async transaction(transactionId: string): Promise<GQLTransaction> {
