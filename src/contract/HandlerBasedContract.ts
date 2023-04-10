@@ -20,7 +20,7 @@ import { Benchmark } from '../logging/Benchmark';
 import { LoggerFactory } from '../logging/LoggerFactory';
 import { Evolve } from '../plugins/Evolve';
 import { ArweaveWrapper } from '../utils/ArweaveWrapper';
-import { sleep } from '../utils/utils';
+import { sleep, stripTrailingSlash } from '../utils/utils';
 import {
   BenchmarkStats,
   Contract,
@@ -77,7 +77,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     private readonly _innerCallData: InnerCallData = null
   ) {
     this.waitForConfirmation = this.waitForConfirmation.bind(this);
-    this._arweaveWrapper = new ArweaveWrapper(warp.arweave);
+    this._arweaveWrapper = new ArweaveWrapper(warp);
     this._sorter = new LexicographicalInteractionsSorter(warp.arweave);
     if (_parentContract != null) {
       this._evaluationOptions = this.getRoot().evaluationOptions();
@@ -335,7 +335,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     );
 
     const response = await this.warpFetchWrapper
-      .fetch(`${this._evaluationOptions.sequencerUrl}gateway/sequencer/register`, {
+      .fetch(`${stripTrailingSlash(this._evaluationOptions.sequencerUrl)}/gateway/sequencer/register`, {
         method: 'POST',
         body: JSON.stringify(interactionTx),
         headers: {

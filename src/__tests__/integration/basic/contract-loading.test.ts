@@ -47,7 +47,8 @@ describe('Testing WarpGatewayContractDefinitionLoader', () => {
     const contractCache = new LevelDbCache<any>({ ...defaultCacheOptions, inMemory: true });
     const srcCache = new LevelDbCache<any>({ ...defaultCacheOptions, inMemory: true });
 
-    loader = new WarpGatewayContractDefinitionLoader('localhost:1832', arweave, contractCache, srcCache, 'local');
+    loader = new WarpGatewayContractDefinitionLoader(arweave, contractCache, srcCache, 'local');
+    loader.warp = warp;
     sorter = new LexicographicalInteractionsSorter(arweave);
 
     ({ jwk: wallet } = await warp.generateWallet());

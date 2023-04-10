@@ -7,7 +7,7 @@ import { GW_TYPE, InteractionsLoader } from '../InteractionsLoader';
 import { InteractionsSorter } from '../InteractionsSorter';
 import { EvaluationOptions } from '../StateEvaluator';
 import { LexicographicalInteractionsSorter } from './LexicographicalInteractionsSorter';
-import { WarpEnvironment } from '../../Warp';
+import { Warp, WarpEnvironment } from '../../Warp';
 import { generateMockVrf } from '../../../utils/vrf';
 import { ArweaveGQLTxsFetcher, ArweaveTransactionQuery } from './ArweaveGQLTxsFetcher';
 
@@ -21,11 +21,10 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
   private readonly logger = LoggerFactory.INST.create('ArweaveGatewayInteractionsLoader');
 
   private readonly sorter: InteractionsSorter;
-  private readonly arweaveTransactionQuery: ArweaveGQLTxsFetcher;
+  private arweaveTransactionQuery: ArweaveGQLTxsFetcher;
 
   constructor(protected readonly arweave: Arweave, private readonly environment: WarpEnvironment) {
     this.sorter = new LexicographicalInteractionsSorter(arweave);
-    this.arweaveTransactionQuery = new ArweaveGQLTxsFetcher(arweave);
   }
 
   async load(
@@ -139,5 +138,9 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
 
   clearCache(): void {
     // noop
+  }
+
+  set warp(warp: Warp) {
+    this.arweaveTransactionQuery = new ArweaveGQLTxsFetcher(warp);
   }
 }

@@ -15,7 +15,7 @@ import { DefinitionLoader } from '../DefinitionLoader';
 import { GW_TYPE } from '../InteractionsLoader';
 import { TagsParser } from './TagsParser';
 import { WasmSrc } from './wasm/WasmSrc';
-import { WarpEnvironment } from '../../Warp';
+import { Warp, WarpEnvironment } from '../../Warp';
 import { SortKeyCache } from '../../../cache/SortKeyCache';
 import { Transaction } from '../../../utils/types/arweave-types';
 
@@ -26,7 +26,6 @@ export class ContractDefinitionLoader implements DefinitionLoader {
   private readonly tagsParser: TagsParser;
 
   constructor(private readonly arweave: Arweave, private readonly env: WarpEnvironment) {
-    this.arweaveWrapper = new ArweaveWrapper(arweave);
     this.tagsParser = new TagsParser();
   }
 
@@ -163,5 +162,9 @@ export class ContractDefinitionLoader implements DefinitionLoader {
 
   getSrcCache(): SortKeyCache<SrcCache> {
     throw new Error('No cache implemented for this loader');
+  }
+
+  set warp(warp: Warp) {
+    this.arweaveWrapper = new ArweaveWrapper(warp);
   }
 }

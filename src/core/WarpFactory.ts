@@ -13,7 +13,6 @@ import { WarpBuilder } from './WarpBuilder';
 export type GatewayOptions = {
   confirmationStatus: ConfirmationStatus;
   source: SourceType;
-  address: string;
 };
 
 export type CacheOptions = {
@@ -21,13 +20,15 @@ export type CacheOptions = {
   dbLocation: string;
 };
 
-export const WARP_GW_URL = 'https://d1o5nlqr4okus2.cloudfront.net';
-
 export const defaultWarpGwOptions: GatewayOptions = {
   confirmationStatus: { notCorrupted: true },
-  source: SourceType.BOTH,
-  address: WARP_GW_URL
+  source: SourceType.BOTH
 };
+
+/**
+ * @Deprecated - will be removed soon, left for backwards compatibility with deploy plugin
+ */
+export const WARP_GW_URL = 'https://gw.warp.cc';
 
 export const DEFAULT_LEVEL_DB_LOCATION = './cache/warp';
 

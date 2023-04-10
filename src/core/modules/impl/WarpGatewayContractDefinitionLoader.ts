@@ -2,18 +2,18 @@ import Arweave from 'arweave';
 import { ContractDefinitionLoader } from './ContractDefinitionLoader';
 import { Buffer } from 'warp-isomorphic';
 import { GW_TYPE } from '../InteractionsLoader';
-import { ContractDefinition, ContractSource, SrcCache, ContractCache } from '../../../core/ContractDefinition';
+import { ContractCache, ContractDefinition, ContractSource, SrcCache } from '../../../core/ContractDefinition';
 import { WARP_TAGS } from '../../KnownTags';
 import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { ArweaveWrapper } from '../../../utils/ArweaveWrapper';
-import { stripTrailingSlash } from '../../../utils/utils';
 import { DefinitionLoader } from '../DefinitionLoader';
 import { WasmSrc } from './wasm/WasmSrc';
-import { WarpEnvironment } from '../../Warp';
+import { Warp, WarpEnvironment } from '../../Warp';
 import { TagsParser } from './TagsParser';
 import { CacheKey, SortKeyCache, SortKeyCacheResult } from '../../../cache/SortKeyCache';
 import { Transaction } from '../../../utils/types/arweave-types';
+import { stripTrailingSlash } from '../../../utils/utils';
 
 /**
  * An extension to {@link ContractDefinitionLoader} that makes use of
@@ -28,17 +28,15 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
   private contractDefinitionLoader: ContractDefinitionLoader;
   private arweaveWrapper: ArweaveWrapper;
   private readonly tagsParser: TagsParser;
+  private _warp: Warp;
 
   constructor(
-    private readonly baseUrl: string,
     arweave: Arweave,
     private definitionCache: SortKeyCache<ContractCache<unknown>>,
     private srcCache: SortKeyCache<SrcCache>,
     private readonly env: WarpEnvironment
   ) {
-    this.baseUrl = stripTrailingSlash(baseUrl);
     this.contractDefinitionLoader = new ContractDefinitionLoader(arweave, env);
-    this.arweaveWrapper = new ArweaveWrapper(arweave);
     this.tagsParser = new TagsParser();
   }
 
@@ -67,8 +65,9 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
 
   async doLoad<State>(contractTxId: string, forcedSrcTxId?: string): Promise<ContractDefinition<State>> {
     try {
+      const baseUrl = stripTrailingSlash(this._warp.gwUrl());
       const result: ContractDefinition<State> = await fetch(
-        `${this.baseUrl}/gateway/contract?txId=${contractTxId}${forcedSrcTxId ? `&srcTxId=${forcedSrcTxId}` : ''}`
+        `${baseUrl}/gateway/contract?txId=${contractTxId}${forcedSrcTxId ? `&srcTxId=${forcedSrcTxId}` : ''}`
       )
         .then((res) => {
           return res.ok ? res.json() : Promise.reject(res);
@@ -164,5 +163,11 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
     const contract = new ContractCache(value);
     await this.definitionCache.put({ key: contractTxId, sortKey: 'cd' }, contract);
     await this.srcCache.put({ key: srcTxId || contract.srcTxId, sortKey: 'src' }, src);
+  }
+
+  set warp(warp: Warp) {
+    this._warp = warp;
+    this.arweaveWrapper = new ArweaveWrapper(warp);
+    this.contractDefinitionLoader.warp = warp;
   }
 }

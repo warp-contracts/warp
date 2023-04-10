@@ -29,7 +29,7 @@ import { SortKeyCache } from '../cache/SortKeyCache';
 import { ContractDefinition, SrcCache } from './ContractDefinition';
 import { CustomSignature } from '../contract/Signature';
 import { Transaction } from '../utils/types/arweave-types';
-import { DEFAULT_LEVEL_DB_LOCATION } from './WarpFactory';
+import {DEFAULT_LEVEL_DB_LOCATION, WARP_GW_URL} from './WarpFactory';
 import { LevelDbCache } from '../cache/impl/LevelDbCache';
 import { SourceData } from '../contract/deploy/Source';
 import { BundlerSigner, DataItem } from '../contract/deploy/DataItem';
@@ -48,6 +48,7 @@ export type KVStorageFactory = (contractTxId: string) => SortKeyCache<unknown>;
 
 export class Warp {
   private _createContract: CreateContract;
+  private _gwUrl = WARP_GW_URL;
 
   private get createContract(): CreateContract {
     if (!this._createContract) {
@@ -205,4 +206,17 @@ export class Warp {
     this.kvStorageFactory = factory;
     return this;
   }
+
+  useGwUrl(url: string): Warp {
+    this._gwUrl = url;
+    return this;
+  }
+
+  gwUrl(): string {
+    return this._gwUrl;
+  }
+}
+
+export interface WarpAware {
+  set warp(warp: Warp);
 }

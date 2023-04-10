@@ -12,7 +12,6 @@ import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { indent } from '../../../utils/utils';
 import { EvalStateResult, StateEvaluator } from '../StateEvaluator';
 import { ContractInteraction, HandlerApi, InteractionResult } from './HandlerExecutorFactory';
-import { canBeCached } from './StateCache';
 import { TagsParser } from './TagsParser';
 
 const EC = new elliptic.ec('secp256k1');
@@ -417,4 +416,13 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
   abstract setCache(cache: SortKeyCache<EvalStateResult<unknown>>): void;
 
   abstract getCache(): SortKeyCache<EvalStateResult<unknown>>;
+}
+
+function canBeCached(tx: GQLNodeInterface): boolean {
+  // in case of using non-redstone gateway
+  if (tx.confirmationStatus === undefined) {
+    return true;
+  } else {
+    return tx.confirmationStatus === 'confirmed';
+  }
 }

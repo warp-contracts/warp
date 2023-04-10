@@ -1,8 +1,9 @@
 import Arweave from 'arweave';
 import { LexicographicalInteractionsSorter } from '../../core/modules/impl/LexicographicalInteractionsSorter';
-import { WarpGatewayInteractionsLoader } from '../../core/modules/impl/WarpGatewayInteractionsLoader';
+import {ConfirmationStatus, WarpGatewayInteractionsLoader} from '../../core/modules/impl/WarpGatewayInteractionsLoader';
 import { GQLNodeInterface } from '../../legacy/gqlResult';
 import { LoggerFactory } from '../../logging/LoggerFactory';
+import {WarpFactory} from "../../core/WarpFactory";
 
 const responseData = {
   paging: {
@@ -91,19 +92,14 @@ const fetchMock = jest
   );
 
 describe('WarpGatewayInteractionsLoader -> load', () => {
-  it('should be called with baseUrl devoid of trailing slashes', async () => {
-    const loader = new WarpGatewayInteractionsLoader('http://baseUrl/');
-
-    expect(loader['baseUrl']).toBe('http://baseUrl');
-  });
   it('should return correct number of interactions', async () => {
-    const loader = new WarpGatewayInteractionsLoader('http://baseUrl');
+    const loader = getLoader();
     const response: GQLNodeInterface[] = await loader.load(contractId, fromBlockHeight, toBlockHeight);
     expect(fetchMock).toHaveBeenCalled();
     expect(response.length).toEqual(2);
   });
   it('should be called with correct params', async () => {
-    const loader = new WarpGatewayInteractionsLoader('http://baseUrl');
+    const loader = getLoader();
     await loader.load(contractId, fromBlockHeight, toBlockHeight);
     expect(fetchMock).toBeCalledWith(`${baseUrl}&page=1&fromSdk=true`);
   });
@@ -116,7 +112,7 @@ describe('WarpGatewayInteractionsLoader -> load', () => {
           status: 200
         }) as Promise<Response>
     );
-    const loader = new WarpGatewayInteractionsLoader('http://baseUrl');
+    const loader = getLoader();
     await loader.load(contractId, fromBlockHeight, toBlockHeight);
     expect(fetchMock).toBeCalledWith(`${baseUrl}&page=1&fromSdk=true`);
     /*expect(fetchMock).toBeCalledWith(`${baseUrl}&page=2&fromSdk=true`);
@@ -126,18 +122,18 @@ describe('WarpGatewayInteractionsLoader -> load', () => {
     expect(fetchMock).toHaveBeenCalledTimes(5);*/
   });
   it('should be called with confirmationStatus set to "confirmed"', async () => {
-    const loader = new WarpGatewayInteractionsLoader('http://baseUrl', { confirmed: true });
+    const loader = getLoader({confirmed: true});
     await loader.load(contractId, fromBlockHeight, toBlockHeight);
     expect(fetchMock).toBeCalledWith(`${baseUrl}&page=1&fromSdk=true&confirmationStatus=confirmed`);
   });
   it('should be called with confirmationStatus set to "not_corrupted"', async () => {
-    const loader = new WarpGatewayInteractionsLoader('http://baseUrl', { notCorrupted: true });
+    const loader = getLoader({notCorrupted: true});
     await loader.load(contractId, fromBlockHeight, toBlockHeight);
     expect(fetchMock).toBeCalledWith(`${baseUrl}&page=1&fromSdk=true&confirmationStatus=not_corrupted`);
   });
   it('should throw an error in case of timeout', async () => {
     jest.spyOn(global, 'fetch').mockImplementation(() => Promise.reject({ status: 504, ok: false }));
-    const loader = new WarpGatewayInteractionsLoader('http://baseUrl');
+    const loader = getLoader();
     try {
       await loader.load(contractId, fromBlockHeight, toBlockHeight);
     } catch (e) {
@@ -148,7 +144,7 @@ describe('WarpGatewayInteractionsLoader -> load', () => {
     jest
       .spyOn(global, 'fetch')
       .mockImplementation(() => Promise.reject({ status: 500, ok: false, body: { message: 'request fails' } }));
-    const loader = new WarpGatewayInteractionsLoader('http://baseUrl');
+    const loader = getLoader();
     try {
       await loader.load(contractId, fromBlockHeight, toBlockHeight);
     } catch (e) {
@@ -156,3 +152,9 @@ describe('WarpGatewayInteractionsLoader -> load', () => {
     }
   });
 });
+
+function getLoader(source: ConfirmationStatus = null) {
+  const loader = new WarpGatewayInteractionsLoader(source);
+  loader.warp = WarpFactory.forLocal().useGwUrl('http://baseUrl');
+  return loader;
+}

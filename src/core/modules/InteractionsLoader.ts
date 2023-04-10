@@ -1,5 +1,6 @@
 import { GQLNodeInterface } from '../../legacy/gqlResult';
 import { EvaluationOptions } from './StateEvaluator';
+import { WarpAware } from '../Warp';
 
 export type GW_TYPE = 'arweave' | 'warp';
 
@@ -11,7 +12,7 @@ export interface GwTypeAware {
  * Implementors of this interface add functionality of loading contract's interaction transactions.
  * Returned interactions MUST be sorted according to protocol specification ({@link LexicographicalInteractionsSorter}
  */
-export interface InteractionsLoader extends GwTypeAware {
+export interface InteractionsLoader extends GwTypeAware, WarpAware {
   /**
    * This method loads interactions for a given contract.
    * If param fromSortKey and/or param toSortKey are present, the loaded interactions do

@@ -1,5 +1,4 @@
-import Arweave from 'arweave';
-import { WarpEnvironment } from '../..//Warp';
+import { Warp, WarpEnvironment } from '../../Warp';
 import { SortKeyCache } from '../../../cache/SortKeyCache';
 import { ContractType } from '../../../contract/deploy/CreateContract';
 import {
@@ -25,14 +24,11 @@ function getTagValue(tags: GQLTagInterface[], tagName: string, orDefault = undef
 }
 
 export class ArweaveGatewayBundledContractDefinitionLoader implements DefinitionLoader {
-  private readonly arweaveWrapper: ArweaveWrapper;
-  private readonly arweaveTransactions: ArweaveGQLTxsFetcher;
+  private arweaveWrapper: ArweaveWrapper;
+  private arweaveTransactions: ArweaveGQLTxsFetcher;
   private readonly logger = LoggerFactory.INST.create(ArweaveGatewayBundledContractDefinitionLoader.name);
 
-  constructor(arweave: Arweave, private readonly env: WarpEnvironment) {
-    this.arweaveWrapper = new ArweaveWrapper(arweave);
-    this.arweaveTransactions = new ArweaveGQLTxsFetcher(arweave);
-  }
+  constructor(private readonly env: WarpEnvironment) {}
 
   async load<State>(contractTxId: string, evolvedSrcTxId?: string): Promise<ContractDefinition<State>> {
     const benchmark = Benchmark.measure();
@@ -172,5 +168,10 @@ export class ArweaveGatewayBundledContractDefinitionLoader implements Definition
 
   type(): GW_TYPE {
     return 'arweave';
+  }
+
+  set warp(warp: Warp) {
+    this.arweaveWrapper = new ArweaveWrapper(warp);
+    this.arweaveTransactions = new ArweaveGQLTxsFetcher(warp);
   }
 }

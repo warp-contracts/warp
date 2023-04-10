@@ -43,6 +43,7 @@ describe('Testing the Arweave interactions loader', () => {
     const { arweave } = warp;
 
     loader = new ArweaveGatewayInteractionsLoader(arweave, 'local');
+    loader.warp = warp;
     sorter = new LexicographicalInteractionsSorter(arweave);
 
     ({ jwk: wallet } = await warp.generateWallet());

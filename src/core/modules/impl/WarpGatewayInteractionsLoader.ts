@@ -5,6 +5,7 @@ import 'warp-isomorphic';
 import { stripTrailingSlash } from '../../../utils/utils';
 import { GW_TYPE, InteractionsLoader } from '../InteractionsLoader';
 import { EvaluationOptions } from '../StateEvaluator';
+import { Warp } from '../../Warp';
 
 export type ConfirmationStatus =
   | {
@@ -40,12 +41,12 @@ export const enum SourceType {
  * - read more {@link https://github.com/warp-contracts/redstone-sw-gateway#corrupted-transactions}.
  */
 export class WarpGatewayInteractionsLoader implements InteractionsLoader {
+  private _warp: Warp;
+
   constructor(
-    private readonly baseUrl: string,
     private readonly confirmationStatus: ConfirmationStatus = null,
     private readonly source: SourceType = SourceType.BOTH
   ) {
-    this.baseUrl = stripTrailingSlash(baseUrl);
     Object.assign(this, confirmationStatus);
     this.source = source;
   }
@@ -67,10 +68,12 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
 
     const effectiveSourceType = evaluationOptions ? evaluationOptions.sourceType : this.source;
     const benchmarkTotalTime = Benchmark.measure();
+    const baseUrl = stripTrailingSlash(this._warp.gwUrl());
+
     do {
       const benchmarkRequestTime = Benchmark.measure();
 
-      const url = `${this.baseUrl}/gateway/v2/interactions-sort-key`;
+      const url = `${baseUrl}/gateway/v2/interactions-sort-key`;
 
       const response = await fetch(
         `${url}?${new URLSearchParams({
@@ -120,5 +123,9 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
 
   clearCache(): void {
     // noop
+  }
+
+  set warp(warp: Warp) {
+    this._warp = warp;
   }
 }

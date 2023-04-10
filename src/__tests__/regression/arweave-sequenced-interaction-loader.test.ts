@@ -2,7 +2,7 @@ import { ArweaveGatewayBundledContractDefinitionLoader } from '../../core/module
 import { ArweaveGatewayBundledInteractionLoader } from '../../core/modules/impl/ArweaveGatewayBundledInteractionLoader';
 import { SourceType, WarpGatewayInteractionsLoader } from '../../core/modules/impl/WarpGatewayInteractionsLoader';
 import { EvaluationOptions } from '../../core/modules/StateEvaluator';
-import { WarpFactory, WARP_GW_URL } from '../../core/WarpFactory';
+import { WarpFactory } from '../../core/WarpFactory';
 import { LoggerFactory } from '../../logging/LoggerFactory';
 import { WarpGatewayContractDefinitionLoader } from '../../core/modules/impl/WarpGatewayContractDefinitionLoader';
 import { LevelDbCache } from '../../cache/impl/LevelDbCache';
@@ -23,7 +23,8 @@ describe('Arweave Gateway interaction loader', () => {
       it('should load contract source', async () => {
         const warp = WarpFactory.forMainnet();
 
-        const arLoader = new ArweaveGatewayBundledContractDefinitionLoader(warp.arweave, warp.environment);
+        const arLoader = new ArweaveGatewayBundledContractDefinitionLoader(warp.environment);
+        arLoader.warp = warp;
 
         const arSrc = await arLoader.loadContractSource(EXAMPLE_CONTRACT_SRC_TX_ID);
         expect(arSrc).toBeDefined();
@@ -44,14 +45,15 @@ describe('Arweave Gateway interaction loader', () => {
         });
 
         const wrLoader = new WarpGatewayContractDefinitionLoader(
-          WARP_GW_URL,
           warp.arweave,
           contractsCache,
           sourceCache,
           warp.environment
         );
+        wrLoader.warp = warp;
 
-        const arLoader = new ArweaveGatewayBundledContractDefinitionLoader(warp.arweave, warp.environment);
+        const arLoader = new ArweaveGatewayBundledContractDefinitionLoader(warp.environment);
+        arLoader.warp = warp;
 
         const arContract = await arLoader.load(EXAMPLE_CONTRACT_TX_ID);
         const wrContract = await wrLoader.load(EXAMPLE_CONTRACT_TX_ID);
@@ -67,10 +69,12 @@ describe('Arweave Gateway interaction loader', () => {
       test('warp loader and arweave loader load interactions with same sortKey', async () => {
         const warp = WarpFactory.forMainnet();
         const arweaveLoader = new ArweaveGatewayBundledInteractionLoader(warp.arweave, warp.environment);
+        arweaveLoader.warp = warp;
         const arTxs = await arweaveLoader.load(EXAMPLE_CONTRACT_TX_ID, START_SORT_KEY, END_SORT_KEY, {
           internalWrites: true
         } as EvaluationOptions);
-        const warpLoader = new WarpGatewayInteractionsLoader(WARP_GW_URL, {}, SourceType.WARP_SEQUENCER);
+        const warpLoader = new WarpGatewayInteractionsLoader({}, SourceType.WARP_SEQUENCER);
+        warpLoader.warp = warp;
         const wrTxs = await warpLoader.load(EXAMPLE_CONTRACT_TX_ID, START_SORT_KEY, END_SORT_KEY);
         const missingTxsOnAr = wrTxs.filter((wr) => !arTxs.map((ar) => ar.sortKey).includes(wr.sortKey));
         expect(missingTxsOnAr.length).toBe(0);
@@ -79,8 +83,10 @@ describe('Arweave Gateway interaction loader', () => {
       test('warp loader and arweave loader load interactions without sortkey', async () => {
         const warp = WarpFactory.forMainnet();
         const arweaveLoader = new ArweaveGatewayBundledInteractionLoader(warp.arweave, warp.environment);
+        arweaveLoader.warp = warp;
         const arTxs = await arweaveLoader.load(EXAMPLE_CONTRACT_TX_ID, undefined, undefined, {} as EvaluationOptions);
-        const warpLoader = new WarpGatewayInteractionsLoader(WARP_GW_URL, {}, SourceType.WARP_SEQUENCER);
+        const warpLoader = new WarpGatewayInteractionsLoader({}, SourceType.WARP_SEQUENCER);
+        warpLoader.warp = warp;
         const wrTxs = await warpLoader.load(EXAMPLE_CONTRACT_TX_ID, undefined, undefined);
 
         const missingTxsOnAr = wrTxs.filter((wr) => !arTxs.map((ar) => ar.sortKey).includes(wr.sortKey));
@@ -106,13 +112,16 @@ describe('Arweave Gateway interaction loader', () => {
         });
 
         const arweave = Arweave.init({ host: 'arweave.net', port: 443, protocol: 'https' });
-        const withArLoader = WarpFactory.custom(arweave, { inMemory: true, dbLocation: '' }, 'mainnet')
-          .setInteractionsLoader(new ArweaveGatewayBundledInteractionLoader(arweave, 'mainnet'))
 
-          .setDefinitionLoader(
-            new WarpGatewayContractDefinitionLoader(WARP_GW_URL, arweave, contractsCache, sourceCache, 'mainnet')
-          )
+        const arLoader = new ArweaveGatewayBundledInteractionLoader(arweave, 'mainnet');
+        const wrLoader = new WarpGatewayContractDefinitionLoader(arweave, contractsCache, sourceCache, 'mainnet')
+        const withArLoader = WarpFactory.custom(arweave, { inMemory: true, dbLocation: '' }, 'mainnet')
+          .setInteractionsLoader(arLoader)
+          .setDefinitionLoader(wrLoader)
           .build();
+        arLoader.warp = withArLoader;
+        wrLoader.warp = withArLoader;
+
 
         const arResult = await withArLoader
           .contract(EXAMPLE_CONTRACT_TX_ID)
@@ -131,10 +140,17 @@ describe('Arweave Gateway interaction loader', () => {
 
       it('warp interaction, contract definition loader and arweave interaction, contract definition loader evaluates to same state ', async () => {
         const arweave = Arweave.init({ host: 'arweave.net', port: 443, protocol: 'https' });
+
+        const arInteractionsLoader = new ArweaveGatewayBundledInteractionLoader(arweave, 'mainnet');
+        const arContractLoader = new ArweaveGatewayBundledContractDefinitionLoader('mainnet');
+
         const withArLoader = WarpFactory.custom(arweave, { inMemory: true, dbLocation: '' }, 'mainnet')
-          .setInteractionsLoader(new ArweaveGatewayBundledInteractionLoader(arweave, 'mainnet'))
-          .setDefinitionLoader(new ArweaveGatewayBundledContractDefinitionLoader(arweave, 'mainnet'))
+          .setInteractionsLoader(arInteractionsLoader)
+          .setDefinitionLoader(arContractLoader)
           .build();
+
+        arInteractionsLoader.warp = withArLoader;
+        arContractLoader.warp = withArLoader;
 
         const arResult = await withArLoader
           .contract(EXAMPLE_CONTRACT_TX_ID)

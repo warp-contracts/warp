@@ -27,8 +27,6 @@ export * from './core/modules/impl/HandlerExecutorFactory';
 export * from './core/modules/impl/LexicographicalInteractionsSorter';
 export * from './core/modules/impl/TagsParser';
 export * from './core/modules/impl/normalize-source';
-export * from './core/modules/impl/StateCache';
-export * from './core/modules/impl/wasm/WasmSrc';
 export * from './core/modules/impl/handler/AbstractContractHandler';
 export * from './core/modules/impl/handler/JsHandlerApi';
 export * from './core/modules/impl/handler/WasmHandlerApi';

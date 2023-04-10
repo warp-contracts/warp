@@ -8,7 +8,7 @@ import { GW_TYPE, InteractionsLoader } from '../InteractionsLoader';
 import { InteractionsSorter } from '../InteractionsSorter';
 import { EvaluationOptions } from '../StateEvaluator';
 import { LexicographicalInteractionsSorter } from './LexicographicalInteractionsSorter';
-import { WarpEnvironment } from '../../Warp';
+import { Warp, WarpEnvironment } from '../../Warp';
 import { generateMockVrf } from '../../../utils/vrf';
 import { Tag } from 'utils/types/arweave-types';
 import { ArweaveGQLTxsFetcher } from './ArweaveGQLTxsFetcher';
@@ -42,13 +42,11 @@ export interface GqlReqVariables {
 export class ArweaveGatewayBundledInteractionLoader implements InteractionsLoader {
   private readonly logger = LoggerFactory.INST.create(ArweaveGatewayBundledInteractionLoader.name);
 
-  private readonly arweaveFetcher: ArweaveGQLTxsFetcher;
-  private readonly arweaveWrapper: ArweaveWrapper;
+  private arweaveFetcher: ArweaveGQLTxsFetcher;
+  private arweaveWrapper: ArweaveWrapper;
   private readonly sorter: InteractionsSorter;
 
   constructor(protected readonly arweave: Arweave, private readonly environment: WarpEnvironment) {
-    this.arweaveWrapper = new ArweaveWrapper(arweave);
-    this.arweaveFetcher = new ArweaveGQLTxsFetcher(arweave);
     this.sorter = new LexicographicalInteractionsSorter(arweave);
   }
 
@@ -260,5 +258,10 @@ export class ArweaveGatewayBundledInteractionLoader implements InteractionsLoade
 
   clearCache(): void {
     // noop
+  }
+
+  set warp(warp: Warp) {
+    this.arweaveWrapper = new ArweaveWrapper(warp);
+    this.arweaveFetcher = new ArweaveGQLTxsFetcher(warp);
   }
 }
