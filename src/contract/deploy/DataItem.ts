@@ -2,14 +2,14 @@ import { Tag } from 'utils/types/arweave-types';
 
 /* eslint-disable */
 export declare abstract class BundlerSigner {
-  readonly signer: any;
+  readonly signer?: any;
   readonly publicKey: Buffer;
   readonly signatureType: number;
   readonly signatureLength: number;
   readonly ownerLength: number;
   readonly pem?: string | Buffer;
   abstract sign(message: Uint8Array): Promise<Uint8Array> | Uint8Array;
-  abstract signDataItem(dataItem: string | Buffer | Uint8Array, tags: Tag[]): Promise<DataItem>;
+  abstract signDataItem?(dataItem: string | Buffer | Uint8Array, tags: Tag[]): Promise<DataItem>;
   static verify(_: string | Buffer): boolean;
 }
 
