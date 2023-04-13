@@ -49,7 +49,8 @@ export class ContractInteractionState implements InteractionState {
 
   async commit(interaction: GQLNodeInterface): Promise<void> {
     if (interaction.dry) {
-      return await this.rollbackKVs();
+      await this.rollbackKVs();
+      return this.reset();
     }
     try {
       await this.doStoreJson(this._json, interaction);
