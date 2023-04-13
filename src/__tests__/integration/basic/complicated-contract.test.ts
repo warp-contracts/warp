@@ -9,9 +9,11 @@ import { Warp } from '../../../core/Warp';
 import { WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
+import { VM2Plugin } from 'warp-contracts-plugin-vm2';
 
 let arlocal: ArLocal;
 let warp: Warp;
+let warpVm: Warp;
 let contract: Contract<any>;
 let contractVM: Contract<any>;
 
@@ -29,6 +31,7 @@ describe('Testing the Warp client', () => {
     LoggerFactory.INST.logLevel('error');
 
     warp = WarpFactory.forLocal(1800).use(new DeployPlugin());
+    warpVm = WarpFactory.forLocal(1800).use(new DeployPlugin()).use(new VM2Plugin());
 
     ({ jwk: wallet } = await warp.generateWallet());
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/very-complicated-contract.js'), 'utf8');
@@ -43,8 +46,7 @@ describe('Testing the Warp client', () => {
     contract = warp.contract(contractTxId).setEvaluationOptions({
       mineArLocalBlocks: false
     });
-    contractVM = warp.contract(contractTxId).setEvaluationOptions({
-      useVM2: true,
+    contractVM = warpVm.contract(contractTxId).setEvaluationOptions({
       mineArLocalBlocks: false
     });
     contract.connect(wallet);

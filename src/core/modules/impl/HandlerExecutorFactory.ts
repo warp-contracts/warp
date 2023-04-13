@@ -1,6 +1,5 @@
 import Arweave from 'arweave';
 import { rustWasmImports, WarpContractsCrateVersion } from './wasm/rust-wasm-imports';
-import * as vm2 from 'vm2';
 import { ContractDefinition } from '../../../core/ContractDefinition';
 import { ExecutionContext } from '../../../core/ExecutionContext';
 import { GQLNodeInterface } from '../../../legacy/gqlResult';
@@ -16,6 +15,7 @@ import { Warp } from '../../Warp';
 import { isBrowser } from '../../../utils/utils';
 import { Buffer } from 'warp-isomorphic';
 import { InteractionState } from '../../../contract/states/InteractionState';
+import { WarpLogger } from '../../../logging/WarpLogger';
 
 // 'require' to fix esbuild adding same lib in both cjs and esm format
 // https://github.com/evanw/esbuild/issues/1950
@@ -166,7 +166,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
       this.logger.info(`WASM ${contractDefinition.srcWasmLang} handler created in ${benchmark.elapsed()}`);
       return new WasmHandlerApi(swGlobal, contractDefinition, jsExports || wasmInstance.exports);
     } else {
-      const normalizedSource = normalizeContractSource(contractDefinition.src, evaluationOptions.useVM2);
+      const normalizedSource = normalizeContractSource(contractDefinition.src, warp.hasPlugin('vm2'));
       if (normalizedSource.includes('unsafeClient')) {
         switch (evaluationOptions.unsafeClient) {
           case 'allow': {
@@ -192,42 +192,9 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
           throw new Error('Using BigInt is not allowed by default. Use EvaluationOptions.allowBigInt flag.');
         }
       }
-      if (evaluationOptions.useVM2) {
-        const vmScript = new vm2.VMScript(normalizedSource);
-        const typedArrays = {
-          Int8Array: Int8Array,
-          Uint8Array: Uint8Array,
-          Uint8ClampedArray: Uint8ClampedArray,
-          Int16Array: Int16Array,
-          Uint16Array: Uint16Array,
-          Int32Array: Int32Array,
-          Uint32Array: Uint32Array,
-          Float32Array: Float32Array,
-          Float64Array: Float64Array,
-          BigInt64Array: BigInt64Array,
-          BigUint64Array: BigUint64Array
-        };
-        const vm = new vm2.NodeVM({
-          console: 'off',
-          sandbox: {
-            SmartWeave: swGlobal,
-            BigNumber: BigNumber,
-            logger: this.logger,
-            ContractError: ContractError,
-            ContractAssert: function (cond, message) {
-              if (!cond) throw new ContractError(message);
-            },
-            //https://github.com/patriksimek/vm2/issues/484#issuecomment-1327479592
-            ...typedArrays
-          },
-          compiler: 'javascript',
-          eval: false,
-          wasm: false,
-          allowAsync: true,
-          wrapper: 'commonjs'
-        });
-
-        return new JsHandlerApi(swGlobal, contractDefinition, vm.run(vmScript));
+      if (warp.hasPlugin('vm2')) {
+        const vm2Plugin = warp.loadPlugin<VM2PluginInput, HandlerApi<State>>('vm2');
+        return vm2Plugin.process({ normalizedSource, swGlobal, logger: this.logger, contractDefinition });
       } else if (warp.hasPlugin('ivm-handler-api')) {
         const ivmPlugin = warp.loadPlugin<IvmPluginInput, HandlerApi<State>>('ivm-handler-api');
         return ivmPlugin.process({
@@ -324,5 +291,12 @@ export interface IvmPluginInput {
   evaluationOptions: EvaluationOptions;
   arweave: Arweave;
   swGlobal: SmartWeaveGlobal;
+  contractDefinition: ContractDefinition<unknown>;
+}
+
+export interface VM2PluginInput {
+  normalizedSource: string;
+  swGlobal: SmartWeaveGlobal;
+  logger: WarpLogger;
   contractDefinition: ContractDefinition<unknown>;
 }

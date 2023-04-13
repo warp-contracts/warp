@@ -7,6 +7,7 @@ import { WarpFactory, defaultCacheOptions, defaultWarpGwOptions } from '../../co
 import { LoggerFactory } from '../../logging/LoggerFactory';
 import { SourceType } from '../../core/modules/impl/WarpGatewayInteractionsLoader';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
+import { VM2Plugin } from 'warp-contracts-plugin-vm2';
 
 const stringify = require('safe-stable-stringify');
 
@@ -125,9 +126,9 @@ describe.each(chunkedVm)('v1 compare.suite (VM2) %#', (contracts: string[]) => {
         .use(new DeployPlugin());
 
       const result2 = await warp
+        .use(new VM2Plugin())
         .contract(contractTxId)
         .setEvaluationOptions({
-          useVM2: true,
           unsafeClient: 'allow',
           allowBigInt: true
         })
