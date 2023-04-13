@@ -134,6 +134,7 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
 
     try {
       await this.swGlobal.kv.open();
+      await this.swGlobal.kv.begin();
 
       const handlerResult = await Promise.race([timeoutPromise, this.contractFunction(stateClone, interaction)]);
 

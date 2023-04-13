@@ -313,6 +313,12 @@ export class KV {
     return this._storage.kvMap(sortKey, options);
   }
 
+  async begin() {
+    if (this._storage) {
+      return this._storage.begin();
+    }
+  }
+
   async commit(): Promise<void> {
     if (this._storage) {
       if (this._transaction.dryRun) {

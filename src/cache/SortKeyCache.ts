@@ -51,7 +51,7 @@ export interface SortKeyCache<V> {
 
   close(): Promise<void>;
 
-  begin(): void;
+  begin(): Promise<void>;
 
   rollback(): void;
 
