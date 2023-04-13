@@ -34,8 +34,16 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
       this.assignWrite(executionContext);
 
       await this.swGlobal.kv.open();
+      await this.swGlobal.kv.begin();
       const handlerResult = await this.doHandle(interaction);
-      await this.swGlobal.kv.commit();
+
+      if (interactionData.interaction.interactionType === 'view') {
+        // view calls are not allowed to perform any KV modifications
+        await this.swGlobal.kv.rollback();
+      } else {
+        await this.swGlobal.kv.commit();
+      }
+
       return {
         type: 'ok',
         result: handlerResult,
@@ -62,10 +70,6 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
         };
       }
     } finally {
-      if (interactionData.interaction.interactionType === 'view') {
-        // view calls are not allowed to perform any KV modifications
-        await this.swGlobal.kv.rollback();
-      }
       await this.swGlobal.kv.close();
     }
   }
