@@ -1,9 +1,12 @@
 import Arweave from 'arweave';
 import { LexicographicalInteractionsSorter } from '../../core/modules/impl/LexicographicalInteractionsSorter';
-import {ConfirmationStatus, WarpGatewayInteractionsLoader} from '../../core/modules/impl/WarpGatewayInteractionsLoader';
+import {
+  ConfirmationStatus,
+  WarpGatewayInteractionsLoader
+} from '../../core/modules/impl/WarpGatewayInteractionsLoader';
 import { GQLNodeInterface } from '../../legacy/gqlResult';
 import { LoggerFactory } from '../../logging/LoggerFactory';
-import {WarpFactory} from "../../core/WarpFactory";
+import { WarpFactory } from '../../core/WarpFactory';
 
 const responseData = {
   paging: {
@@ -122,12 +125,12 @@ describe('WarpGatewayInteractionsLoader -> load', () => {
     expect(fetchMock).toHaveBeenCalledTimes(5);*/
   });
   it('should be called with confirmationStatus set to "confirmed"', async () => {
-    const loader = getLoader({confirmed: true});
+    const loader = getLoader({ confirmed: true });
     await loader.load(contractId, fromBlockHeight, toBlockHeight);
     expect(fetchMock).toBeCalledWith(`${baseUrl}&page=1&fromSdk=true&confirmationStatus=confirmed`);
   });
   it('should be called with confirmationStatus set to "not_corrupted"', async () => {
-    const loader = getLoader({notCorrupted: true});
+    const loader = getLoader({ notCorrupted: true });
     await loader.load(contractId, fromBlockHeight, toBlockHeight);
     expect(fetchMock).toBeCalledWith(`${baseUrl}&page=1&fromSdk=true&confirmationStatus=not_corrupted`);
   });
@@ -148,7 +151,11 @@ describe('WarpGatewayInteractionsLoader -> load', () => {
     try {
       await loader.load(contractId, fromBlockHeight, toBlockHeight);
     } catch (e) {
-      expect(e).toEqual(new Error('Error while communicating with gateway: {"status":500,"ok":false,"body":{"message":"request fails"}}'));
+      expect(e).toEqual(
+        new Error(
+          'Error while communicating with gateway: {"status":500,"ok":false,"body":{"message":"request fails"}}'
+        )
+      );
     }
   });
 });

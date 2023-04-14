@@ -1,6 +1,6 @@
 /* eslint-disable */
 import copy from 'fast-copy';
-import {Buffer} from 'warp-isomorphic';
+import { Buffer } from 'warp-isomorphic';
 
 export const sleep = (ms: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -101,5 +101,4 @@ export async function getJsonResponse<T>(response: Promise<Response>): Promise<T
   }
   const result = await r.json();
   return result as T;
-
 }

@@ -114,14 +114,13 @@ describe('Arweave Gateway interaction loader', () => {
         const arweave = Arweave.init({ host: 'arweave.net', port: 443, protocol: 'https' });
 
         const arLoader = new ArweaveGatewayBundledInteractionLoader(arweave, 'mainnet');
-        const wrLoader = new WarpGatewayContractDefinitionLoader(arweave, contractsCache, sourceCache, 'mainnet')
+        const wrLoader = new WarpGatewayContractDefinitionLoader(arweave, contractsCache, sourceCache, 'mainnet');
         const withArLoader = WarpFactory.custom(arweave, { inMemory: true, dbLocation: '' }, 'mainnet')
           .setInteractionsLoader(arLoader)
           .setDefinitionLoader(wrLoader)
           .build();
         arLoader.warp = withArLoader;
         wrLoader.warp = withArLoader;
-
 
         const arResult = await withArLoader
           .contract(EXAMPLE_CONTRACT_TX_ID)

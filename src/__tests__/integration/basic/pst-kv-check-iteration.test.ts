@@ -5,7 +5,7 @@ import Arweave from 'arweave';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import path from 'path';
 import { mineBlock } from '../_helpers';
-import { PstContract, PstState } from "../../../contract/PstContract";
+import { PstContract, PstState } from '../../../contract/PstContract';
 import { Warp } from '../../../core/Warp';
 import { DEFAULT_LEVEL_DB_LOCATION, WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
@@ -189,24 +189,36 @@ describe('Testing the PST kv storage range access', () => {
 
     expect((await pst.currentBalance(aliceWalletAddress)).balance).toEqual(200_000);
     expect((await pst.currentBalance(walletAddress)).balance).toEqual(555669 - 655 - 200_000);
-    expect((await pst.getStorageValues(['check.' + walletAddress + '.' + aliceWalletAddress]))
-      .cachedValue.get('check.' + walletAddress + '.' + aliceWalletAddress))
-      .toBeNull();
+    expect(
+      (await pst.getStorageValues(['check.' + walletAddress + '.' + aliceWalletAddress])).cachedValue.get(
+        'check.' + walletAddress + '.' + aliceWalletAddress
+      )
+    ).toBeNull();
   });
 
   it('should withdraw last check', async () => {
-    expect((await pst.viewState<unknown, ChecksWrittenResult>({ function: 'checksActive' })).result.total)
-      .toEqual(207_500);
+    expect((await pst.viewState<unknown, ChecksWrittenResult>({ function: 'checksActive' })).result.total).toEqual(
+      207_500
+    );
 
-    await pst.writeInteraction({ function: 'withdrawLastCheck', target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M' });
-    await pst.writeInteraction({ function: 'withdrawLastCheck', target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M' });
-    await pst.writeInteraction({ function: 'withdrawLastCheck', target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M' });
+    await pst.writeInteraction({
+      function: 'withdrawLastCheck',
+      target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M'
+    });
+    await pst.writeInteraction({
+      function: 'withdrawLastCheck',
+      target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M'
+    });
+    await pst.writeInteraction({
+      function: 'withdrawLastCheck',
+      target: 'uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M'
+    });
 
     await mineBlock(warp);
 
-    expect((await pst.viewState<unknown, ChecksWrittenResult>({ function: 'checksActive' })).result.total)
-      .toEqual(200_000);
-
+    expect((await pst.viewState<unknown, ChecksWrittenResult>({ function: 'checksActive' })).result.total).toEqual(
+      200_000
+    );
   });
 
   it('should not be able to write check', async () => {
