@@ -1,6 +1,7 @@
 const { build } = require('esbuild');
 const rimraf = require('rimraf');
-const fs = require('fs');
+const plugin = require('node-stdlib-browser/helpers/esbuild/plugin');
+const stdLibBrowser = require('node-stdlib-browser');
 
 const clean = async () => {
   return new Promise((resolve) => {
@@ -17,11 +18,13 @@ const runBuild = async () => {
     platform: 'browser',
     target: ['esnext'],
     format: 'esm',
-    globalName: 'warp'
+    globalName: 'warp',
+    inject: [require.resolve('node-stdlib-browser/helpers/esbuild/shim')],
+    plugins: [plugin(stdLibBrowser)]
   };
 
   console.log('Building web bundle esm.');
-  const result = await build({
+  await build({
     ...buildConfig,
     minify: true,
     // metafile: true,
@@ -30,11 +33,6 @@ const runBuild = async () => {
     console.log(e);
     process.exit(1);
   });
-
-  /*fs.writeFileSync('metadata.json', JSON.stringify({
-    inputs: result.metafile.inputs,
-    outputs: result.metafile.outputs
-  }));*/
 
   console.log('Building web bundle iife.');
   await build({

@@ -4,8 +4,10 @@
   "description": "An implementation of the SmartWeave smart contract protocol.",
   "types": "./lib/types/index.d.ts",
   "main": "./lib/cjs/index.js",
+  "browser": {
+    "./lib/cjs/index.js": "./bundles/web.bundle.min.js"
+  },
   "exports": {
-    "./web": "./bundles/web.bundle.min.js",
     "./mjs": "./lib/mjs/index.js",
     ".": "./lib/cjs/index.js"
   },
@@ -118,7 +120,8 @@
     "typescript": "^4.9.5",
     "warp-contracts-plugin-deploy": "^1.0.3",
     "warp-contracts-plugin-vm2": "1.0.0",
-    "ws": "^8.11.0"
+    "ws": "^8.11.0",
+    "node-stdlib-browser": "^1.2.0"
   },
   "resolutions": {
     "bn.js": "5.2.1",
@@ -129,16 +132,5 @@
     "bn.js": "5.2.1",
     "bignumber.js": "9.1.1",
     "buffer-pipe": "0.0.5"
-  },
-  "browser": {
-    "fs": false,
-    "path": false,
-    "crypto": false,
-    "archiver": false,
-    "stream-buffers": false,
-    "constants": false,
-    "os": false,
-    "process": false,
-    "url": false
   }
 }
