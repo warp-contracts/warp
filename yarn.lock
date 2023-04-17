@@ -2543,7 +2543,7 @@ bech32@1.1.4:
   resolved "https://registry.yarnpkg.com/bech32/-/bech32-1.1.4.tgz#e38c9f37bf179b8eb16ae3a772b40c356d4832e9"
   integrity sha512-s0IrSOzLlbvX7yp4WBfPITzpAU8sqQcpsmwXDiKwrG4r491vwCO/XpejasRNl0piBMe/DvP4Tz0mIS/X1DPJBQ==
 
-bignumber.js@9.1.1, bignumber.js@^9.0.0, bignumber.js@^9.0.1, bignumber.js@^9.0.2:
+bignumber.js@9.1.1, bignumber.js@^9.0.0, bignumber.js@^9.0.1, bignumber.js@^9.0.2, bignumber.js@^9.1.1:
   version "9.1.1"
   resolved "https://registry.yarnpkg.com/bignumber.js/-/bignumber.js-9.1.1.tgz#c4df7dc496bd849d4c9464344c1aa74228b4dac6"
   integrity sha512-pHm4LsMJ6lzgNGVfZHjMoO8sdoRhOzOH4MLmY65Jg70bpxCKu5iOHNJyfF6OyvYw7t8Fpf35RuzUyqnQsj8Vig==
@@ -7447,10 +7447,10 @@ vm-browserify@^1.0.1:
   resolved "https://registry.yarnpkg.com/vm-browserify/-/vm-browserify-1.1.2.tgz#78641c488b8e6ca91a75f511e7a3b32a86e5dda0"
   integrity sha512-2ham8XPWTONajOR0ohOKOHXkm3+gaBmGut3SRuu75xLd/RRaY6vqgh8NBYYk7+RW3u5AtzPQZG8F10LHkl0lAQ==
 
-vm2@3.9.13:
-  version "3.9.13"
-  resolved "https://registry.yarnpkg.com/vm2/-/vm2-3.9.13.tgz#774a1a3d73b9b90b1aa45bcc5f25e349f2eef649"
-  integrity sha512-0rvxpB8P8Shm4wX2EKOiMp7H2zq+HUE/UwodY0pCZXs9IffIKZq6vUti5OgkVCTakKo9e/fgO4X1fkwfjWxE3Q==
+vm2@^3.9.16:
+  version "3.9.16"
+  resolved "https://registry.yarnpkg.com/vm2/-/vm2-3.9.16.tgz#0fbc2a265f7bf8b837cea6f4a908f88a3f93b8e6"
+  integrity sha512-3T9LscojNTxdOyG+e8gFeyBXkMlOBYDoF6dqZbj+MPVHi9x10UfiTAJIobuchRCp3QvC+inybTbMJIUrLsig0w==
   dependencies:
     acorn "^8.7.0"
     acorn-walk "^8.2.0"
@@ -7462,37 +7462,22 @@ walker@^1.0.8:
   dependencies:
     makeerror "1.0.12"
 
-warp-contracts-plugin-deploy@1.0.0-beta.16:
-  version "1.0.0-beta.16"
-  resolved "https://registry.yarnpkg.com/warp-contracts-plugin-deploy/-/warp-contracts-plugin-deploy-1.0.0-beta.16.tgz#cd2a0472e1272f3ab238ab3137e394413a494f7e"
-  integrity sha512-66OYLIXM5FkyYxABfOGcTi+lk/XRU2Q1n3Wm3Jr12GrrO/NyC1WFi1q/dquCtrkoN5kesNIDOp8+i17cIHEBlA==
+warp-contracts-plugin-deploy@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/warp-contracts-plugin-deploy/-/warp-contracts-plugin-deploy-1.0.3.tgz#9ca7cd53b4a7cd1b015881f1d369659bb6f9075b"
+  integrity sha512-zDF/yqHbxIDImtVKxE/hbIz824PjPOc0aXONQtnR7do0MFdF7eJqeAAA5a2W5WTHN3cplvej6y7vSv6f/E2dEg==
   dependencies:
     arbundles "^0.7.3"
     arlocal "^1.1.59"
     node-stdlib-browser "^1.2.0"
-    warp-contracts "1.2.43-beta.21"
 
-warp-contracts@1.2.43-beta.21:
-  version "1.2.43-beta.21"
-  resolved "https://registry.yarnpkg.com/warp-contracts/-/warp-contracts-1.2.43-beta.21.tgz#55a7b661a7218073ce96d82e8cb0ffb2c342ad1f"
-  integrity sha512-2ZRCWULNDeSduhgS7iNbApyECSsCOtyHgPn9AuSFlpnB7z0Z7SfIRSuycG8zDqbnIPxrkumKrsT4O4oG0uxjiA==
+warp-contracts-plugin-vm2@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/warp-contracts-plugin-vm2/-/warp-contracts-plugin-vm2-1.0.0.tgz#f55914a228102f3bda7dafc197c395078fa0e190"
+  integrity sha512-3XubaZ9eeRbBtMDwmTAewZk6WYgtcg9g44vATqH5vmn2wdPWIBcrBX3gA7XQIDbqPcLPpIgifMDZiQJSNwYZDA==
   dependencies:
-    "@idena/vrf-js" "^1.0.1"
-    archiver "^5.3.0"
-    arweave "^1.12.4"
-    async-mutex "^0.4.0"
-    bignumber.js "9.1.1"
-    elliptic "^6.5.4"
-    events "3.3.0"
-    fast-copy "^3.0.0"
-    level "^8.0.0"
-    memory-level "^1.0.0"
-    safe-stable-stringify "2.4.1"
-    stream-buffers "^3.0.2"
-    unzipit "^1.4.0"
-    vm2 "3.9.13"
-    warp-isomorphic "1.0.0"
-    warp-wasm-metering "1.0.1"
+    bignumber.js "^9.1.1"
+    vm2 "^3.9.16"
 
 warp-isomorphic@1.0.0:
   version "1.0.0"

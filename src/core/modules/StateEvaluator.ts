@@ -132,8 +132,6 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
 
   sourceType = SourceType.BOTH;
 
-  useVM2 = false;
-
   unsafeClient = 'throw' as const;
 
   allowBigInt = false;
@@ -200,12 +198,6 @@ export interface EvaluationOptions {
   sequencerUrl: string;
 
   gasLimit: number;
-
-  // Whether js contracts' code should be run within vm2 sandbox (https://github.com/patriksimek/vm2#vm2-----)
-  // it greatly enhances security - at a cost of performance.
-  // use for contracts that you cannot trust.
-  // this obviously works only in a node.js env.
-  useVM2: boolean;
 
   // Whether using unsafe client should be allowed
   // allow - allows to evaluate contracts with SmartWeave.unsafeClient calls

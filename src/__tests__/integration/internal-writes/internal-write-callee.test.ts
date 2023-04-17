@@ -10,6 +10,7 @@ import { Warp } from '../../../core/Warp';
 import { WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
+import { VM2Plugin } from 'warp-contracts-plugin-vm2';
 
 interface ExampleContractState {
   counter: number;
@@ -52,6 +53,7 @@ describe('Testing internal writes', () => {
 
   let arlocal: ArLocal;
   let warp: Warp;
+  let warpVm: Warp;
   let calleeContract: Contract<ExampleContractState>;
   let calleeContractVM: Contract<ExampleContractState>;
   let callingContract: Contract<ExampleContractState>;
@@ -75,6 +77,7 @@ describe('Testing internal writes', () => {
 
   async function deployContracts() {
     warp = WarpFactory.forLocal(port).use(new DeployPlugin());
+    warpVm = WarpFactory.forLocal(port).use(new DeployPlugin()).use(new VM2Plugin());
     ({ jwk: wallet } = await warp.generateWallet());
 
     callingContractSrc = fs.readFileSync(path.join(__dirname, '../data/writing-contract.js'), 'utf8');
@@ -101,11 +104,10 @@ describe('Testing internal writes', () => {
         mineArLocalBlocks: false
       })
       .connect(wallet);
-    calleeContractVM = warp
+    calleeContractVM = warpVm
       .contract<ExampleContractState>(calleeTxId)
       .setEvaluationOptions({
         internalWrites: true,
-        useVM2: true,
         mineArLocalBlocks: false
       })
       .connect(wallet);
@@ -117,11 +119,10 @@ describe('Testing internal writes', () => {
         mineArLocalBlocks: false
       })
       .connect(wallet);
-    callingContractVM = warp
+    callingContractVM = warpVm
       .contract<ExampleContractState>(callingTxId)
       .setEvaluationOptions({
         internalWrites: true,
-        useVM2: true,
         mineArLocalBlocks: false
       })
       .connect(wallet);
@@ -272,10 +273,10 @@ describe('Testing internal writes', () => {
         });
       const calleeContract2VM = WarpFactory.forLocal(port)
         .use(new DeployPlugin())
+        .use(new VM2Plugin())
         .contract<ExampleContractState>(calleeTxId)
         .setEvaluationOptions({
-          internalWrites: true,
-          useVM2: true
+          internalWrites: true
         });
       expect((await calleeContract2.readState()).cachedValue.state.counter).toEqual(634);
       expect((await calleeContract2VM.readState()).cachedValue.state.counter).toEqual(634);

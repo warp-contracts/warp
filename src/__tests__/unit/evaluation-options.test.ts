@@ -28,7 +28,6 @@ describe('Evaluation options evaluator', () => {
       unsafeClient: 'throw',
       updateCacheForEachInteraction: false,
       useKVStorage: false,
-      useVM2: false,
       waitForConfirmation: false,
       useConstructor: false,
       walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/'
@@ -36,7 +35,6 @@ describe('Evaluation options evaluator', () => {
 
     contract.setEvaluationOptions({
       allowBigInt: true,
-      useVM2: true,
       internalWrites: true,
       gasLimit: 3453453
     });
@@ -44,7 +42,6 @@ describe('Evaluation options evaluator', () => {
     expect(
       new EvaluationOptionsEvaluator(contract.evaluationOptions(), {
         allowBigInt: true,
-        useVM2: true,
         internalWrites: true,
         gasLimit: 3453453
       }).rootOptions
@@ -68,7 +65,6 @@ describe('Evaluation options evaluator', () => {
       unsafeClient: 'throw',
       updateCacheForEachInteraction: false,
       useKVStorage: false,
-      useVM2: true,
       waitForConfirmation: false,
       useConstructor: false,
       walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/'
@@ -76,7 +72,6 @@ describe('Evaluation options evaluator', () => {
 
     const contract2 = warp.contract(null).setEvaluationOptions({
       internalWrites: true,
-      useVM2: true,
       unsafeClient: 'allow',
       gasLimit: 2222,
       maxCallDepth: 5
@@ -102,7 +97,6 @@ describe('Evaluation options evaluator', () => {
       unsafeClient: 'allow',
       updateCacheForEachInteraction: false,
       useKVStorage: false,
-      useVM2: true,
       waitForConfirmation: false,
       useConstructor: false,
       walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/'
@@ -110,9 +104,9 @@ describe('Evaluation options evaluator', () => {
 
     expect(function () {
       const result = new EvaluationOptionsEvaluator(contract2.evaluationOptions(), {
-        useVM2: false
+        internalWrites: false
       }).rootOptions;
-    }).toThrow('Option {useVM2} differs.');
+    }).toThrow('Option {internalWrites} differs.');
   });
 
   it('should properly set foreign evaluation options - unsafeClient - allow', async () => {

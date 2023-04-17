@@ -99,7 +99,6 @@ export class EvaluationOptionsEvaluator {
     sourceType: () => this.rootOptions['sourceType'],
     sequencerUrl: () => this.rootOptions['sequencerUrl'],
     gasLimit: () => this.rootOptions['gasLimit'],
-    useVM2: () => this.rootOptions['useVM2'],
     allowBigInt: () => this.rootOptions['allowBigInt'], // not sure about this
     walletBalanceUrl: () => this.rootOptions['walletBalanceUrl'],
     mineArLocalBlocks: () => this.rootOptions['mineArLocalBlocks'],

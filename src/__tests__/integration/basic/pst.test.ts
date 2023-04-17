@@ -11,6 +11,7 @@ import { Warp } from '../../../core/Warp';
 import { WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
+import { VM2Plugin } from 'warp-contracts-plugin-vm2';
 
 describe('Testing the Profit Sharing Token', () => {
   let contractSrc: string;
@@ -23,6 +24,7 @@ describe('Testing the Profit Sharing Token', () => {
   let arweave: Arweave;
   let arlocal: ArLocal;
   let warp: Warp;
+  let warpVm: Warp;
   let pst: PstContract;
   let pstVM: PstContract;
 
@@ -34,6 +36,7 @@ describe('Testing the Profit Sharing Token', () => {
     LoggerFactory.INST.logLevel('error');
 
     warp = WarpFactory.forLocal(1820).use(new DeployPlugin());
+    warpVm = WarpFactory.forLocal(1820).use(new DeployPlugin()).use(new VM2Plugin());
 
     ({ arweave } = warp);
     ({ jwk: wallet, address: walletAddress } = await warp.generateWallet());
@@ -61,9 +64,7 @@ describe('Testing the Profit Sharing Token', () => {
 
     // connecting to the PST contract
     pst = warp.pst(contractTxId);
-    pstVM = warp.pst(contractTxId).setEvaluationOptions({
-      useVM2: true
-    }) as PstContract;
+    pstVM = warpVm.pst(contractTxId);
 
     // connecting wallet to the PST contract
     pst.connect(wallet);

@@ -9,6 +9,7 @@ import { Warp } from '../../../core/Warp';
 import { WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
+import { VM2Plugin } from 'warp-contracts-plugin-vm2';
 
 interface ExampleContractState {
   counter: number;
@@ -31,6 +32,7 @@ describe('Testing the Warp client', () => {
 
   let arlocal: ArLocal;
   let warp: Warp;
+  let warpVm: Warp;
   let contract: Contract<ExampleContractState>;
   let contractInitData: Contract<ExampleContractState>;
   let contractVM: Contract<ExampleContractState>;
@@ -43,6 +45,7 @@ describe('Testing the Warp client', () => {
 
     LoggerFactory.INST.logLevel('error');
     warp = WarpFactory.forLocal(1810).use(new DeployPlugin());
+    warpVm = WarpFactory.forLocal(1810).use(new DeployPlugin()).use(new VM2Plugin());
     ({ jwk: wallet } = await warp.generateWallet());
 
     contractSrc = fs.readFileSync(path.join(__dirname, '../data/example-contract.js'), 'utf8');
@@ -65,8 +68,7 @@ describe('Testing the Warp client', () => {
     contract = warp.contract<ExampleContractState>(contractTxId).setEvaluationOptions({
       mineArLocalBlocks: false
     });
-    contractVM = warp.contract<ExampleContractState>(contractTxId).setEvaluationOptions({
-      useVM2: true,
+    contractVM = warpVm.contract<ExampleContractState>(contractTxId).setEvaluationOptions({
       mineArLocalBlocks: false
     });
     contractInitData = warp.contract<ExampleContractState>(contractInitDataTxId).setEvaluationOptions({
