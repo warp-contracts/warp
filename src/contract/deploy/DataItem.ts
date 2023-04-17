@@ -1,4 +1,4 @@
-import { Tag } from 'utils/types/arweave-types';
+import { Tag } from '../../utils/types/arweave-types';
 
 /* eslint-disable */
 export declare abstract class BundlerSigner {
