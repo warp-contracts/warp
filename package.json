@@ -8,6 +8,7 @@
     "./lib/cjs/index.js": "./bundles/web.bundle.min.js"
   },
   "exports": {
+    "./web": "./bundles/web.bundle.min.js",
     "./mjs": "./lib/mjs/index.js",
     ".": "./lib/cjs/index.js"
   },
