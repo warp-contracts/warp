@@ -417,8 +417,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
   abstract lastCachedSortKey(): Promise<string | null>;
 
-  abstract allCachedContracts(): Promise<string[]>;
-
   abstract setCache(cache: SortKeyCache<EvalStateResult<unknown>>): void;
 
   abstract getCache(): SortKeyCache<EvalStateResult<unknown>>;

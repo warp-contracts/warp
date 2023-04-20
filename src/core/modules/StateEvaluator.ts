@@ -87,8 +87,6 @@ export interface StateEvaluator {
 
   lastCachedSortKey(): Promise<string | null>;
 
-  allCachedContracts(): Promise<string[]>;
-
   setCache(cache: SortKeyCache<EvalStateResult<unknown>>): void;
 
   getCache(): SortKeyCache<EvalStateResult<unknown>>;

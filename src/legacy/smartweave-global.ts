@@ -322,16 +322,16 @@ export class KV {
   async commit(): Promise<void> {
     if (this._storage) {
       if (this._transaction.dryRun) {
-        this._storage.rollback();
+        await this._storage.rollback();
       } else {
-        this._storage.commit();
+        await this._storage.commit();
       }
     }
   }
 
   async rollback(): Promise<void> {
     if (this._storage) {
-      this._storage.rollback();
+      await this._storage.rollback();
     }
   }
 

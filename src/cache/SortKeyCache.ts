@@ -53,9 +53,9 @@ export interface SortKeyCache<V> {
 
   begin(): Promise<void>;
 
-  rollback(): void;
+  rollback(): Promise<void>;
 
-  commit(): void;
+  commit(): Promise<void>;
 
   /**
    * used mostly for debugging, allows to dump the current content cache
