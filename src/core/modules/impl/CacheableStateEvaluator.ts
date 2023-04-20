@@ -224,10 +224,6 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     return await this.cache.getLastSortKey();
   }
 
-  async allCachedContracts(): Promise<string[]> {
-    return await this.cache.keys();
-  }
-
   setCache(cache: SortKeyCache<EvalStateResult<unknown>>): void {
     this.cache = cache;
   }
