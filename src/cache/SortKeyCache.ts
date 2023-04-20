@@ -66,7 +66,7 @@ export interface SortKeyCache<V> {
   /**
    * Returns keys for a specified range
    */
-  keys(sortKey?: string, options?: SortKeyCacheRangeOptions): Promise<string[]>;
+  keys(sortKey: string, options?: SortKeyCacheRangeOptions): Promise<string[]>;
 
   /**
    * Returns a key value map for a specified range

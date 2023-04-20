@@ -272,7 +272,7 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
     return lastSortKey == '' ? null : lastSortKey;
   }
 
-  async keys(sortKey?: string, options?: SortKeyCacheRangeOptions): Promise<string[]> {
+  async keys(sortKey: string, options?: SortKeyCacheRangeOptions): Promise<string[]> {
     return Array.from((await this.kvMap(sortKey, options)).keys());
   }
 
@@ -360,7 +360,7 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
       entriesStored = 1;
     }
 
-    const contracts = await this.keys();
+    const contracts = await this.allKeys();
     for (let i = 0; i < contracts.length; i++) {
       const contractCache = this.db.sublevel<string, ClientValueWrapper<V>>(contracts[i], this.subLevelOptions);
 
@@ -377,5 +377,11 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
     }
 
     return null;
+  }
+
+  private async allKeys(): Promise<string[]> {
+    return (await this.db.keys().all())
+      .filter((k) => k != this.ongoingTransactionMark)
+      .map((k) => this.extractOriginalKey(k));
   }
 }
