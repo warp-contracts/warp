@@ -4,18 +4,13 @@ module.exports = {
   testTimeout: 30000,
   moduleFileExtensions: ['ts', 'js'],
 
-  testPathIgnorePatterns: [
-    "/.yalc/",
-    "/data/",
-    "/_helpers",
-  ],
+  testPathIgnorePatterns: ['/.yalc/', '/data/', '/_helpers'],
 
   testEnvironment: 'node',
 
-  "transformIgnorePatterns": [
-    "<rootDir>/node_modules/(?!@assemblyscript/.*)"
-  ],
-
+  moduleNameMapper: {
+    '^warp-contracts$': '<rootDir>/lib/cjs'
+  },
 
   transform: {
     '^.+\\.(ts|js)$': 'ts-jest'
