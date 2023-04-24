@@ -9,7 +9,7 @@ import { EvaluationOptions } from '../StateEvaluator';
 import { LexicographicalInteractionsSorter } from './LexicographicalInteractionsSorter';
 import { Warp, WarpEnvironment } from '../../Warp';
 import { ArweaveGQLTxsFetcher, ArweaveTransactionQuery } from './ArweaveGQLTxsFetcher';
-import { neverArg, VrfPluginFunctions } from '../../WarpPlugin';
+import { VrfPluginFunctions } from '../../WarpPlugin';
 
 const MAX_REQUEST = 100;
 
@@ -116,14 +116,14 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
     });
 
     const isLocalOrTestnetEnv = this.environment === 'local' || this.environment === 'testnet';
-    const vrfPlugin = this.warp.maybeLoadPlugin<never, VrfPluginFunctions>('vrf');
+    const vrfPlugin = this.warp.maybeLoadPlugin<void, VrfPluginFunctions>('vrf');
 
     return sortedInteractions.map((i) => {
       const interaction = i.node;
       if (isLocalOrTestnetEnv) {
         if (hasVrfTag(interaction)) {
           if (vrfPlugin) {
-            interaction.vrf = vrfPlugin.process(neverArg).generateMockVrf(interaction.sortKey, this.arweave);
+            interaction.vrf = vrfPlugin.process().generateMockVrf(interaction.sortKey, this.arweave);
           } else {
             this.logger.warn('Cannot generate mock vrf for interaction - no "warp-contracts-plugin-vrf" attached!');
           }

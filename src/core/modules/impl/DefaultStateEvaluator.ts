@@ -4,14 +4,14 @@ import { SortKeyCache, SortKeyCacheResult } from '../../../cache/SortKeyCache';
 import { InteractionCall } from '../../ContractCallRecord';
 import { ExecutionContext } from '../../../core/ExecutionContext';
 import { ExecutionContextModifier } from '../../../core/ExecutionContextModifier';
-import { GQLNodeInterface, GQLTagInterface, VrfData } from '../../../legacy/gqlResult';
+import { GQLNodeInterface, GQLTagInterface } from '../../../legacy/gqlResult';
 import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { indent } from '../../../utils/utils';
 import { EvalStateResult, StateEvaluator } from '../StateEvaluator';
 import { ContractInteraction, HandlerApi, InteractionResult } from './HandlerExecutorFactory';
 import { TagsParser } from './TagsParser';
-import { neverArg, VrfPluginFunctions } from '../../WarpPlugin';
+import { VrfPluginFunctions } from '../../WarpPlugin';
 
 type EvaluationProgressInput = {
   contractTxId: string;
@@ -79,7 +79,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       'evm-signature-verification'
     );
     const progressPlugin = warp.maybeLoadPlugin<EvaluationProgressInput, void>('evaluation-progress');
-    const vrfPlugin = warp.maybeLoadPlugin<never, VrfPluginFunctions>('vrf');
+    const vrfPlugin = warp.maybeLoadPlugin<void, VrfPluginFunctions>('vrf');
 
     let shouldBreakAfterEvolve = false;
 
@@ -100,7 +100,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         if (!vrfPlugin) {
           this.logger.warn('Cannot verify vrf for interaction - no "warp-contracts-plugin-vrf" attached!');
         } else {
-          if (!vrfPlugin.process(neverArg).verify(missingInteraction.vrf, missingInteraction.sortKey, this.arweave)) {
+          if (!vrfPlugin.process().verify(missingInteraction.vrf, missingInteraction.sortKey, this.arweave)) {
             throw new Error('Vrf verification failed.');
           }
         }
@@ -311,25 +311,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     }
 
     return new SortKeyCacheResult(currentSortKey, evalStateResult);
-  }
-
-  private verifyVrf(vrf: VrfData, sortKey: string, arweave: Arweave): boolean {
-    const keys = EC.keyFromPublic(vrf.pubkey, 'hex');
-
-    let hash;
-    try {
-      // ProofHoHash throws its own 'invalid vrf' exception
-      hash = ProofHoHash(
-        keys.getPublic(),
-        arweave.utils.stringToBuffer(sortKey),
-        arweave.utils.b64UrlToBuffer(vrf.proof)
-      );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      return false;
-    }
-
-    return arweave.utils.bufferTob64Url(hash) == vrf.index;
   }
 
   private logResult<State>(

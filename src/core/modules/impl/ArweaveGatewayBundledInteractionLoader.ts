@@ -14,11 +14,11 @@ import { ArweaveGQLTxsFetcher } from './ArweaveGQLTxsFetcher';
 import { WarpTags, WARP_TAGS } from '../../KnownTags';
 import { safeParseInt } from '../../../utils/utils';
 import { hasVrfTag } from './ArweaveGatewayInteractionsLoader';
-import { neverArg, VrfPluginFunctions, WarpPlugin } from '../../WarpPlugin';
+import { VrfPluginFunctions, WarpPlugin } from '../../WarpPlugin';
 
 const MAX_REQUEST = 100;
-// SortKey.blockHeight is blockheight
-// at which interaction was send to bundler
+// SortKey.blockHeight is block height
+// at which interaction was sent to bundler
 // it can be actually finalized in later block
 // we assume that this maximal "delay"
 const EMPIRIC_BUNDLR_FINALITY_TIME = 100;
@@ -223,12 +223,12 @@ export class ArweaveGatewayBundledInteractionLoader implements InteractionsLoade
   private maybeAddMockVrf(
     isLocalOrTestnetEnv: boolean,
     interaction: GQLEdgeInterface,
-    vrfPlugin?: WarpPlugin<never, VrfPluginFunctions>
+    vrfPlugin?: WarpPlugin<void, VrfPluginFunctions>
   ): GQLEdgeInterface {
     if (isLocalOrTestnetEnv) {
       if (hasVrfTag(interaction.node)) {
         if (vrfPlugin) {
-          interaction.node.vrf = vrfPlugin.process(neverArg).generateMockVrf(interaction.node.sortKey, this.arweave);
+          interaction.node.vrf = vrfPlugin.process().generateMockVrf(interaction.node.sortKey, this.arweave);
         } else {
           this.logger.warn('Cannot generate mock vrf for interaction - no "warp-contracts-plugin-vrf" attached!');
         }
@@ -244,11 +244,7 @@ export class ArweaveGatewayBundledInteractionLoader implements InteractionsLoade
       const sendToBundlerBlockHeight = Number.parseInt(blockHeightSortKey);
       const finalizedBlockHeight = Number(interaction.node.block.height);
       const blockHeightDiff = finalizedBlockHeight - sendToBundlerBlockHeight;
-      if (blockHeightDiff < 0) {
-        return false;
-      }
-
-      return true;
+      return blockHeightDiff >= 0;
     }
     return true;
   }

@@ -31,5 +31,3 @@ export type VrfPluginFunctions = {
   generateMockVrf(sortKey: string, arweave: Arweave): VrfData;
   verify(vrf: VrfData, sortKey: string, arweave: Arweave): boolean;
 };
-
-export declare const neverArg: never;
