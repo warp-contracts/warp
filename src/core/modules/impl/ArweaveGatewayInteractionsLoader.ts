@@ -8,8 +8,8 @@ import { InteractionsSorter } from '../InteractionsSorter';
 import { EvaluationOptions } from '../StateEvaluator';
 import { LexicographicalInteractionsSorter } from './LexicographicalInteractionsSorter';
 import { Warp, WarpEnvironment } from '../../Warp';
-import { generateMockVrf } from '../../../utils/vrf';
 import { ArweaveGQLTxsFetcher, ArweaveTransactionQuery } from './ArweaveGQLTxsFetcher';
+import { neverArg, VrfPluginFunctions } from '../../WarpPlugin';
 
 const MAX_REQUEST = 100;
 
@@ -76,9 +76,9 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
         },
         first: MAX_REQUEST
       };
-      const innerWritesInteractions = await (
-        await this.arweaveTransactionQuery.transactions(innerWritesVariables)
-      ).filter(bundledTxsFilter);
+      const innerWritesInteractions = (await this.arweaveTransactionQuery.transactions(innerWritesVariables)).filter(
+        bundledTxsFilter
+      );
 
       this.logger.debug('Inner writes interactions length:', innerWritesInteractions.length);
       interactions = interactions.concat(innerWritesInteractions);
@@ -116,15 +116,17 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
     });
 
     const isLocalOrTestnetEnv = this.environment === 'local' || this.environment === 'testnet';
+    const vrfPlugin = this.warp.maybeLoadPlugin<never, VrfPluginFunctions>('vrf');
+
     return sortedInteractions.map((i) => {
       const interaction = i.node;
       if (isLocalOrTestnetEnv) {
-        if (
-          interaction.tags.some((t) => {
-            return t.name == WARP_TAGS.REQUEST_VRF && t.value === 'true';
-          })
-        ) {
-          interaction.vrf = generateMockVrf(interaction.sortKey, this.arweave);
+        if (hasVrfTag(interaction)) {
+          if (vrfPlugin) {
+            interaction.vrf = vrfPlugin.process(neverArg).generateMockVrf(interaction.sortKey, this.arweave);
+          } else {
+            this.logger.warn('Cannot generate mock vrf for interaction - no "warp-contracts-plugin-vrf" attached!');
+          }
         }
       }
 
@@ -143,4 +145,10 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
   set warp(warp: Warp) {
     this.arweaveTransactionQuery = new ArweaveGQLTxsFetcher(warp);
   }
+}
+
+export function hasVrfTag(interaction: GQLNodeInterface) {
+  return interaction.tags.some((t) => {
+    return t.name == WARP_TAGS.REQUEST_VRF && t.value === 'true';
+  });
 }

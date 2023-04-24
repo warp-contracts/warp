@@ -31,7 +31,6 @@ import {
 } from './Contract';
 import { ArTransfer, ArWallet, emptyTransfer, Tags } from './deploy/CreateContract';
 import { InnerWritesEvaluator } from './InnerWritesEvaluator';
-import { generateMockVrf } from '../utils/vrf';
 import { CustomSignature, Signature } from './Signature';
 import { EvaluationOptionsEvaluator } from './EvaluationOptionsEvaluator';
 import { WarpFetchWrapper } from '../core/WarpFetchWrapper';
@@ -40,6 +39,7 @@ import { TransactionStatusResponse } from '../utils/types/arweave-types';
 import { InteractionState } from './states/InteractionState';
 import { ContractInteractionState } from './states/ContractInteractionState';
 import { Crypto } from 'warp-isomorphic';
+import { neverArg, VrfPluginFunctions } from '../core/WarpPlugin';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -688,7 +688,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
     dummyTx.sortKey = await this._sorter.createSortKey(dummyTx.block.id, dummyTx.id, dummyTx.block.height, true);
     dummyTx.strict = strict;
     if (vrf) {
-      dummyTx.vrf = generateMockVrf(dummyTx.sortKey, arweave);
+      const vrfPlugin = this.warp.maybeLoadPlugin<never, VrfPluginFunctions>('vrf');
+      if (vrfPlugin) {
+        dummyTx.vrf = vrfPlugin.process(neverArg).generateMockVrf(dummyTx.sortKey, arweave);
+      } else {
+        this.logger.warn('Cannot generate mock vrf for interaction - no "warp-contracts-plugin-vrf" attached!');
+      }
     }
 
     const handleResult = await this.evalInteraction<Input, View>(

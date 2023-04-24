@@ -9,11 +9,12 @@ import { InteractionsSorter } from '../InteractionsSorter';
 import { EvaluationOptions } from '../StateEvaluator';
 import { LexicographicalInteractionsSorter } from './LexicographicalInteractionsSorter';
 import { Warp, WarpEnvironment } from '../../Warp';
-import { generateMockVrf } from '../../../utils/vrf';
 import { Tag } from 'utils/types/arweave-types';
 import { ArweaveGQLTxsFetcher } from './ArweaveGQLTxsFetcher';
 import { WarpTags, WARP_TAGS } from '../../KnownTags';
 import { safeParseInt } from '../../../utils/utils';
+import { hasVrfTag } from './ArweaveGatewayInteractionsLoader';
+import { neverArg, VrfPluginFunctions, WarpPlugin } from '../../WarpPlugin';
 
 const MAX_REQUEST = 100;
 // SortKey.blockHeight is blockheight
@@ -108,12 +109,13 @@ export class ArweaveGatewayBundledInteractionLoader implements InteractionsLoade
 
     const sortedInteractions = await this.sorter.sort(interactions);
     const isLocalOrTestnetEnv = this.environment === 'local' || this.environment === 'testnet';
+    const vrfPlugin = this.warp.maybeLoadPlugin<never, VrfPluginFunctions>('vrf');
 
     return sortedInteractions
       .filter((interaction) => this.isNewerThenSortKeyBlockHeight(interaction))
       .filter((interaction) => this.isSortKeyInBounds(fromSortKey, toSortKey, interaction))
       .map((interaction) => this.attachSequencerDataToInteraction(interaction))
-      .map((interaction) => this.maybeAddMockVrf(isLocalOrTestnetEnv, interaction))
+      .map((interaction) => this.maybeAddMockVrf(isLocalOrTestnetEnv, interaction, vrfPlugin))
       .map((interaction, index, allInteractions) => this.verifySortKeyIntegrity(interaction, index, allInteractions))
       .map(({ node: interaction }) => interaction);
   }
@@ -218,14 +220,18 @@ export class ArweaveGatewayBundledInteractionLoader implements InteractionsLoade
     return interactions;
   }
 
-  private maybeAddMockVrf(isLocalOrTestnetEnv: boolean, interaction: GQLEdgeInterface): GQLEdgeInterface {
+  private maybeAddMockVrf(
+    isLocalOrTestnetEnv: boolean,
+    interaction: GQLEdgeInterface,
+    vrfPlugin?: WarpPlugin<never, VrfPluginFunctions>
+  ): GQLEdgeInterface {
     if (isLocalOrTestnetEnv) {
-      if (
-        interaction.node.tags.some((t) => {
-          return t.name == WARP_TAGS.REQUEST_VRF && t.value === 'true';
-        })
-      ) {
-        interaction.node.vrf = generateMockVrf(interaction.node.sortKey, this.arweave);
+      if (hasVrfTag(interaction.node)) {
+        if (vrfPlugin) {
+          interaction.node.vrf = vrfPlugin.process(neverArg).generateMockVrf(interaction.node.sortKey, this.arweave);
+        } else {
+          this.logger.warn('Cannot generate mock vrf for interaction - no "warp-contracts-plugin-vrf" attached!');
+        }
       }
     }
     return interaction;

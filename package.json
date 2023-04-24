@@ -78,12 +78,10 @@
   },
   "homepage": "https://github.com/warp-contracts/warp#readme",
   "dependencies": {
-    "@idena/vrf-js": "^1.0.1",
     "archiver": "^5.3.0",
     "arweave": "^1.12.4",
     "async-mutex": "^0.4.0",
     "bignumber.js": "9.1.1",
-    "elliptic": "^6.5.4",
     "events": "3.3.0",
     "fast-copy": "^3.0.0",
     "level": "^8.0.0",
@@ -95,6 +93,7 @@
     "warp-wasm-metering": "1.0.1"
   },
   "devDependencies": {
+    "@idena/vrf-js": "^1.0.1",
     "@types/cheerio": "^0.22.30",
     "@types/jest": "^28.1.6",
     "@types/node": "^18.0.6",
@@ -103,6 +102,7 @@
     "arlocal": "1.1.42",
     "cheerio": "^1.0.0-rc.10",
     "colors": "^1.4.0",
+    "elliptic": "^6.5.4",
     "esbuild": "0.17.5",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
