@@ -202,7 +202,8 @@ describe('readState', () => {
   it('should properly read state at requested block height', async () => {
     const contractTxId = 'CbGCxBJn6jLeezqDl1w3o8oCSeRCb-MmtZNKPodla-0';
     const blockHeight = 707892;
-    const result = await readContract(arweave, contractTxId, blockHeight);
+    // note: as any because of types incompatibility between arweave 1.12.x and 1.13.x (smartweave.js has 1.12.x in deps)
+    const result = await readContract(arweave as any, contractTxId, blockHeight);
     const resultString = stringify(result).trim();
 
     const result2 = await WarpFactory.custom(
@@ -235,7 +236,7 @@ describe('readState', () => {
   it.skip('should properly check balance of a PST contract', async () => {
     const jwk = await arweave.wallets.generate();
     const contractTxId = '-8A6RexFkpfWwuyVO98wzSFZh0d6VJuI-buTJvlwOJQ';
-    const v1Result = await interactRead(arweave, jwk, contractTxId, {
+    const v1Result = await interactRead(arweave as any, jwk, contractTxId, {
       function: 'balance',
       target: '6Z-ifqgVi1jOwMvSNwKWs6ewUEQ0gU9eo4aHYC3rN1M'
     });
