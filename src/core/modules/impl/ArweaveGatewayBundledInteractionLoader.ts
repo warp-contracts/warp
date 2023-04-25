@@ -9,15 +9,16 @@ import { InteractionsSorter } from '../InteractionsSorter';
 import { EvaluationOptions } from '../StateEvaluator';
 import { LexicographicalInteractionsSorter } from './LexicographicalInteractionsSorter';
 import { Warp, WarpEnvironment } from '../../Warp';
-import { generateMockVrf } from '../../../utils/vrf';
 import { Tag } from 'utils/types/arweave-types';
 import { ArweaveGQLTxsFetcher } from './ArweaveGQLTxsFetcher';
 import { WarpTags, WARP_TAGS } from '../../KnownTags';
 import { safeParseInt } from '../../../utils/utils';
+import { VrfPluginFunctions, WarpPlugin } from '../../WarpPlugin';
+import { TagsParser } from './TagsParser';
 
 const MAX_REQUEST = 100;
-// SortKey.blockHeight is blockheight
-// at which interaction was send to bundler
+// SortKey.blockHeight is block height
+// at which interaction was sent to bundler
 // it can be actually finalized in later block
 // we assume that this maximal "delay"
 const EMPIRIC_BUNDLR_FINALITY_TIME = 100;
@@ -44,7 +45,9 @@ export class ArweaveGatewayBundledInteractionLoader implements InteractionsLoade
 
   private arweaveFetcher: ArweaveGQLTxsFetcher;
   private arweaveWrapper: ArweaveWrapper;
+  private _warp: Warp;
   private readonly sorter: InteractionsSorter;
+  private readonly tagsParser = new TagsParser();
 
   constructor(protected readonly arweave: Arweave, private readonly environment: WarpEnvironment) {
     this.sorter = new LexicographicalInteractionsSorter(arweave);
@@ -108,12 +111,13 @@ export class ArweaveGatewayBundledInteractionLoader implements InteractionsLoade
 
     const sortedInteractions = await this.sorter.sort(interactions);
     const isLocalOrTestnetEnv = this.environment === 'local' || this.environment === 'testnet';
+    const vrfPlugin = this._warp.maybeLoadPlugin<void, VrfPluginFunctions>('vrf');
 
     return sortedInteractions
       .filter((interaction) => this.isNewerThenSortKeyBlockHeight(interaction))
       .filter((interaction) => this.isSortKeyInBounds(fromSortKey, toSortKey, interaction))
       .map((interaction) => this.attachSequencerDataToInteraction(interaction))
-      .map((interaction) => this.maybeAddMockVrf(isLocalOrTestnetEnv, interaction))
+      .map((interaction) => this.maybeAddMockVrf(isLocalOrTestnetEnv, interaction, vrfPlugin))
       .map((interaction, index, allInteractions) => this.verifySortKeyIntegrity(interaction, index, allInteractions))
       .map(({ node: interaction }) => interaction);
   }
@@ -218,14 +222,18 @@ export class ArweaveGatewayBundledInteractionLoader implements InteractionsLoade
     return interactions;
   }
 
-  private maybeAddMockVrf(isLocalOrTestnetEnv: boolean, interaction: GQLEdgeInterface): GQLEdgeInterface {
+  private maybeAddMockVrf(
+    isLocalOrTestnetEnv: boolean,
+    interaction: GQLEdgeInterface,
+    vrfPlugin?: WarpPlugin<void, VrfPluginFunctions>
+  ): GQLEdgeInterface {
     if (isLocalOrTestnetEnv) {
-      if (
-        interaction.node.tags.some((t) => {
-          return t.name == WARP_TAGS.REQUEST_VRF && t.value === 'true';
-        })
-      ) {
-        interaction.node.vrf = generateMockVrf(interaction.node.sortKey, this.arweave);
+      if (this.tagsParser.hasVrfTag(interaction.node)) {
+        if (vrfPlugin) {
+          interaction.node.vrf = vrfPlugin.process().generateMockVrf(interaction.node.sortKey);
+        } else {
+          this.logger.warn('Cannot generate mock vrf for interaction - no "warp-contracts-plugin-vrf" attached!');
+        }
       }
     }
     return interaction;
@@ -238,11 +246,7 @@ export class ArweaveGatewayBundledInteractionLoader implements InteractionsLoade
       const sendToBundlerBlockHeight = Number.parseInt(blockHeightSortKey);
       const finalizedBlockHeight = Number(interaction.node.block.height);
       const blockHeightDiff = finalizedBlockHeight - sendToBundlerBlockHeight;
-      if (blockHeightDiff < 0) {
-        return false;
-      }
-
-      return true;
+      return blockHeightDiff >= 0;
     }
     return true;
   }
@@ -263,5 +267,6 @@ export class ArweaveGatewayBundledInteractionLoader implements InteractionsLoade
   set warp(warp: Warp) {
     this.arweaveWrapper = new ArweaveWrapper(warp);
     this.arweaveFetcher = new ArweaveGQLTxsFetcher(warp);
+    this._warp = warp;
   }
 }

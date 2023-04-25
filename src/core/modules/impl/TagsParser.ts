@@ -112,4 +112,10 @@ export class TagsParser {
 
     return false;
   }
+
+  hasVrfTag(interaction: GQLNodeInterface) {
+    return interaction.tags.some((t) => {
+      return t.name == WARP_TAGS.REQUEST_VRF && t.value === 'true';
+    });
+  }
 }
