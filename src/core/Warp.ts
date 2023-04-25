@@ -174,6 +174,14 @@ export class Warp {
     return this.plugins.get(type) as WarpPlugin<P, Q>;
   }
 
+  maybeLoadPlugin<P, Q>(type: WarpPluginType): WarpPlugin<P, Q> | null {
+    if (!this.hasPlugin(type)) {
+      return null;
+    }
+
+    return this.plugins.get(type) as WarpPlugin<P, Q>;
+  }
+
   // Close cache connection
   async close(): Promise<void> {
     return Promise.all([

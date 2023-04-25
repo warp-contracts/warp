@@ -1,20 +1,24 @@
 import Arweave from 'arweave';
 
-import { ProofHoHash } from '@idena/vrf-js';
-import elliptic from 'elliptic';
 import { SortKeyCache, SortKeyCacheResult } from '../../../cache/SortKeyCache';
 import { InteractionCall } from '../../ContractCallRecord';
 import { ExecutionContext } from '../../../core/ExecutionContext';
 import { ExecutionContextModifier } from '../../../core/ExecutionContextModifier';
-import { GQLNodeInterface, GQLTagInterface, VrfData } from '../../../legacy/gqlResult';
+import { GQLNodeInterface, GQLTagInterface } from '../../../legacy/gqlResult';
 import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { indent } from '../../../utils/utils';
 import { EvalStateResult, StateEvaluator } from '../StateEvaluator';
 import { ContractInteraction, HandlerApi, InteractionResult } from './HandlerExecutorFactory';
 import { TagsParser } from './TagsParser';
+import { VrfPluginFunctions } from '../../WarpPlugin';
 
-const EC = new elliptic.ec('secp256k1');
+type EvaluationProgressInput = {
+  contractTxId: string;
+  currentInteraction: number;
+  allInteractions: number;
+  lastInteractionProcessingTime: string;
+};
 
 /**
  * This class contains the base functionality of evaluating the contracts state - according
@@ -71,21 +75,11 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
     const missingInteractionsLength = missingInteractions.length;
 
-    const evmSignatureVerificationPlugin = warp.hasPlugin('evm-signature-verification')
-      ? warp.loadPlugin<GQLNodeInterface, Promise<boolean>>('evm-signature-verification')
-      : null;
-
-    const progressPlugin = warp.hasPlugin('evaluation-progress')
-      ? warp.loadPlugin<
-          {
-            contractTxId: string;
-            currentInteraction: number;
-            allInteractions: number;
-            lastInteractionProcessingTime: string;
-          },
-          void
-        >('evaluation-progress')
-      : null;
+    const evmSignatureVerificationPlugin = warp.maybeLoadPlugin<GQLNodeInterface, Promise<boolean>>(
+      'evm-signature-verification'
+    );
+    const progressPlugin = warp.maybeLoadPlugin<EvaluationProgressInput, void>('evaluation-progress');
+    const vrfPlugin = warp.maybeLoadPlugin<void, VrfPluginFunctions>('vrf');
 
     let shouldBreakAfterEvolve = false;
 
@@ -103,8 +97,12 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       currentSortKey = missingInteraction.sortKey;
 
       if (missingInteraction.vrf) {
-        if (!this.verifyVrf(missingInteraction.vrf, missingInteraction.sortKey, this.arweave)) {
-          throw new Error('Vrf verification failed.');
+        if (!vrfPlugin) {
+          this.logger.warn('Cannot verify vrf for interaction - no "warp-contracts-plugin-vrf" attached!');
+        } else {
+          if (!vrfPlugin.process().verify(missingInteraction.vrf, missingInteraction.sortKey)) {
+            throw new Error('Vrf verification failed.');
+          }
         }
       }
 
@@ -313,25 +311,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     }
 
     return new SortKeyCacheResult(currentSortKey, evalStateResult);
-  }
-
-  private verifyVrf(vrf: VrfData, sortKey: string, arweave: Arweave): boolean {
-    const keys = EC.keyFromPublic(vrf.pubkey, 'hex');
-
-    let hash;
-    try {
-      // ProofHoHash throws its own 'invalid vrf' exception
-      hash = ProofHoHash(
-        keys.getPublic(),
-        arweave.utils.stringToBuffer(sortKey),
-        arweave.utils.b64UrlToBuffer(vrf.proof)
-      );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      return false;
-    }
-
-    return arweave.utils.bufferTob64Url(hash) == vrf.index;
   }
 
   private logResult<State>(
