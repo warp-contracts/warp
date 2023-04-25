@@ -2365,7 +2365,17 @@ arweave-stream-tx@^1.1.0:
   dependencies:
     exponential-backoff "^3.1.0"
 
-arweave@^1.10.13, arweave@^1.10.23, arweave@^1.10.5, arweave@^1.11.4, arweave@^1.12.4:
+arweave@1.13.7:
+  version "1.13.7"
+  resolved "https://registry.yarnpkg.com/arweave/-/arweave-1.13.7.tgz#cda8534c833baec372a7052c61f53b4e39a886d7"
+  integrity sha512-Hv+x2bSI6UyBHpuVbUDMMpMje1ETfpJWj52kKfz44O0IqDRi/LukOkkDUptup1p6OT6KP1/DdpnUnsNHoskFeA==
+  dependencies:
+    arconnect "^0.4.2"
+    asn1.js "^5.4.1"
+    base64-js "^1.5.1"
+    bignumber.js "^9.0.2"
+
+arweave@^1.10.13, arweave@^1.10.23, arweave@^1.10.5, arweave@^1.11.4:
   version "1.13.0"
   resolved "https://registry.yarnpkg.com/arweave/-/arweave-1.13.0.tgz#046d1b74efe5b157ad85279473f3729e8c7a47a9"
   integrity sha512-pir1s0Lg7MzAxmFsPqht1SGOq8Hoj1fhf44/8PVjBd6T8l6JRrFN23UvKp7N+MXBYM5SqrLYB8KrgvxAaczGFg==
@@ -7478,6 +7488,14 @@ warp-contracts-plugin-vm2@1.0.0:
   dependencies:
     bignumber.js "^9.1.1"
     vm2 "^3.9.16"
+
+warp-contracts-plugin-vrf@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/warp-contracts-plugin-vrf/-/warp-contracts-plugin-vrf-1.0.3.tgz#84077e00b02778fe181c50ed4c2bf987d72c6ffe"
+  integrity sha512-QIrlN/HQ4FfaqiPl38auHtJYnvC15ID3GWzsEIukzHHdcKgskuzskc0q0fCCI63q74so++9EKbQ+0k4s1+XXtw==
+  dependencies:
+    "@idena/vrf-js" "^1.0.1"
+    elliptic "^6.5.4"
 
 warp-isomorphic@1.0.0:
   version "1.0.0"
