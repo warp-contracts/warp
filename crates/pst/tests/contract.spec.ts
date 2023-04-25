@@ -21,6 +21,7 @@ import path from 'path';
 import { PstContract } from '../contract/definition/bindings/ts/PstContract';
 import { State } from '../contract/definition/bindings/ts/ContractState';
 import { TheAnswerExtension } from './the-answer-plugin';
+import { VRFPlugin } from 'warp-contracts-plugin-vrf';
 
 jest.setTimeout(30000);
 
@@ -60,7 +61,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
     LoggerFactory.INST.logLevel('debug', 'WASM:Rust');
     //LoggerFactory.INST.logLevel('debug', 'WasmContractHandlerApi');
 
-    warp = WarpFactory.forLocal(1820).use(new DeployPlugin()).use(new TheAnswerExtension());
+    warp = WarpFactory.forLocal(1820).use(new DeployPlugin()).use(new TheAnswerExtension()).use(new VRFPlugin());
     ({ arweave } = warp);
     arweaveWrapper = new ArweaveWrapper(warp);
 

@@ -40,7 +40,6 @@ import { InteractionState } from './states/InteractionState';
 import { ContractInteractionState } from './states/ContractInteractionState';
 import { Crypto } from 'warp-isomorphic';
 import { VrfPluginFunctions } from '../core/WarpPlugin';
-import Arweave from 'arweave';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -689,7 +688,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
     dummyTx.sortKey = await this._sorter.createSortKey(dummyTx.block.id, dummyTx.id, dummyTx.block.height, true);
     dummyTx.strict = strict;
     if (vrf) {
-      Arweave.utils;
       const vrfPlugin = this.warp.maybeLoadPlugin<void, VrfPluginFunctions>('vrf');
       if (vrfPlugin) {
         dummyTx.vrf = vrfPlugin.process().generateMockVrf(dummyTx.sortKey);
