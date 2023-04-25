@@ -1,5 +1,4 @@
 import Arweave from 'arweave';
-import { AxiosResponse } from 'axios';
 import { Buffer as isomorphicBuffer } from 'warp-isomorphic';
 import { LoggerFactory } from '../logging/LoggerFactory';
 import { BlockData, NetworkInfoInterface, Transaction } from './types/arweave-types';
@@ -36,34 +35,27 @@ export class ArweaveWrapper {
    *
    * @param query graphql query string
    * @param variables variables depends on provided query
-   * @returns axios response from graphql
+   * @returns axios-like (for backwards compatibility..) response from graphql
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async gql(query: string, variables: unknown): Promise<Partial<AxiosResponse<any>>> {
+  async gql(query: string, variables: unknown): Promise<{ data: any; status: number }> {
     try {
       const data = JSON.stringify({
         query: query,
         variables: variables
       });
 
-      const response = await fetch(`${this.baseUrl}/graphql`, {
-        method: 'POST',
-        body: data,
-        headers: {
-          'Accept-Encoding': 'gzip, deflate, br',
-          'Content-Type': 'application/json',
-          Accept: 'application/json'
-        }
-      })
-        .then((res) => {
-          return res.ok ? res.json() : Promise.reject(res);
-        })
-        .catch((error) => {
-          if (error.body?.message) {
-            this.logger.error(error.body.message);
+      const response = await getJsonResponse(
+        fetch(`${this.baseUrl}/graphql`, {
+          method: 'POST',
+          body: data,
+          headers: {
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Content-Type': 'application/json',
+            Accept: 'application/json'
           }
-          throw new Error(`Unable to retrieve gql page. ${error.status}: ${error.body?.message}`);
-        });
+        })
+      );
 
       return {
         data: response,
