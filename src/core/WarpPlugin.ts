@@ -1,4 +1,3 @@
-import Arweave from 'arweave';
 import { VrfData } from '../legacy/gqlResult';
 
 export const knownWarpPluginsPartial = [`^smartweave-extension-`] as const;
