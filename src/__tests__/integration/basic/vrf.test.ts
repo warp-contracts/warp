@@ -17,7 +17,7 @@ import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { ArweaveGatewayInteractionsLoader } from '../../../core/modules/impl/ArweaveGatewayInteractionsLoader';
 import { LexicographicalInteractionsSorter } from '../../../core/modules/impl/LexicographicalInteractionsSorter';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
-import { VRFPlugin } from "warp-contracts-plugin-vrf";
+import { VRFPlugin } from 'warp-contracts-plugin-vrf';
 
 const EC = new elliptic.ec('secp256k1');
 const key = EC.genKeyPair();
@@ -144,9 +144,7 @@ describe('Testing the Profit Sharing Token', () => {
   });
 
   it('should allow to test VRF on a standard forLocal Warp instance', async () => {
-    const localWarp = WarpFactory.forLocal(1823)
-      .use(new DeployPlugin())
-      .use(new VRFPlugin());
+    const localWarp = WarpFactory.forLocal(1823).use(new DeployPlugin()).use(new VRFPlugin());
 
     const { contractTxId: vrfContractTxId } = await localWarp.deploy({
       wallet,
@@ -178,9 +176,7 @@ describe('Testing the Profit Sharing Token', () => {
   });
 
   it('should allow to test VRF on a standard forLocal Warp instance in strict mode', async () => {
-    const localWarp = WarpFactory.forLocal(1823)
-      .use(new DeployPlugin())
-      .use(new VRFPlugin());
+    const localWarp = WarpFactory.forLocal(1823).use(new DeployPlugin()).use(new VRFPlugin());
 
     const { contractTxId: vrfContractTxId } = await localWarp.deploy({
       wallet,
@@ -212,9 +208,7 @@ describe('Testing the Profit Sharing Token', () => {
   });
 
   it('should allow to test VRF on a standard forLocal Warp instance with internal writes', async () => {
-    const localWarp = WarpFactory.forLocal(1823)
-      .use(new DeployPlugin())
-      .use(new VRFPlugin());
+    const localWarp = WarpFactory.forLocal(1823).use(new DeployPlugin()).use(new VRFPlugin());
 
     const { contractTxId: vrfContractTxId } = await localWarp.deploy({
       wallet,
