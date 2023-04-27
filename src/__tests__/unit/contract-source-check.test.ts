@@ -1,4 +1,4 @@
-import { checkJsSrc } from "../../core/modules/impl/normalize-source";
+import { checkJsSrc } from '../../core/modules/impl/normalize-source';
 
 const BAD_SRC = [
   `
@@ -58,9 +58,8 @@ export {
   `
 ];
 
-
-describe("Naive js src checker", () => {
-  it("should return false for wrong sources", async () => {
+describe('Naive js src checker', () => {
+  it('should return false for wrong sources', async () => {
     for (const badSrc of BAD_SRC) {
       expect(checkJsSrc(badSrc)).toBeFalsy();
     }
