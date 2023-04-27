@@ -7472,10 +7472,10 @@ walker@^1.0.8:
   dependencies:
     makeerror "1.0.12"
 
-warp-contracts-plugin-deploy@^1.0.3:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/warp-contracts-plugin-deploy/-/warp-contracts-plugin-deploy-1.0.3.tgz#9ca7cd53b4a7cd1b015881f1d369659bb6f9075b"
-  integrity sha512-zDF/yqHbxIDImtVKxE/hbIz824PjPOc0aXONQtnR7do0MFdF7eJqeAAA5a2W5WTHN3cplvej6y7vSv6f/E2dEg==
+warp-contracts-plugin-deploy@1.0.8-beta.0:
+  version "1.0.8-beta.0"
+  resolved "https://registry.yarnpkg.com/warp-contracts-plugin-deploy/-/warp-contracts-plugin-deploy-1.0.8-beta.0.tgz#c4c95a57d53a5ae2a50c0907f94ac74e6bcdbada"
+  integrity sha512-bA8K9QHuIvE1XzWpFYmAR5+xisanAzfInxx0ekMwlGVFiDWciWcVAFNefLUa5iFHuHlDpqgDQvUpsd6lg7Wx8g==
   dependencies:
     arbundles "^0.7.3"
     arlocal "^1.1.59"
