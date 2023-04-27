@@ -162,6 +162,7 @@ export interface Contract<State = unknown> {
    * @param transfer - additional {@link ArTransfer} data to be associated with the "dummy" transaction
    * @param caller - an option to override the caller - if available, this value will overwrite the caller evaluated
    * from the wallet connected to this contract.
+   * @param vrf - whether a mock VRF data should be generated
    */
   dryWrite<Input>(
     input: Input,

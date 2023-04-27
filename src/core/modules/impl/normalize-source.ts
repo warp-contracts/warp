@@ -1,4 +1,6 @@
 import { isBrowser } from '../../../utils/utils';
+import { ILoggerFactory } from "../../../logging/LoggerFactory";
+import { WarpLogger } from "../../../logging/WarpLogger";
 
 export function normalizeContractSource(contractSrc: string, useVM2: boolean): string {
   // Convert from ES Module format to something we can run inside a Function.
@@ -41,5 +43,16 @@ export function normalizeContractSource(contractSrc: string, useVM2: boolean): s
     ${contractSrc};
     return handle;
   `;
+  }
+}
+
+export function checkJsSrc(src: string, logger?: WarpLogger): boolean {
+  try {
+    const normalizedSource = normalizeContractSource(src, false);
+    new Function(normalizedSource)();
+    return true;
+  } catch (e) {
+    logger?.error(e);
+    return false;
   }
 }
