@@ -64,6 +64,7 @@ export class Warp {
 
   readonly testing: Testing;
   kvStorageFactory: KVStorageFactory;
+  whoAmI: string;
 
   private readonly plugins: Map<WarpPluginType, WarpPlugin<unknown, unknown>> = new Map();
 
