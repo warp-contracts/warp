@@ -87,6 +87,7 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
         fetch(
           `${url}?${new URLSearchParams({
             contractId: contractId,
+            ...(this._warp.whoAmI ? { client: this._warp.whoAmI } : ''),
             ...(fromSortKey ? { from: fromSortKey } : ''),
             ...(toSortKey ? { to: toSortKey } : ''),
             page: (++page).toString(),
