@@ -105,6 +105,21 @@ describe('Testing the Profit Sharing Token', () => {
     );
   });
 
+  it('should properly set custom reward', async () => {
+    await pst.writeInteraction({
+      function: 'setReward',
+    }, { reward: '555566666' });
+    await mineBlock(warp);
+    expect(((await pst.currentState()) as any).lastReward).toEqual("555566666");
+
+    await pst.writeInteraction({
+      function: 'setReward',
+    }, { reward: '8892923423' });
+    await mineBlock(warp);
+    expect(((await pst.currentState()) as any).lastReward).toEqual("8892923423");
+  });
+
+
   it('should properly view contract state', async () => {
     const result = await pst.currentBalance('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M');
     const resultVM = await pst.currentBalance('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M');
