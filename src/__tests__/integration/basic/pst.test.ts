@@ -117,6 +117,15 @@ describe('Testing the Profit Sharing Token', () => {
     }, { reward: '8892923423' });
     await mineBlock(warp);
     expect(((await pst.currentState()) as any).lastReward).toEqual("8892923423");
+
+    const {originalTxId} = await pst.writeInteraction({
+      function: 'throwReward',
+    }, { reward: '666666666' });
+    await mineBlock(warp);
+    const result = await pst.readState();
+    console.log(result.cachedValue.errorMessages[originalTxId]);
+
+    expect(result.cachedValue.errorMessages[originalTxId]).toContain('666666666');
   });
 
 

@@ -122,5 +122,10 @@ export async function handle(state, action) {
     return {state};
   }
 
+  if (input.function === 'throwReward') {
+    throw new ContractError(`Throwing with reward ${SmartWeave.transaction.reward}`);
+    return {state};
+  }
+
   throw new ContractError(`No function supplied or function not recognised: "${input.function}"`);
 }
