@@ -7497,6 +7497,25 @@ warp-contracts-plugin-vrf@^1.0.3:
     "@idena/vrf-js" "^1.0.1"
     elliptic "^6.5.4"
 
+warp-contracts@^1.4.5:
+  version "1.4.5"
+  resolved "https://registry.yarnpkg.com/warp-contracts/-/warp-contracts-1.4.5.tgz#a9113c1f4fe963ca6a65410ae0917e55db5cc7fe"
+  integrity sha512-hUlJt1DXQapPf7cQRUehv9bEMNl6gX9srJ3K3LFAjKvtv2evD22tdcAH0MYHb+QchGIBLqJwva9d2pC7pSA+PQ==
+  dependencies:
+    archiver "^5.3.0"
+    arweave "1.13.7"
+    async-mutex "^0.4.0"
+    bignumber.js "9.1.1"
+    events "3.3.0"
+    fast-copy "^3.0.0"
+    level "^8.0.0"
+    memory-level "^1.0.0"
+    safe-stable-stringify "2.4.1"
+    stream-buffers "^3.0.2"
+    unzipit "^1.4.0"
+    warp-isomorphic "1.0.4"
+    warp-wasm-metering "1.0.1"
+
 warp-isomorphic@1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/warp-isomorphic/-/warp-isomorphic-1.0.0.tgz#dccccfc046bc6ac77919f8be1024ced1385c70ea"

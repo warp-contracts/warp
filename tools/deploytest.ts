@@ -7,7 +7,7 @@ import { JWKInterface } from 'arweave/node/lib/wallet';
 import {ArweaveSigner, DeployPlugin} from "warp-contracts-plugin-deploy";
 
 async function main() {
-  let wallet: JWKInterface = readJSON('./.secrets/33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA.json');
+  //let wallet: JWKInterface = readJSON('./.secrets/33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA.json');
   LoggerFactory.INST.logLevel('error');
   //LoggerFactory.INST.logLevel('debug', 'ExecutionContext');
   const logger = LoggerFactory.INST.create('deploy');
@@ -19,13 +19,15 @@ async function main() {
   });
 
   try {
-    const warp = WarpFactory.forMainnet({...defaultCacheOptions, inMemory: true})
-      .use(new DeployPlugin())
-      .useGwUrl("http://localhost:5666/");
+    const warp = WarpFactory.forMainnet()
+      .use(new DeployPlugin())/*
+      .useGwUrl("http://localhost:5666/")*/;
 
-    const jsContractSrc = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.js'), 'utf8');
+    await warp.register("nwJHV3YUtwtnE6ttR006w-_fHcnHI4scalyxsEXIwBY", "node1");
+
+  /*  const jsContractSrc = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.js'), 'utf8');
     const initialState = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.json'), 'utf8');
-
+*/
     // case 1 - full deploy, js contract
    /* const { contractTxId, srcTxId } = await warp.deploy({
       wallet: new ArweaveSigner(wallet),
@@ -63,9 +65,9 @@ async function main() {
       srcTxId: "5wXT-A0iugP9pWEyw-iTbB0plZ_AbmvlNKyBfGS3AUY",
     });*/
 
-    const contract = warp.contract<any>('SG9sKOZvKFQ7EcpJU3bS0pQWp2idQf3VY2Ki_5-hDjo').setEvaluationOptions({
+   /* const contract = warp.contract<any>('SG9sKOZvKFQ7EcpJU3bS0pQWp2idQf3VY2Ki_5-hDjo').setEvaluationOptions({
       sequencerUrl: 'http://localhost:5666/'
-    }).connect(wallet);
+    }).connect(wallet);*/
 
     await Promise.all([
      /* contract.writeInteraction<any>({
@@ -86,7 +88,7 @@ async function main() {
         disableBundling: true
       })*/
     ]);
-    const {cachedValue} = await contract.readState();
+    //const {cachedValue} = await contract.readState();
 
     //logger.info("Result", await contract.getStorageValue('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA'));
     //console.dir(cachedValue.state);

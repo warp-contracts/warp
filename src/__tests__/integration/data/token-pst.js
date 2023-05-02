@@ -127,5 +127,10 @@ export async function handle(state, action) {
     return {state};
   }
 
+  if (input.function === 'logOnMe') {
+    logger.debug(`Reward from logger ${SmartWeave.transaction.reward}`)
+    return {state};
+  }
+
   throw new ContractError(`No function supplied or function not recognised: "${input.function}"`);
 }

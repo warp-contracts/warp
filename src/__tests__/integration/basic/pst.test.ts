@@ -27,6 +27,7 @@ describe('Testing the Profit Sharing Token', () => {
   let warpVm: Warp;
   let pst: PstContract;
   let pstVM: PstContract;
+  let contractTxId;
 
   beforeAll(async () => {
     // note: each tests suit (i.e. file with tests that Jest is running concurrently
@@ -56,11 +57,11 @@ describe('Testing the Profit Sharing Token', () => {
     };
 
     // deploying contract using the new SDK.
-    const { contractTxId } = await warp.deploy({
+    ({ contractTxId } = await warp.deploy({
       wallet,
       initState: JSON.stringify(initialState),
       src: contractSrc
-    });
+    }));
 
     // connecting to the PST contract
     pst = warp.pst(contractTxId);
@@ -126,6 +127,13 @@ describe('Testing the Profit Sharing Token', () => {
     console.log(result.cachedValue.errorMessages[originalTxId]);
 
     expect(result.cachedValue.errorMessages[originalTxId]).toContain('666666666');
+
+    LoggerFactory.INST.logLevel("debug", contractTxId);
+    await pst.writeInteraction({
+      function: 'logOnMe',
+    }, { reward: '3334999882342' });
+    await pst.readState();
+
   });
 
 
