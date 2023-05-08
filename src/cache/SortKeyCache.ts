@@ -1,36 +1,15 @@
 import { SortKeyCacheRangeOptions } from './SortKeyCacheRangeOptions';
+import { BasicSortKeyCache } from './BasicSortKeyCache';
 
 /**
- * A cache that stores its values per dedicated key and sort key.
- * A sort key is a value that the SmartWeave protocol is using
- * to sort contract transactions ({@link LexicographicalInteractionsSorter}.
+ * Key-value cache storage.
+ * Just as {@link BasicSortKeyCache}, items are stored
+ * in lexicographical order using by sort key.
  *
- * All values should be stored in a lexicographical order (per key) -
- * sorted by the sort key.
+ * In addition, this interface provide functionality related to
+ * fetching keys and values using range options. {@link SortKeyCacheRangeOptions}
  */
-export interface SortKeyCache<V> {
-  getLessOrEqual(key: string, sortKey: string): Promise<SortKeyCacheResult<V> | null>;
-
-  /**
-   * returns value stored for a given key and last sortKey
-   */
-  getLast(key: string): Promise<SortKeyCacheResult<V> | null>;
-
-  /**
-   * returns last cached sort key - takes all keys into account
-   */
-  getLastSortKey(): Promise<string | null>;
-
-  /**
-   * returns value for the key and exact sortKey
-   */
-  get(cacheKey: CacheKey): Promise<SortKeyCacheResult<V> | null>;
-
-  /**
-   * puts new value in cache under given {@link CacheKey.key} and {@link CacheKey.sortKey}.
-   */
-  put(cacheKey: CacheKey, value: V): Promise<void>;
-
+export interface SortKeyCache<V> extends BasicSortKeyCache<V> {
   /**
    * deletes value in cache under given {@link CacheKey.key} from {@link CacheKey.sortKey}.
    * the value will be still available if fetched using a lower sortKey
@@ -38,30 +17,9 @@ export interface SortKeyCache<V> {
   del(cacheKey: CacheKey): Promise<void>;
 
   /**
-   * removes all data stored under a specified key
-   */
-  delete(key: string): Promise<void>;
-
-  /**
    * executes a list of stacked operations
    */
   batch(opStack: BatchDBOp<V>[]);
-
-  open(): Promise<void>;
-
-  close(): Promise<void>;
-
-  begin(): Promise<void>;
-
-  rollback(): Promise<void>;
-
-  commit(): Promise<void>;
-
-  /**
-   * used mostly for debugging, allows to dump the current content cache
-   * It's slow.
-   */
-  dump(): Promise<any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
   /**
    * Returns keys for a specified range
@@ -72,23 +30,6 @@ export interface SortKeyCache<V> {
    * Returns a key value map for a specified range
    */
   kvMap(sortKey: string, options?: SortKeyCacheRangeOptions): Promise<Map<string, V>>;
-
-  /**
-   * returns underlying storage (LevelDB, LMDB, sqlite...)
-   * - useful for performing low-level operations
-   */
-  storage<S>(): S;
-
-  /**
-   * leaves n-latest (i.e. with latest (in lexicographic order) sort keys)
-   * entries for each cached key
-   *
-   * @param entriesStored - how many latest entries should be left
-   * for each cached key
-   *
-   * @retun PruneStats if getting them doesn't introduce a delay, null otherwise
-   */
-  prune(entriesStored: number): Promise<PruneStats | null>;
 }
 
 export interface PruneStats {
@@ -107,11 +48,13 @@ export class SortKeyCacheResult<V> {
 }
 
 export declare type BatchDBOp<V> = PutBatch<V> | DelBatch;
+
 export interface PutBatch<V> {
   type: 'put';
   key: CacheKey;
   value: V;
 }
+
 export interface DelBatch {
   type: 'del';
   key: string;
