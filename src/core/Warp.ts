@@ -33,6 +33,7 @@ import { DEFAULT_LEVEL_DB_LOCATION, WARP_GW_URL } from './WarpFactory';
 import { LevelDbCache } from '../cache/impl/LevelDbCache';
 import { SourceData } from '../contract/deploy/Source';
 import { BundlerSigner, DataItem } from '../contract/deploy/DataItem';
+import { BasicSortKeyCache } from '../cache/BasicSortKeyCache';
 
 export type WarpEnvironment = 'local' | 'testnet' | 'mainnet' | 'custom';
 export type KVStorageFactory = (contractTxId: string) => SortKeyCache<unknown>;
@@ -87,7 +88,7 @@ export class Warp {
 
   static builder(
     arweave: Arweave,
-    stateCache: SortKeyCache<EvalStateResult<unknown>>,
+    stateCache: BasicSortKeyCache<EvalStateResult<unknown>>,
     environment: WarpEnvironment
   ): WarpBuilder {
     return new WarpBuilder(arweave, stateCache, environment);
@@ -138,12 +139,12 @@ export class Warp {
     return new PstContractImpl(contractTxId, this);
   }
 
-  useStateCache(stateCache: SortKeyCache<EvalStateResult<unknown>>): Warp {
+  useStateCache(stateCache: BasicSortKeyCache<EvalStateResult<unknown>>): Warp {
     this.stateEvaluator.setCache(stateCache);
     return this;
   }
 
-  useContractCache(definition: SortKeyCache<ContractDefinition<unknown>>, src: SortKeyCache<SrcCache>): Warp {
+  useContractCache(definition: BasicSortKeyCache<ContractDefinition<unknown>>, src: SortKeyCache<SrcCache>): Warp {
     this.definitionLoader.setSrcCache(src);
     this.definitionLoader.setCache(definition);
     return this;
