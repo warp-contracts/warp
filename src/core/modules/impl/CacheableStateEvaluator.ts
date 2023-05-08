@@ -1,5 +1,5 @@
 import Arweave from 'arweave';
-import { CacheKey, SortKeyCache, SortKeyCacheResult } from '../../../cache/SortKeyCache';
+import { CacheKey, SortKeyCacheResult } from '../../../cache/SortKeyCache';
 import { ExecutionContext } from '../../../core/ExecutionContext';
 import { ExecutionContextModifier } from '../../../core/ExecutionContextModifier';
 import { GQLNodeInterface } from '../../../legacy/gqlResult';
@@ -9,6 +9,7 @@ import { EvalStateResult } from '../StateEvaluator';
 import { DefaultStateEvaluator } from './DefaultStateEvaluator';
 import { HandlerApi } from './HandlerExecutorFactory';
 import { genesisSortKey } from './LexicographicalInteractionsSorter';
+import { BasicSortKeyCache } from '../../../cache/BasicSortKeyCache';
 
 /**
  * An implementation of DefaultStateEvaluator that adds caching capabilities.
@@ -23,7 +24,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
 
   constructor(
     arweave: Arweave,
-    private cache: SortKeyCache<EvalStateResult<unknown>>,
+    private cache: BasicSortKeyCache<EvalStateResult<unknown>>,
     executionContextModifiers: ExecutionContextModifier[] = []
   ) {
     super(arweave, executionContextModifiers);
@@ -224,11 +225,11 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     return await this.cache.getLastSortKey();
   }
 
-  setCache(cache: SortKeyCache<EvalStateResult<unknown>>): void {
+  setCache(cache: BasicSortKeyCache<EvalStateResult<unknown>>): void {
     this.cache = cache;
   }
 
-  getCache(): SortKeyCache<EvalStateResult<unknown>> {
+  getCache(): BasicSortKeyCache<EvalStateResult<unknown>> {
     return this.cache;
   }
 }

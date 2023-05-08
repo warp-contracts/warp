@@ -12,9 +12,9 @@ import { InteractionsLoader } from './modules/InteractionsLoader';
 import { StateEvaluator, EvalStateResult } from './modules/StateEvaluator';
 import { WarpEnvironment, Warp } from './Warp';
 import { CacheOptions, GatewayOptions } from './WarpFactory';
-import { SortKeyCache } from '../cache/SortKeyCache';
 import { LevelDbCache } from '../cache/impl/LevelDbCache';
 import { ContractCache, SrcCache } from './ContractDefinition';
+import { BasicSortKeyCache } from '../cache/BasicSortKeyCache';
 
 export class WarpBuilder {
   private _definitionLoader?: DefinitionLoader;
@@ -24,7 +24,7 @@ export class WarpBuilder {
 
   constructor(
     private readonly _arweave: Arweave,
-    private readonly _stateCache: SortKeyCache<EvalStateResult<unknown>>,
+    private readonly _stateCache: BasicSortKeyCache<EvalStateResult<unknown>>,
     private readonly _environment: WarpEnvironment = 'custom'
   ) {}
 

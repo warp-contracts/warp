@@ -5,6 +5,7 @@ export * from './logging/LoggerFactory';
 export * from './logging/LoggerSettings';
 export * from './logging/Benchmark';
 
+export * from './cache/BasicSortKeyCache';
 export * from './cache/SortKeyCache';
 export * from './cache/WarpCache';
 export * from './cache/impl/LevelDbCache';

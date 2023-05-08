@@ -1,7 +1,8 @@
-import { SortKeyCache, SortKeyCacheResult } from '../../cache/SortKeyCache';
+import { SortKeyCacheResult } from '../../cache/SortKeyCache';
 import { ExecutionContext } from '../ExecutionContext';
 import { GQLNodeInterface } from '../../legacy/gqlResult';
 import { SourceType } from './impl/WarpGatewayInteractionsLoader';
+import { BasicSortKeyCache } from '../../cache/BasicSortKeyCache';
 
 /**
  * Implementors of this class are responsible for evaluating contract's state
@@ -87,9 +88,9 @@ export interface StateEvaluator {
 
   lastCachedSortKey(): Promise<string | null>;
 
-  setCache(cache: SortKeyCache<EvalStateResult<unknown>>): void;
+  setCache(cache: BasicSortKeyCache<EvalStateResult<unknown>>): void;
 
-  getCache(): SortKeyCache<EvalStateResult<unknown>>;
+  getCache(): BasicSortKeyCache<EvalStateResult<unknown>>;
 }
 
 export class EvalStateResult<State> {
