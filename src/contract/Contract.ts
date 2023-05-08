@@ -7,6 +7,7 @@ import { ArTransfer, Tags, ArWallet } from './deploy/CreateContract';
 import { CustomSignature } from './Signature';
 import { EvaluationOptionsEvaluator } from './EvaluationOptionsEvaluator';
 import { InteractionState } from './states/InteractionState';
+import { ContractDefinition } from '../core/ContractDefinition';
 
 export type BenchmarkStats = { gatewayCommunication: number; stateEvaluation: number; total: number };
 
@@ -70,6 +71,10 @@ export interface EvolveState {
 export type InnerCallType = 'read' | 'view' | 'write';
 
 export type InnerCallData = { callingInteraction: GQLNodeInterface; callType: InnerCallType };
+
+export type WritesAware = {
+  allowedSrcTxIds?: string[];
+};
 
 /**
  * A base interface to be implemented by SmartWeave Contracts clients
@@ -150,7 +155,8 @@ export interface Contract<State = unknown> {
    */
   viewStateForTx<Input = unknown, View = unknown>(
     input: Input,
-    transaction: GQLNodeInterface
+    transaction: GQLNodeInterface,
+    contractDefinition: ContractDefinition<State>
   ): Promise<InteractionResult<State, View>>;
 
   /**
@@ -172,7 +178,17 @@ export interface Contract<State = unknown> {
     vrf?: boolean
   ): Promise<InteractionResult<State, unknown>>;
 
-  applyInput<Input>(input: Input, transaction: GQLNodeInterface): Promise<InteractionResult<State, unknown>>;
+  /**
+   * Applies input on the current state of the contract.
+   * Verifies whether the callee contract has the calling contract whitelisted (https://github.com/warp-contracts/warp/issues/403).
+   * @param input
+   * @param transaction
+   */
+  applyInputSafe<Input>(
+    input: Input,
+    transaction: GQLNodeInterface,
+    contractDef: ContractDefinition<State>
+  ): Promise<InteractionResult<State, unknown>>;
 
   /**
    * Writes a new "interaction" transaction - i.e. such transaction that stores input for the contract.

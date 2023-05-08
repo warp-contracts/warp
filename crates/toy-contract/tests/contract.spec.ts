@@ -16,6 +16,7 @@ import {
 } from '../../..';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 import path from 'path';
+import { WritesAware } from '../../../src';
 
 jest.setTimeout(30000);
 
@@ -42,7 +43,7 @@ describe('Testing the Rust WASM Profit Sharing Token', () => {
   let arweave: Arweave;
   let arlocal: ArLocal;
   let warp: Warp;
-  let toyContract: Contract<State>;
+  let toyContract: Contract<State & WritesAware>;
 
   let contractTxId: string;
 

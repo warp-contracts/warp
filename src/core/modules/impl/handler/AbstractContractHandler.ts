@@ -63,7 +63,11 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         callingInteraction: this.swGlobal._activeTx,
         callType: 'write'
       });
-      const result = await calleeContract.applyInput<Input>(input, this.swGlobal._activeTx);
+      const result = await calleeContract.applyInputSafe<Input>(
+        input,
+        this.swGlobal._activeTx,
+        this.contractDefinition
+      );
 
       this.logger.debug('Cache result?:', !this.swGlobal._activeTx.dry);
       const shouldAutoThrow =
@@ -110,7 +114,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         callType: 'view'
       });
 
-      return await childContract.viewStateForTx<Input, View>(input, this.swGlobal._activeTx);
+      return await childContract.viewStateForTx<Input, View>(input, this.swGlobal._activeTx, this.contractDefinition);
     };
   }
 

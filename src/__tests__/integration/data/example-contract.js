@@ -51,4 +51,12 @@ export async function handle(state, action) {
   if (action.input.function === 'justThrow') {
     throw new ContractError('Error from justThrow function');
   }
+
+  if (action.input.function === 'setAllowedSrc') {
+    const allowedSrc = action.input.allowedSrc;
+
+    state.allowedSrcTxIds = allowedSrc;
+
+    return { state };
+  }
 }

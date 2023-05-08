@@ -20,7 +20,7 @@ import { Benchmark } from '../logging/Benchmark';
 import { LoggerFactory } from '../logging/LoggerFactory';
 import { Evolve } from '../plugins/Evolve';
 import { ArweaveWrapper } from '../utils/ArweaveWrapper';
-import { getJsonResponse, sleep, stripTrailingSlash } from '../utils/utils';
+import { getJsonResponse, isWritesWhitelistAware, sleep, stripTrailingSlash } from '../utils/utils';
 import {
   BenchmarkStats,
   Contract,
@@ -40,11 +40,11 @@ import { InteractionState } from './states/InteractionState';
 import { ContractInteractionState } from './states/ContractInteractionState';
 import { Crypto } from 'warp-isomorphic';
 import { VrfPluginFunctions } from '../core/WarpPlugin';
-import Arweave from 'arweave';
+import { ContractDefinition } from '../core/ContractDefinition';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
- * of writing SW contracts (ie. using the "handle" function).
+ * of writing SW contracts (i.e. using the "handle" function).
  *
  * It requires {@link ExecutorFactory} that is using {@link HandlerApi} generic type.
  */
@@ -215,10 +215,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   async viewStateForTx<Input, View>(
     input: Input,
-    interactionTx: GQLNodeInterface
+    transaction: GQLNodeInterface,
+    contractDefinition: ContractDefinition<State>
   ): Promise<InteractionResult<State, View>> {
     this.logger.info(`View state for ${this._contractTxId}`);
-    return await this.doApplyInputOnTx<Input, View>(input, interactionTx, 'view');
+    return await this.doApplyInputOnTx<Input, View>(input, transaction, 'view', contractDefinition);
   }
 
   async dryWrite<Input>(
@@ -232,9 +233,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return await this.callContract<Input>(input, 'write', caller, undefined, tags, transfer, undefined, vrf);
   }
 
-  async applyInput<Input>(input: Input, transaction: GQLNodeInterface): Promise<InteractionResult<State, unknown>> {
+  async applyInputSafe<Input>(
+    input: Input,
+    transaction: GQLNodeInterface,
+    contractDef: ContractDefinition<State>
+  ): Promise<InteractionResult<State, unknown>> {
     this.logger.info(`Apply-input from transaction ${transaction.id} for ${this._contractTxId}`);
-    return await this.doApplyInputOnTx<Input>(input, transaction, 'write');
+    return await this.doApplyInputOnTx<Input>(input, transaction, 'write', contractDef);
   }
 
   async writeInteraction<Input>(
@@ -290,6 +295,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
         effectiveVrf && environment !== 'mainnet',
         effectiveReward
       );
+
       const response = await arweave.transactions.post(interactionTx);
 
       if (response.status !== 200) {
@@ -689,7 +695,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
     dummyTx.sortKey = await this._sorter.createSortKey(dummyTx.block.id, dummyTx.id, dummyTx.block.height, true);
     dummyTx.strict = strict;
     if (vrf) {
-      Arweave.utils;
       const vrfPlugin = this.warp.maybeLoadPlugin<void, VrfPluginFunctions>('vrf');
       if (vrfPlugin) {
         dummyTx.vrf = vrfPlugin.process().generateMockVrf(dummyTx.sortKey);
@@ -720,7 +725,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
   private async doApplyInputOnTx<Input, View = unknown>(
     input: Input,
     interactionTx: GQLNodeInterface,
-    interactionType: InteractionType
+    interactionType: InteractionType,
+    callingContractDef: ContractDefinition<State>
   ): Promise<InteractionResult<State, View>> {
     this.maybeResetRootContract();
 
@@ -736,6 +742,30 @@ export class HandlerBasedContract<State> implements Contract<State> {
     } else {
       evalStateResult = await this.warp.stateEvaluator.eval<State>(executionContext);
       this.interactionState().update(this.txId(), evalStateResult.cachedValue);
+    }
+
+    const calleeState = evalStateResult.cachedValue.state;
+    if (interactionType === 'write' && isWritesWhitelistAware(calleeState)) {
+      let errorMessage = null;
+      if (calleeState.allowedSrcTxIds.length === 0) {
+        errorMessage = '[WriteNotAllowed] Internal writes not allowed.';
+      } else {
+        const callingSrcTxId = callingContractDef.srcTxId;
+        if (!calleeState.allowedSrcTxIds.includes(callingSrcTxId)) {
+          errorMessage = `[WriteNotAllowed] Calling contract source ${callingSrcTxId} not allowed.`;
+        }
+      }
+
+      if (errorMessage) {
+        return {
+          type: 'error',
+          errorMessage,
+          originalValidity: evalStateResult.cachedValue.validity,
+          originalErrorMessages: evalStateResult.cachedValue.errorMessages,
+          state: calleeState,
+          result: null
+        };
+      }
     }
 
     this.logger.debug('callContractForTx - evalStateResult', {

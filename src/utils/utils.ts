@@ -1,6 +1,7 @@
 /* eslint-disable */
 import copy from 'fast-copy';
 import { Buffer } from 'warp-isomorphic';
+import { WritesAware } from "../contract/Contract";
 
 export const sleep = (ms: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -101,4 +102,12 @@ export async function getJsonResponse<T>(response: Promise<Response>): Promise<T
   }
   const result = await r.json();
   return result as T;
+}
+
+export function isWritesWhitelistAware(state: unknown): state is WritesAware {
+  if (!state) {
+    return false;
+  }
+
+  return Array.isArray((state as WritesAware).allowedSrcTxIds);
 }
