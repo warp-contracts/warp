@@ -1,6 +1,6 @@
 import Arweave from 'arweave';
 
-import { SortKeyCache, SortKeyCacheResult } from '../../../cache/SortKeyCache';
+import { SortKeyCacheResult } from '../../../cache/SortKeyCache';
 import { InteractionCall } from '../../ContractCallRecord';
 import { ExecutionContext } from '../../../core/ExecutionContext';
 import { ExecutionContextModifier } from '../../../core/ExecutionContextModifier';
@@ -12,6 +12,7 @@ import { EvalStateResult, StateEvaluator } from '../StateEvaluator';
 import { ContractInteraction, HandlerApi, InteractionResult } from './HandlerExecutorFactory';
 import { TagsParser } from './TagsParser';
 import { VrfPluginFunctions } from '../../WarpPlugin';
+import { BasicSortKeyCache } from '../../../cache/BasicSortKeyCache';
 
 type EvaluationProgressInput = {
   contractTxId: string;
@@ -396,9 +397,9 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
   abstract lastCachedSortKey(): Promise<string | null>;
 
-  abstract setCache(cache: SortKeyCache<EvalStateResult<unknown>>): void;
+  abstract setCache(cache: BasicSortKeyCache<EvalStateResult<unknown>>): void;
 
-  abstract getCache(): SortKeyCache<EvalStateResult<unknown>>;
+  abstract getCache(): BasicSortKeyCache<EvalStateResult<unknown>>;
 }
 
 function canBeCached(tx: GQLNodeInterface): boolean {

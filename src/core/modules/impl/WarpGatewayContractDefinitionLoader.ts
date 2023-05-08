@@ -11,9 +11,10 @@ import { DefinitionLoader } from '../DefinitionLoader';
 import { WasmSrc } from './wasm/WasmSrc';
 import { Warp, WarpEnvironment } from '../../Warp';
 import { TagsParser } from './TagsParser';
-import { CacheKey, SortKeyCache, SortKeyCacheResult } from '../../../cache/SortKeyCache';
+import { CacheKey, SortKeyCacheResult } from '../../../cache/SortKeyCache';
 import { Transaction } from '../../../utils/types/arweave-types';
 import { getJsonResponse, stripTrailingSlash } from '../../../utils/utils';
+import { BasicSortKeyCache } from '../../../cache/BasicSortKeyCache';
 
 /**
  * An extension to {@link ContractDefinitionLoader} that makes use of
@@ -32,8 +33,8 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
 
   constructor(
     arweave: Arweave,
-    private definitionCache: SortKeyCache<ContractCache<unknown>>,
-    private srcCache: SortKeyCache<SrcCache>,
+    private definitionCache: BasicSortKeyCache<ContractCache<unknown>>,
+    private srcCache: BasicSortKeyCache<SrcCache>,
     private readonly env: WarpEnvironment
   ) {
     this.contractDefinitionLoader = new ContractDefinitionLoader(arweave, env);
@@ -102,19 +103,19 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
     return 'warp';
   }
 
-  setCache(cache: SortKeyCache<ContractCache<unknown>>): void {
+  setCache(cache: BasicSortKeyCache<ContractCache<unknown>>): void {
     this.definitionCache = cache;
   }
 
-  setSrcCache(cacheSrc: SortKeyCache<SrcCache>): void {
+  setSrcCache(cacheSrc: BasicSortKeyCache<SrcCache>): void {
     this.srcCache = cacheSrc;
   }
 
-  getCache(): SortKeyCache<ContractCache<unknown>> {
+  getCache(): BasicSortKeyCache<ContractCache<unknown>> {
     return this.definitionCache;
   }
 
-  getSrcCache(): SortKeyCache<SrcCache> {
+  getSrcCache(): BasicSortKeyCache<SrcCache> {
     return this.srcCache;
   }
 

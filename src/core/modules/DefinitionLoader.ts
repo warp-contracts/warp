@@ -1,7 +1,7 @@
 import { ContractCache, ContractDefinition, ContractSource, SrcCache } from '../../core/ContractDefinition';
 import { GwTypeAware } from './InteractionsLoader';
-import { SortKeyCache } from '../../cache/SortKeyCache';
 import { WarpAware } from '../Warp';
+import { BasicSortKeyCache } from '../../cache/BasicSortKeyCache';
 
 /**
  * Implementors of this interface are responsible for loading contract's definitions -
@@ -13,12 +13,12 @@ export interface DefinitionLoader extends GwTypeAware, WarpAware {
 
   loadContractSource(srcTxId: string): Promise<ContractSource>;
 
-  setCache(cache: SortKeyCache<ContractCache<unknown>>): void;
+  setCache(cache: BasicSortKeyCache<ContractCache<unknown>>): void;
 
   // Cache for storing common source code or binaries
-  setSrcCache(cacheSrc?: SortKeyCache<SrcCache>): void;
+  setSrcCache(cacheSrc?: BasicSortKeyCache<SrcCache>): void;
 
-  getCache(): SortKeyCache<ContractCache<unknown>>;
+  getCache(): BasicSortKeyCache<ContractCache<unknown>>;
 
-  getSrcCache(): SortKeyCache<SrcCache>;
+  getSrcCache(): BasicSortKeyCache<SrcCache>;
 }

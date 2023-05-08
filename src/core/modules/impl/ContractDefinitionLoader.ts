@@ -16,8 +16,8 @@ import { GW_TYPE } from '../InteractionsLoader';
 import { TagsParser } from './TagsParser';
 import { WasmSrc } from './wasm/WasmSrc';
 import { Warp, WarpEnvironment } from '../../Warp';
-import { SortKeyCache } from '../../../cache/SortKeyCache';
 import { Transaction } from '../../../utils/types/arweave-types';
+import { BasicSortKeyCache } from '../../../cache/BasicSortKeyCache';
 
 export class ContractDefinitionLoader implements DefinitionLoader {
   private readonly logger = LoggerFactory.INST.create('ContractDefinitionLoader');
@@ -147,20 +147,20 @@ export class ContractDefinitionLoader implements DefinitionLoader {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  setCache(cache: SortKeyCache<ContractDefinition<unknown>>): void {
+  setCache(cache: BasicSortKeyCache<ContractDefinition<unknown>>): void {
     throw new Error('No cache implemented for this loader');
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  setSrcCache(cache: SortKeyCache<SrcCache>): void {
+  setSrcCache(cache: BasicSortKeyCache<SrcCache>): void {
     throw new Error('No cache implemented for this loader');
   }
 
-  getCache(): SortKeyCache<ContractCache<unknown>> {
+  getCache(): BasicSortKeyCache<ContractCache<unknown>> {
     throw new Error('No cache implemented for this loader');
   }
 
-  getSrcCache(): SortKeyCache<SrcCache> {
+  getSrcCache(): BasicSortKeyCache<SrcCache> {
     throw new Error('No cache implemented for this loader');
   }
 
