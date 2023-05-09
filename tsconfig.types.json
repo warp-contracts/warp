@@ -2,7 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "module": "esnext",
-    "target": "es2019",
+    "target": "esnext",
     "removeComments": false,
     "declaration": true,
     "declarationMap": true,

@@ -16,7 +16,7 @@
       },
       "import": {
         "types": "./lib/types/index.d.ts",
-        "default": "./lib/mjs/index.js"
+        "default": "./lib/esm/index.js"
       }
     }
   },
@@ -26,7 +26,7 @@
   },
   "scripts": {
     "build:cjs": "tsc -b tsconfig.json",
-    "build:mjs": "gen-esm-wrapper ./lib/cjs ./lib/mjs/index.js",
+    "build:mjs": "tsc -b tsconfig.esm.json",
     "mjs:burn:in:hell": "bash mjs-package.sh",
     "build:types": "tsc -b tsconfig.types.json",
     "bundle": "node bundle.js",

@@ -1,4 +1,4 @@
-cat > lib/mjs/package.json <<!EOF
+cat > lib/esm/package.json <<!EOF
 {
     "type": "module"
 }
