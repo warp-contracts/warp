@@ -104,8 +104,7 @@ export class ArweaveGQLTxsFetcher {
         after: cursor
       };
 
-      pageResult = await this.fetch(TRANSACTIONS_QUERY, newVariables);
-
+      pageResult = (await this.fetch<GQLResultInterface['data']>(TRANSACTIONS_QUERY, newVariables)).transactions;
       edges.push(...pageResult.edges);
     }
     return edges;
