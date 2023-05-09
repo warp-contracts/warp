@@ -3,6 +3,7 @@ import {defaultCacheOptions, LoggerFactory, WarpFactory} from '../src';
 import os from 'os';
 import {JWKInterface} from "arweave/web/lib/wallet";
 import fs from "fs";
+import { ArweaveGQLTxsFetcher } from "../src/core/modules/impl/ArweaveGQLTxsFetcher";
 
 const logger = LoggerFactory.INST.create('Contract');
 
@@ -11,6 +12,7 @@ const logger = LoggerFactory.INST.create('Contract');
 
 LoggerFactory.INST.logLevel('debug', 'DefaultStateEvaluator');
 LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
+LoggerFactory.INST.logLevel('debug', 'ArweaveGQLTxsFetcher');
 
 async function main() {
   printTestInfo();
@@ -19,16 +21,13 @@ async function main() {
   const rssUsedBefore = Math.round((process.memoryUsage().rss / 1024 / 1024) * 100) / 100;
 
   const warp = WarpFactory
-    .forMainnet({...defaultCacheOptions, inMemory: true})
-    .useGwUrl("http://localhost:5666/")
-
-  let wallet: JWKInterface = readJSON('./.secrets/33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA.json');
+    .forMainnet({...defaultCacheOptions, inMemory: true}, true)
 
   try {
     const contract = warp
-      .contract("G89hzE_P9xCWErQebDuIRdB6zsrmAIjw-WU0g0e8J3M")
-    await contract.readState();
-    //console.dir(cacheResult.cachedValue.state, {depth: null});
+      .contract("bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U")
+    const result = await contract.readState();
+    console.dir(result.cachedValue.validity, {depth: null});
   } catch (e) {
     console.error(e);
   }
