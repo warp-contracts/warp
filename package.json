@@ -9,8 +9,16 @@
   },
   "exports": {
     "./web": "./bundles/web.bundle.min.js",
-    "./mjs": "./lib/mjs/index.js",
-    ".": "./lib/cjs/index.js"
+    ".": {
+      "require": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/cjs/index.js"
+      },
+      "import": {
+        "types": "./lib/types/index.d.ts",
+        "default": "./lib/mjs/index.js"
+      }
+    }
   },
   "sideEffects": false,
   "engines": {
