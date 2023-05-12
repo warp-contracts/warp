@@ -1,7 +1,7 @@
 /* eslint-disable */
 import copy from 'fast-copy';
 import { Buffer } from 'warp-isomorphic';
-import { WritesAware } from "../contract/Contract";
+import { WritesAware } from '../contract/Contract';
 
 export const sleep = (ms: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, ms));
