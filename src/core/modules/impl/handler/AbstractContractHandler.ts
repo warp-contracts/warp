@@ -75,16 +75,20 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         ? `Internal write auto error for call [${JSON.stringify(debugData)}]: ${result.errorMessage}`
         : result.errorMessage;
 
+      const resultErrorMessages = effectiveErrorMessage
+        ? {
+            ...result.originalErrorMessages,
+            [this.swGlobal._activeTx.id]: effectiveErrorMessage
+          }
+        : result.originalErrorMessages;
+
       calleeContract.interactionState().update(calleeContract.txId(), {
         state: result.state as State,
         validity: {
           ...result.originalValidity,
           [this.swGlobal._activeTx.id]: result.type == 'ok'
         },
-        errorMessages: {
-          ...result.originalErrorMessages,
-          [this.swGlobal._activeTx.id]: effectiveErrorMessage
-        }
+        errorMessages: resultErrorMessages
       });
 
       if (shouldAutoThrow) {
