@@ -32,6 +32,8 @@ import { InteractionState } from '../contract/states/InteractionState';
  *
  */
 
+export type TransactionOrigin = "L1" | "L2";
+
 export class SmartWeaveGlobal {
   gasUsed: number;
   gasLimit: number;
@@ -201,6 +203,13 @@ export class SWTransaction {
       throw new Error('No current Tx');
     }
     return this.smartWeaveGlobal._activeTx.fee.winston;
+  }
+
+  get origin(): TransactionOrigin {
+    if (!this.smartWeaveGlobal._activeTx) {
+      throw new Error('No current Tx');
+    }
+    return this.smartWeaveGlobal._activeTx.source === 'redstone-sequencer' ? 'L2' : 'L1' ;
   }
 }
 

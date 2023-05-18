@@ -33,7 +33,7 @@ export async function createInteractionTx<Input>(
   // from calling /tx_anchor and /price endpoints) - we're presetting these
   // values here
   if (dummy) {
-    options.reward = '72600854';
+    options.reward = '0';
     options.last_tx = 'p7vc1iSP6bvH_fCeUFa9LqoV5qiyW-jdEKouAT0XMoSwrNraB9mgpi29Q10waEpO';
   }
   if (reward && reward.length) {
