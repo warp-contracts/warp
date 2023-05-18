@@ -192,7 +192,8 @@ export class ArweaveGatewayBundledInteractionLoader implements InteractionsLoade
         },
         sortKey: sequencerSortKey,
         lastSortKey: sequencerLastSortKey,
-        id: sequencerTxId
+        id: sequencerTxId,
+        source: 'redstone-sequencer'
       }
     };
   }

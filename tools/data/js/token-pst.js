@@ -132,6 +132,14 @@ export async function handle(state, action) {
     return {state};
   }
 
+  if (input.function === 'origin') {
+    if (!state.origins) {
+      state.origins = {};
+    }
+    state.origins[SmartWeave.transaction.id] = SmartWeave.transaction.origin;
+    return {state};
+  }
+
 
   throw new ContractError(`No function supplied or function not recognised: "${input.function}"`);
 }
