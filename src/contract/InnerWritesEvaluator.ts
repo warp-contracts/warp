@@ -14,17 +14,19 @@ export class InnerWritesEvaluator {
   private evalForeignCalls(rootContractTxId: string, interaction: InteractionCall, result: Array<string>) {
     Object.keys(interaction.interactionInput.foreignContractCalls).forEach((foreignContractCallKey) => {
       const foreignContractCall = interaction.interactionInput.foreignContractCalls[foreignContractCallKey];
-      Object.keys(foreignContractCall.interactions).forEach((k) => {
-        const foreignInteraction = foreignContractCall.interactions[k];
-        if (
-          foreignInteraction.interactionInput.dryWrite &&
-          !result.includes(foreignContractCall.contractTxId) &&
-          rootContractTxId !== foreignContractCall.contractTxId /*"write-backs"*/
-        ) {
-          result.push(foreignContractCall.contractTxId);
-        }
-        this.evalForeignCalls(rootContractTxId, foreignInteraction, result);
-      });
+      if (foreignContractCall.innerCallType == 'write') {
+        Object.keys(foreignContractCall.interactions).forEach((k) => {
+          const foreignInteraction = foreignContractCall.interactions[k];
+          if (
+            foreignInteraction.interactionInput.dryWrite &&
+            !result.includes(foreignContractCall.contractTxId) &&
+            rootContractTxId !== foreignContractCall.contractTxId /*"write-backs"*/
+          ) {
+            result.push(foreignContractCall.contractTxId);
+          }
+          this.evalForeignCalls(rootContractTxId, foreignInteraction, result);
+        });
+      }
     });
   }
 }
