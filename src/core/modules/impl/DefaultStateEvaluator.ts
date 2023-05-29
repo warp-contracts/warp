@@ -158,8 +158,9 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
          updated in uncommitted state
          */
         let newState: EvalStateResult<unknown> = null;
+        let writingState: SortKeyCacheResult<EvalStateResult<unknown>> = null;
         try {
-          await writingContract.readState(missingInteraction.sortKey, [
+          writingState = await writingContract.readState(missingInteraction.sortKey, [
             ...(currentTx || []),
             {
               contractTxId: contractDefinition.txId, //not: writingContractTxId!
@@ -193,9 +194,9 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           // TODO: opt - reuse wasm handlers...
           executionContext?.handler.initState(currentState);
 
-          validity[missingInteraction.id] = newState.validity[missingInteraction.id];
-          if (newState.errorMessages?.[missingInteraction.id]) {
-            errorMessages[missingInteraction.id] = newState.errorMessages[missingInteraction.id];
+          validity[missingInteraction.id] = writingState.cachedValue.validity[missingInteraction.id];
+          if (writingState.cachedValue.errorMessages?.[missingInteraction.id]) {
+            errorMessages[missingInteraction.id] = writingState.cachedValue.errorMessages[missingInteraction.id];
           }
 
           const toCache = new EvalStateResult(currentState, validity, errorMessages);
