@@ -1,5 +1,5 @@
 import Arweave from 'arweave';
-import { SMART_WEAVE_TAGS } from '../../KnownTags';
+import { SMART_WEAVE_TAGS, WARP_TAGS, WarpTags } from '../../KnownTags';
 import { GQLEdgeInterface, GQLNodeInterface } from '../../../legacy/gqlResult';
 import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
@@ -7,11 +7,10 @@ import { ArweaveWrapper } from '../../../utils/ArweaveWrapper';
 import { GW_TYPE, InteractionsLoader } from '../InteractionsLoader';
 import { InteractionsSorter } from '../InteractionsSorter';
 import { EvaluationOptions } from '../StateEvaluator';
-import { LexicographicalInteractionsSorter } from './LexicographicalInteractionsSorter';
+import { defaultArweaveMs, LexicographicalInteractionsSorter } from './LexicographicalInteractionsSorter';
 import { Warp, WarpEnvironment } from '../../Warp';
 import { Tag } from 'utils/types/arweave-types';
 import { ArweaveGQLTxsFetcher } from './ArweaveGQLTxsFetcher';
-import { WarpTags, WARP_TAGS } from '../../KnownTags';
 import { safeParseInt } from '../../../utils/utils';
 import { VrfPluginFunctions, WarpPlugin } from '../../WarpPlugin';
 import { TagsParser } from './TagsParser';
@@ -39,6 +38,9 @@ export interface GqlReqVariables {
   first: number;
   after?: string;
 }
+
+// a height from which the last sort key value is being set by the sequencer
+const LAST_SORT_KEY_MIN_HEIGHT = 1057409;
 
 export class ArweaveGatewayBundledInteractionLoader implements InteractionsLoader {
   private readonly logger = LoggerFactory.INST.create(ArweaveGatewayBundledInteractionLoader.name);
@@ -73,6 +75,10 @@ export class ArweaveGatewayBundledInteractionLoader implements InteractionsLoade
         {
           name: SMART_WEAVE_TAGS.CONTRACT_TX_ID,
           values: [contractId]
+        },
+        {
+          name: WARP_TAGS.SEQUENCER,
+          values: ['RedStone']
         }
       ],
       blockFilter: {
@@ -131,8 +137,21 @@ export class ArweaveGatewayBundledInteractionLoader implements InteractionsLoade
       const prevInteraction = allInteractions[index - 1];
       const nextInteraction = allInteractions[index];
 
-      if (prevInteraction.node.sortKey !== nextInteraction.node.lastSortKey) {
-        throw Error(
+      this.logger.debug(`prev: ${prevInteraction.node.id} | current: ${nextInteraction.node.id}`);
+
+      if (nextInteraction.node.block.height <= LAST_SORT_KEY_MIN_HEIGHT) {
+        return interaction;
+      }
+      if (nextInteraction.node.lastSortKey?.split(',')[1] === defaultArweaveMs) {
+        // cannot verify this one
+        return interaction;
+      }
+
+      if (
+        prevInteraction.node.source === 'redstone-sequencer' &&
+        prevInteraction.node.sortKey !== nextInteraction.node.lastSortKey
+      ) {
+        this.logger.warn(
           `Interaction loading error: interaction ${nextInteraction.node.id} lastSortKey is not pointing on prev interaction ${prevInteraction.node.id}`
         );
       }
@@ -157,20 +176,26 @@ export class ArweaveGatewayBundledInteractionLoader implements InteractionsLoade
 
   private attachSequencerDataToInteraction(interaction: GQLEdgeInterface): GQLEdgeInterface {
     const extractTag = (tagName: WarpTags) => interaction.node.tags.find((tag: Tag) => tag.name === tagName)?.value;
+
+    const sequencerTxId = extractTag(WARP_TAGS.SEQUENCER_TX_ID);
+
     const sequencerOwner = extractTag(WARP_TAGS.SEQUENCER_OWNER);
     const sequencerBlockId = extractTag(WARP_TAGS.SEQUENCER_BLOCK_ID);
     const sequencerBlockHeight = extractTag(WARP_TAGS.SEQUENCER_BLOCK_HEIGHT);
-    const sequencerLastSortKey = extractTag(WARP_TAGS.SEQUENCER_LAST_SORT_KEY);
+    const sequencerLastSortKey =
+      extractTag(WARP_TAGS.SEQUENCER_PREV_SORT_KEY) || extractTag(WARP_TAGS.SEQUENCER_LAST_SORT_KEY);
     const sequencerSortKey = extractTag(WARP_TAGS.SEQUENCER_SORT_KEY);
-    const sequencerTxId = extractTag(WARP_TAGS.SEQUENCER_TX_ID);
     // this field was added in sequencer from 15.03.2023
     const sequencerBlockTimestamp = extractTag(WARP_TAGS.SEQUENCER_BLOCK_TIMESTAMP);
+
+    const parsedBlockHeight = safeParseInt(sequencerBlockHeight);
 
     if (
       !sequencerOwner ||
       !sequencerBlockId ||
       !sequencerBlockHeight ||
-      !sequencerLastSortKey ||
+      // note: old sequencer transactions do not have last sort key set
+      (!sequencerLastSortKey && parsedBlockHeight > LAST_SORT_KEY_MIN_HEIGHT) ||
       !sequencerTxId ||
       !sequencerSortKey
     ) {
