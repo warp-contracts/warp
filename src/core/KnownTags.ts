@@ -22,7 +22,8 @@ export const WARP_TAGS = {
   SEQUENCER_OWNER: 'Sequencer-Owner',
   SEQUENCER_MILLIS: 'Sequencer-Mills',
   SEQUENCER_SORT_KEY: 'Sequencer-Sort-Key',
-  SEQUENCER_LAST_SORT_KEY: 'Sequencer-Last-Sort-Key',
+  SEQUENCER_PREV_SORT_KEY: 'Sequencer-Prev-Sort-Key',
+  SEQUENCER_LAST_SORT_KEY: 'Sequencer-Last-Sort-Key', // deprecated
   SEQUENCER_TX_ID: 'Sequencer-Tx-Id',
   SEQUENCER_BLOCK_HEIGHT: 'Sequencer-Block-Height',
   SEQUENCER_BLOCK_ID: 'Sequencer-Block-Id',
