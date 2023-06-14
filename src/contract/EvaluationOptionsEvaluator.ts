@@ -124,13 +124,35 @@ export class EvaluationOptionsEvaluator {
     if (manifestOptions) {
       const errors = [];
       for (const k in manifestOptions) {
-        if (this.notConflictingEvaluationOptions.includes(k as keyof EvaluationOptions)) {
+        const optionKey = k as keyof EvaluationOptions;
+        const manifestValue = manifestOptions[k];
+        const userValue = userSetOptions[k];
+        if (this.notConflictingEvaluationOptions.includes(optionKey)) {
           continue;
         }
-        if (userSetOptions[k] !== manifestOptions[k]) {
-          errors.push(
-            `Option {${k}} differs. EvaluationOptions: [${userSetOptions[k]}], manifest: [${manifestOptions[k]}]. Use contract.setEvaluationOptions({${k}: ${manifestOptions[k]}}) to evaluate contract state.`
-          );
+        // https://github.com/warp-contracts/warp/issues/425#issuecomment-1591212639
+        if (optionKey === 'internalWrites') {
+          if (userValue === false && manifestValue === true) {
+            throw new Error(
+              'Cannot proceed with contract evaluation. User is blocking internal writes, while contract requires them.'
+            );
+          }
+        } else if (optionKey === 'unsafeClient') {
+          // 'allow' | 'skip' | 'throw'
+          if (
+            (userValue === 'throw' && manifestValue !== 'throw') ||
+            (userValue === 'skip' && manifestValue === 'allow')
+          ) {
+            throw new Error(
+              `Cannot proceed with contract evaluation. User requires to ${userValue} on any unsafeClient usage, while contract uses ${manifestValue} option.`
+            );
+          }
+        } else {
+          if (userSetOptions[k] !== manifestOptions[k]) {
+            errors.push(
+              `Option {${k}} differs. EvaluationOptions: [${userSetOptions[k]}], manifest: [${manifestOptions[k]}]. Use contract.setEvaluationOptions({${k}: ${manifestOptions[k]}}) to evaluate contract state.`
+            );
+          }
         }
       }
       if (errors.length) {

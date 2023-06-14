@@ -102,12 +102,114 @@ describe('Evaluation options evaluator', () => {
       walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/'
     });
 
-    expect(function () {
-      const result = new EvaluationOptionsEvaluator(contract2.evaluationOptions(), {
+    expect(new EvaluationOptionsEvaluator(contract2.evaluationOptions(), {
         internalWrites: false
+      }).rootOptions).toEqual({
+      allowBigInt: false,
+      cacheEveryNInteractions: -1,
+      gasLimit: 2222,
+      ignoreExceptions: true,
+      internalWrites: false,
+      maxCallDepth: 5,
+      maxInteractionEvaluationTimeSeconds: 60,
+      mineArLocalBlocks: true,
+      remoteStateSyncEnabled: false,
+      remoteStateSyncSource: 'https://dre-1.warp.cc/contract',
+      sequencerUrl: 'https://d1o5nlqr4okus2.cloudfront.net/',
+      sourceType: 'both',
+      stackTrace: {
+        saveState: false
+      },
+      throwOnInternalWriteError: true,
+      unsafeClient: 'allow',
+      updateCacheForEachInteraction: false,
+      useKVStorage: false,
+      waitForConfirmation: false,
+      useConstructor: false,
+      walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/'
+    });
+
+    expect(new EvaluationOptionsEvaluator(contract2.evaluationOptions(), {
+      unsafeClient: 'throw'
+    }).rootOptions).toEqual({
+      allowBigInt: false,
+      cacheEveryNInteractions: -1,
+      gasLimit: 2222,
+      ignoreExceptions: true,
+      internalWrites: true,
+      maxCallDepth: 5,
+      maxInteractionEvaluationTimeSeconds: 60,
+      mineArLocalBlocks: true,
+      remoteStateSyncEnabled: false,
+      remoteStateSyncSource: 'https://dre-1.warp.cc/contract',
+      sequencerUrl: 'https://d1o5nlqr4okus2.cloudfront.net/',
+      sourceType: 'both',
+      stackTrace: {
+        saveState: false
+      },
+      throwOnInternalWriteError: true,
+      unsafeClient: 'throw',
+      updateCacheForEachInteraction: false,
+      useKVStorage: false,
+      waitForConfirmation: false,
+      useConstructor: false,
+      walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/'
+    });
+
+    expect(new EvaluationOptionsEvaluator(contract2.evaluationOptions(), {
+      unsafeClient: 'skip'
+    }).rootOptions).toEqual({
+      allowBigInt: false,
+      cacheEveryNInteractions: -1,
+      gasLimit: 2222,
+      ignoreExceptions: true,
+      internalWrites: true,
+      maxCallDepth: 5,
+      maxInteractionEvaluationTimeSeconds: 60,
+      mineArLocalBlocks: true,
+      remoteStateSyncEnabled: false,
+      remoteStateSyncSource: 'https://dre-1.warp.cc/contract',
+      sequencerUrl: 'https://d1o5nlqr4okus2.cloudfront.net/',
+      sourceType: 'both',
+      stackTrace: {
+        saveState: false
+      },
+      throwOnInternalWriteError: true,
+      unsafeClient: 'skip',
+      updateCacheForEachInteraction: false,
+      useKVStorage: false,
+      waitForConfirmation: false,
+      useConstructor: false,
+      walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/'
+    });
+
+
+    const contract3 = warp.contract(null).setEvaluationOptions({
+      internalWrites: false,
+      unsafeClient: 'throw',
+      gasLimit: 2222,
+      maxCallDepth: 5
+    });
+
+    expect(function () {
+      const result = new EvaluationOptionsEvaluator(contract3.evaluationOptions(), {
+        internalWrites: true
       }).rootOptions;
-    }).toThrow('Option {internalWrites} differs.');
+    }).toThrow('Cannot proceed with contract evaluation.');
+
+    expect(function () {
+      const result = new EvaluationOptionsEvaluator(contract3.evaluationOptions(), {
+        unsafeClient: 'allow'
+      }).rootOptions;
+    }).toThrow('Cannot proceed with contract evaluation.');
+
+    expect(function () {
+      const result = new EvaluationOptionsEvaluator(contract3.evaluationOptions(), {
+        unsafeClient: 'skip'
+      }).rootOptions;
+    }).toThrow('Cannot proceed with contract evaluation.');
   });
+
 
   it('should properly set foreign evaluation options - unsafeClient - allow', async () => {
     const contract = warp.contract(null).setEvaluationOptions({

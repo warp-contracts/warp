@@ -13,6 +13,8 @@ jobs:
           version: 'latest'
       - name: Install modules
         run: yarn
+      - name: Lint
+        run: yarn lint
       - name: Build package
         run: yarn build
       - name: Run unit tests
