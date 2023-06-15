@@ -53,7 +53,8 @@
     "format:json-bindings:pst": "eslint 'crates/pst/contract/definition/bindings/json/*.json' --fix",
     "format:ts-bindings:pst": "eslint 'crates/pst/contract/definition/bindings/ts/*.ts' --fix",
     "test:pst": "jest crates/pst/tests",
-    "build:test:wasm": "yarn build:toy-contract && yarn test:toy-contract && yarn build:pst && yarn gen-bindings:pst && yarn test:pst"
+    "build:test:wasm": "yarn build:toy-contract && yarn test:toy-contract && yarn build:pst && yarn gen-bindings:pst && yarn test:pst",
+    "build:panic": "wasm-pack build --target nodejs --release --out-name rust-contract crates/panic"
   },
   "license": "MIT",
   "author": "Redstone Team <dev@redstone.finance>",
