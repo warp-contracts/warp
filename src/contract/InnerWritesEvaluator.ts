@@ -11,14 +11,19 @@ export class InnerWritesEvaluator {
     return result;
   }
 
-  private evalForeignCalls(rootContractTxId: string, interaction: InteractionCall, result: Array<string>) {
+  evalForeignCalls(
+    rootContractTxId: string,
+    interaction: InteractionCall,
+    result: Array<string>,
+    onlyDryWrites = true
+  ) {
     Object.keys(interaction.interactionInput.foreignContractCalls).forEach((foreignContractCallKey) => {
       const foreignContractCall = interaction.interactionInput.foreignContractCalls[foreignContractCallKey];
       if (foreignContractCall.innerCallType == 'write') {
         Object.keys(foreignContractCall.interactions).forEach((k) => {
           const foreignInteraction = foreignContractCall.interactions[k];
           if (
-            foreignInteraction.interactionInput.dryWrite &&
+            ((onlyDryWrites && foreignInteraction.interactionInput.dryWrite) || !onlyDryWrites) &&
             !result.includes(foreignContractCall.contractTxId) &&
             rootContractTxId !== foreignContractCall.contractTxId /*"write-backs"*/
           ) {
