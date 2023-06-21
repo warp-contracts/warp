@@ -11,7 +11,12 @@ import {
 } from '../core/modules/impl/HandlerExecutorFactory';
 import { LexicographicalInteractionsSorter } from '../core/modules/impl/LexicographicalInteractionsSorter';
 import { InteractionsSorter } from '../core/modules/InteractionsSorter';
-import { DefaultEvaluationOptions, EvalStateResult, EvaluationOptions } from '../core/modules/StateEvaluator';
+import {
+  DefaultEvaluationOptions,
+  EvalStateResult,
+  EvaluationOptions,
+  InternalWriteEvalResult
+} from '../core/modules/StateEvaluator';
 import { WARP_TAGS } from '../core/KnownTags';
 import { Warp } from '../core/Warp';
 import { createDummyTx, createInteractionTx } from '../legacy/create-interaction-tx';
@@ -689,7 +694,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
     dummyTx.sortKey = await this._sorter.createSortKey(dummyTx.block.id, dummyTx.id, dummyTx.block.height, true);
     dummyTx.strict = strict;
     if (vrf) {
-      Arweave.utils;
       const vrfPlugin = this.warp.maybeLoadPlugin<void, VrfPluginFunctions>('vrf');
       if (vrfPlugin) {
         dummyTx.vrf = vrfPlugin.process().generateMockVrf(dummyTx.sortKey);
@@ -954,25 +958,67 @@ export class HandlerBasedContract<State> implements Contract<State> {
     strict: boolean,
     vrf: boolean
   ) {
-    const handlerResult = await this.callContract(
-      input,
-      'write',
-      undefined,
-      undefined,
-      tags,
-      transfer,
-      strict,
-      vrf,
-      false
-    );
+    const innerWrites = [];
 
-    if (strict && handlerResult.type !== 'ok') {
-      throw Error('Cannot create interaction: ' + JSON.stringify(handlerResult.error || handlerResult.errorMessage));
+    if (this.evaluationOptions().remoteInternalWrite) {
+      // there's probably a less dumb way of doin' this.
+      const baseDreUrl = this.evaluationOptions().remoteStateSyncSource.split('/')[1];
+
+      const walletAddress = await this._signature.getAddress();
+      const iwEvalUrl = `https://${baseDreUrl}/internal-write?contractTxId=${this.txId()}&caller=${walletAddress}&vrf=${vrf}&strict=${strict}&input=${JSON.stringify(
+        input
+      )}`;
+      const result = await getJsonResponse<InternalWriteEvalResult>(fetch(iwEvalUrl));
+      if (result.errorMessage) {
+        throw new Error(`Error while generating internal writes, cause: ${result.errorMessage}`);
+      }
+      const stringifiedContracts = stringify(result.contracts);
+
+      // TODO: add trusted nodes jwk.n in EvaluationOptions
+      const verified = await Arweave.crypto.verify(
+        result.publicModulus,
+        Arweave.utils.stringToBuffer(stringifiedContracts),
+        Arweave.utils.b64UrlToBuffer(result.signature)
+      );
+      if (!verified) {
+        throw new Error('Could not verify the internal writes response from DRE');
+      }
+      innerWrites.push(...result.contracts);
+      tags.push(
+        {
+          name: WARP_TAGS.INTERACT_WRITE_SIG,
+          value: result.signature
+        },
+        {
+          name: WARP_TAGS.INTERACT_WRITE_SIGNER,
+          value: result.publicModulus
+        },
+        {
+          name: WARP_TAGS.INTERACT_WRITE_SIG_DATA,
+          value: stringifiedContracts
+        }
+      );
+    } else {
+      const handlerResult = await this.callContract(
+        input,
+        'write',
+        undefined,
+        undefined,
+        tags,
+        transfer,
+        strict,
+        vrf,
+        false
+      );
+
+      if (strict && handlerResult.type !== 'ok') {
+        throw Error('Cannot create interaction: ' + JSON.stringify(handlerResult.error || handlerResult.errorMessage));
+      }
+      const callStack: ContractCallRecord = this.getCallStack();
+      innerWrites.push(...this._innerWritesEvaluator.eval(callStack));
+      this.logger.debug('Input', input);
+      this.logger.debug('Callstack', callStack.print());
     }
-    const callStack: ContractCallRecord = this.getCallStack();
-    const innerWrites = this._innerWritesEvaluator.eval(callStack);
-    this.logger.debug('Input', input);
-    this.logger.debug('Callstack', callStack.print());
 
     innerWrites.forEach((contractTxId) => {
       tags.push({

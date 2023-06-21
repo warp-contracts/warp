@@ -62,7 +62,7 @@ export class EvaluationOptionsEvaluator {
 
       if (this.rootOptions['unsafeClient'] === 'allow') {
         if (foreignOptions['unsafeClient'] === 'throw') {
-          return 'skip'; // we don't the foreing contract to stop the evaluation of the root contract
+          return 'skip'; // we don't want the foreign contract to stop the evaluation of the root contract
         } else {
           return foreignOptions['unsafeClient'];
         }
@@ -106,13 +106,15 @@ export class EvaluationOptionsEvaluator {
     remoteStateSyncEnabled: () => this.rootOptions['remoteStateSyncEnabled'],
     remoteStateSyncSource: () => this.rootOptions['remoteStateSyncSource'],
     useKVStorage: (foreignOptions) => foreignOptions['useKVStorage'],
-    useConstructor: (foreignOptions) => foreignOptions['useConstructor']
+    useConstructor: (foreignOptions) => foreignOptions['useConstructor'],
+    remoteInternalWrite: (foreignOptions) => foreignOptions['remoteInternalWrite']
   };
 
   private readonly notConflictingEvaluationOptions: (keyof EvaluationOptions)[] = [
     'useKVStorage',
     'sourceType',
-    'useConstructor'
+    'useConstructor',
+    'remoteInternalWrite'
   ];
 
   /**

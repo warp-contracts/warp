@@ -14,6 +14,7 @@ import { TagsParser } from './TagsParser';
 import { VrfPluginFunctions } from '../../WarpPlugin';
 import { BasicSortKeyCache } from '../../../cache/BasicSortKeyCache';
 import { InnerWritesEvaluator } from '../../../contract/InnerWritesEvaluator';
+import stringify from 'safe-stable-stringify';
 
 type EvaluationProgressInput = {
   contractTxId: string;
@@ -245,22 +246,34 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         }
 
         if (internalWrites && contract.isRoot() && result.type === 'ok') {
-          const innerWritesEvaluator = new InnerWritesEvaluator();
-          const iwEvaluatorResult = [];
-          innerWritesEvaluator.evalForeignCalls(contract.txId(), interactionCall, iwEvaluatorResult, false);
-          const tagsInnerWrites = this.tagsParser.getInteractWritesContracts(missingInteraction);
-          if (
-            iwEvaluatorResult.length == tagsInnerWrites.length &&
-            tagsInnerWrites.every((elem) => iwEvaluatorResult.includes(elem))
-          ) {
-            validity[missingInteraction.id] = result.type === 'ok';
-            currentState = result.state;
+          const iwSigData = this.tagsParser.getInternalWritesSigTags(missingInteraction);
+          if (iwSigData) {
+            const verified = await Arweave.crypto.verify(
+              iwSigData.publicModulus,
+              Arweave.utils.stringToBuffer(stringify(iwSigData.contracts)),
+              Arweave.utils.b64UrlToBuffer(iwSigData.signature)
+            );
+            if (!verified) {
+              throw new Error('Could not verify the internal writes response from DRE');
+            }
           } else {
-            validity[missingInteraction.id] = false;
-            errorMessage = `[SDK] Inner writes do not match - tags: ${tagsInnerWrites}, evaluated: ${iwEvaluatorResult}`;
-            // console.error(errorMessage);
-            // console.dir(interactionCall, { depth: null });
-            errorMessages[missingInteraction.id] = errorMessage;
+            const innerWritesEvaluator = new InnerWritesEvaluator();
+            const iwEvaluatorResult = [];
+            innerWritesEvaluator.evalForeignCalls(contract.txId(), interactionCall, iwEvaluatorResult, false);
+            const tagsInnerWrites = this.tagsParser.getInteractWritesContracts(missingInteraction);
+            if (
+              iwEvaluatorResult.length == tagsInnerWrites.length &&
+              tagsInnerWrites.every((elem) => iwEvaluatorResult.includes(elem))
+            ) {
+              validity[missingInteraction.id] = result.type === 'ok';
+              currentState = result.state;
+            } else {
+              validity[missingInteraction.id] = false;
+              errorMessage = `[SDK] Inner writes do not match - tags: ${tagsInnerWrites}, evaluated: ${iwEvaluatorResult}`;
+              // console.error(errorMessage);
+              // console.dir(interactionCall, { depth: null });
+              errorMessages[missingInteraction.id] = errorMessage;
+            }
           }
         } else {
           validity[missingInteraction.id] = result.type === 'ok';
