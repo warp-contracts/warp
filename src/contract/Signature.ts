@@ -1,7 +1,9 @@
 import { Warp } from '../core/Warp';
 import { ArWallet } from './deploy/CreateContract';
 import { Transaction } from '../utils/types/arweave-types';
-import { BundlerSigner } from './deploy/DataItem';
+import { JWKInterface } from 'arweave/node/lib/wallet';
+import { ArweaveSigner, Signer as BundlerSigner } from 'warp-arbundles';
+import { isBrowser } from '../utils/utils';
 
 export type SignatureType = 'arweave' | 'ethereum';
 export type SigningFunction = (tx: Transaction) => Promise<void>;
@@ -16,13 +18,13 @@ Different types which can be used to sign transaction or data item
 - ArWallet - default option for signing Arweave transactions, either JWKInterface or 'use_wallet'
 - CustomSignature - object with `signer` field - a custom signing function which takes transaction as a parameter and requires signing it 
   on the client side and `type` field of type SignatureType which indicates the wallet's chain, either 'arweave' or 'ethereum'
-- Signer - arbundles specific class which allows to sign data items (only this type can be used when bundling is enabled and data items 
-  are being created)
+- Signer - arbundles specific class which allows to sign data items (works with data items - when bundling is enabled)
 */
 export type SignatureProvider = ArWallet | CustomSignature | BundlerSigner;
 
 export class Signature {
   signer: SigningFunction;
+  bundlerSigner: BundlerSigner;
   readonly type: SignatureType;
   readonly warp: Warp;
   private readonly signatureProviderType: 'CustomSignature' | 'ArWallet' | 'BundlerSigner';
@@ -40,8 +42,11 @@ export class Signature {
     } else if (this.isValidBundlerSignature(walletOrSignature)) {
       this.signatureProviderType = 'BundlerSigner';
       this.type = decodeBundleSignatureType(walletOrSignature.signatureType);
+      this.bundlerSigner = walletOrSignature;
     } else {
       this.assignArweaveSigner(walletOrSignature);
+      this.bundlerSigner =
+        typeof walletOrSignature == 'string' ? null : new ArweaveSigner(walletOrSignature as JWKInterface);
       this.signatureProviderType = 'ArWallet';
       this.type = 'arweave';
     }
@@ -76,19 +81,22 @@ export class Signature {
     }
   }
 
-  private async deduceSignerBySigning() {
+  private async deduceSignerBySigning(): Promise<string> {
     const { arweave } = this.warp;
 
-    const dummyTx = await arweave.createTransaction({
-      data: Math.random().toString().slice(-4),
-      reward: '72600854',
-      last_tx: 'p7vc1iSP6bvH_fCeUFa9LqoV5qiyW-jdEKouAT0XMoSwrNraB9mgpi29Q10waEpO'
-    });
-    await this.signer(dummyTx);
-
-    if (this.type === 'ethereum') {
-      return dummyTx.owner;
-    } else if (this.type === 'arweave') {
+    if (this.signatureProviderType == 'BundlerSigner') {
+      try {
+        return await this.bundlerSigner.getAddress();
+      } catch (e) {
+        throw new Error(`Could not get address from the signer. Is the 'getAddress' implementation correct?'`);
+      }
+    } else if (this.signatureProviderType == 'ArWallet' || this.signatureProviderType == 'CustomSignature') {
+      const dummyTx = await arweave.createTransaction({
+        data: Math.random().toString().slice(-4),
+        reward: '72600854',
+        last_tx: 'p7vc1iSP6bvH_fCeUFa9LqoV5qiyW-jdEKouAT0XMoSwrNraB9mgpi29Q10waEpO'
+      });
+      await (this.signer as SigningFunction)(dummyTx);
       return arweave.wallets.ownerToAddress(dummyTx.owner);
     } else {
       throw Error('Unknown Signature::type');
@@ -101,6 +109,18 @@ export class Signature {
     }
   }
 
+  checkBundlerSignerAvailability(bundling: boolean): void {
+    if (bundling && isBrowser() && this.signatureProviderType != 'BundlerSigner') {
+      throw new Error(`Only wallet of type 'Signer' is allowed when bundling is enabled and in browser.`);
+    }
+
+    if ((!bundling || this.warp.environment == 'local') && this.signatureProviderType == 'BundlerSigner') {
+      throw new Error(
+        `Only wallet of type 'ArWallet' or 'CustomSignature' is allowed when bundling is disabled or in local environment.`
+      );
+    }
+  }
+
   private assignArweaveSigner(walletOrSignature) {
     this.signer = async (tx: Transaction) => {
       await this.warp.arweave.transactions.sign(tx, walletOrSignature);
@@ -108,19 +128,17 @@ export class Signature {
   }
 
   private assertEnvForCustomSigner(signatureType: SignatureType) {
-    if (signatureType === 'arweave') {
-      return;
+    if (this.warp.interactionsLoader.type() === 'warp') {
+      throw new Error(`Unable to use signing function when bundling is enabled.`);
     }
 
-    if (!['mainnet', 'testnet'].includes(this.warp.environment) || this.warp.interactionsLoader.type() !== 'warp') {
-      throw new Error(
-        `Unable to use signing function of type: ${signatureType} when not in mainnet environment or bundling is disabled.`
-      );
+    if (signatureType == 'ethereum') {
+      throw new Error(`Unable to use signing function with signature of type: ${signatureType}.`);
     }
   }
 
   private isCustomSignature(signature: SignatureProvider): signature is CustomSignature {
-    return (signature as CustomSignature).signer !== undefined;
+    return (signature as CustomSignature).signer !== undefined && (signature as CustomSignature).type !== undefined;
   }
 
   private isValidBundlerSignature(signature: SignatureProvider): signature is BundlerSigner {
