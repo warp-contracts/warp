@@ -2,6 +2,8 @@ const { build } = require('esbuild');
 const rimraf = require('rimraf');
 const plugin = require('node-stdlib-browser/helpers/esbuild/plugin');
 const stdLibBrowser = require('node-stdlib-browser');
+const fs = require('fs');
+const path = require('path');
 
 const clean = async () => {
   return new Promise((resolve) => {
@@ -24,7 +26,7 @@ const runBuild = async () => {
   };
 
   console.log('Building web bundle esm.');
-  await build({
+  const result = await build({
     ...buildConfig,
     minify: true,
     // metafile: true,
@@ -34,6 +36,7 @@ const runBuild = async () => {
     process.exit(1);
   });
 
+  // fs.writeFileSync(path.join(__dirname, 'metafile.json'), JSON.stringify(result.metafile));
   console.log('Building web bundle iife.');
   await build({
     ...buildConfig,

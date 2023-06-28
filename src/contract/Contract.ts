@@ -7,6 +7,7 @@ import { ArTransfer, Tags, ArWallet } from './deploy/CreateContract';
 import { CustomSignature } from './Signature';
 import { EvaluationOptionsEvaluator } from './EvaluationOptionsEvaluator';
 import { InteractionState } from './states/InteractionState';
+import { Signer } from 'warp-arbundles';
 
 export type BenchmarkStats = { gatewayCommunication: number; stateEvaluation: number; total: number };
 
@@ -87,9 +88,9 @@ export interface Contract<State = unknown> {
    * i.e. whether called contract's function required "caller" info)
    * Connecting a signer MUST be done before "writeInteraction" and "bundleInteraction".
    *
-   * @param signer - either {@link ArWallet} that will be connected to this contract or custom {@link SigningFunction}
+   * @param signer - either {@link ArWallet} that will be connected to this contract, custom {@link SigningFunction} or {@link Signer}
    */
-  connect(signature: ArWallet | CustomSignature): Contract<State>;
+  connect(signature: ArWallet | CustomSignature | Signer): Contract<State>;
 
   /**
    * Allows to set ({@link EvaluationOptions})

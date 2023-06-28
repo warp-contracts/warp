@@ -4,8 +4,9 @@ import { EvaluationOptions } from '../../core/modules/StateEvaluator';
 import { Source } from './Source';
 import { BundlerSigner } from './DataItem';
 import { CustomSignature } from '../Signature';
+import { Tag } from '../../utils/types/arweave-types';
 
-export type Tags = { name: string; value: string }[];
+export type Tags = Tag[];
 
 export type ArWallet = JWKInterface | 'use_wallet';
 

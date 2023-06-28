@@ -14,13 +14,13 @@ import { InteractionsSorter } from '../core/modules/InteractionsSorter';
 import { DefaultEvaluationOptions, EvalStateResult, EvaluationOptions } from '../core/modules/StateEvaluator';
 import { WARP_TAGS } from '../core/KnownTags';
 import { Warp } from '../core/Warp';
-import { createDummyTx, createInteractionTx } from '../legacy/create-interaction-tx';
+import { createDummyTx, createInteractionTagsList, createInteractionTx } from '../legacy/create-interaction-tx';
 import { GQLNodeInterface } from '../legacy/gqlResult';
 import { Benchmark } from '../logging/Benchmark';
 import { LoggerFactory } from '../logging/LoggerFactory';
 import { Evolve } from '../plugins/Evolve';
 import { ArweaveWrapper } from '../utils/ArweaveWrapper';
-import { getJsonResponse, sleep, stripTrailingSlash } from '../utils/utils';
+import { getJsonResponse, isBrowser, sleep, stripTrailingSlash } from '../utils/utils';
 import {
   BenchmarkStats,
   Contract,
@@ -35,12 +35,13 @@ import { CustomSignature, Signature } from './Signature';
 import { EvaluationOptionsEvaluator } from './EvaluationOptionsEvaluator';
 import { WarpFetchWrapper } from '../core/WarpFetchWrapper';
 import { Mutex } from 'async-mutex';
-import { TransactionStatusResponse } from '../utils/types/arweave-types';
+import { Tag, TransactionStatusResponse } from '../utils/types/arweave-types';
 import { InteractionState } from './states/InteractionState';
 import { ContractInteractionState } from './states/ContractInteractionState';
 import { Crypto } from 'warp-isomorphic';
 import { VrfPluginFunctions } from '../core/WarpPlugin';
 import Arweave from 'arweave';
+import { createData, tagsExceedLimit, DataItem, Signer } from 'warp-arbundles';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -48,6 +49,7 @@ import Arweave from 'arweave';
  *
  * It requires {@link ExecutorFactory} that is using {@link HandlerApi} generic type.
  */
+
 export class HandlerBasedContract<State> implements Contract<State> {
   private readonly logger = LoggerFactory.INST.create('HandlerBasedContract');
 
@@ -261,6 +263,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const bundleInteraction = interactionsLoader.type() == 'warp' && !effectiveDisableBundling;
 
     this._signature.checkNonArweaveSigningAvailability(bundleInteraction);
+    this._signature.checkBundlerSignerAvailability(bundleInteraction);
 
     if (
       bundleInteraction &&
@@ -272,6 +275,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     if (effectiveVrf && !bundleInteraction && environment === 'mainnet') {
       throw new Error('Vrf generation is only available for bundle interaction');
+    }
+
+    if (!input) {
+      throw new Error(`Input should be a truthy value: ${JSON.stringify(input)}`);
     }
 
     if (bundleInteraction) {
@@ -322,32 +329,84 @@ export class HandlerBasedContract<State> implements Contract<State> {
   ): Promise<WriteInteractionResponse | null> {
     this.logger.info('Bundle interaction input', input);
 
-    const interactionTx = await this.createInteraction(
+    const interactionDataItem = await this.createInteractionDataItem(
       input,
       options.tags,
       emptyTransfer,
       options.strict,
-      true,
       options.vrf
     );
 
     const response = this._warpFetchWrapper.fetch(
-      `${stripTrailingSlash(this._evaluationOptions.sequencerUrl)}/gateway/sequencer/register`,
+      `${stripTrailingSlash(this._evaluationOptions.sequencerUrl)}/gateway/v2/sequencer/register`,
       {
         method: 'POST',
-        body: JSON.stringify(interactionTx),
         headers: {
-          'Accept-Encoding': 'gzip, deflate, br',
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/octet-stream',
           Accept: 'application/json'
-        }
+        },
+        body: interactionDataItem.getRaw()
       }
     );
 
+    const dataItemId = await interactionDataItem.id;
+
     return {
       bundlrResponse: await getJsonResponse(response),
-      originalTxId: interactionTx.id
+      originalTxId: dataItemId
     };
+  }
+
+  private async createInteractionDataItem<Input>(
+    input: Input,
+    tags: Tags,
+    transfer: ArTransfer,
+    strict: boolean,
+    vrf = false
+  ) {
+    if (this._evaluationOptions.internalWrites) {
+      // it modifies tags
+      await this.discoverInternalWrites<Input>(input, tags, transfer, strict, vrf);
+    }
+
+    if (vrf) {
+      tags.push(new Tag(WARP_TAGS.REQUEST_VRF, 'true'));
+    }
+
+    const interactionTags = createInteractionTagsList(
+      this._contractTxId,
+      input,
+      this.warp.environment === 'testnet',
+      tags
+    );
+
+    if (tagsExceedLimit(interactionTags)) {
+      throw new Error(`Interaction tags exceed limit of 4096 bytes.`);
+    }
+
+    const data = Math.random().toString().slice(-4);
+    const bundlerSigner = this._signature.bundlerSigner;
+
+    if (!bundlerSigner) {
+      throw new Error(
+        `Signer not set correctly. If you connect wallet through 'use_wallet', please remember that it only works when bundling is disabled.`
+      );
+    }
+
+    let interactionDataItem: DataItem;
+    if (isBrowser() && bundlerSigner.signer?.signDataItem) {
+      interactionDataItem = await bundlerSigner.signDataItem(data, interactionTags);
+    } else {
+      interactionDataItem = createData(data, bundlerSigner, { tags: interactionTags });
+      await interactionDataItem.sign(bundlerSigner);
+    }
+
+    // TODO: for ethereum owner is set to public key and not the address!!
+    if (!this._evaluationOptions.internalWrites && strict) {
+      await this.checkInteractionInStrictMode(interactionDataItem.owner, input, tags, transfer, strict, vrf);
+    }
+
+    return interactionDataItem;
   }
 
   private async createInteraction<Input>(
@@ -365,10 +424,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
 
     if (vrf) {
-      tags.push({
-        name: WARP_TAGS.REQUEST_VRF,
-        value: 'true'
-      });
+      tags.push(new Tag(WARP_TAGS.REQUEST_VRF, 'true'));
     }
 
     const interactionTx = await createInteractionTx(
@@ -385,18 +441,26 @@ export class HandlerBasedContract<State> implements Contract<State> {
     );
 
     if (!this._evaluationOptions.internalWrites && strict) {
-      const { arweave } = this.warp;
-      const caller =
-        this._signature.type == 'arweave'
-          ? await arweave.wallets.ownerToAddress(interactionTx.owner)
-          : interactionTx.owner;
-      const handlerResult = await this.callContract(input, 'write', caller, undefined, tags, transfer, strict, vrf);
-      if (handlerResult.type !== 'ok') {
-        throw Error('Cannot create interaction: ' + JSON.stringify(handlerResult.error || handlerResult.errorMessage));
-      }
+      await this.checkInteractionInStrictMode(interactionTx.owner, input, tags, transfer, strict, vrf);
     }
 
     return interactionTx;
+  }
+
+  private async checkInteractionInStrictMode<Input>(
+    owner: string,
+    input: Input,
+    tags: Tags,
+    transfer: ArTransfer,
+    strict: boolean,
+    vrf: boolean
+  ) {
+    const { arweave } = this.warp;
+    const caller = this._signature.type == 'arweave' ? await arweave.wallets.ownerToAddress(owner) : owner;
+    const handlerResult = await this.callContract(input, 'write', caller, undefined, tags, transfer, strict, vrf);
+    if (handlerResult.type !== 'ok') {
+      throw Error('Cannot create interaction: ' + JSON.stringify(handlerResult.error || handlerResult.errorMessage));
+    }
   }
 
   txId(): string {
@@ -407,7 +471,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return this._callStack;
   }
 
-  connect(signature: ArWallet | CustomSignature): Contract<State> {
+  connect(signature: ArWallet | CustomSignature | Signer): Contract<State> {
     this._signature = new Signature(this.warp, signature);
     return this;
   }
@@ -975,10 +1039,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     this.logger.debug('Callstack', callStack.print());
 
     innerWrites.forEach((contractTxId) => {
-      tags.push({
-        name: WARP_TAGS.INTERACT_WRITE,
-        value: contractTxId
-      });
+      tags.push(new Tag(WARP_TAGS.INTERACT_WRITE, contractTxId));
     });
 
     this.logger.debug('Tags with inner calls', tags);

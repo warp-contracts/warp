@@ -3,14 +3,15 @@ import { SMART_WEAVE_TAGS, WARP_TAGS } from '../core/KnownTags';
 import { GQLNodeInterface } from './gqlResult';
 import { TagsParser } from '../core/modules/impl/TagsParser';
 import { SigningFunction } from '../contract/Signature';
-import { BlockData, CreateTransactionInterface, Transaction } from '../utils/types/arweave-types';
+import { BlockData, CreateTransactionInterface, Tag, Transaction } from '../utils/types/arweave-types';
+import { Tags } from '../contract/deploy/CreateContract';
 
 export async function createInteractionTx<Input>(
   arweave: Arweave,
   signer: SigningFunction,
   contractId: string,
   input: Input,
-  tags: { name: string; value: string }[],
+  tags: Tags,
   target = '',
   winstonQty = '0',
   dummy = false,
@@ -42,24 +43,8 @@ export async function createInteractionTx<Input>(
 
   const interactionTx = await arweave.createTransaction(options);
 
-  if (!input) {
-    throw new Error(`Input should be a truthy value: ${JSON.stringify(input)}`);
-  }
-
-  if (tags && tags.length) {
-    for (const tag of tags) {
-      interactionTx.addTag(tag.name.toString(), tag.value.toString());
-    }
-  }
-  interactionTx.addTag(SMART_WEAVE_TAGS.APP_NAME, 'SmartWeaveAction');
-  // use real SDK version here?
-  interactionTx.addTag(SMART_WEAVE_TAGS.APP_VERSION, '0.3.0');
-  interactionTx.addTag(SMART_WEAVE_TAGS.SDK, 'Warp');
-  interactionTx.addTag(SMART_WEAVE_TAGS.CONTRACT_TX_ID, contractId);
-  interactionTx.addTag(SMART_WEAVE_TAGS.INPUT, JSON.stringify(input));
-  if (isTestnet) {
-    interactionTx.addTag(WARP_TAGS.WARP_TESTNET, '1.0.0');
-  }
+  const interactionTags = createInteractionTagsList(contractId, input, isTestnet, tags);
+  interactionTags.forEach((t) => interactionTx.addTag(t.name, t.value));
 
   if (signer) {
     await signer(interactionTx);
@@ -113,4 +98,31 @@ export function createDummyTx(tx: Transaction, from: string, block: BlockData): 
     parent: null,
     bundledIn: null
   };
+}
+
+export function createInteractionTagsList<Input>(
+  contractId: string,
+  input: Input,
+  isTestnet: boolean,
+  customTags?: Tags
+) {
+  const interactionTags: Tags = [];
+
+  if (customTags && customTags.length) {
+    for (const customTag of customTags) {
+      interactionTags.push(new Tag(customTag.name.toString(), customTag.value.toString()));
+    }
+  }
+
+  interactionTags.push(new Tag(SMART_WEAVE_TAGS.APP_NAME, 'SmartWeaveAction'));
+  // use real SDK version here?
+  interactionTags.push(new Tag(SMART_WEAVE_TAGS.APP_VERSION, '0.3.0'));
+  interactionTags.push(new Tag(SMART_WEAVE_TAGS.SDK, 'Warp'));
+  interactionTags.push(new Tag(SMART_WEAVE_TAGS.CONTRACT_TX_ID, contractId));
+  interactionTags.push(new Tag(SMART_WEAVE_TAGS.INPUT, JSON.stringify(input)));
+  if (isTestnet) {
+    interactionTags.push(new Tag(WARP_TAGS.WARP_TESTNET, '1.0.0'));
+  }
+
+  return interactionTags;
 }
