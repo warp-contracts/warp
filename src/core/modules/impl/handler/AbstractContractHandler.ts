@@ -82,13 +82,19 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
           }
         : result.originalErrorMessages;
 
+      const fromSK = calleeContract.rootSortKey;
+      const toSK = calleeContract.rootSortKey; //FIXME: here also
       calleeContract.interactionState().update(calleeContract.txId(), {
-        state: result.state as State,
-        validity: {
-          ...result.originalValidity,
-          [this.swGlobal._activeTx.id]: result.type == 'ok'
-        },
-        errorMessages: resultErrorMessages
+        validFrom: fromSK,
+        validTo: toSK,
+        state: {
+          state: result.state as State,
+          validity: {
+            ...result.originalValidity,
+            [this.swGlobal._activeTx.id]: result.type == 'ok'
+          },
+          errorMessages: resultErrorMessages
+        }
       });
 
       if (shouldAutoThrow) {
@@ -166,7 +172,9 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
 
   protected assignRefreshState(executionContext: ExecutionContext<State>) {
     this.swGlobal.contracts.refreshState = async () => {
-      return executionContext.contract.interactionState().get(this.swGlobal.contract.id)?.state;
+      return executionContext.contract
+        .interactionState()
+        .get(this.swGlobal.contract.id, executionContext.requestedSortKey)?.state;
     };
   }
 }

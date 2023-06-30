@@ -89,9 +89,11 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         break;
       }
 
-      contract
-        .interactionState()
-        .setInitial(contract.txId(), new EvalStateResult(currentState, validity, errorMessages));
+      contract.interactionState().setInitial(contract.txId(), {
+        validFrom: null,
+        validTo: null, // FIXME: in a hurry here, probably we make this better
+        state: new EvalStateResult(currentState, validity, errorMessages)
+      });
 
       const missingInteraction = missingInteractions[i];
       const singleInteractionBenchmark = Benchmark.measure();
@@ -151,7 +153,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         let newState: EvalStateResult<unknown> = null;
         try {
           await writingContract.readState(missingInteraction.sortKey);
-          newState = contract.interactionState().get(contract.txId());
+          newState = contract.interactionState().get(contract.txId(), currentSortKey);
         } catch (e) {
           if (e.name == 'ContractError' && e.subtype == 'unsafeClientSkip') {
             this.logger.warn('Skipping unsafe contract in internal write');
@@ -291,7 +293,13 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       if (contract.isRoot()) {
         // update the uncommitted state of the root contract
         if (lastConfirmedTxState) {
-          contract.interactionState().update(contract.txId(), lastConfirmedTxState.state);
+          const fromSK = lastConfirmedTxState?.tx?.sortKey || contract.rootSortKey;
+          const toSK = contract.rootSortKey;
+          contract.interactionState().update(contract.txId(), {
+            validFrom: fromSK,
+            validTo: toSK,
+            state: lastConfirmedTxState.state
+          });
           if (validity[missingInteraction.id]) {
             await contract.interactionState().commit(missingInteraction);
           } else {
@@ -300,7 +308,13 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         }
       } else {
         // if that's an inner contract call - only update the state in the uncommitted states
-        contract.interactionState().update(contract.txId(), new EvalStateResult(currentState, validity, errorMessages));
+        const fromSK = lastConfirmedTxState?.tx?.sortKey || contract.rootSortKey;
+        const toSK = contract.rootSortKey;
+        contract.interactionState().update(contract.txId(), {
+          validFrom: fromSK,
+          validTo: toSK,
+          state: new EvalStateResult(currentState, validity, errorMessages)
+        });
       }
     }
     const evalStateResult = new EvalStateResult<State>(currentState, validity, errorMessages);

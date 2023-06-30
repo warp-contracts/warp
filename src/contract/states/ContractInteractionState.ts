@@ -1,4 +1,4 @@
-import { InteractionState } from './InteractionState';
+import { InteractionState, InteractionStateSnapshot } from './InteractionState';
 import { CacheKey, SortKeyCache } from '../../cache/SortKeyCache';
 import { EvalStateResult } from '../../core/modules/StateEvaluator';
 import { GQLNodeInterface } from '../../legacy/gqlResult';
@@ -6,18 +6,22 @@ import { Warp } from '../../core/Warp';
 import { SortKeyCacheRangeOptions } from '../../cache/SortKeyCacheRangeOptions';
 
 export class ContractInteractionState implements InteractionState {
-  private readonly _json = new Map<string, EvalStateResult<unknown>>();
+  private readonly _json = new Map<string, InteractionStateSnapshot>();
   private readonly _initialJson = new Map<string, EvalStateResult<unknown>>();
   private readonly _kv = new Map<string, SortKeyCache<unknown>>();
 
   constructor(private readonly _warp: Warp) {}
 
-  has(contractTx): boolean {
-    return this._json.has(contractTx);
+  has(contractTx, sortKey: string): boolean {
+    const snapshot = this._json.get(contractTx);
+    return snapshot != null && sortKey >= snapshot.validFrom && sortKey <= snapshot.validTo;
   }
 
-  get(contractTxId: string): EvalStateResult<unknown> {
-    return this._json.get(contractTxId) || null;
+  get(contractTxId: string, sortKey: string): EvalStateResult<unknown> {
+    if (this.has(contractTxId, sortKey)) {
+      return this._json.get(contractTxId).state;
+    }
+    return null;
   }
 
   async getKV(contractTxId: string, cacheKey: CacheKey): Promise<unknown> {
@@ -53,7 +57,7 @@ export class ContractInteractionState implements InteractionState {
       return this.reset();
     }
     try {
-      await this.doStoreJson(this._json, interaction);
+      await this.doStoreSnapshot(this._json, interaction);
       await this.commitKVs();
     } finally {
       this.reset();
@@ -74,14 +78,16 @@ export class ContractInteractionState implements InteractionState {
     }
   }
 
-  setInitial(contractTxId: string, state: EvalStateResult<unknown>): void {
+  setInitial(contractTxId: string, snapshot: InteractionStateSnapshot): void {
     // think twice here.
-    this._initialJson.set(contractTxId, state);
-    this._json.set(contractTxId, state);
+    this._initialJson.set(contractTxId, snapshot.state);
+    this.update(contractTxId, snapshot);
   }
 
-  update(contractTxId: string, state: EvalStateResult<unknown>): void {
-    this._json.set(contractTxId, state);
+  update(contractTxId: string, snapshot: InteractionStateSnapshot): void {
+    if (snapshot.validTo != null && snapshot.validFrom != null) {
+      this._json.set(contractTxId, snapshot);
+    }
   }
 
   async updateKV(contractTxId: string, key: CacheKey, value: unknown): Promise<void> {
@@ -108,6 +114,14 @@ export class ContractInteractionState implements InteractionState {
     if (states.size > 1) {
       for (const [k, v] of states) {
         await this._warp.stateEvaluator.putInCache(k, interaction, v);
+      }
+    }
+  }
+
+  private async doStoreSnapshot(snapshots: Map<string, InteractionStateSnapshot>, interaction: GQLNodeInterface) {
+    if (snapshots.size > 1) {
+      for (const [k, v] of snapshots) {
+        await this._warp.stateEvaluator.putInCache(k, interaction, v.state);
       }
     }
   }

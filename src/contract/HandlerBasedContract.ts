@@ -151,8 +151,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
         ? this._sorter.generateLastSortKey(sortKeyOrBlockHeight)
         : sortKeyOrBlockHeight;
 
-    if (sortKey && !this.isRoot() && this.interactionState().has(this.txId())) {
-      const result = this.interactionState().get(this.txId());
+    if (sortKey && !this.isRoot() && this.interactionState().has(this.txId(), sortKey)) {
+      const result = this.interactionState().get(this.txId(), sortKey);
       return new SortKeyCacheResult<EvalStateResult<State>>(sortKey, result as EvalStateResult<State>);
     }
 
@@ -190,7 +190,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
       });
 
       if (sortKey && !this.isRoot()) {
-        this.interactionState().update(this.txId(), result.cachedValue);
+        const fromSK = result.sortKey;
+        const toSK = sortKey;
+        this.interactionState().update(this.txId(), {
+          validFrom: fromSK,
+          validTo: toSK,
+          state: result.cachedValue
+        });
       }
 
       return result;
@@ -792,14 +798,20 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     const executionContext = await this.createExecutionContextFromTx(this._contractTxId, interactionTx);
 
-    if (!this.isRoot() && this.interactionState().has(this.txId())) {
+    if (!this.isRoot() && this.interactionState().has(this.txId(), interactionTx.sortKey)) {
       evalStateResult = new SortKeyCacheResult<EvalStateResult<State>>(
         interactionTx.sortKey,
-        this.interactionState().get(this.txId()) as EvalStateResult<State>
+        this.interactionState().get(this.txId(), interactionTx.sortKey) as EvalStateResult<State>
       );
     } else {
       evalStateResult = await this.warp.stateEvaluator.eval<State>(executionContext);
-      this.interactionState().update(this.txId(), evalStateResult.cachedValue);
+      const fromSK = evalStateResult.sortKey;
+      const toSK = interactionTx.sortKey;
+      this.interactionState().update(this.txId(), {
+        validFrom: fromSK,
+        validTo: toSK,
+        state: evalStateResult.cachedValue
+      });
     }
 
     this.logger.debug('callContractForTx - evalStateResult', {
