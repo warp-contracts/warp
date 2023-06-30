@@ -129,12 +129,14 @@ export interface Contract<State = unknown> {
    * @param input - the input to the contract - eg. function name and parameters
    * @param tags - a set of tags that can be added to the interaction transaction
    * @param transfer - additional {@link ArTransfer} data that can be attached to the interaction
+   * @param caller - caller of the view state operation
    * transaction
    */
   viewState<Input = unknown, View = unknown>(
     input: Input,
     tags?: Tags,
-    transfer?: ArTransfer
+    transfer?: ArTransfer,
+    caller?: string
   ): Promise<InteractionResult<State, View>>;
 
   /**

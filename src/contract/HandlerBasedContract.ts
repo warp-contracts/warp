@@ -209,10 +209,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
   async viewState<Input, View>(
     input: Input,
     tags: Tags = [],
-    transfer: ArTransfer = emptyTransfer
+    transfer: ArTransfer = emptyTransfer,
+    caller?: string
   ): Promise<InteractionResult<State, View>> {
     this.logger.info('View state for', this._contractTxId);
-    return await this.callContract<Input, View>(input, 'view', undefined, undefined, tags, transfer);
+    return await this.callContract<Input, View>(input, 'view', caller, undefined, tags, transfer);
   }
 
   async viewStateForTx<Input, View>(
