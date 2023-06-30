@@ -53,7 +53,6 @@ export * from './contract/Signature';
 export * from './contract/EvaluationOptionsEvaluator';
 export * from './contract/deploy/Source';
 export * from './contract/deploy/CreateContract';
-export * from './contract/deploy/DataItem';
 
 export * from './legacy/gqlResult';
 export * from './legacy/smartweave-global';

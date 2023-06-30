@@ -401,7 +401,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
       await interactionDataItem.sign(bundlerSigner);
     }
 
-    // TODO: for ethereum owner is set to public key and not the address!!
     if (!this._evaluationOptions.internalWrites && strict) {
       await this.checkInteractionInStrictMode(interactionDataItem.owner, input, tags, transfer, strict, vrf);
     }

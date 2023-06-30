@@ -32,7 +32,7 @@ import { Transaction } from '../utils/types/arweave-types';
 import { DEFAULT_LEVEL_DB_LOCATION, WARP_GW_URL } from './WarpFactory';
 import { LevelDbCache } from '../cache/impl/LevelDbCache';
 import { SourceData } from '../contract/deploy/Source';
-import { BundlerSigner, DataItem } from '../contract/deploy/DataItem';
+import { Signer, DataItem } from 'warp-arbundles';
 import { BasicSortKeyCache } from '../cache/BasicSortKeyCache';
 
 export type WarpEnvironment = 'local' | 'testnet' | 'mainnet' | 'custom';
@@ -121,7 +121,7 @@ export class Warp {
 
   async createSource(
     sourceData: SourceData,
-    wallet: ArWallet | CustomSignature | BundlerSigner,
+    wallet: ArWallet | CustomSignature | Signer,
     disableBundling = false
   ): Promise<Transaction | DataItem> {
     return await this.createContract.createSource(sourceData, wallet, disableBundling);
