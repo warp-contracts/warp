@@ -3,7 +3,6 @@ import { ArWallet } from './deploy/CreateContract';
 import { Transaction } from '../utils/types/arweave-types';
 import { JWKInterface } from 'arweave/node/lib/wallet';
 import { ArweaveSigner, Signer as BundlerSigner } from 'warp-arbundles';
-import { isBrowser } from '../utils/utils';
 
 export type SignatureType = 'arweave' | 'ethereum';
 export type SigningFunction = (tx: Transaction) => Promise<void>;
@@ -110,10 +109,6 @@ export class Signature {
   }
 
   checkBundlerSignerAvailability(bundling: boolean): void {
-    if (bundling && isBrowser() && this.signatureProviderType != 'BundlerSigner') {
-      throw new Error(`Only wallet of type 'Signer' is allowed when bundling is enabled and in browser.`);
-    }
-
     if ((!bundling || this.warp.environment == 'local') && this.signatureProviderType == 'BundlerSigner') {
       throw new Error(
         `Only wallet of type 'ArWallet' or 'CustomSignature' is allowed when bundling is disabled or in local environment.`
