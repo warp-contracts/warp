@@ -19,6 +19,17 @@ export async function handle(state, action) {
         const result = await SmartWeave.contracts.viewContractState(state.foreignContract, { function: 'readCounter' });
         return { result };
     }
+    else if (action.input.function == 'readRead') { // (:
+        const result = await SmartWeave.contracts.readContractState(state.foreignContract);
+        return { result: result.state };
+    } else if (action.input.function == 'add') {
+        state.counter++;
+        return { state };
+    } else if (action.input.function == 'addWithFailExternalConstructor') {
+        state.counter++;
+        await SmartWeave.contracts.readContractState(state.foreignContract);
+        return { state };
+    }
 
     return { state }
 }
