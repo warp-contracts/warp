@@ -124,6 +124,12 @@ export class EvaluationOptionsEvaluator {
     if (manifestOptions) {
       const errors = [];
       for (const k in manifestOptions) {
+        // eslint-disable-next-line no-prototype-builtins
+        if (!userSetOptions.hasOwnProperty(k)) {
+          throw new Error(
+            "Unknown option set in contract's manifest. You probably need to update the Warp SDK version."
+          );
+        }
         const optionKey = k as keyof EvaluationOptions;
         const manifestValue = manifestOptions[k];
         const userValue = userSetOptions[k];
