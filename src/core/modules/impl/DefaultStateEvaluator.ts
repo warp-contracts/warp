@@ -153,8 +153,12 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           await writingContract.readState(missingInteraction.sortKey);
           newState = contract.interactionState().get(contract.txId());
         } catch (e) {
-          if (e.name == 'ContractError' && e.subtype == 'unsafeClientSkip') {
-            this.logger.warn('Skipping unsafe contract in internal write');
+          // ppe: not sure why we're not handling all ContractErrors here...
+          if (
+            e.name == 'ContractError' &&
+            (e.subtype == 'unsafeClientSkip' || e.subtype == 'constructor' || e.subtype == 'blacklistedSkip')
+          ) {
+            this.logger.warn(`Skipping contract in internal write, reason ${e.subtype}`);
             errorMessages[missingInteraction.id] = e;
             if (canBeCached(missingInteraction)) {
               const toCache = new EvalStateResult(currentState, validity, errorMessages);

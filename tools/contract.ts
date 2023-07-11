@@ -4,15 +4,21 @@ import os from 'os';
 import {JWKInterface} from "arweave/web/lib/wallet";
 import fs from "fs";
 import { ArweaveGQLTxsFetcher } from "../src/core/modules/impl/ArweaveGQLTxsFetcher";
+import { EventEmitter } from "node:events";
+import { EvaluationProgressPlugin } from "warp-contracts-plugin-evaluation-progress";
 
 const logger = LoggerFactory.INST.create('Contract');
 
 //LoggerFactory.use(new TsLogFactory());
 //LoggerFactory.INST.logLevel('error');
 
-LoggerFactory.INST.logLevel('debug', 'DefaultStateEvaluator');
-LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
-LoggerFactory.INST.logLevel('debug', 'ArweaveGQLTxsFetcher');
+LoggerFactory.INST.logLevel('none');
+LoggerFactory.INST.logLevel('info', 'DefaultStateEvaluator');
+
+const eventEmitter = new EventEmitter();
+eventEmitter.on('progress-notification', (data) => {
+  // events.progress(data.contractTxId, data.message);
+});
 
 async function main() {
   printTestInfo();
@@ -21,13 +27,20 @@ async function main() {
   const rssUsedBefore = Math.round((process.memoryUsage().rss / 1024 / 1024) * 100) / 100;
 
   const warp = WarpFactory
-    .forMainnet({...defaultCacheOptions, inMemory: true}, true)
+    .forMainnet({ ...defaultCacheOptions, inMemory: true });
 
   try {
     const contract = warp
-      .contract("bLAgYxAdX2Ry-nt6aH2ixgvJXbpsEYm28NgJgyqfs-U")
+      .contract("KTzTXT_ANmF84fWEKHzWURD1LWd9QaFR9yfYUwH2Lxw")
+      .setEvaluationOptions({
+        maxCallDepth: 5,
+        maxInteractionEvaluationTimeSeconds: 10000,
+        allowBigInt: true,
+        unsafeClient: 'skip',
+        internalWrites: true,
+      });
     const result = await contract.readState();
-    console.dir(result.cachedValue.validity, {depth: null});
+    console.dir(result.cachedValue.state, {depth: null});
   } catch (e) {
     console.error(e);
   }

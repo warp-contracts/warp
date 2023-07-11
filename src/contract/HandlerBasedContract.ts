@@ -35,12 +35,11 @@ import { CustomSignature, Signature } from './Signature';
 import { EvaluationOptionsEvaluator } from './EvaluationOptionsEvaluator';
 import { WarpFetchWrapper } from '../core/WarpFetchWrapper';
 import { Mutex } from 'async-mutex';
-import { Tag, TransactionStatusResponse } from '../utils/types/arweave-types';
+import { Tag, Transaction, TransactionStatusResponse } from '../utils/types/arweave-types';
 import { InteractionState } from './states/InteractionState';
 import { ContractInteractionState } from './states/ContractInteractionState';
 import { Crypto } from 'warp-isomorphic';
 import { VrfPluginFunctions } from '../core/WarpPlugin';
-import Arweave from 'arweave';
 import { createData, tagsExceedLimit, DataItem, Signer } from 'warp-arbundles';
 
 /**
@@ -316,7 +315,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
         await this.warp.testing.mineBlock();
       }
 
-      return { originalTxId: interactionTx.id };
+      return { originalTxId: interactionTx.id, interactionTx };
     }
   }
 
@@ -354,7 +353,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     return {
       bundlrResponse: await getJsonResponse(response),
-      originalTxId: dataItemId
+      originalTxId: dataItemId,
+      interactionTx: interactionDataItem
     };
   }
 
@@ -409,7 +409,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return interactionDataItem;
   }
 
-  private async createInteraction<Input>(
+  async createInteraction<Input>(
     input: Input,
     tags: Tags,
     transfer: ArTransfer,
@@ -417,7 +417,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     bundle = false,
     vrf = false,
     reward?: string
-  ) {
+  ): Promise<Transaction> {
     if (this._evaluationOptions.internalWrites) {
       // it modifies tags
       await this.discoverInternalWrites<Input>(input, tags, transfer, strict, vrf);
@@ -753,7 +753,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
     dummyTx.sortKey = await this._sorter.createSortKey(dummyTx.block.id, dummyTx.id, dummyTx.block.height, true);
     dummyTx.strict = strict;
     if (vrf) {
-      Arweave.utils;
       const vrfPlugin = this.warp.maybeLoadPlugin<void, VrfPluginFunctions>('vrf');
       if (vrfPlugin) {
         dummyTx.vrf = vrfPlugin.process().generateMockVrf(dummyTx.sortKey);

@@ -7,7 +7,8 @@ import { ArTransfer, Tags, ArWallet } from './deploy/CreateContract';
 import { CustomSignature } from './Signature';
 import { EvaluationOptionsEvaluator } from './EvaluationOptionsEvaluator';
 import { InteractionState } from './states/InteractionState';
-import { Signer } from 'warp-arbundles';
+import { DataItem, Signer } from 'warp-arbundles';
+import { Transaction } from '../utils/types/arweave-types';
 
 export type BenchmarkStats = { gatewayCommunication: number; stateEvaluation: number; total: number };
 
@@ -21,6 +22,7 @@ interface BundlrResponse {
 export interface WriteInteractionResponse {
   bundlrResponse?: BundlrResponse;
   originalTxId: string;
+  interactionTx: Transaction | DataItem;
 }
 
 export interface DREContractStatusResponse<State> {
