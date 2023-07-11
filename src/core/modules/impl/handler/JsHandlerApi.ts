@@ -4,7 +4,7 @@ import { ExecutionContext } from '../../../../core/ExecutionContext';
 import { EvalStateResult } from '../../../../core/modules/StateEvaluator';
 import { SWBlock, SmartWeaveGlobal, SWTransaction, SWVrf } from '../../../../legacy/smartweave-global';
 import { deepCopy, timeout } from '../../../../utils/utils';
-import { ContractInteraction, InteractionData, InteractionResult } from '../HandlerExecutorFactory';
+import { ContractError, ContractInteraction, InteractionData, InteractionResult } from '../HandlerExecutorFactory';
 import { genesisSortKey } from '../LexicographicalInteractionsSorter';
 import { AbstractContractHandler } from './AbstractContractHandler';
 
@@ -14,7 +14,7 @@ const throwErrorWithName = (name: string, message: string) => {
   error.name = name;
   throw error;
 };
-enum KnownErrors {
+export enum KnownErrors {
   ContractError = 'ContractError',
   ConstructorError = 'ConstructorError'
 }
@@ -71,7 +71,12 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
 
       cleanUpSwGlobal();
       if (result.type !== 'ok') {
-        throw new Error(`Exception while calling constructor: ${JSON.stringify(interaction)}:\n${result.errorMessage}`);
+        if (executionContext.contract.isRoot()) {
+          throw Error(`ConstructorError: ${result.errorMessage}`);
+        } else {
+          // note: see comments in 'catch' in 'runContractFunction'
+          throw new ContractError(`ConstructorError [${executionContext.contract.txId()}]: ${result.errorMessage}`);
+        }
       }
       return result.state;
     } else {
@@ -160,7 +165,17 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
             result: null
           };
         case KnownErrors.ConstructorError:
-          throw Error(`ConstructorError: ${err.message}`);
+          // if that's the contract that we want to evaluate 'directly' - we need to stop evaluation immediately,
+          // BUT throwing exception in case of inner contract call would stop the base contract evaluation
+          // (and effectively block it from further evaluation) - https://github.com/warp-contracts/warp/issues/436
+          if (executionContext.contract.isRoot()) {
+            throw Error(`ConstructorError: ${err.message}`);
+          } else {
+            // i.e. if that is an inner contract call
+            // note: throwing ContractError here (in case of inner contract call) will (from the caller perspective)
+            // look like a ContractError thrown from the callee contract itself
+            throw new ContractError(`ConstructorError [${executionContext.contract.txId()}]: ${err.message}`);
+          }
         default:
           return {
             type: 'exception' as const,

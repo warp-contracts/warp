@@ -15,6 +15,7 @@ describe('Constructor', () => {
   let contractIrSrc: string;
   let helperContractSrc: string;
   let dummyContractSrc: string;
+  let missingConstructorContractSrc: string;
 
   let wallet: JWKInterface;
   let walletAddress: string;
@@ -39,6 +40,7 @@ describe('Constructor', () => {
     contractIrSrc = fs.readFileSync(path.join(__dirname, '../data/constructor/constructor-internal-writes.js'), 'utf8');
     helperContractSrc = fs.readFileSync(path.join(__dirname, '../data/constructor/constructor-helper.js'), 'utf8');
     dummyContractSrc = fs.readFileSync(path.join(__dirname, '../data/constructor/constructor-dummy.js'), 'utf8');
+    missingConstructorContractSrc = fs.readFileSync(path.join(__dirname, '../data/constructor/missing-constructor-dummy.js'), 'utf8');
   });
 
   afterAll(async () => {
@@ -278,6 +280,34 @@ describe('Constructor', () => {
           },
           type: 'ok'
         });
+      });
+
+      it('should not fail the calling contract when callee contract constructor is broken', async () => {
+        const withConstructorContract = await deployContract({
+          src: missingConstructorContractSrc,
+          withKv: false
+        });
+        const readExternalContract = await deployContract({
+          src: contractIrSrc,
+          withKv: false,
+          addToState: { foreignContract: withConstructorContract.txId() }
+        });
+
+        expect((await readExternalContract.viewState({ function: 'readRead' })).result).toEqual(null);
+        expect((await readExternalContract.viewState({ function: 'read' })).result).toEqual(null);
+
+        await readExternalContract.writeInteraction({ function: 'add' });
+
+        const result1 = await readExternalContract.readState();
+
+        // note: constructor of this contract adds '1' to initial value
+        expect(result1.cachedValue.state.counter).toEqual(3);
+
+        await readExternalContract.writeInteraction({ function: 'addWithFailExternalConstructor' });
+        const result2 = await readExternalContract.readState();
+        // note: in this case read from external contract (with a 'broken constructor')
+        // should cause the original interaction to fail - so the counter should not be increased
+        expect(result2.cachedValue.state.counter).toEqual(3);
       });
     });
   });
