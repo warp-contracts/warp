@@ -9,12 +9,17 @@ import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 import { mineBlock } from '../_helpers';
 import { WriteInteractionResponse } from '../../../contract/Contract';
+import { HandlerBasedContract } from "../../../contract/HandlerBasedContract";
+import { emptyTransfer } from "../../../contract/deploy/CreateContract";
+import { Tag } from "../../../utils/types/arweave-types";
+import { WARP_TAGS } from "../../../core/KnownTags";
 
 describe('Constructor', () => {
   let contractSrc: string;
   let contractIrSrc: string;
   let helperContractSrc: string;
   let dummyContractSrc: string;
+  let missingConstructorContractSrc: string;
 
   let wallet: JWKInterface;
   let walletAddress: string;
@@ -39,6 +44,10 @@ describe('Constructor', () => {
     contractIrSrc = fs.readFileSync(path.join(__dirname, '../data/constructor/constructor-internal-writes.js'), 'utf8');
     helperContractSrc = fs.readFileSync(path.join(__dirname, '../data/constructor/constructor-helper.js'), 'utf8');
     dummyContractSrc = fs.readFileSync(path.join(__dirname, '../data/constructor/constructor-dummy.js'), 'utf8');
+    missingConstructorContractSrc = fs.readFileSync(
+      path.join(__dirname, '../data/constructor/missing-constructor-dummy.js'),
+      'utf8'
+    );
   });
 
   afterAll(async () => {
@@ -278,6 +287,56 @@ describe('Constructor', () => {
           },
           type: 'ok'
         });
+      });
+
+      it('should not fail the calling contract when callee contract constructor is broken', async () => {
+        const withoutConstructorContract = await deployContract({
+          src: missingConstructorContractSrc,
+          withKv: false
+        });
+        const readExternalContract = await deployContract({
+          src: contractIrSrc,
+          withKv: false,
+          addToState: { foreignContract: withoutConstructorContract.txId() }
+        });
+
+        expect((await readExternalContract.viewState({ function: 'readRead' })).result).toEqual(null);
+        expect((await readExternalContract.viewState({ function: 'read' })).result).toEqual(null);
+
+        await readExternalContract.writeInteraction({ function: 'add' });
+
+        const result1 = await readExternalContract.readState();
+
+        // note: constructor of this contract adds '1' to initial value
+        expect(result1.cachedValue.state.counter).toEqual(3);
+
+        await readExternalContract.writeInteraction({ function: 'addWithFailExternalConstructor' });
+        const result2 = await readExternalContract.readState();
+        // note: in this case read from external contract (with a 'broken constructor')
+        // should cause the original interaction to fail - so the counter should not be increased
+        expect(result2.cachedValue.state.counter).toEqual(3);
+
+        // we need to switch off internal-writes, otherwise the 'createInteraction' tries to discover them and explodes
+        // with a constructor error
+        withoutConstructorContract.setEvaluationOptions(
+          Object.assign({}, withoutConstructorContract.evaluationOptions(), { internalWrites: false })
+        );
+
+        // we're testing a case where someone has created an interaction with a 'constructor' based contract
+        // - i.e. the with 'useConstructor=true' in manifest (this contract has missing '__init' function in its code)
+        // but with SDK version that does not support constructors.
+        // trying to create an interaction on a contract that has a 'broken' constructor, supports internal writes
+        // and with the SDK version the supports constructors - results in an error thrown during internal writes
+        // discovery - in other words, it is not possible to create any interaction with such contract.
+        const hackyTransaction = await (withoutConstructorContract as HandlerBasedContract<any>).createInteraction(
+          { function: "doWrite" }, [new Tag(WARP_TAGS.INTERACT_WRITE, readExternalContract.txId())], emptyTransfer, false
+        );
+
+        await warp.arweave.transactions.post(hackyTransaction);
+        await mineBlock(warp);
+
+        const result3 = await readExternalContract.readState();
+        expect(result3.cachedValue.state.counter).toEqual(3);
       });
     });
   });
