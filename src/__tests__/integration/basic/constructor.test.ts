@@ -9,10 +9,10 @@ import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 import { mineBlock } from '../_helpers';
 import { WriteInteractionResponse } from '../../../contract/Contract';
-import { HandlerBasedContract } from "../../../contract/HandlerBasedContract";
-import { emptyTransfer } from "../../../contract/deploy/CreateContract";
-import { Tag } from "../../../utils/types/arweave-types";
-import { WARP_TAGS } from "../../../core/KnownTags";
+import { HandlerBasedContract } from '../../../contract/HandlerBasedContract';
+import { emptyTransfer } from '../../../contract/deploy/CreateContract';
+import { Tag } from '../../../utils/types/arweave-types';
+import { WARP_TAGS } from '../../../core/KnownTags';
 
 describe('Constructor', () => {
   let contractSrc: string;
@@ -329,7 +329,10 @@ describe('Constructor', () => {
         // and with the SDK version the supports constructors - results in an error thrown during internal writes
         // discovery - in other words, it is not possible to create any interaction with such contract.
         const hackyTransaction = await (withoutConstructorContract as HandlerBasedContract<any>).createInteraction(
-          { function: "doWrite" }, [new Tag(WARP_TAGS.INTERACT_WRITE, readExternalContract.txId())], emptyTransfer, false
+          { function: 'doWrite' },
+          [new Tag(WARP_TAGS.INTERACT_WRITE, readExternalContract.txId())],
+          emptyTransfer,
+          false
         );
 
         await warp.arweave.transactions.post(hackyTransaction);
