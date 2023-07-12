@@ -40,7 +40,10 @@ describe('Constructor', () => {
     contractIrSrc = fs.readFileSync(path.join(__dirname, '../data/constructor/constructor-internal-writes.js'), 'utf8');
     helperContractSrc = fs.readFileSync(path.join(__dirname, '../data/constructor/constructor-helper.js'), 'utf8');
     dummyContractSrc = fs.readFileSync(path.join(__dirname, '../data/constructor/constructor-dummy.js'), 'utf8');
-    missingConstructorContractSrc = fs.readFileSync(path.join(__dirname, '../data/constructor/missing-constructor-dummy.js'), 'utf8');
+    missingConstructorContractSrc = fs.readFileSync(
+      path.join(__dirname, '../data/constructor/missing-constructor-dummy.js'),
+      'utf8'
+    );
   });
 
   afterAll(async () => {
