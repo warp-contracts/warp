@@ -22,16 +22,16 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
     interactionData: InteractionData<Input>
   ): Promise<InteractionResult<State, Result>> {
     try {
-      const { interaction, interactionTx } = interactionData;
+      const { interaction, interactionTx, currentTx } = interactionData;
 
       this.swGlobal._activeTx = interactionTx;
       this.swGlobal.caller = interaction.caller; // either contract tx id (for internal writes) or transaction.owner
       this.swGlobal.gasLimit = executionContext.evaluationOptions.gasLimit;
       this.swGlobal.gasUsed = 0;
 
-      this.assignReadContractState(executionContext, interactionTx);
+      this.assignReadContractState(executionContext, currentTx, interactionTx);
       this.assignViewContractState<Input>(executionContext);
-      this.assignWrite(executionContext);
+      this.assignWrite(executionContext, currentTx);
 
       await this.swGlobal.kv.open();
       await this.swGlobal.kv.begin();

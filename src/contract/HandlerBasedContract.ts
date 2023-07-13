@@ -24,6 +24,7 @@ import { getJsonResponse, isBrowser, sleep, stripTrailingSlash } from '../utils/
 import {
   BenchmarkStats,
   Contract,
+  CurrentTx,
   DREContractStatusResponse,
   InnerCallData,
   WriteInteractionOptions,
@@ -135,11 +136,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   async readState(
     sortKeyOrBlockHeight?: string | number,
+    currentTx?: CurrentTx[],
     caller?: string,
     interactions?: GQLNodeInterface[]
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
     this.logger.info('Read state for', {
       contractTxId: this._contractTxId,
+      currentTx,
       sortKeyOrBlockHeight
     });
     if (!this.isRoot() && sortKeyOrBlockHeight == null) {
@@ -172,7 +175,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       initBenchmark.stop();
 
       const stateBenchmark = Benchmark.measure();
-      const result = await stateEvaluator.eval(executionContext);
+      const result = await stateEvaluator.eval(executionContext, currentTx || []);
       stateBenchmark.stop();
 
       const total = (initBenchmark.elapsed(true) as number) + (stateBenchmark.elapsed(true) as number);
@@ -203,7 +206,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     sortKey: string,
     interactions: GQLNodeInterface[]
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
-    return this.readState(sortKey, undefined, interactions);
+    return this.readState(sortKey, [], undefined, interactions);
   }
 
   async viewState<Input, View>(
@@ -235,9 +238,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return await this.callContract<Input>(input, 'write', caller, undefined, tags, transfer, undefined, vrf);
   }
 
-  async applyInput<Input>(input: Input, transaction: GQLNodeInterface): Promise<InteractionResult<State, unknown>> {
+  async applyInput<Input>(
+    input: Input,
+    transaction: GQLNodeInterface,
+    currentTx?: CurrentTx[]
+  ): Promise<InteractionResult<State, unknown>> {
     this.logger.info(`Apply-input from transaction ${transaction.id} for ${this._contractTxId}`);
-    return await this.doApplyInputOnTx<Input>(input, transaction, 'write');
+    return await this.doApplyInputOnTx<Input>(input, transaction, 'write', currentTx || []);
   }
 
   async writeInteraction<Input>(
@@ -720,7 +727,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     };
 
     // eval current state
-    const evalStateResult = await stateEvaluator.eval<State>(executionContext);
+    const evalStateResult = await stateEvaluator.eval<State>(executionContext, []);
     this.logger.info('Current state', evalStateResult.cachedValue.state);
 
     // create interaction transaction
@@ -765,7 +772,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const handleResult = await this.evalInteraction<Input, View>(
       {
         interaction,
-        interactionTx: dummyTx
+        interactionTx: dummyTx,
+        currentTx: []
       },
       executionContext,
       evalStateResult.cachedValue
@@ -784,7 +792,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
   private async doApplyInputOnTx<Input, View = unknown>(
     input: Input,
     interactionTx: GQLNodeInterface,
-    interactionType: InteractionType
+    interactionType: InteractionType,
+    currentTx?: CurrentTx[]
   ): Promise<InteractionResult<State, View>> {
     this.maybeResetRootContract();
 
@@ -798,16 +807,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
         this.interactionState().get(this.txId(), interactionTx.sortKey) as EvalStateResult<State>
       );
     } else {
-      // if (interactionType == 'write') {
-      // }
-      executionContext.sortedInteractions = executionContext.sortedInteractions.filter(
-        (i) => i.sortKey != interactionTx.sortKey
-      );
-      evalStateResult = await this.warp.stateEvaluator.eval<State>(executionContext);
-      console.log(
-        `HBC eval - trying to update ${this.txId()} with SK ${evalStateResult.sortKey} ${interactionTx.sortKey}`
-      );
-      // this.interactionState().update(this.txId(), evalStateResult.cachedValue, evalStateResult.sortKey);
+      evalStateResult = await this.warp.stateEvaluator.eval<State>(executionContext, currentTx);
       this.interactionState().update(this.txId(), evalStateResult.cachedValue, interactionTx.sortKey);
     }
 
@@ -824,7 +824,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     const interactionData: InteractionData<Input> = {
       interaction,
-      interactionTx
+      interactionTx,
+      currentTx
     };
 
     const result = await this.evalInteraction<Input, View>(

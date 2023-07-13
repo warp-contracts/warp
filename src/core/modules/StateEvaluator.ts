@@ -1,5 +1,6 @@
 import { SortKeyCacheResult } from '../../cache/SortKeyCache';
 import { ExecutionContext } from '../ExecutionContext';
+import { CurrentTx } from '../../contract/Contract';
 import { GQLNodeInterface } from '../../legacy/gqlResult';
 import { SourceType } from './impl/WarpGatewayInteractionsLoader';
 import { BasicSortKeyCache } from '../../cache/BasicSortKeyCache';
@@ -9,7 +10,10 @@ import { BasicSortKeyCache } from '../../cache/BasicSortKeyCache';
  * - based on the {@link ExecutionContext}.
  */
 export interface StateEvaluator {
-  eval<State>(executionContext: ExecutionContext<State>): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
+  eval<State>(
+    executionContext: ExecutionContext<State>,
+    currentTx: CurrentTx[]
+  ): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
 
   /**
    * a hook that is called on each state update (i.e. after evaluating state for each interaction transaction)

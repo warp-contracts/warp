@@ -1,6 +1,7 @@
 import Arweave from 'arweave';
 
 import { SortKeyCacheResult } from '../../../cache/SortKeyCache';
+import { CurrentTx } from '../../../contract/Contract';
 import { InteractionCall } from '../../ContractCallRecord';
 import { ExecutionContext } from '../../../core/ExecutionContext';
 import { ExecutionContextModifier } from '../../../core/ExecutionContextModifier';
@@ -13,7 +14,7 @@ import { ContractInteraction, HandlerApi, InteractionResult } from './HandlerExe
 import { TagsParser } from './TagsParser';
 import { VrfPluginFunctions } from '../../WarpPlugin';
 import { BasicSortKeyCache } from '../../../cache/BasicSortKeyCache';
-import { genesisSortKey } from "./LexicographicalInteractionsSorter";
+import { genesisSortKey } from './LexicographicalInteractionsSorter';
 
 type EvaluationProgressInput = {
   contractTxId: string;
@@ -40,19 +41,22 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
   ) {}
 
   async eval<State>(
-    executionContext: ExecutionContext<State, HandlerApi<State>>
+    executionContext: ExecutionContext<State, HandlerApi<State>>,
+    currentTx: CurrentTx[]
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
     return this.doReadState(
       executionContext.sortedInteractions,
       new EvalStateResult<State>(executionContext.contractDefinition.initState, {}, {}),
-      executionContext
+      executionContext,
+      currentTx
     );
   }
 
   protected async doReadState<State>(
     missingInteractions: GQLNodeInterface[],
     baseState: EvalStateResult<State>,
-    executionContext: ExecutionContext<State, HandlerApi<State>>
+    executionContext: ExecutionContext<State, HandlerApi<State>>,
+    currentTx: CurrentTx[]
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
     const { ignoreExceptions, stackTrace, internalWrites } = executionContext.evaluationOptions;
     const { contract, contractDefinition, sortedInteractions, warp } = executionContext;
@@ -139,7 +143,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         const interactionCall: InteractionCall = contract
           .getCallStack()
-          .addInteractionData({ interaction: null, interactionTx: missingInteraction });
+          .addInteractionData({ interaction: null, interactionTx: missingInteraction, currentTx });
 
         // creating a Contract instance for the "writing" contract
         const writingContract = warp.contract(writingContractTxId, executionContext.contract, {
@@ -155,7 +159,13 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
          */
         let newState: EvalStateResult<unknown> = null;
         try {
-          await writingContract.readState(missingInteraction.sortKey);
+          await writingContract.readState(missingInteraction.sortKey, [
+            ...(currentTx || []),
+            {
+              contractTxId: contractDefinition.txId, //not: writingContractTxId!
+              interactionTxId: missingInteraction.id
+            }
+          ]);
           newState = contract.interactionState().get(contract.txId(), missingInteraction.sortKey);
         } catch (e) {
           if (e.name == 'ContractError' && e.subtype == 'unsafeClientSkip') {
@@ -224,7 +234,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         const interactionData = {
           interaction,
-          interactionTx: missingInteraction
+          interactionTx: missingInteraction,
+          currentTx
         };
 
         const interactionCall: InteractionCall = contract.getCallStack().addInteractionData(interactionData);
@@ -296,7 +307,9 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       if (contract.isRoot()) {
         // update the uncommitted state of the root contract
         if (lastConfirmedTxState) {
-          contract.interactionState().update(contract.txId(), lastConfirmedTxState.state, lastConfirmedTxState.tx.sortKey);
+          contract
+            .interactionState()
+            .update(contract.txId(), lastConfirmedTxState.state, lastConfirmedTxState.tx.sortKey);
           if (validity[missingInteraction.id]) {
             await contract.interactionState().commit(missingInteraction);
           } else {
