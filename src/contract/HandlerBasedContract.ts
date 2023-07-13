@@ -150,8 +150,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
         ? this._sorter.generateLastSortKey(sortKeyOrBlockHeight)
         : sortKeyOrBlockHeight;
 
-    if (sortKey && !this.isRoot() && this.interactionState().has(this.txId())) {
-      const result = this.interactionState().get(this.txId());
+    if (sortKey && !this.isRoot() && this.interactionState().has(this.txId(), sortKey)) {
+      const result = this.interactionState().get(this.txId(), sortKey);
       return new SortKeyCacheResult<EvalStateResult<State>>(sortKey, result as EvalStateResult<State>);
     }
 
@@ -189,7 +189,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       });
 
       if (sortKey && !this.isRoot()) {
-        this.interactionState().update(this.txId(), result.cachedValue);
+        this.interactionState().update(this.txId(), result.cachedValue, sortKey);
       }
 
       return result;
@@ -789,14 +789,23 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     const executionContext = await this.createExecutionContextFromTx(this._contractTxId, interactionTx);
 
-    if (!this.isRoot() && this.interactionState().has(this.txId())) {
+    if (!this.isRoot() && this.interactionState().has(this.txId(), interactionTx.sortKey)) {
       evalStateResult = new SortKeyCacheResult<EvalStateResult<State>>(
         interactionTx.sortKey,
-        this.interactionState().get(this.txId()) as EvalStateResult<State>
+        this.interactionState().get(this.txId(), interactionTx.sortKey) as EvalStateResult<State>
       );
     } else {
+      // if (interactionType == 'write') {
+      // }
+      executionContext.sortedInteractions = executionContext.sortedInteractions.filter(
+        (i) => i.sortKey != interactionTx.sortKey
+      );
       evalStateResult = await this.warp.stateEvaluator.eval<State>(executionContext);
-      this.interactionState().update(this.txId(), evalStateResult.cachedValue);
+      console.log(
+        `HBC eval - trying to update ${this.txId()} with SK ${evalStateResult.sortKey} ${interactionTx.sortKey}`
+      );
+      // this.interactionState().update(this.txId(), evalStateResult.cachedValue, evalStateResult.sortKey);
+      this.interactionState().update(this.txId(), evalStateResult.cachedValue, interactionTx.sortKey);
     }
 
     this.logger.debug('callContractForTx - evalStateResult', {
@@ -822,6 +831,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     );
     result.originalValidity = evalStateResult.cachedValue.validity;
     result.originalErrorMessages = evalStateResult.cachedValue.errorMessages;
+
+    // this.interactionState().update(this.txId(), result, interactionTx.sortKey);
 
     return result;
   }

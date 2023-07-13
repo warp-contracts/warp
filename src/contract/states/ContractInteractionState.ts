@@ -6,18 +6,18 @@ import { Warp } from '../../core/Warp';
 import { SortKeyCacheRangeOptions } from '../../cache/SortKeyCacheRangeOptions';
 
 export class ContractInteractionState implements InteractionState {
-  private readonly _json = new Map<string, EvalStateResult<unknown>>();
+  private readonly _json = new Map<string, Map<string, EvalStateResult<unknown>>>();
   private readonly _initialJson = new Map<string, EvalStateResult<unknown>>();
   private readonly _kv = new Map<string, SortKeyCache<unknown>>();
 
   constructor(private readonly _warp: Warp) {}
 
-  has(contractTx): boolean {
-    return this._json.has(contractTx);
+  has(contractTx, sortKey: string): boolean {
+    return this._json.get(contractTx)?.has(sortKey);
   }
 
-  get(contractTxId: string): EvalStateResult<unknown> {
-    return this._json.get(contractTxId) || null;
+  get(contractTxId: string, sortKey: string): EvalStateResult<unknown> {
+    return this._json.get(contractTxId)?.get(sortKey) || null;
   }
 
   async getKV(contractTxId: string, cacheKey: CacheKey): Promise<unknown> {
@@ -53,7 +53,14 @@ export class ContractInteractionState implements InteractionState {
       return this.reset();
     }
     try {
-      await this.doStoreJson(this._json, interaction);
+      const latestState = new Map<string, EvalStateResult<unknown>>();
+      this._json.forEach((val, k) => {
+        const state = val.get(interaction.sortKey);
+        if (state != null) {
+          latestState.set(k, state);
+        }
+      });
+      await this.doStoreJson(latestState, interaction);
       await this.commitKVs();
     } finally {
       this.reset();
@@ -74,14 +81,17 @@ export class ContractInteractionState implements InteractionState {
     }
   }
 
-  setInitial(contractTxId: string, state: EvalStateResult<unknown>): void {
+  setInitial(contractTxId: string, state: EvalStateResult<unknown>, sortKey: string): void {
     // think twice here.
     this._initialJson.set(contractTxId, state);
-    this._json.set(contractTxId, state);
+    this.update(contractTxId, state, sortKey);
   }
 
-  update(contractTxId: string, state: EvalStateResult<unknown>): void {
-    this._json.set(contractTxId, state);
+  update(contractTxId: string, state: EvalStateResult<unknown>, sortKey: string): void {
+    if (!this._json.has(contractTxId)) {
+      this._json.set(contractTxId, new Map<string, EvalStateResult<unknown>>());
+    }
+    this._json.get(contractTxId).set(sortKey, state);
   }
 
   async updateKV(contractTxId: string, key: CacheKey, value: unknown): Promise<void> {
