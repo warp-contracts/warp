@@ -1,4 +1,4 @@
-import { CacheKey } from '../../cache/SortKeyCache';
+import { CacheKey, SortKeyCacheResult } from '../../cache/SortKeyCache';
 import { EvalStateResult } from '../../core/modules/StateEvaluator';
 import { GQLNodeInterface } from '../../legacy/gqlResult';
 import { SortKeyCacheRangeOptions } from '../../cache/SortKeyCacheRangeOptions';
@@ -43,6 +43,8 @@ export interface InteractionState {
   has(contractTxId: string, sortKey: string): boolean;
 
   get(contractTxId: string, sortKey: string): EvalStateResult<unknown> | null;
+
+  getLessOrEqual(contractTxId: string, sortKey?: string): SortKeyCacheResult<EvalStateResult<unknown>> | null;
 
   getKV(contractTxId: string, cacheKey: CacheKey): Promise<unknown>;
 
