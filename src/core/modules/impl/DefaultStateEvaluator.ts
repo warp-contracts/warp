@@ -13,6 +13,7 @@ import { ContractInteraction, HandlerApi, InteractionResult } from './HandlerExe
 import { TagsParser } from './TagsParser';
 import { VrfPluginFunctions } from '../../WarpPlugin';
 import { BasicSortKeyCache } from '../../../cache/BasicSortKeyCache';
+import { genesisSortKey } from "./LexicographicalInteractionsSorter";
 
 type EvaluationProgressInput = {
   contractTxId: string;
@@ -91,7 +92,11 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
       contract
         .interactionState()
-        .setInitial(contract.txId(), new EvalStateResult(currentState, validity, errorMessages));
+        .setInitial(
+          contract.txId(),
+          new EvalStateResult(currentState, validity, errorMessages),
+          lastConfirmedTxState?.tx?.sortKey || executionContext.cachedState?.sortKey || genesisSortKey
+        );
 
       const missingInteraction = missingInteractions[i];
       const singleInteractionBenchmark = Benchmark.measure();
@@ -151,7 +156,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         let newState: EvalStateResult<unknown> = null;
         try {
           await writingContract.readState(missingInteraction.sortKey);
-          newState = contract.interactionState().get(contract.txId());
+          newState = contract.interactionState().get(contract.txId(), missingInteraction.sortKey);
         } catch (e) {
           // ppe: not sure why we're not handling all ContractErrors here...
           if (
@@ -295,7 +300,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       if (contract.isRoot()) {
         // update the uncommitted state of the root contract
         if (lastConfirmedTxState) {
-          contract.interactionState().update(contract.txId(), lastConfirmedTxState.state);
+          contract.interactionState().update(contract.txId(), lastConfirmedTxState.state, lastConfirmedTxState.tx.sortKey);
           if (validity[missingInteraction.id]) {
             await contract.interactionState().commit(missingInteraction);
           } else {
@@ -304,7 +309,9 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         }
       } else {
         // if that's an inner contract call - only update the state in the uncommitted states
-        contract.interactionState().update(contract.txId(), new EvalStateResult(currentState, validity, errorMessages));
+        contract
+          .interactionState()
+          .update(contract.txId(), new EvalStateResult(currentState, validity, errorMessages), currentSortKey);
       }
     }
     const evalStateResult = new EvalStateResult<State>(currentState, validity, errorMessages);
