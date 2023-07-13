@@ -1,5 +1,5 @@
 import { InteractionState } from './InteractionState';
-import { CacheKey, SortKeyCache } from '../../cache/SortKeyCache';
+import { CacheKey, SortKeyCache, SortKeyCacheResult } from '../../cache/SortKeyCache';
 import { EvalStateResult } from '../../core/modules/StateEvaluator';
 import { GQLNodeInterface } from '../../legacy/gqlResult';
 import { Warp } from '../../core/Warp';
@@ -13,11 +13,25 @@ export class ContractInteractionState implements InteractionState {
   constructor(private readonly _warp: Warp) {}
 
   has(contractTx, sortKey: string): boolean {
-    return this._json.get(contractTx)?.has(sortKey);
+    return this._json.get(contractTx)?.has(sortKey) || false;
   }
 
   get(contractTxId: string, sortKey: string): EvalStateResult<unknown> {
     return this._json.get(contractTxId)?.get(sortKey) || null;
+  }
+
+  getLessOrEqual(contractTxId: string, sortKey?: string): SortKeyCacheResult<EvalStateResult<unknown>> | null {
+    const states = this._json.get(contractTxId);
+    if (states != null && states.size > 0) {
+      let keys = Array.from(states.keys());
+      if (sortKey) {
+        keys = keys.filter((k) => k.localeCompare(sortKey) <= 0);
+      }
+      keys = keys.sort((a, b) => a.localeCompare(b));
+      const resultSortKey = keys[keys.length - 1];
+      return new SortKeyCacheResult<EvalStateResult<unknown>>(resultSortKey, states.get(resultSortKey));
+    }
+    return null;
   }
 
   async getKV(contractTxId: string, cacheKey: CacheKey): Promise<unknown> {

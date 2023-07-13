@@ -89,6 +89,8 @@ export async function handle(state, action) {
       target: input.target,
       qty: input.qty
     });
+
+    return {state};
   }
 
   if (input.function === 'innerViewKV') {
