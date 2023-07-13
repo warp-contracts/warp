@@ -13,7 +13,7 @@ export class ContractInteractionState implements InteractionState {
   constructor(private readonly _warp: Warp) {}
 
   has(contractTx, sortKey: string): boolean {
-    return this._json.get(contractTx)?.has(sortKey);
+    return this._json.get(contractTx)?.has(sortKey) || false;
   }
 
   get(contractTxId: string, sortKey: string): EvalStateResult<unknown> {

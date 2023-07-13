@@ -798,11 +798,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
         this.interactionState().get(this.txId(), interactionTx.sortKey) as EvalStateResult<State>
       );
     } else {
-      // if (interactionType == 'write') {
-      // }
-      executionContext.sortedInteractions = executionContext.sortedInteractions.filter(
-        (i) => i.sortKey != interactionTx.sortKey
-      );
       evalStateResult = await this.warp.stateEvaluator.eval<State>(executionContext);
       console.log(
         `HBC eval - trying to update ${this.txId()} with SK ${evalStateResult.sortKey} ${interactionTx.sortKey}`
