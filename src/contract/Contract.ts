@@ -10,6 +10,7 @@ import { InteractionState } from './states/InteractionState';
 import { DataItem, Signer } from 'warp-arbundles';
 import { Transaction } from '../utils/types/arweave-types';
 
+export type CurrentTx = { interactionTxId: string; contractTxId: string };
 export type BenchmarkStats = { gatewayCommunication: number; stateEvaluation: number; total: number };
 
 interface BundlrResponse {
@@ -112,6 +113,7 @@ export interface Contract<State = unknown> {
    */
   readState(
     sortKeyOrBlockHeight?: string | number,
+    currentTx?: CurrentTx[],
     caller?: string,
     interactions?: GQLNodeInterface[]
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
@@ -177,7 +179,11 @@ export interface Contract<State = unknown> {
     vrf?: boolean
   ): Promise<InteractionResult<State, unknown>>;
 
-  applyInput<Input>(input: Input, transaction: GQLNodeInterface): Promise<InteractionResult<State, unknown>>;
+  applyInput<Input>(
+    input: Input,
+    transaction: GQLNodeInterface,
+    currentTx?: CurrentTx[]
+  ): Promise<InteractionResult<State, unknown>>;
 
   /**
    * Writes a new "interaction" transaction - i.e. such transaction that stores input for the contract.

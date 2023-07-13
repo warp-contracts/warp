@@ -7,6 +7,7 @@ import { deepCopy, timeout } from '../../../../utils/utils';
 import { ContractError, ContractInteraction, InteractionData, InteractionResult } from '../HandlerExecutorFactory';
 import { genesisSortKey } from '../LexicographicalInteractionsSorter';
 import { AbstractContractHandler } from './AbstractContractHandler';
+import { CurrentTx } from '../../../../contract/Contract';
 
 const INIT_FUNC_NAME = '__init';
 const throwErrorWithName = (name: string, message: string) => {
@@ -35,10 +36,10 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
     currentResult: EvalStateResult<State>,
     interactionData: InteractionData<Input>
   ): Promise<InteractionResult<State, Result>> {
-    const { interaction, interactionTx } = interactionData;
+    const { interaction, interactionTx, currentTx } = interactionData;
 
     this.setupSwGlobal(interactionData);
-    this.enableInternalWrites(executionContext, interactionTx);
+    this.enableInternalWrites(executionContext, interactionTx, currentTx);
 
     this.assertNotConstructorCall<Input>(interaction);
 
@@ -54,7 +55,7 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
   ): Promise<State> {
     if (this.contractDefinition.manifest?.evaluationOptions?.useConstructor) {
       const interaction: ContractInteraction<Input> = {
-        input: { function: INIT_FUNC_NAME, args: initialState } as Input,
+        input: { function: INIT_FUNC_NAME, args: initialState } as unknown as Input,
         caller: this.contractDefinition.owner,
         interactionType: 'write'
       };
@@ -63,7 +64,7 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
         owner: { address: executionContext.caller, key: null },
         sortKey: genesisSortKey
       } as GQLNodeInterface;
-      const interactionData: InteractionData<Input> = { interaction, interactionTx };
+      const interactionData: InteractionData<Input> = { interaction, interactionTx, currentTx: [] };
 
       this.setupSwGlobal(interactionData);
       const cleanUpSwGlobal = this.configureSwGlobalForConstructor();
@@ -209,11 +210,12 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
 
   private enableInternalWrites<Input>(
     executionContext: ExecutionContext<State, unknown>,
-    interactionTx: GQLNodeInterface
+    interactionTx: GQLNodeInterface,
+    currentTx: CurrentTx[]
   ) {
-    this.assignReadContractState(executionContext, interactionTx);
+    this.assignReadContractState(executionContext, currentTx, interactionTx);
     this.assignViewContractState<Input>(executionContext);
-    this.assignWrite(executionContext);
+    this.assignWrite(executionContext, currentTx);
     this.assignRefreshState(executionContext);
   }
 }
