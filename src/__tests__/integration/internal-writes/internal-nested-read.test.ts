@@ -19,6 +19,8 @@ import { DeployPlugin } from "warp-contracts-plugin-deploy";
  *                 └───► node20Contract
  *                          └───► leafContract:  balances['asd'] = 300
  *                 └───► node21Contract
+ *                          └───► leafContract:  balances['asd'] = 1350
+ *                 └───► node22Contract
  *                          └───► leafContract:  balances['asd'] = 1100
  *
  */
@@ -30,12 +32,14 @@ describe('Testing deep internal reads', () => {
   let leafContract: Contract<any>;
   let node20Contract: Contract<any>;
   let node21Contract: Contract<any>;
+  let node22Contract: Contract<any>;
   let node1Contract: Contract<any>;
   let rootContract: Contract<any>;
 
   let leafId;
   let node20Id;
   let node21Id;
+  let node22Id;
   let nod1Id;
   let rootId;
 
@@ -79,7 +83,7 @@ describe('Testing deep internal reads', () => {
       src: nodeSrc
     }));
 
-    ({ contractTxId: node21Id } = await warp.deploy({
+    ({ contractTxId: node22Id } = await warp.deploy({
       wallet,
       initState: nodeState,
       src: nodeSrc
@@ -106,6 +110,9 @@ describe('Testing deep internal reads', () => {
     node21Contract = warp
       .contract(node21Id)
       .connect(wallet);
+    node22Contract = warp
+      .contract(node22Id)
+      .connect(wallet);
     node1Contract = warp
       .contract(nod1Id)
       .connect(wallet);
@@ -131,11 +138,17 @@ describe('Testing deep internal reads', () => {
       await mineBlock(warp);
       await leafContract.writeInteraction({ function: 'increase', target: 'asd', qty: 400 });
       await mineBlock(warp);
+      await node22Contract.writeInteraction({ function: 'readBalanceFrom', tokenAddress: leafId, contractTxId: 'asd' });
+      await mineBlock(warp);
+      await leafContract.writeInteraction({ function: 'increase', target: 'asd', qty: 250 });
+      await mineBlock(warp);
       await node21Contract.writeInteraction({ function: 'readBalanceFrom', tokenAddress: leafId, contractTxId: 'asd' });
       await mineBlock(warp);
       await node1Contract.writeInteraction({ function: 'readBalanceFrom', tokenAddress: node20Id, contractTxId: 'asd' });
       await mineBlock(warp);
       await node1Contract.writeInteraction({ function: 'readBalanceFrom', tokenAddress: node21Id, contractTxId: 'asd' });
+      await mineBlock(warp);
+      await node1Contract.writeInteraction({ function: 'readBalanceFrom', tokenAddress: node22Id, contractTxId: 'asd' });
       await mineBlock(warp);
       await rootContract.writeInteraction({ function: 'readBalanceFrom', tokenAddress: nod1Id, contractTxId: 'asd' });
       await mineBlock(warp);
@@ -148,7 +161,10 @@ describe('Testing deep internal reads', () => {
       expect(node20Result.cachedValue.state.balances['asd']).toEqual(300);
 
       const node21Result = await warp.pst(node21Id).readState();
-      expect(node21Result.cachedValue.state.balances['asd']).toEqual(1100);
+      expect(node21Result.cachedValue.state.balances['asd']).toEqual(1350);
+
+      const node22Result = await warp.pst(node22Id).readState();
+      expect(node22Result.cachedValue.state.balances['asd']).toEqual(1100);
     });
   });
 });
