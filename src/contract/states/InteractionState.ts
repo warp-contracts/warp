@@ -11,12 +11,12 @@ export interface InteractionState {
    * - this initial state will be committed to the cache for this interaction.
    * In other words - all changes made during evaluation of this interaction will be rollbacked.
    */
-  setInitial(contractTxId: string, state: EvalStateResult<unknown>): void;
+  setInitial(contractTxId: string, state: EvalStateResult<unknown>, sortKey: string): void;
 
   /**
    * Updates the json-state for a given contract during interaction evaluation - e.g. as a result of an internal write
    */
-  update(contractTxId: string, state: EvalStateResult<unknown>): void;
+  update(contractTxId: string, state: EvalStateResult<unknown>, sortKey: string): void;
 
   /**
    * Updates the kv-state for a given contract during interaction evaluation
@@ -40,9 +40,9 @@ export interface InteractionState {
    */
   rollback(interaction: GQLNodeInterface): Promise<void>;
 
-  has(contractTxId: string): boolean;
+  has(contractTxId: string, sortKey: string): boolean;
 
-  get(contractTxId: string): EvalStateResult<unknown> | null;
+  get(contractTxId: string, sortKey: string): EvalStateResult<unknown> | null;
 
   getKV(contractTxId: string, cacheKey: CacheKey): Promise<unknown>;
 

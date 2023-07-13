@@ -5,6 +5,7 @@
     "target": "es2019",
     "module": "commonjs",
     "types": ["jest", "node"],
+    "typeRoots" : ["<rootDir>/lib/types", "node_modules/@types"],
     "moduleResolution": "node",
     "sourceMap": true,
     "skipLibCheck": true,
