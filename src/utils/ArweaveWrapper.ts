@@ -3,7 +3,7 @@ import { Buffer as isomorphicBuffer } from 'warp-isomorphic';
 import { LoggerFactory } from '../logging/LoggerFactory';
 import { BlockData, NetworkInfoInterface, Transaction } from './types/arweave-types';
 import { Warp } from '../core/Warp';
-import { getJsonResponse, stripTrailingSlash } from './utils';
+import { getJsonResponse, NetworkCommunicationError, stripTrailingSlash } from './utils';
 
 export class ArweaveWrapper {
   private readonly logger = LoggerFactory.INST.create('ArweaveWrapper');
@@ -76,7 +76,7 @@ export class ArweaveWrapper {
         if (error.body?.message) {
           this.logger.error(error.body.message);
         }
-        throw new Error(`Unable to retrieve tx ${id}. ${error.status}. ${error.body?.message}`);
+        throw new NetworkCommunicationError(`Unable to retrieve tx ${id}. ${error.status}. ${error.body?.message}`);
       });
 
     return new Transaction({
