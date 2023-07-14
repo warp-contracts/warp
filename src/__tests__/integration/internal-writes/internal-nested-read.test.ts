@@ -6,9 +6,9 @@ import path from 'path';
 import { mineBlock } from '../_helpers';
 import { Contract } from '../../../contract/Contract';
 import { Warp } from '../../../core/Warp';
-import { WarpFactory } from "../../../core/WarpFactory";
+import { WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
-import { DeployPlugin } from "warp-contracts-plugin-deploy";
+import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 /**
  * This test verifies "deep" reads between contracts.
@@ -61,9 +61,15 @@ describe('Testing deep internal reads', () => {
     ({ jwk: wallet } = await warp.generateWallet());
 
     const leafSrc = fs.readFileSync(path.join(__dirname, '../data/nested-read/leaf-contract.js'), 'utf8');
-    const leafState = fs.readFileSync(path.join(__dirname, '../data/nested-read/leaf-contract-init-state.json'), 'utf8');
+    const leafState = fs.readFileSync(
+      path.join(__dirname, '../data/nested-read/leaf-contract-init-state.json'),
+      'utf8'
+    );
     const nodeSrc = fs.readFileSync(path.join(__dirname, '../data/nested-read/node-contract.js'), 'utf8');
-    const nodeState = fs.readFileSync(path.join(__dirname, '../data/nested-read/node-contract-init-state.json'), 'utf8');
+    const nodeState = fs.readFileSync(
+      path.join(__dirname, '../data/nested-read/node-contract-init-state.json'),
+      'utf8'
+    );
 
     ({ contractTxId: leafId } = await warp.deploy({
       wallet,
@@ -101,24 +107,12 @@ describe('Testing deep internal reads', () => {
       src: nodeSrc
     }));
 
-    rootContract = warp
-      .contract(rootId)
-      .connect(wallet);
-    node20Contract = warp
-      .contract(node20Id)
-      .connect(wallet);
-    node21Contract = warp
-      .contract(node21Id)
-      .connect(wallet);
-    node22Contract = warp
-      .contract(node22Id)
-      .connect(wallet);
-    node1Contract = warp
-      .contract(nod1Id)
-      .connect(wallet);
-    leafContract = warp
-      .contract(leafId)
-      .connect(wallet);
+    rootContract = warp.contract(rootId).connect(wallet);
+    node20Contract = warp.contract(node20Id).connect(wallet);
+    node21Contract = warp.contract(node21Id).connect(wallet);
+    node22Contract = warp.contract(node22Id).connect(wallet);
+    node1Contract = warp.contract(nod1Id).connect(wallet);
+    leafContract = warp.contract(leafId).connect(wallet);
 
     await mineBlock(warp);
     await mineBlock(warp);
@@ -144,15 +138,26 @@ describe('Testing deep internal reads', () => {
       await mineBlock(warp);
       await node21Contract.writeInteraction({ function: 'readBalanceFrom', tokenAddress: leafId, contractTxId: 'asd' });
       await mineBlock(warp);
-      await node1Contract.writeInteraction({ function: 'readBalanceFrom', tokenAddress: node20Id, contractTxId: 'asd' });
+      await node1Contract.writeInteraction({
+        function: 'readBalanceFrom',
+        tokenAddress: node20Id,
+        contractTxId: 'asd'
+      });
       await mineBlock(warp);
-      await node1Contract.writeInteraction({ function: 'readBalanceFrom', tokenAddress: node21Id, contractTxId: 'asd' });
+      await node1Contract.writeInteraction({
+        function: 'readBalanceFrom',
+        tokenAddress: node21Id,
+        contractTxId: 'asd'
+      });
       await mineBlock(warp);
-      await node1Contract.writeInteraction({ function: 'readBalanceFrom', tokenAddress: node22Id, contractTxId: 'asd' });
+      await node1Contract.writeInteraction({
+        function: 'readBalanceFrom',
+        tokenAddress: node22Id,
+        contractTxId: 'asd'
+      });
       await mineBlock(warp);
       await rootContract.writeInteraction({ function: 'readBalanceFrom', tokenAddress: nod1Id, contractTxId: 'asd' });
       await mineBlock(warp);
-
 
       const rootResult = await warp.pst(rootId).readState();
       expect(rootResult.cachedValue.state.balances['asd']).toEqual(1100);
