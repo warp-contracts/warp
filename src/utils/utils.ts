@@ -1,7 +1,7 @@
 /* eslint-disable */
 import copy from 'fast-copy';
 import { Buffer } from 'warp-isomorphic';
-import { KnownErrors } from "../core/modules/impl/handler/JsHandlerApi";
+import { KnownErrors } from '../core/modules/impl/handler/JsHandlerApi';
 
 export const sleep = (ms: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, ms));

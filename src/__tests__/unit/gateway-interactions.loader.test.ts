@@ -7,7 +7,7 @@ import {
 import { GQLNodeInterface } from '../../legacy/gqlResult';
 import { LoggerFactory } from '../../logging/LoggerFactory';
 import { WarpFactory } from '../../core/WarpFactory';
-import { NetworkCommunicationError } from "../../utils/utils";
+import { NetworkCommunicationError } from '../../utils/utils';
 
 const responseData = {
   paging: {

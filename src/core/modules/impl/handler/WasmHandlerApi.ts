@@ -5,7 +5,7 @@ import { EvalStateResult } from '../../../../core/modules/StateEvaluator';
 import { SmartWeaveGlobal } from '../../../../legacy/smartweave-global';
 import { ContractError, ContractInteraction, InteractionData, InteractionResult } from '../HandlerExecutorFactory';
 import { AbstractContractHandler } from './AbstractContractHandler';
-import { NetworkCommunicationError } from "../../../../utils/utils";
+import { NetworkCommunicationError } from '../../../../utils/utils';
 
 export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
   constructor(
