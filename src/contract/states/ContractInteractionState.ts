@@ -69,9 +69,9 @@ export class ContractInteractionState implements InteractionState {
     try {
       const latestState = new Map<string, EvalStateResult<unknown>>();
       this._json.forEach((val, k) => {
-        const state = val.get(interaction.sortKey);
+        const state = this.getLessOrEqual(k, interaction.sortKey);
         if (state != null) {
-          latestState.set(k, state);
+          latestState.set(k, state.cachedValue);
         }
       });
       await this.doStoreJson(latestState, interaction);
