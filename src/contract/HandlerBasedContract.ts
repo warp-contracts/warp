@@ -495,7 +495,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     if (status.confirmed === null) {
       this.logger.info(`Transaction ${transactionId} not yet confirmed. Waiting another 20 seconds before next check.`);
       await sleep(20000);
-      await this.waitForConfirmation(transactionId);
+      return this.waitForConfirmation(transactionId);
     } else {
       this.logger.info(`Transaction ${transactionId} confirmed`, status);
       return status;
