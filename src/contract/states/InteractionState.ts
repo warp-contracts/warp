@@ -28,7 +28,7 @@ export interface InteractionState {
    * Called by the {@link DefaultStateEvaluator} at the end every root's contract interaction evaluation
    * - IFF the result.type == 'ok'.
    */
-  commit(interaction: GQLNodeInterface): Promise<void>;
+  commit(interaction: GQLNodeInterface, forceStore?: boolean): Promise<void>;
 
   commitKV(): Promise<void>;
 
