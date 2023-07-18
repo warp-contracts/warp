@@ -259,4 +259,6 @@ export interface Contract<State = unknown> {
   getStorageValues(keys: string[]): Promise<SortKeyCacheResult<Map<string, unknown>>>;
 
   interactionState(): InteractionState;
+
+  clearChildren(): void;
 }

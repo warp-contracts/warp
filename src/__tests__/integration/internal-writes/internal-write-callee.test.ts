@@ -278,8 +278,12 @@ describe('Testing internal writes', () => {
     });
 
     it('should write to cache at the end of interaction (if interaction with other contracts)', async () => {
-      await calleeContract.writeInteraction({ function: 'addAndWrite', contractId: callingContract.txId(), amount: 1 });
       await calleeContract.writeInteraction({ function: 'add' });
+      await mineBlock(warp);
+
+      // this writeInteraction will cause the state with the previous 'add' to be added the cache
+      // - hence the 7 (not 6) entries in the cache at the end of this test
+      await calleeContract.writeInteraction({ function: 'addAndWrite', contractId: callingContract.txId(), amount: 1 });
       await mineBlock(warp);
 
       await calleeContract.readState();

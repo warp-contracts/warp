@@ -4,9 +4,10 @@ import { EvalStateResult } from '../../core/modules/StateEvaluator';
 import { GQLNodeInterface } from '../../legacy/gqlResult';
 import { Warp } from '../../core/Warp';
 import { SortKeyCacheRangeOptions } from '../../cache/SortKeyCacheRangeOptions';
+import { SimpleLRUCache } from '../../common/SimpleLRUCache';
 
 export class ContractInteractionState implements InteractionState {
-  private readonly _json = new Map<string, Map<string, EvalStateResult<unknown>>>();
+  private readonly _json = new Map<string, SimpleLRUCache<string, EvalStateResult<unknown>>>();
   private readonly _initialJson = new Map<string, EvalStateResult<unknown>>();
   private readonly _kv = new Map<string, SortKeyCache<unknown>>();
 
@@ -22,8 +23,8 @@ export class ContractInteractionState implements InteractionState {
 
   getLessOrEqual(contractTxId: string, sortKey?: string): SortKeyCacheResult<EvalStateResult<unknown>> | null {
     const states = this._json.get(contractTxId);
-    if (states != null && states.size > 0) {
-      let keys = Array.from(states.keys());
+    if (states != null && states.size() > 0) {
+      let keys = states.keys();
       if (sortKey) {
         keys = keys.filter((k) => k.localeCompare(sortKey) <= 0);
       }
@@ -61,7 +62,7 @@ export class ContractInteractionState implements InteractionState {
     return storage.kvMap(sortKey, options);
   }
 
-  async commit(interaction: GQLNodeInterface): Promise<void> {
+  async commit(interaction: GQLNodeInterface, forceStore = false): Promise<void> {
     if (interaction.dry) {
       await this.rollbackKVs();
       return this.reset();
@@ -74,7 +75,7 @@ export class ContractInteractionState implements InteractionState {
           latestState.set(k, state.cachedValue);
         }
       });
-      await this.doStoreJson(latestState, interaction);
+      await this.doStoreJson(latestState, interaction, forceStore);
       await this.commitKVs();
     } finally {
       this.reset();
@@ -103,7 +104,8 @@ export class ContractInteractionState implements InteractionState {
 
   update(contractTxId: string, state: EvalStateResult<unknown>, sortKey: string): void {
     if (!this._json.has(contractTxId)) {
-      this._json.set(contractTxId, new Map<string, EvalStateResult<unknown>>());
+      const cache = new SimpleLRUCache<string, EvalStateResult<unknown>>(10);
+      this._json.set(contractTxId, cache);
     }
     this._json.get(contractTxId).set(sortKey, state);
   }
@@ -128,8 +130,12 @@ export class ContractInteractionState implements InteractionState {
     this._kv.clear();
   }
 
-  private async doStoreJson(states: Map<string, EvalStateResult<unknown>>, interaction: GQLNodeInterface) {
-    if (states.size > 1) {
+  private async doStoreJson(
+    states: Map<string, EvalStateResult<unknown>>,
+    interaction: GQLNodeInterface,
+    forceStore = false
+  ) {
+    if (states.size > 1 || forceStore) {
       for (const [k, v] of states) {
         await this._warp.stateEvaluator.putInCache(k, interaction, v);
       }
