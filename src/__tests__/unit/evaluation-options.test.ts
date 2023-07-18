@@ -1,16 +1,18 @@
 import { EvaluationOptionsEvaluator } from '../../contract/EvaluationOptionsEvaluator';
 import { WarpFactory } from '../../core/WarpFactory';
 import { SourceType } from '../../core/modules/impl/WarpGatewayInteractionsLoader';
+import { DefaultEvaluationOptions } from '../../core/modules/StateEvaluator';
 
 describe('Evaluation options evaluator', () => {
   const warp = WarpFactory.forLocal();
 
   it('should properly set root evaluation options', async () => {
     const contract = warp.contract(null);
+    const defEvalOptions = new DefaultEvaluationOptions();
 
     expect(new EvaluationOptionsEvaluator(contract.evaluationOptions(), {}).rootOptions).toEqual({
       allowBigInt: false,
-      cacheEveryNInteractions: -1,
+      cacheEveryNInteractions: defEvalOptions.cacheEveryNInteractions,
       gasLimit: 9007199254740991,
       ignoreExceptions: true,
       internalWrites: false,
@@ -47,7 +49,7 @@ describe('Evaluation options evaluator', () => {
       }).rootOptions
     ).toEqual({
       allowBigInt: true,
-      cacheEveryNInteractions: -1,
+      cacheEveryNInteractions: defEvalOptions.cacheEveryNInteractions,
       gasLimit: 3453453,
       ignoreExceptions: true,
       internalWrites: true,
@@ -79,7 +81,7 @@ describe('Evaluation options evaluator', () => {
 
     expect(new EvaluationOptionsEvaluator(contract2.evaluationOptions(), {}).rootOptions).toEqual({
       allowBigInt: false,
-      cacheEveryNInteractions: -1,
+      cacheEveryNInteractions: defEvalOptions.cacheEveryNInteractions,
       gasLimit: 2222,
       ignoreExceptions: true,
       internalWrites: true,
@@ -108,7 +110,7 @@ describe('Evaluation options evaluator', () => {
       }).rootOptions
     ).toEqual({
       allowBigInt: false,
-      cacheEveryNInteractions: -1,
+      cacheEveryNInteractions: defEvalOptions.cacheEveryNInteractions,
       gasLimit: 2222,
       ignoreExceptions: true,
       internalWrites: false,
@@ -137,7 +139,7 @@ describe('Evaluation options evaluator', () => {
       }).rootOptions
     ).toEqual({
       allowBigInt: false,
-      cacheEveryNInteractions: -1,
+      cacheEveryNInteractions: defEvalOptions.cacheEveryNInteractions,
       gasLimit: 2222,
       ignoreExceptions: true,
       internalWrites: true,
@@ -166,7 +168,7 @@ describe('Evaluation options evaluator', () => {
       }).rootOptions
     ).toEqual({
       allowBigInt: false,
-      cacheEveryNInteractions: -1,
+      cacheEveryNInteractions: defEvalOptions.cacheEveryNInteractions,
       gasLimit: 2222,
       ignoreExceptions: true,
       internalWrites: true,
