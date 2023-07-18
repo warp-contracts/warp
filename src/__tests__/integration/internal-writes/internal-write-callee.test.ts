@@ -213,6 +213,85 @@ describe('Testing internal writes', () => {
     });
   });
 
+  describe('should properly commit states', () => {
+    beforeAll(async () => {
+      await deployContracts();
+    });
+
+    async function currentContractEntries(contractTxId: string): Promise<[[string, string]]> {
+      const storage: MemoryLevel<string, any> = await warp.stateEvaluator.getCache().storage();
+      const sub = storage.sublevel(contractTxId, { valueEncoding: "json" });
+      return await sub.iterator().all();
+    }
+
+    it('should write to cache the initial state', async () => {
+      expect((await calleeContract.readState()).cachedValue.state.counter).toEqual(555);
+      await mineBlock(warp);
+      const entries = await currentContractEntries(calleeContract.txId());
+      expect(entries.length).toEqual(1);
+    });
+
+    it('should write to cache at the end of evaluation (if no interactions with other contracts)', async () => {
+      await calleeContract.writeInteraction({ function: 'add' });
+      await calleeContract.writeInteraction({ function: 'add' });
+      await calleeContract.writeInteraction({ function: 'add' });
+      await calleeContract.writeInteraction({ function: 'add' });
+      await mineBlock(warp);
+      const entries1 = await currentContractEntries(calleeContract.txId());
+      expect(entries1.length).toEqual(1);
+
+      await calleeContract.readState();
+      const entries2 = await currentContractEntries(calleeContract.txId());
+      expect(entries2.length).toEqual(2);
+
+      await calleeContract.writeInteraction({ function: 'add' });
+      await calleeContract.writeInteraction({ function: 'add' });
+      await mineBlock(warp);
+      const entries3 = await currentContractEntries(calleeContract.txId());
+      expect(entries3.length).toEqual(2);
+
+      await calleeContract.readState();
+      const entries4 = await currentContractEntries(calleeContract.txId());
+      expect(entries4.length).toEqual(3);
+    });
+
+    // i.e. it should write the state from previous sort key under the sort key of the last interaction
+    it('should rollback state', async () => {
+      await calleeContract.writeInteraction({ function: 'add' });
+      await mineBlock(warp);
+      const result1 = await calleeContract.readState();
+      const entries1 = await currentContractEntries(calleeContract.txId());
+      expect(entries1.length).toEqual(4);
+      await calleeContract.writeInteraction({ function: 'add', throw: true });
+      await mineBlock(warp);
+
+      await calleeContract.readState();
+      const entries2 = await currentContractEntries(calleeContract.txId());
+      expect(entries2.length).toEqual(5);
+      const lastCacheValue = await warp.stateEvaluator.getCache().getLast(calleeContract.txId());
+      expect(lastCacheValue.cachedValue.state).toEqual(result1.cachedValue.state);
+      expect(Object.keys(result1.cachedValue.errorMessages).length + 1).toEqual(Object.keys(lastCacheValue.cachedValue.errorMessages).length);
+
+      const blockHeight = (await warp.arweave.network.getInfo()).height;
+      expect(lastCacheValue.sortKey).toContain(`${blockHeight}`.padStart(12, '0'));
+    });
+
+    it('should write to cache at the end of interaction (if interaction with other contracts)', async () => {
+      await calleeContract.writeInteraction({ function: 'add' });
+      await mineBlock(warp);
+
+      // this writeInteraction will cause the state with the previous 'add' to be added the cache
+      // - hence the 7 (not 6) entries in the cache at the end of this test
+      await calleeContract.writeInteraction({ function: 'addAndWrite', contractId: callingContract.txId(), amount: 1 });
+      await mineBlock(warp);
+
+      await calleeContract.readState();
+      const entries2 = await currentContractEntries(calleeContract.txId());
+      expect(entries2.length).toEqual(7);
+    });
+
+  });
+
   describe('with read state at the end', () => {
     beforeAll(async () => {
       await deployContracts();

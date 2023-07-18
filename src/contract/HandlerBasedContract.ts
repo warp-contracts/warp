@@ -1043,4 +1043,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     this.logger.debug('Tags with inner calls', tags);
   }
+
+  clearChildren(): void {
+    for (const child of this._children) {
+      child.clearChildren();
+    }
+    this._children = [];
+  }
 }
