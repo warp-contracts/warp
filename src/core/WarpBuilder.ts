@@ -3,7 +3,6 @@ import { DebuggableExecutorFactory } from '../plugins/DebuggableExecutorFactor';
 import { DefinitionLoader } from './modules/DefinitionLoader';
 import { ExecutorFactory } from './modules/ExecutorFactory';
 import { ArweaveGatewayInteractionsLoader } from './modules/impl/ArweaveGatewayInteractionsLoader';
-import { CacheableInteractionsLoader } from './modules/impl/CacheableInteractionsLoader';
 import { ContractDefinitionLoader } from './modules/impl/ContractDefinitionLoader';
 import { HandlerApi } from './modules/impl/HandlerExecutorFactory';
 import { WarpGatewayContractDefinitionLoader } from './modules/impl/WarpGatewayContractDefinitionLoader';
@@ -57,8 +56,9 @@ export class WarpBuilder {
   }
 
   public useWarpGateway(gatewayOptions: GatewayOptions, cacheOptions: CacheOptions): WarpBuilder {
-    this._interactionsLoader = new CacheableInteractionsLoader(
-      new WarpGatewayInteractionsLoader(gatewayOptions.confirmationStatus, gatewayOptions.source)
+    this._interactionsLoader = new WarpGatewayInteractionsLoader(
+      gatewayOptions.confirmationStatus,
+      gatewayOptions.source
     );
 
     const contractsCache = new LevelDbCache<ContractCache<unknown>>({
@@ -83,9 +83,7 @@ export class WarpBuilder {
 
   public useArweaveGateway(): WarpBuilder {
     this._definitionLoader = new ContractDefinitionLoader(this._arweave, this._environment);
-    this._interactionsLoader = new CacheableInteractionsLoader(
-      new ArweaveGatewayInteractionsLoader(this._arweave, this._environment)
-    );
+    this._interactionsLoader = new ArweaveGatewayInteractionsLoader(this._arweave, this._environment);
     return this;
   }
 
