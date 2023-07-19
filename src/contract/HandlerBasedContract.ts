@@ -566,19 +566,19 @@ export class HandlerBasedContract<State> implements Contract<State> {
         sortedInteractions = await interactionsLoader.load(
           contractTxId,
           cachedState?.sortKey,
-          this.getToSortKey(upToSortKey),
+          upToSortKey,
           contractEvaluationOptions
         );
       }
 
       // we still need to return only interactions up to original "upToSortKey"
-      if (cachedState?.sortKey) {
-        sortedInteractions = sortedInteractions.filter((i) => i.sortKey.localeCompare(cachedState?.sortKey) > 0);
-      }
+      // if (cachedState?.sortKey) {
+      //   sortedInteractions = sortedInteractions.filter((i) => i.sortKey.localeCompare(cachedState?.sortKey) > 0);
+      // }
 
-      if (upToSortKey) {
-        sortedInteractions = sortedInteractions.filter((i) => i.sortKey.localeCompare(upToSortKey) <= 0);
-      }
+      // if (upToSortKey) {
+      //   sortedInteractions = sortedInteractions.filter((i) => i.sortKey.localeCompare(upToSortKey) <= 0);
+      // }
 
       this.logger.debug('contract and interactions load', benchmark.elapsed());
       if (this.isRoot() && sortedInteractions.length) {
