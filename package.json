@@ -1,6 +1,6 @@
 {
   "name": "warp-contracts",
-  "version": "1.4.15-beta.6",
+  "version": "1.4.15-beta.7",
   "description": "An implementation of the SmartWeave smart contract protocol.",
   "types": "./lib/types/index.d.ts",
   "main": "./lib/cjs/index.js",
@@ -121,7 +121,7 @@
     "warp-contracts-plugin-deploy": "1.0.8",
     "warp-contracts-plugin-vm2": "1.0.1",
     "warp-contracts-plugin-vrf": "^1.0.3",
-    "ws": "^8.11.0" 
+    "ws": "^8.11.0"
   },
   "resolutions": {
     "bn.js": "5.2.1",
