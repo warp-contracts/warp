@@ -155,11 +155,12 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         /**
          Reading the state of the writing contract.
          This in turn will cause the state of THIS contract to be
-         updated in uncommitted state
+         updated in 'interaction state'
          */
         let newState: EvalStateResult<unknown> = null;
+        let writingContractState: SortKeyCacheResult<EvalStateResult<unknown>> = null;
         try {
-          await writingContract.readState(missingInteraction.sortKey, [
+          writingContractState = await writingContract.readState(missingInteraction.sortKey, [
             ...(currentTx || []),
             {
               contractTxId: contractDefinition.txId, //not: writingContractTxId!
@@ -187,15 +188,24 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           }
         }
 
-        if (newState !== null) {
-          currentState = newState.state as State;
+        if (newState !== null && writingContractState !== null) {
+          const parentValidity = writingContractState.cachedValue.validity[missingInteraction.id];
+          if (parentValidity) {
+            currentState = newState.state as State;
+          }
           // we need to update the state in the wasm module
           // TODO: opt - reuse wasm handlers...
           executionContext?.handler.initState(currentState);
 
-          validity[missingInteraction.id] = newState.validity[missingInteraction.id];
-          if (newState.errorMessages?.[missingInteraction.id]) {
-            errorMessages[missingInteraction.id] = newState.errorMessages[missingInteraction.id];
+          if (parentValidity) {
+            validity[missingInteraction.id] = newState.validity[missingInteraction.id];
+            if (newState.errorMessages?.[missingInteraction.id]) {
+              errorMessages[missingInteraction.id] = newState.errorMessages[missingInteraction.id];
+            }
+          } else {
+            validity[missingInteraction.id] = false;
+            errorMessages[missingInteraction.id] =
+              writingContractState.cachedValue.errorMessages[missingInteraction.id];
           }
 
           const toCache = new EvalStateResult(currentState, validity, errorMessages);
