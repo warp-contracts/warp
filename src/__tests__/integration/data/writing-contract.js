@@ -124,6 +124,8 @@ export async function handle(state, action) {
   }
 
   if (action.input.function === 'addAmount') {
+    console.log("addAmount", action.input);
+
     state.counter += action.input.amount;
     return { state };
   }
