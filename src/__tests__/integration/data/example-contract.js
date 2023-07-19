@@ -9,10 +9,14 @@ export async function handle(state, action) {
 
   if (action.input.function === 'add') {
     state.counter++;
+    if (action.input.throw) {
+      throw new ContractError('Error from "add" function');
+    }
     return { state };
   }
 
   if (action.input.function === 'addAndWrite') {
+    console.log("addAndWrite");
     const result = await SmartWeave.contracts.write(action.input.contractId, {
       function: 'addAmount',
       amount: action.input.amount
@@ -51,4 +55,5 @@ export async function handle(state, action) {
   if (action.input.function === 'justThrow') {
     throw new ContractError('Error from justThrow function');
   }
+
 }
