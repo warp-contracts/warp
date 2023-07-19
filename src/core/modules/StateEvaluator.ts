@@ -111,8 +111,6 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   // (e.g. when using unsafe client and Arweave does not respond properly for a while)
   ignoreExceptions = true;
 
-  waitForConfirmation = false;
-
   updateCacheForEachInteraction = false;
 
   internalWrites = false;
@@ -126,6 +124,8 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   };
 
   sequencerUrl = `https://d1o5nlqr4okus2.cloudfront.net/`;
+
+  useDecentralizedSequencer = false;
 
   gasLimit = Number.MAX_SAFE_INTEGER;
 
@@ -156,10 +156,6 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
 export interface EvaluationOptions {
   // whether exceptions from given transaction interaction should be ignored
   ignoreExceptions: boolean;
-
-  // allow to wait for confirmation of the interaction transaction - this way
-  // you will know, when the new interaction is effectively available on the network
-  waitForConfirmation: boolean;
 
   // whether the state cache should be updated after evaluating each interaction transaction.
   // currently, defaults to false. Setting to true might in some scenarios increase evaluation performance
@@ -195,6 +191,8 @@ export interface EvaluationOptions {
   };
 
   sequencerUrl: string;
+
+  useDecentralizedSequencer: boolean;
 
   gasLimit: number;
 

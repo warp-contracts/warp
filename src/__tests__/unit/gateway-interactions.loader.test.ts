@@ -7,6 +7,7 @@ import {
 import { GQLNodeInterface } from '../../legacy/gqlResult';
 import { LoggerFactory } from '../../logging/LoggerFactory';
 import { WarpFactory } from '../../core/WarpFactory';
+import { NetworkCommunicationError } from '../../utils/utils';
 
 const responseData = {
   paging: {
@@ -140,7 +141,7 @@ describe('WarpGatewayInteractionsLoader -> load', () => {
     try {
       await loader.load(contractId, fromBlockHeight, toBlockHeight);
     } catch (e) {
-      expect(e).toEqual(new Error('Error while communicating with gateway: {"status":504,"ok":false}'));
+      expect(e).toEqual(new NetworkCommunicationError('Error during network communication: {"status":504,"ok":false}'));
     }
   });
   it('should throw an error when request fails', async () => {
@@ -152,8 +153,8 @@ describe('WarpGatewayInteractionsLoader -> load', () => {
       await loader.load(contractId, fromBlockHeight, toBlockHeight);
     } catch (e) {
       expect(e).toEqual(
-        new Error(
-          'Error while communicating with gateway: {"status":500,"ok":false,"body":{"message":"request fails"}}'
+        new NetworkCommunicationError(
+          'Error during network communication: {"status":500,"ok":false,"body":{"message":"request fails"}}'
         )
       );
     }

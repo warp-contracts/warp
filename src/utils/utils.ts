@@ -87,18 +87,30 @@ export function bufToBn(buf: Buffer) {
 
 export const isBrowser = new Function('try {return this===window;}catch(e){ return false;}');
 
+export class NetworkCommunicationError<T> extends Error {
+  constructor(readonly error: T) {
+    super(error.toString());
+    this.name = 'NetworkCommunicationError';
+  }
+}
+
 export async function getJsonResponse<T>(response: Promise<Response>): Promise<T> {
   let r: Response;
   try {
     r = await response;
   } catch (e) {
-    throw new Error(`Error while communicating with gateway: ${JSON.stringify(e)}`);
+    throw new NetworkCommunicationError(`Error during network communication: ${JSON.stringify(e)}`);
   }
 
   if (!r?.ok) {
     const text = await r.text();
-    throw new Error(`${r.status}: ${text}`);
+    throw new NetworkCommunicationError(`Wrong response code: ${r.status}. ${text}`);
   }
-  const result = await r.json();
-  return result as T;
+
+  try {
+    const result = await r.json();
+    return result as T;
+  } catch (e) {
+    throw new NetworkCommunicationError(`Error while parsing json response: ${JSON.stringify(e)}`);
+  }
 }

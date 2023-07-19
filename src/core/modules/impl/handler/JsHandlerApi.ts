@@ -14,9 +14,10 @@ const throwErrorWithName = (name: string, message: string) => {
   error.name = name;
   throw error;
 };
-enum KnownErrors {
+export enum KnownErrors {
   ContractError = 'ContractError',
-  ConstructorError = 'ConstructorError'
+  ConstructorError = 'ConstructorError',
+  NetworkCommunicationError = 'NetworkCommunicationError'
 }
 
 export class JsHandlerApi<State> extends AbstractContractHandler<State> {
@@ -161,6 +162,9 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
           };
         case KnownErrors.ConstructorError:
           throw Error(`ConstructorError: ${err.message}`);
+        // any network-based error should result in immediately stop contract evaluation
+        case KnownErrors.NetworkCommunicationError:
+          throw err;
         default:
           return {
             type: 'exception' as const,

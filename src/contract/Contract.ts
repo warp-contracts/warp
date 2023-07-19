@@ -11,7 +11,7 @@ import { Signer } from 'warp-arbundles';
 
 export type BenchmarkStats = { gatewayCommunication: number; stateEvaluation: number; total: number };
 
-interface BundlrResponse {
+export interface BundlrResponse {
   id: string;
   public: string;
   signature: string;
@@ -48,6 +48,10 @@ export type ArweaveOptions = {
 export type CommonOptions = {
   tags?: Tags;
   strict?: boolean;
+  // Allows waiting for confirmation of the interaction.
+  // In the case of the 'disableBundling' option, the confirmation comes from the Arweave network,
+  // otherwise from the decentralized sequencer.
+  waitForConfirmation?: boolean;
 };
 
 export type WriteInteractionOptions = WarpOptions & ArweaveOptions & CommonOptions;

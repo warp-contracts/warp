@@ -91,13 +91,13 @@ export class EvaluationOptionsEvaluator {
       throw new Error('Could not determine "ignoreExceptions" value');
     },
 
-    waitForConfirmation: () => this.rootOptions['waitForConfirmation'],
     updateCacheForEachInteraction: () => this.rootOptions['updateCacheForEachInteraction'],
     maxCallDepth: () => this.rootOptions['maxCallDepth'],
     maxInteractionEvaluationTimeSeconds: () => this.rootOptions['maxInteractionEvaluationTimeSeconds'],
     stackTrace: () => this.rootOptions['stackTrace'],
     sourceType: () => this.rootOptions['sourceType'],
     sequencerUrl: () => this.rootOptions['sequencerUrl'],
+    useDecentralizedSequencer: () => this.rootOptions['useDecentralizedSequencer'],
     gasLimit: () => this.rootOptions['gasLimit'],
     allowBigInt: () => this.rootOptions['allowBigInt'], // not sure about this
     walletBalanceUrl: () => this.rootOptions['walletBalanceUrl'],

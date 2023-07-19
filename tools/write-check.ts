@@ -29,11 +29,7 @@ async function main() {
     .contract('lnG1-1_5lAoABx7oihhRXI3J5ybTTQ2HCi2FJbKPI_w')
     // connecting wallet to a contract. It is required before performing any "writeInteraction"
     // calling "writeInteraction" without connecting to a wallet first will cause a runtime error.
-    .connect(jwk)
-    .setEvaluationOptions({
-      // with this flag set to true, the write will wait for the transaction to be confirmed
-      waitForConfirmation: true
-    });
+    .connect(jwk);
 
   const result = await token.writeInteraction<any>({
     function: 'transfer',
@@ -41,6 +37,9 @@ async function main() {
       target: 'fake',
       qty: 15100900
     }
+  }, {
+      // with this flag set to true, the write will wait for the transaction to be confirmed
+      waitForConfirmation: true
   });
 
   //const { state, validity } = await lootContract.readState();

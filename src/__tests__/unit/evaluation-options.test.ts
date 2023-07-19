@@ -20,6 +20,7 @@ describe('Evaluation options evaluator', () => {
       remoteStateSyncEnabled: false,
       remoteStateSyncSource: 'https://dre-1.warp.cc/contract',
       sequencerUrl: 'https://d1o5nlqr4okus2.cloudfront.net/',
+      useDecentralizedSequencer: false,
       sourceType: SourceType.BOTH,
       stackTrace: {
         saveState: false
@@ -28,7 +29,6 @@ describe('Evaluation options evaluator', () => {
       unsafeClient: 'throw',
       updateCacheForEachInteraction: false,
       useKVStorage: false,
-      waitForConfirmation: false,
       useConstructor: false,
       walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/'
     });
@@ -57,6 +57,7 @@ describe('Evaluation options evaluator', () => {
       remoteStateSyncEnabled: false,
       remoteStateSyncSource: 'https://dre-1.warp.cc/contract',
       sequencerUrl: 'https://d1o5nlqr4okus2.cloudfront.net/',
+      useDecentralizedSequencer: false,
       sourceType: SourceType.BOTH,
       stackTrace: {
         saveState: false
@@ -65,7 +66,6 @@ describe('Evaluation options evaluator', () => {
       unsafeClient: 'throw',
       updateCacheForEachInteraction: false,
       useKVStorage: false,
-      waitForConfirmation: false,
       useConstructor: false,
       walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/'
     });
@@ -89,6 +89,7 @@ describe('Evaluation options evaluator', () => {
       remoteStateSyncEnabled: false,
       remoteStateSyncSource: 'https://dre-1.warp.cc/contract',
       sequencerUrl: 'https://d1o5nlqr4okus2.cloudfront.net/',
+      useDecentralizedSequencer: false,
       sourceType: 'both',
       stackTrace: {
         saveState: false
@@ -97,7 +98,6 @@ describe('Evaluation options evaluator', () => {
       unsafeClient: 'allow',
       updateCacheForEachInteraction: false,
       useKVStorage: false,
-      waitForConfirmation: false,
       useConstructor: false,
       walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/'
     });
@@ -118,6 +118,7 @@ describe('Evaluation options evaluator', () => {
       remoteStateSyncEnabled: false,
       remoteStateSyncSource: 'https://dre-1.warp.cc/contract',
       sequencerUrl: 'https://d1o5nlqr4okus2.cloudfront.net/',
+      useDecentralizedSequencer: false,
       sourceType: 'both',
       stackTrace: {
         saveState: false
@@ -126,7 +127,6 @@ describe('Evaluation options evaluator', () => {
       unsafeClient: 'allow',
       updateCacheForEachInteraction: false,
       useKVStorage: false,
-      waitForConfirmation: false,
       useConstructor: false,
       walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/'
     });
@@ -147,6 +147,7 @@ describe('Evaluation options evaluator', () => {
       remoteStateSyncEnabled: false,
       remoteStateSyncSource: 'https://dre-1.warp.cc/contract',
       sequencerUrl: 'https://d1o5nlqr4okus2.cloudfront.net/',
+      useDecentralizedSequencer: false,
       sourceType: 'both',
       stackTrace: {
         saveState: false
@@ -155,7 +156,6 @@ describe('Evaluation options evaluator', () => {
       unsafeClient: 'throw',
       updateCacheForEachInteraction: false,
       useKVStorage: false,
-      waitForConfirmation: false,
       useConstructor: false,
       walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/'
     });
@@ -176,6 +176,7 @@ describe('Evaluation options evaluator', () => {
       remoteStateSyncEnabled: false,
       remoteStateSyncSource: 'https://dre-1.warp.cc/contract',
       sequencerUrl: 'https://d1o5nlqr4okus2.cloudfront.net/',
+      useDecentralizedSequencer: false,
       sourceType: 'both',
       stackTrace: {
         saveState: false
@@ -184,7 +185,6 @@ describe('Evaluation options evaluator', () => {
       unsafeClient: 'skip',
       updateCacheForEachInteraction: false,
       useKVStorage: false,
-      waitForConfirmation: false,
       useConstructor: false,
       walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/'
     });

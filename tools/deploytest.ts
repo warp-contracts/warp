@@ -4,7 +4,7 @@ import { defaultCacheOptions, LoggerFactory, WarpFactory } from '../src';
 import fs from 'fs';
 import path from 'path';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import {ArweaveSigner, DeployPlugin} from "warp-contracts-plugin-deploy";
+import { ArweaveSigner, DeployPlugin } from "warp-contracts-plugin-deploy";
 
 async function main() {
   let wallet: JWKInterface = readJSON('./.secrets/warp.json');
@@ -63,9 +63,6 @@ async function main() {
     });*/
 
     const contract = warp.contract<any>('wAU7KuBFkyku-7pVfGk_gh9-eusog9L2TeBAgtGoRfk')
-      .setEvaluationOptions({
-        waitForConfirmation: true
-      })
       .connect(wallet);
 
     /*await Promise.all([
@@ -93,7 +90,8 @@ async function main() {
         target: 'M-mpNeJbg9h7mZ-uHaNsa5jwFFRAq0PsTkNWXJ-ojwI',
         qty: 100
       }, {
-        disableBundling: true
+        disableBundling: true,
+        waitForConfirmation: true
       })*!/
     ]);*/
     const {cachedValue} = await contract.readState();

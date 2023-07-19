@@ -28,6 +28,7 @@ export const WARP_TAGS = {
   SEQUENCER_BLOCK_HEIGHT: 'Sequencer-Block-Height',
   SEQUENCER_BLOCK_ID: 'Sequencer-Block-Id',
   SEQUENCER_BLOCK_TIMESTAMP: 'Sequencer-Block-Timestamp',
+  SEQUENCER_NONCE: 'Sequencer-Nonce',
   INIT_STATE: 'Init-State',
   INIT_STATE_TX: 'Init-State-TX',
   INTERACT_WRITE: 'Interact-Write',

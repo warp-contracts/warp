@@ -23,6 +23,7 @@ import { ArweaveWrapper } from '../utils/ArweaveWrapper';
 import { getJsonResponse, isBrowser, sleep, stripTrailingSlash } from '../utils/utils';
 import {
   BenchmarkStats,
+  BundlrResponse,
   Contract,
   DREContractStatusResponse,
   InnerCallData,
@@ -42,6 +43,7 @@ import { Crypto } from 'warp-isomorphic';
 import { VrfPluginFunctions } from '../core/WarpPlugin';
 import Arweave from 'arweave';
 import { createData, tagsExceedLimit, DataItem, Signer } from 'warp-arbundles';
+import { DecentralizedSequencer } from './DecentralizedSequencer';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -73,6 +75,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   private _children: HandlerBasedContract<unknown>[] = [];
   private _interactionState;
   private _dreStates = new Map<string, SortKeyCacheResult<EvalStateResult<State>>>();
+  private _decentralizedSequencer: DecentralizedSequencer;
 
   constructor(
     private readonly _contractTxId: string,
@@ -131,6 +134,15 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     this.getCallStack = this.getCallStack.bind(this);
     this._warpFetchWrapper = new WarpFetchWrapper(this.warp);
+    this.setDecentralizedSequencer();
+  }
+
+  private setDecentralizedSequencer() {
+    if (this._evaluationOptions.useDecentralizedSequencer) {
+      this._decentralizedSequencer = new DecentralizedSequencer(this._evaluationOptions.sequencerUrl);
+    } else {
+      this._decentralizedSequencer = null;
+    }
   }
 
   async readState(
@@ -260,6 +272,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const effectiveVrf = options?.vrf === true;
     const effectiveDisableBundling = options?.disableBundling === true;
     const effectiveReward = options?.reward;
+    const effectiveWaitForConfirmation = options?.waitForConfirmation === true;
 
     const bundleInteraction = interactionsLoader.type() == 'warp' && !effectiveDisableBundling;
 
@@ -286,7 +299,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
       return await this.bundleInteraction(input, {
         tags: effectiveTags,
         strict: effectiveStrict,
-        vrf: effectiveVrf
+        vrf: effectiveVrf,
+        waitForConfirmation: effectiveWaitForConfirmation
       });
     } else {
       const interactionTx = await this.createInteraction(
@@ -305,7 +319,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
         return null;
       }
 
-      if (this._evaluationOptions.waitForConfirmation) {
+      if (effectiveWaitForConfirmation) {
         this.logger.info('Waiting for confirmation of', interactionTx.id);
         const benchmark = Benchmark.measure();
         await this.waitForConfirmation(interactionTx.id);
@@ -326,6 +340,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       tags: Tags;
       strict: boolean;
       vrf: boolean;
+      waitForConfirmation: boolean;
     }
   ): Promise<WriteInteractionResponse | null> {
     this.logger.info('Bundle interaction input', input);
@@ -338,22 +353,35 @@ export class HandlerBasedContract<State> implements Contract<State> {
       options.vrf
     );
 
-    const response = this._warpFetchWrapper.fetch(
-      `${stripTrailingSlash(this._evaluationOptions.sequencerUrl)}/gateway/v2/sequencer/register`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/octet-stream',
-          Accept: 'application/json'
-        },
-        body: interactionDataItem.getRaw()
-      }
-    );
-
+    let bundlrResponse: BundlrResponse;
     const dataItemId = await interactionDataItem.id;
+    if (this._evaluationOptions.useDecentralizedSequencer) {
+      const response = await this._decentralizedSequencer.sendDataItem(
+        interactionDataItem,
+        options.waitForConfirmation
+      );
+      if (options.waitForConfirmation && !response.confirmed) {
+        throw new Error(
+          `The transaction with hash ${response.sequencer_tx_hash} containing DataItem with id ${dataItemId} has not been confirmed.`
+        );
+      }
+    } else {
+      const response = this._warpFetchWrapper.fetch(
+        `${stripTrailingSlash(this._evaluationOptions.sequencerUrl)}/gateway/v2/sequencer/register`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/octet-stream',
+            Accept: 'application/json'
+          },
+          body: interactionDataItem.getRaw()
+        }
+      );
+      bundlrResponse = await getJsonResponse(response);
+    }
 
     return {
-      bundlrResponse: await getJsonResponse(response),
+      bundlrResponse,
       originalTxId: dataItemId
     };
   }
@@ -370,8 +398,20 @@ export class HandlerBasedContract<State> implements Contract<State> {
       await this.discoverInternalWrites<Input>(input, tags, transfer, strict, vrf);
     }
 
+    const bundlerSigner = this._signature.bundlerSigner;
+    if (!bundlerSigner) {
+      throw new Error(
+        `Signer not set correctly. If you connect wallet through 'use_wallet', please remember that it only works when bundling is disabled.`
+      );
+    }
+
     if (vrf) {
       tags.push(new Tag(WARP_TAGS.REQUEST_VRF, 'true'));
+    }
+
+    if (this.evaluationOptions().useDecentralizedSequencer) {
+      const nonce = await this._decentralizedSequencer.fetchNonce(bundlerSigner);
+      tags.push(new Tag(WARP_TAGS.SEQUENCER_NONCE, String(nonce)));
     }
 
     const interactionTags = createInteractionTagsList(
@@ -386,13 +426,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
 
     const data = Math.random().toString().slice(-4);
-    const bundlerSigner = this._signature.bundlerSigner;
-
-    if (!bundlerSigner) {
-      throw new Error(
-        `Signer not set correctly. If you connect wallet through 'use_wallet', please remember that it only works when bundling is disabled.`
-      );
-    }
 
     let interactionDataItem: DataItem;
     if (isBrowser() && bundlerSigner.signer?.signDataItem) {
@@ -484,6 +517,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       ...this._evaluationOptions,
       ...options
     };
+    this.setDecentralizedSequencer();
     return this;
   }
 

@@ -41,6 +41,7 @@
     "test:integration:basic": "jest ./src/__tests__/integration/basic",
     "test:integration:basic:load": "jest --silent=false --detectOpenHandles ./src/__tests__/integration/basic/contract-loading.test.ts ",
     "test:integration:basic:arweave": "jest ./src/__tests__/integration/basic/arweave-transactions-loading",
+    "test:integration:decentralized-sequencer": "jest ./src/__tests__/integration/decentralized-sequencer --detectOpenHandles",
     "test:integration:internal-writes": "jest ./src/__tests__/integration/internal-writes",
     "test:integration:wasm": "jest ./src/__tests__/integration/wasm",
     "test:regression": "node ./node_modules/.bin/jest ./src/__tests__/regression",
