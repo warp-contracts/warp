@@ -1,7 +1,6 @@
 import Arweave from 'arweave';
 
 import { SortKeyCacheResult } from '../../../cache/SortKeyCache';
-import { CurrentTx } from '../../../contract/Contract';
 import { InteractionCall } from '../../ContractCallRecord';
 import { ExecutionContext } from '../../../core/ExecutionContext';
 import { ExecutionContextModifier } from '../../../core/ExecutionContextModifier';
@@ -40,22 +39,19 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
   ) {}
 
   async eval<State>(
-    executionContext: ExecutionContext<State, HandlerApi<State>>,
-    currentTx: CurrentTx[]
+    executionContext: ExecutionContext<State, HandlerApi<State>>
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
     return this.doReadState(
       executionContext.sortedInteractions,
       new EvalStateResult<State>(executionContext.contractDefinition.initState, {}, {}),
-      executionContext,
-      currentTx
+      executionContext
     );
   }
 
   protected async doReadState<State>(
     missingInteractions: GQLNodeInterface[],
     baseState: EvalStateResult<State>,
-    executionContext: ExecutionContext<State, HandlerApi<State>>,
-    currentTx: CurrentTx[]
+    executionContext: ExecutionContext<State, HandlerApi<State>>
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
     const { ignoreExceptions, stackTrace, internalWrites } = executionContext.evaluationOptions;
     const { contract, contractDefinition, sortedInteractions, warp } = executionContext;
@@ -137,7 +133,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         const interactionCall: InteractionCall = contract
           .getCallStack()
-          .addInteractionData({ interaction: null, interactionTx: missingInteraction, currentTx });
+          .addInteractionData({ interaction: null, interactionTx: missingInteraction });
 
         // creating a Contract instance for the "writing" contract
         const writingContract = warp.contract(writingContractTxId, executionContext.contract, {
@@ -154,13 +150,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         let newState: EvalStateResult<unknown> = null;
         let writingContractState: SortKeyCacheResult<EvalStateResult<unknown>> = null;
         try {
-          writingContractState = await writingContract.readState(missingInteraction.sortKey, [
-            ...(currentTx || []),
-            {
-              contractTxId: contractDefinition.txId, //not: writingContractTxId!
-              interactionTxId: missingInteraction.id
-            }
-          ]);
+          writingContractState = await writingContract.readState(missingInteraction.sortKey);
           newState = contract.interactionState().get(contract.txId(), missingInteraction.sortKey);
         } catch (e) {
           // ppe: not sure why we're not handling all ContractErrors here...
@@ -242,8 +232,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         const interactionData = {
           interaction,
-          interactionTx: missingInteraction,
-          currentTx
+          interactionTx: missingInteraction
         };
 
         const interactionCall: InteractionCall = contract.getCallStack().addInteractionData(interactionData);

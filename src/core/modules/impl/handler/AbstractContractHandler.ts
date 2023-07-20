@@ -1,4 +1,3 @@
-import { CurrentTx } from '../../../../contract/Contract';
 import { ContractDefinition } from '../../../../core/ContractDefinition';
 import { ExecutionContext } from '../../../../core/ExecutionContext';
 import { EvalStateResult } from '../../../../core/modules/StateEvaluator';
@@ -38,7 +37,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
     // noop by default;
   }
 
-  protected assignWrite(executionContext: ExecutionContext<State>, currentTx: CurrentTx[]) {
+  protected assignWrite(executionContext: ExecutionContext<State>) {
     this.swGlobal.contracts.write = async <Input = unknown>(
       contractTxId: string,
       input: Input,
@@ -64,13 +63,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         callingInteraction: this.swGlobal._activeTx,
         callType: 'write'
       });
-      const result = await calleeContract.applyInput<Input>(input, this.swGlobal._activeTx, [
-        ...(currentTx || []),
-        {
-          contractTxId: this.contractDefinition.txId,
-          interactionTxId: this.swGlobal.transaction.id
-        }
-      ]);
+      const result = await calleeContract.applyInput<Input>(input, this.swGlobal._activeTx);
 
       this.logger.debug('Cache result?:', !this.swGlobal._activeTx.dry);
       const shouldAutoThrow =
@@ -128,11 +121,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
     };
   }
 
-  protected assignReadContractState(
-    executionContext: ExecutionContext<State>,
-    currentTx: CurrentTx[],
-    interactionTx: GQLNodeInterface
-  ) {
+  protected assignReadContractState(executionContext: ExecutionContext<State>, interactionTx: GQLNodeInterface) {
     this.swGlobal.contracts.readContractState = async (contractTxId: string, returnValidity?: boolean) => {
       this.logger.debug('swGlobal.readContractState call:', {
         from: this.contractDefinition.txId,
@@ -148,13 +137,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         callType: 'read'
       });
 
-      const stateWithValidity = await childContract.readState(interactionTx.sortKey, [
-        ...(currentTx || []),
-        {
-          contractTxId: this.contractDefinition.txId,
-          interactionTxId: this.swGlobal.transaction.id
-        }
-      ]);
+      const stateWithValidity = await childContract.readState(interactionTx.sortKey);
 
       if (stateWithValidity?.cachedValue?.errorMessages) {
         const errorKeys = Reflect.ownKeys(stateWithValidity?.cachedValue?.errorMessages);
