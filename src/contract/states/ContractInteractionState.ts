@@ -30,7 +30,9 @@ export class ContractInteractionState implements InteractionState {
       }
       keys = keys.sort((a, b) => a.localeCompare(b));
       const resultSortKey = keys[keys.length - 1];
-      return new SortKeyCacheResult<EvalStateResult<unknown>>(resultSortKey, states.get(resultSortKey));
+      if (states.get(resultSortKey)) {
+        return new SortKeyCacheResult<EvalStateResult<unknown>>(resultSortKey, states.get(resultSortKey));
+      }
     }
     return null;
   }
@@ -87,9 +89,9 @@ export class ContractInteractionState implements InteractionState {
     this._kv.clear();
   }
 
-  async rollback(interaction: GQLNodeInterface): Promise<void> {
+  async rollback(interaction: GQLNodeInterface, forceStateStoreToCache: boolean): Promise<void> {
     try {
-      await this.doStoreJson(this._initialJson, interaction);
+      await this.doStoreJson(this._initialJson, interaction, forceStateStoreToCache);
       await this.rollbackKVs();
     } finally {
       this.reset();
