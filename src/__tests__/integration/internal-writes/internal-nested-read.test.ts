@@ -130,17 +130,31 @@ describe('Testing deep internal reads', () => {
     });
 
     it('root contract should have the latest balance', async () => {
-      await leafContract.writeInteraction({ function: 'increase', target: 'asd', qty: 200 });
+      await leafContract.writeInteraction({ function: 'increase', target: 'asd', qty: 25 });
+      await leafContract.writeInteraction({ function: 'increase', target: 'asd', qty: 25 });
+      await leafContract.writeInteraction({ function: 'increase', target: 'asd', qty: 50 });
+      await leafContract.writeInteraction({ function: 'increase', target: 'asd', qty: 50 });
+      await leafContract.writeInteraction({ function: 'increase', target: 'asd', qty: 50 });
       await mineBlock(warp);
       await node20Contract.writeInteraction({ function: 'readBalanceFrom', tokenAddress: leafId, contractTxId: 'asd' });
       await mineBlock(warp);
-      await leafContract.writeInteraction({ function: 'increase', target: 'asd', qty: 400 });
+      await leafContract.writeInteraction({ function: 'increase', target: 'asd', qty: 200 });
+      await leafContract.writeInteraction({ function: 'increase', target: 'asd', qty: 100 });
+      await leafContract.writeInteraction({ function: 'increase', target: 'asd', qty: 100 });
       await mineBlock(warp);
-      await leafContract.writeInteraction({ function: 'increase', target: 'asd', qty: 400 });
+      await leafContract.writeInteraction({ function: 'increase', target: 'asd', qty: 100 });
+      await mineBlock(warp);
+      await leafContract.writeInteraction({ function: 'increase', target: 'asd', qty: 100 });
+      await mineBlock(warp);
+      await leafContract.writeInteraction({ function: 'increase', target: 'asd', qty: 100 });
+      await mineBlock(warp);
+      await leafContract.writeInteraction({ function: 'increase', target: 'asd', qty: 100 });
       await mineBlock(warp);
       await node22Contract.writeInteraction({ function: 'readBalanceFrom', tokenAddress: leafId, contractTxId: 'asd' });
       await mineBlock(warp);
-      await leafContract.writeInteraction({ function: 'increase', target: 'asd', qty: 250 });
+      await leafContract.writeInteraction({ function: 'increase', target: 'asd', qty: 50 });
+      await leafContract.writeInteraction({ function: 'increase', target: 'asd', qty: 100 });
+      await leafContract.writeInteraction({ function: 'increase', target: 'asd', qty: 100 });
       await mineBlock(warp);
       await node21Contract.writeInteraction({ function: 'readBalanceFrom', tokenAddress: leafId, contractTxId: 'asd' });
       await mineBlock(warp);
@@ -154,7 +168,10 @@ describe('Testing deep internal reads', () => {
       await mineBlock(warp);
 
 
-      const rootResult = await warp.pst(rootId).readState();
+      const rootResult = await warp.pst(rootId)
+        .setEvaluationOptions({
+          cacheEveryNInteractions: 1,
+        }).readState();
       expect(rootResult.cachedValue.state.balances['asd']).toEqual(1100);
 
       const node20Result = await warp.pst(node20Id).readState();
