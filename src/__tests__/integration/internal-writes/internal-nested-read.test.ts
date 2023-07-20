@@ -173,10 +173,12 @@ describe('Testing deep internal reads', () => {
       await rootContract.writeInteraction({ function: 'readBalanceFrom', tokenAddress: nod1Id, contractTxId: 'asd' });
       await mineBlock(warp);
 
-      const rootResult = await warp.pst(rootId)
+      const rootResult = await warp
+        .pst(rootId)
         .setEvaluationOptions({
-          cacheEveryNInteractions: 1,
-        }).readState();
+          cacheEveryNInteractions: 1
+        })
+        .readState();
       expect(rootResult.cachedValue.state.balances['asd']).toEqual(1100);
 
       const node20Result = await warp.pst(node20Id).readState();
