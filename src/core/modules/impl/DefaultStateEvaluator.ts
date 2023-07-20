@@ -159,7 +159,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
             (e.subtype == 'unsafeClientSkip' || e.subtype == 'constructor' || e.subtype == 'blacklistedSkip')
           ) {
             this.logger.warn(`Skipping contract in internal write, reason ${e.subtype}`);
-            errorMessages[missingInteraction.id] = e;
+            errorMessages[missingInteraction.id] = e.message?.slice(0, 10_000);
             if (canBeCached(missingInteraction)) {
               const toCache = new EvalStateResult(currentState, validity, errorMessages);
               lastConfirmedTxState = {
@@ -184,12 +184,13 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           if (parentValidity) {
             validity[missingInteraction.id] = newState.validity[missingInteraction.id];
             if (newState.errorMessages?.[missingInteraction.id]) {
-              errorMessages[missingInteraction.id] = newState.errorMessages[missingInteraction.id];
+              errorMessages[missingInteraction.id] = newState.errorMessages[missingInteraction.id]?.slice(0, 10_000);
             }
           } else {
             validity[missingInteraction.id] = false;
-            errorMessages[missingInteraction.id] =
-              writingContractState.cachedValue.errorMessages[missingInteraction.id];
+            errorMessages[missingInteraction.id] = writingContractState.cachedValue.errorMessages[
+              missingInteraction.id
+            ]?.slice(0, 10_000);
           }
 
           const toCache = new EvalStateResult(currentState, validity, errorMessages);
@@ -245,7 +246,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         errorMessage = result.errorMessage;
         if (result.type !== 'ok') {
-          errorMessages[missingInteraction.id] = errorMessage;
+          errorMessages[missingInteraction.id] = errorMessage?.slice(0, 10_000);
         }
 
         this.logResult<State>(result, missingInteraction, executionContext);
@@ -293,7 +294,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       } catch (e) {
         if (e.name == 'ContractError' && e.subtype == 'unsafeClientSkip') {
           validity[missingInteraction.id] = false;
-          errorMessages[missingInteraction.id] = e.message;
+          errorMessages[missingInteraction.id] = e.message?.slice(0, 10_000);
           shouldBreakAfterEvolve = true;
         } else {
           throw e;
@@ -422,11 +423,15 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
   abstract getCache(): BasicSortKeyCache<EvalStateResult<unknown>>;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function canBeCached(tx: GQLNodeInterface): boolean {
   // in case of using non-redstone gateway
-  if (tx.confirmationStatus === undefined) {
-    return true;
-  } else {
-    return tx.confirmationStatus === 'confirmed';
-  }
+  // if (tx.confirmationStatus === undefined) {
+  //   return true;
+  // } else {
+  //   return tx.confirmationStatus === 'confirmed';
+  // }
+  // to make sure all contracts are evaluated the same way
+  // until we come up with something better
+  return true;
 }
