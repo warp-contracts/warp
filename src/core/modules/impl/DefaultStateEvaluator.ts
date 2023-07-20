@@ -14,7 +14,6 @@ import { ContractInteraction, HandlerApi, InteractionResult } from './HandlerExe
 import { TagsParser } from './TagsParser';
 import { VrfPluginFunctions } from '../../WarpPlugin';
 import { BasicSortKeyCache } from '../../../cache/BasicSortKeyCache';
-import { genesisSortKey } from './LexicographicalInteractionsSorter';
 
 type EvaluationProgressInput = {
   contractTxId: string;
@@ -94,17 +93,12 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         break;
       }
 
+      const missingInteraction = missingInteractions[i];
+      currentSortKey = missingInteraction.sortKey;
       contract
         .interactionState()
-        .setInitial(
-          contract.txId(),
-          new EvalStateResult(currentState, validity, errorMessages),
-          lastConfirmedTxState?.tx?.sortKey || executionContext.cachedState?.sortKey || genesisSortKey
-        );
-
-      const missingInteraction = missingInteractions[i];
+        .setInitial(contract.txId(), new EvalStateResult(currentState, validity, errorMessages), currentSortKey);
       const singleInteractionBenchmark = Benchmark.measure();
-      currentSortKey = missingInteraction.sortKey;
 
       if (missingInteraction.vrf) {
         if (!vrfPlugin) {
@@ -317,6 +311,9 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         }
       }
 
+      const forceStateStoreToCache =
+        executionContext.evaluationOptions.cacheEveryNInteractions > 0 &&
+        i % executionContext.evaluationOptions.cacheEveryNInteractions === 0;
       // if that's the end of the root contract's interaction - commit all the uncommitted states to cache.
       if (contract.isRoot()) {
         contract.clearChildren();
@@ -326,20 +323,15 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
             .interactionState()
             .update(contract.txId(), lastConfirmedTxState.state, lastConfirmedTxState.tx.sortKey);
           if (validity[missingInteraction.id]) {
-            let forceStateStoreToCache = false;
-            if (executionContext.evaluationOptions.cacheEveryNInteractions > 0) {
-              forceStateStoreToCache = i % executionContext.evaluationOptions.cacheEveryNInteractions === 0;
-            }
             await contract.interactionState().commit(missingInteraction, forceStateStoreToCache);
           } else {
-            await contract.interactionState().rollback(missingInteraction);
+            await contract.interactionState().rollback(missingInteraction, forceStateStoreToCache);
           }
         }
       } else {
         // if that's an inner contract call - only update the state in the uncommitted states
-        contract
-          .interactionState()
-          .update(contract.txId(), new EvalStateResult(currentState, validity, errorMessages), currentSortKey);
+        const interactionState = new EvalStateResult(currentState, validity, errorMessages);
+        contract.interactionState().update(contract.txId(), interactionState, currentSortKey);
       }
     }
     const evalStateResult = new EvalStateResult<State>(currentState, validity, errorMessages);

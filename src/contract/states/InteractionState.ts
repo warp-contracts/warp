@@ -38,7 +38,7 @@ export interface InteractionState {
    * - IFF the result.type != 'ok'.
    * This ensures atomicity of state changes withing any given interaction - also in case of internal contract calls.
    */
-  rollback(interaction: GQLNodeInterface): Promise<void>;
+  rollback(interaction: GQLNodeInterface, forceStateStoreToCache: boolean): Promise<void>;
 
   has(contractTxId: string, sortKey: string): boolean;
 
