@@ -86,11 +86,6 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     );
   }
 
-// {
-//   contractTxId: this.contractDefinition.txId,
-//   interactionTxId: this.swGlobal.transaction.id
-// }
-
   async onStateEvaluated<State>(
     transaction: GQLNodeInterface,
     executionContext: ExecutionContext<State>,
