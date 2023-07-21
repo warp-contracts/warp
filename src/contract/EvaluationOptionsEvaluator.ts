@@ -109,11 +109,7 @@ export class EvaluationOptionsEvaluator {
     useConstructor: (foreignOptions) => foreignOptions['useConstructor']
   };
 
-  private readonly notConflictingEvaluationOptions: (keyof EvaluationOptions)[] = [
-    'useKVStorage',
-    'sourceType',
-    'useConstructor'
-  ];
+  private readonly notConflictingEvaluationOptions: (keyof EvaluationOptions)[] = ['sourceType', 'useConstructor'];
 
   /**
    * @param userSetOptions evaluation options set via {@link Contract.setEvaluationOptions}
@@ -137,10 +133,10 @@ export class EvaluationOptionsEvaluator {
           continue;
         }
         // https://github.com/warp-contracts/warp/issues/425#issuecomment-1591212639
-        if (optionKey === 'internalWrites') {
+        if (optionKey === 'internalWrites' || optionKey === 'useKVStorage') {
           if (userValue === false && manifestValue === true) {
             throw new Error(
-              'Cannot proceed with contract evaluation. User is blocking internal writes, while contract requires them.'
+              `Cannot proceed with contract evaluation. User is blocking ${optionKey}, while contract requires them.`
             );
           }
         } else if (optionKey === 'unsafeClient') {
