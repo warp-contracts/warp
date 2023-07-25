@@ -277,29 +277,22 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         }
       }
 
+      if (validity[missingInteraction.id] === undefined || validity[missingInteraction.id] === null) {
+        throw new Error('Validity not set after interaction evaluation');
+      }
+
       const forceStateStoreToCache =
         executionContext.evaluationOptions.cacheEveryNInteractions > 0 &&
         i % executionContext.evaluationOptions.cacheEveryNInteractions === 0;
-      // if that's the end of the root contract's interaction - commit all the uncommitted states to cache.
+      const interactionState = new EvalStateResult(currentState, validity, errorMessages);
+      contract.interactionState().update(contract.txId(), interactionState, currentSortKey);
       if (contract.isRoot()) {
         contract.clearChildren();
-        // update the interaction state of the root contract
-        contract
-          .interactionState()
-          .update(
-            contract.txId(),
-            new EvalStateResult<unknown>(currentState, validity, errorMessages),
-            missingInteraction.sortKey
-          );
         if (validity[missingInteraction.id]) {
           await contract.interactionState().commit(missingInteraction, forceStateStoreToCache);
         } else {
           await contract.interactionState().rollback(missingInteraction, forceStateStoreToCache);
         }
-      } else {
-        // if that's an inner contract call - only update the state in the uncommitted states
-        const interactionState = new EvalStateResult(currentState, validity, errorMessages);
-        contract.interactionState().update(contract.txId(), interactionState, currentSortKey);
       }
     }
     const evalStateResult = new EvalStateResult<State>(currentState, validity, errorMessages);
