@@ -72,8 +72,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     );
 
     let errorMessage = null;
-    let lastConfirmedTxState: { tx: GQLNodeInterface; state: EvalStateResult<State> } = null;
-
     const missingInteractionsLength = missingInteractions.length;
 
     const evmSignatureVerificationPlugin = warp.maybeLoadPlugin<GQLNodeInterface, Promise<boolean>>(
@@ -160,13 +158,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           ) {
             this.logger.warn(`Skipping contract in internal write, reason ${e.subtype}`);
             errorMessages[missingInteraction.id] = e.message?.slice(0, 10_000);
-            if (canBeCached(missingInteraction)) {
-              const toCache = new EvalStateResult(currentState, validity, errorMessages);
-              lastConfirmedTxState = {
-                tx: missingInteraction,
-                state: toCache
-              };
-            }
           } else {
             throw e;
           }
@@ -191,14 +182,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
             errorMessages[missingInteraction.id] = writingContractState.cachedValue.errorMessages[
               missingInteraction.id
             ]?.slice(0, 10_000);
-          }
-
-          const toCache = new EvalStateResult(currentState, validity, errorMessages);
-          if (canBeCached(missingInteraction)) {
-            lastConfirmedTxState = {
-              tx: missingInteraction,
-              state: toCache
-            };
           }
         } else {
           validity[missingInteraction.id] = false;
@@ -268,14 +251,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         validity[missingInteraction.id] = result.type === 'ok';
         currentState = result.state;
-
-        const toCache = new EvalStateResult(currentState, validity, errorMessages);
-        if (canBeCached(missingInteraction)) {
-          lastConfirmedTxState = {
-            tx: missingInteraction,
-            state: toCache
-          };
-        }
       }
 
       if (progressPlugin) {
@@ -307,16 +282,18 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       // if that's the end of the root contract's interaction - commit all the uncommitted states to cache.
       if (contract.isRoot()) {
         contract.clearChildren();
-        // update the uncommitted state of the root contract
-        if (lastConfirmedTxState) {
-          contract
-            .interactionState()
-            .update(contract.txId(), lastConfirmedTxState.state, lastConfirmedTxState.tx.sortKey);
-          if (validity[missingInteraction.id]) {
-            await contract.interactionState().commit(missingInteraction, forceStateStoreToCache);
-          } else {
-            await contract.interactionState().rollback(missingInteraction, forceStateStoreToCache);
-          }
+        // update the interaction state of the root contract
+        contract
+          .interactionState()
+          .update(
+            contract.txId(),
+            new EvalStateResult<unknown>(currentState, validity, errorMessages),
+            missingInteraction.sortKey
+          );
+        if (validity[missingInteraction.id]) {
+          await contract.interactionState().commit(missingInteraction, forceStateStoreToCache);
+        } else {
+          await contract.interactionState().rollback(missingInteraction, forceStateStoreToCache);
         }
       } else {
         // if that's an inner contract call - only update the state in the uncommitted states
@@ -328,8 +305,12 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
     // state could have been fully retrieved from cache
     // or there were no interactions below requested sort key
-    if (lastConfirmedTxState !== null) {
-      await this.onStateEvaluated(lastConfirmedTxState.tx, executionContext, lastConfirmedTxState.state);
+    if (missingInteractionsLength > 0) {
+      await this.onStateEvaluated(
+        missingInteractions[missingInteractionsLength - 1],
+        executionContext,
+        evalStateResult
+      );
     }
 
     return new SortKeyCacheResult(currentSortKey, evalStateResult);
