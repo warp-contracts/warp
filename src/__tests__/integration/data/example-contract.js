@@ -16,19 +16,28 @@ export async function handle(state, action) {
   }
 
   if (action.input.function === 'addAndWrite') {
-    console.log("addAndWrite");
+    console.log("CONTRACT: addAndWrite");
     const result = await SmartWeave.contracts.write(action.input.contractId, {
       function: 'addAmount',
-      amount: action.input.amount
+      amount: action.input.amount,
+      throw: action.input.throw
     });
 
+    console.log("CONTRACT", result);
+
     state.counter += result.state.counter;
+
+    console.log("CONTRACT counter", state.counter);
 
     return { state };
   }
 
   if (action.input.function === 'addAmount') {
     state.counter += action.input.amount;
+
+    if (action.input.throw) {
+      throw new ContractError("Throw from addAmount");
+    }
 
     return { state };
   }

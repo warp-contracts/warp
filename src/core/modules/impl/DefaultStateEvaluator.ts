@@ -150,6 +150,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         try {
           writingContractState = await writingContract.readState(missingInteraction.sortKey);
           newState = contract.interactionState().get(contract.txId(), missingInteraction.sortKey);
+          console.log('NEW STATE', newState);
         } catch (e) {
           // ppe: not sure why we're not handling all ContractErrors here...
           if (
