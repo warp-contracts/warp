@@ -7,13 +7,13 @@ import path from 'path';
 import { mineBlock } from '../_helpers';
 import { Contract } from '../../../contract/Contract';
 import { Warp } from '../../../core/Warp';
-import { defaultCacheOptions, WarpFactory } from "../../../core/WarpFactory";
+import { defaultCacheOptions, WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 import { VM2Plugin } from 'warp-contracts-plugin-vm2';
 import { MemoryLevel } from 'memory-level';
-import { CacheKey } from "../../../cache/SortKeyCache";
-import { SqliteContractCache } from "warp-contracts-sqlite";
+import { CacheKey } from '../../../cache/SortKeyCache';
+import { SqliteContractCache } from 'warp-contracts-sqlite';
 
 interface ExampleContractState {
   counter: number;
@@ -50,7 +50,8 @@ describe('Testing internal writes', () => {
   });
 
   async function deployContracts() {
-    warp = WarpFactory.forLocal(port).use(new DeployPlugin())
+    warp = WarpFactory.forLocal(port)
+      .use(new DeployPlugin())
       .useStateCache(
         new SqliteContractCache(
           {
@@ -64,10 +65,9 @@ describe('Testing internal writes', () => {
       );
     ({ jwk: wallet } = await warp.generateWallet());
 
-
     callingContractSrc = fs.readFileSync(path.join(__dirname, '../data/example-contract.js'), 'utf8');
     callingContractInitialState = JSON.stringify({
-      "counter": 0
+      counter: 0
     });
     calleeContractSrc = callingContractSrc;
     calleeInitialState = callingContractInitialState;
@@ -110,7 +110,6 @@ describe('Testing internal writes', () => {
   }
 
   describe('with read states on internal write interaction', () => {
-
     it('should deploy callee contract with initial state', async () => {
       await deployContracts();
       expect((await calleeContract.readState()).cachedValue.state.counter).toEqual(0);
@@ -130,7 +129,7 @@ describe('Testing internal writes', () => {
       await mineBlock(warp);
 
       await callingContract.writeInteraction({
-        function: "addAndWrite",
+        function: 'addAndWrite',
         contractId: calleeContract.txId(),
         amount: 10
       });
@@ -142,12 +141,11 @@ describe('Testing internal writes', () => {
 
       await calleeContract.readState(iwBlockHeight);
       const result = await warp.stateEvaluator.latestAvailableState<ExampleContractState>(calleeContract.txId());
-      console.dir(result, { depth: null});
+      console.dir(result, { depth: null });
 
       // '3' from direct interaction + '10' from interact write
       expect(result.cachedValue.state.counter).toEqual(13);
       expect(Object.keys(result.cachedValue.validity).length).toEqual(4);
-
 
       const freshWarp = WarpFactory.forLocal(port).use(new DeployPlugin());
       const freshCalleeContract = freshWarp
@@ -159,12 +157,21 @@ describe('Testing internal writes', () => {
         .connect(wallet);
 
       await freshCalleeContract.readState(iwBlockHeight + 1);
-      const freshResult = await freshWarp.stateEvaluator.latestAvailableState<ExampleContractState>(freshCalleeContract.txId());
+      const freshResult = await freshWarp.stateEvaluator.latestAvailableState<ExampleContractState>(
+        freshCalleeContract.txId()
+      );
       expect(freshResult.cachedValue.state.counter).toEqual(14);
 
-      const calleeInteractions = await freshWarp.interactionsLoader.load(freshCalleeContract.txId(), undefined, undefined, freshCalleeContract.evaluationOptions());
+      const calleeInteractions = await freshWarp.interactionsLoader.load(
+        freshCalleeContract.txId(),
+        undefined,
+        undefined,
+        freshCalleeContract.evaluationOptions()
+      );
       const iwInteraction = calleeInteractions[calleeInteractions.length - 2];
-      const iwState = await freshWarp.stateEvaluator.getCache().get(new CacheKey(freshCalleeContract.txId(), iwInteraction.sortKey));
+      const iwState = await freshWarp.stateEvaluator
+        .getCache()
+        .get(new CacheKey(freshCalleeContract.txId(), iwInteraction.sortKey));
       expect((iwState.cachedValue.state as any).counter).toEqual(13);
       expect(Object.keys(result.cachedValue.validity).length).toEqual(4);
     });
@@ -185,7 +192,7 @@ describe('Testing internal writes', () => {
       await mineBlock(warp);
 
       await callingContract.writeInteraction({
-        function: "addAndWrite",
+        function: 'addAndWrite',
         contractId: calleeContract.txId(),
         amount: 10,
         throw: true
@@ -219,11 +226,10 @@ describe('Testing internal writes', () => {
 
       await calleeContract1.readState(iwBlockHeight);
       const result = await warp1.stateEvaluator.latestAvailableState<ExampleContractState>(calleeContract1.txId());
-      console.dir(result, { depth: null});
+      console.dir(result, { depth: null });
 
       expect(result.cachedValue.state.counter).toEqual(3);
       expect(Object.keys(result.cachedValue.validity).length).toEqual(4);
-
 
       const warp2 = WarpFactory.forLocal(port)
         .use(new DeployPlugin())
@@ -250,9 +256,16 @@ describe('Testing internal writes', () => {
       const freshResult = await warp2.stateEvaluator.latestAvailableState<ExampleContractState>(calleeContract2.txId());
       expect(freshResult.cachedValue.state.counter).toEqual(4);
 
-      const calleeInteractions = await warp2.interactionsLoader.load(calleeContract2.txId(), undefined, undefined, calleeContract2.evaluationOptions());
+      const calleeInteractions = await warp2.interactionsLoader.load(
+        calleeContract2.txId(),
+        undefined,
+        undefined,
+        calleeContract2.evaluationOptions()
+      );
       const iwInteraction = calleeInteractions[calleeInteractions.length - 2];
-      const iwState = await warp2.stateEvaluator.getCache().get(new CacheKey(calleeContract2.txId(), iwInteraction.sortKey));
+      const iwState = await warp2.stateEvaluator
+        .getCache()
+        .get(new CacheKey(calleeContract2.txId(), iwInteraction.sortKey));
       expect((iwState.cachedValue.state as any).counter).toEqual(3);
       expect(Object.keys(result.cachedValue.validity).length).toEqual(4);
     });
