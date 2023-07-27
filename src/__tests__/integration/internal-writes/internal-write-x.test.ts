@@ -110,11 +110,9 @@ describe('Testing internal writes', () => {
   }
 
   describe('with read states on internal write interaction', () => {
-    beforeAll(async () => {
-      await deployContracts();
-    });
 
     it('should deploy callee contract with initial state', async () => {
+      await deployContracts();
       expect((await calleeContract.readState()).cachedValue.state.counter).toEqual(0);
     });
 
@@ -172,6 +170,8 @@ describe('Testing internal writes', () => {
     });
 
     it('with failed internal write', async () => {
+      await deployContracts();
+      expect((await calleeContract.readState()).cachedValue.state.counter).toEqual(0);
       await calleeContract.writeInteraction({ function: 'add' });
       await callingContract.writeInteraction({ function: 'add' });
       await mineBlock(warp);

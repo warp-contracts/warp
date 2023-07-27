@@ -8,7 +8,7 @@ import { SimpleLRUCache } from '../../common/SimpleLRUCache';
 
 export class ContractInteractionState implements InteractionState {
   private readonly _json = new Map<string, SimpleLRUCache<string, EvalStateResult<unknown>>>();
-  private readonly _initialJson = new Map<string, EvalStateResult<unknown>>();
+  private readonly _initialJson = new Map<string, SortKeyCacheResult<EvalStateResult<unknown>>>();
   private readonly _kv = new Map<string, SortKeyCache<unknown>>();
 
   constructor(private readonly _warp: Warp) {}
@@ -70,11 +70,11 @@ export class ContractInteractionState implements InteractionState {
       return this.reset();
     }
     try {
-      const latestState = new Map<string, EvalStateResult<unknown>>();
+      const latestState = new Map<string, SortKeyCacheResult<EvalStateResult<unknown>>>();
       this._json.forEach((val, k) => {
         const state = this.getLessOrEqual(k, interaction.sortKey);
         if (state != null) {
-          latestState.set(k, state.cachedValue);
+          latestState.set(k, state);
         }
       });
       await this.doStoreJson(latestState, interaction, forceStore);
@@ -100,7 +100,7 @@ export class ContractInteractionState implements InteractionState {
 
   setInitial(contractTxId: string, state: EvalStateResult<unknown>, sortKey: string): void {
     // think twice here.
-    this._initialJson.set(contractTxId, state);
+    this._initialJson.set(contractTxId, new SortKeyCacheResult<EvalStateResult<unknown>>(sortKey, state));
     this.update(contractTxId, state, sortKey);
   }
 
@@ -126,20 +126,20 @@ export class ContractInteractionState implements InteractionState {
     return storage;
   }
 
-  private reset(): void {
+  reset(): void {
     this._json.clear();
     this._initialJson.clear();
     this._kv.clear();
   }
 
   private async doStoreJson(
-    states: Map<string, EvalStateResult<unknown>>,
+    states: Map<string, SortKeyCacheResult<EvalStateResult<unknown>>>,
     interaction: GQLNodeInterface,
     forceStore = false
   ) {
     if (states.size > 1 || forceStore) {
       for (const [k, v] of states) {
-        await this._warp.stateEvaluator.putInCache(k, interaction, v);
+        await this._warp.stateEvaluator.putInCache(k, interaction, v.cachedValue, v.sortKey);
       }
     }
   }

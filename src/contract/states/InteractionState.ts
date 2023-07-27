@@ -53,4 +53,6 @@ export interface InteractionState {
   getKvKeys(contractTxId: string, sortKey?: string, options?: SortKeyCacheRangeOptions): Promise<string[]>;
 
   getKvRange(contractTxId: string, sortKey?: string, options?: SortKeyCacheRangeOptions): Promise<Map<string, unknown>>;
+
+  reset(): void;
 }

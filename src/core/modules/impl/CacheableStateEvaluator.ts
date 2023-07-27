@@ -174,7 +174,8 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
   public async putInCache<State>(
     contractTxId: string,
     transaction: GQLNodeInterface,
-    state: EvalStateResult<State>
+    state: EvalStateResult<State>,
+    sortKey?: string
   ): Promise<void> {
     if (transaction.dry) {
       return;
@@ -187,11 +188,11 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     this.cLogger.debug('Putting into cache', {
       contractTxId,
       transaction: transaction.id,
-      sortKey: transaction.sortKey,
+      sortKey: sortKey || transaction.sortKey,
       dry: transaction.dry
     });
 
-    await this.cache.put(new CacheKey(contractTxId, transaction.sortKey), stateToCache);
+    await this.cache.put(new CacheKey(contractTxId, sortKey || transaction.sortKey), stateToCache);
   }
 
   async syncState<State>(

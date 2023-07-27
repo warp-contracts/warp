@@ -64,8 +64,6 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         callType: 'write'
       });
       const result = await calleeContract.applyInput<Input>(input, this.swGlobal._activeTx);
-      console.log("Callee id", calleeContract.txId());
-      console.log("INSIDE WRITE", result);
 
       this.logger.debug('Cache result?:', !this.swGlobal._activeTx.dry);
       const shouldAutoThrow =

@@ -64,7 +64,12 @@ export interface StateEvaluator {
     sortKey?: string
   ): Promise<SortKeyCacheResult<EvalStateResult<State>> | null>;
 
-  putInCache<State>(contractTxId: string, transaction: GQLNodeInterface, state: EvalStateResult<State>): Promise<void>;
+  putInCache<State>(
+    contractTxId: string,
+    transaction: GQLNodeInterface,
+    state: EvalStateResult<State>,
+    sortKey?: string
+  ): Promise<void>;
 
   /**
    * allows to syncState with an external state source (like Warp Distributed Execution Network)

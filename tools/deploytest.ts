@@ -4,7 +4,6 @@ import { defaultCacheOptions, LoggerFactory, WarpFactory } from '../src';
 import fs from 'fs';
 import path from 'path';
 import { JWKInterface } from 'arweave/node/lib/wallet';
-import {ArweaveSigner, DeployPlugin} from "warp-contracts-plugin-deploy";
 
 async function main() {
   let wallet: JWKInterface = readJSON('./.secrets/warp.json');
@@ -19,26 +18,25 @@ async function main() {
   });
 
   try {
-    const warp = WarpFactory.forMainnet({ ...defaultCacheOptions, inMemory: true })
-      .use(new DeployPlugin());
+    const warp = WarpFactory.forMainnet({ ...defaultCacheOptions, inMemory: true });
 
     const jsContractSrc = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.js'), 'utf8');
     const initialState = fs.readFileSync(path.join(__dirname, 'data/js/token-pst.json'), 'utf8');
 
     // case 1 - full deploy, js contract
-   const { contractTxId, srcTxId } = await warp.deploy({
+   /*const { contractTxId, srcTxId } = await warp.deploy({
       wallet: new ArweaveSigner(wallet),
       initState: initialState,
       src: jsContractSrc
-      /*evaluationManifest: {
+      /!*evaluationManifest: {
         evaluationOptions: {
           useKVStorage: true
         }
-      }*/
+      }*!/
     });
 
     console.log('contractTxId:', contractTxId);
-    console.log('srcTxId:', srcTxId);
+    console.log('srcTxId:', srcTxId);*/
     // case 2 - deploy from source, js contract
     /*const {contractTxId} = await warp.createContract.deployFromSourceTx({
       wallet,
@@ -62,12 +60,20 @@ async function main() {
       srcTxId: "5wXT-A0iugP9pWEyw-iTbB0plZ_AbmvlNKyBfGS3AUY",
     });*/
 
-    const contract = warp.contract<any>('wAU7KuBFkyku-7pVfGk_gh9-eusog9L2TeBAgtGoRfk')
+    const contract = warp.contract<any>('XW_z0WhM5PsVD-nmyNm1pCK1za9uysu1vco1HS8DpIo')
       .setEvaluationOptions({
-        waitForConfirmation: true
+        waitForConfirmation: true,
+        internalWrites: true,
+        remoteStateSyncEnabled: true,
+        remoteStateSyncSource: 'https://dre-6.warp.cc/contract',
+        unsafeClient: 'skip',
+        allowBigInt: true
       })
       .connect(wallet);
 
+    await contract.writeInteraction<any>({
+      function: "just_a_test"
+    });
     /*await Promise.all([
       contract.writeInteraction<any>({
         function: 'origin'
@@ -96,10 +102,10 @@ async function main() {
         disableBundling: true
       })*!/
     ]);*/
-    const {cachedValue} = await contract.readState();
+    //const {cachedValue} = await contract.readState();
 
     //logger.info("Result", await contract.getStorageValue('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA'));
-    console.dir(cachedValue.state);
+    //console.dir(cachedValue.state);
 
     /*await contract.writeInteraction({
       function: "origin"
