@@ -6,12 +6,12 @@ import { SortKeyCacheRangeOptions } from '../../cache/SortKeyCacheRangeOptions';
 // Handles contracts state (both the json-based and kv-based) during interaction evaluation
 export interface InteractionState {
   /**
-   * Sets the state for a given contract as it is at the beginning of the interaction evaluation.
+   * Sets the state for a given contract after an invalid interaction evaluation.
    * If the interaction evaluation of the root contract will fail (i.e. its result type is != 'ok')
-   * - this initial state will be committed to the cache for this interaction.
+   * - this state will be committed to the cache for this interaction.
    * In other words - all changes made during evaluation of this interaction will be rollbacked.
    */
-  setInitial(contractTxId: string, state: EvalStateResult<unknown>, sortKey: string): void;
+  setRollbackState(contractTxId: string, state: EvalStateResult<unknown>, sortKey: string): void;
 
   /**
    * Updates the json-state for a given contract during interaction evaluation - e.g. as a result of an internal write

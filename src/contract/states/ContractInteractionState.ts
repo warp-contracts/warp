@@ -7,22 +7,22 @@ import { SortKeyCacheRangeOptions } from '../../cache/SortKeyCacheRangeOptions';
 import { SimpleLRUCache } from '../../common/SimpleLRUCache';
 
 export class ContractInteractionState implements InteractionState {
-  private readonly _json = new Map<string, SimpleLRUCache<string, EvalStateResult<unknown>>>();
-  private readonly _initialJson = new Map<string, SortKeyCacheResult<EvalStateResult<unknown>>>();
+  private readonly _uncommittedStates = new Map<string, SimpleLRUCache<string, EvalStateResult<unknown>>>();
+  private readonly _rollbackStates = new Map<string, SortKeyCacheResult<EvalStateResult<unknown>>>();
   private readonly _kv = new Map<string, SortKeyCache<unknown>>();
 
   constructor(private readonly _warp: Warp) {}
 
   has(contractTx, sortKey: string): boolean {
-    return this._json.get(contractTx)?.has(sortKey) || false;
+    return this._uncommittedStates.get(contractTx)?.has(sortKey) || false;
   }
 
   get(contractTxId: string, sortKey: string): EvalStateResult<unknown> {
-    return this._json.get(contractTxId)?.get(sortKey) || null;
+    return this._uncommittedStates.get(contractTxId)?.get(sortKey) || null;
   }
 
   getLessOrEqual(contractTxId: string, sortKey?: string): SortKeyCacheResult<EvalStateResult<unknown>> | null {
-    const states = this._json.get(contractTxId);
+    const states = this._uncommittedStates.get(contractTxId);
     if (states != null && states.size() > 0) {
       let keys = states.keys();
       if (sortKey) {
@@ -70,14 +70,14 @@ export class ContractInteractionState implements InteractionState {
       return this.reset();
     }
     try {
-      const latestState = new Map<string, SortKeyCacheResult<EvalStateResult<unknown>>>();
-      this._json.forEach((val, k) => {
+      const latestStates = new Map<string, SortKeyCacheResult<EvalStateResult<unknown>>>();
+      this._uncommittedStates.forEach((val, k) => {
         const state = this.getLessOrEqual(k, interaction.sortKey);
         if (state != null) {
-          latestState.set(k, state);
+          latestStates.set(k, state);
         }
       });
-      await this.doStoreJson(latestState, interaction, forceStore);
+      await this.doStoreStates(latestStates, interaction, forceStore);
       await this.commitKVs();
     } finally {
       this.reset();
@@ -91,25 +91,23 @@ export class ContractInteractionState implements InteractionState {
 
   async rollback(interaction: GQLNodeInterface, forceStateStoreToCache: boolean): Promise<void> {
     try {
-      await this.doStoreJson(this._initialJson, interaction, forceStateStoreToCache);
+      await this.doStoreStates(this._rollbackStates, interaction, forceStateStoreToCache);
       await this.rollbackKVs();
     } finally {
       this.reset();
     }
   }
 
-  setInitial(contractTxId: string, state: EvalStateResult<unknown>, sortKey: string): void {
-    // think twice here.
-    this._initialJson.set(contractTxId, new SortKeyCacheResult<EvalStateResult<unknown>>(sortKey, state));
-    this.update(contractTxId, state, sortKey);
+  setRollbackState(contractTxId: string, state: EvalStateResult<unknown>, sortKey: string): void {
+    this._rollbackStates.set(contractTxId, new SortKeyCacheResult<EvalStateResult<unknown>>(sortKey, state));
   }
 
   update(contractTxId: string, state: EvalStateResult<unknown>, sortKey: string): void {
-    if (!this._json.has(contractTxId)) {
+    if (!this._uncommittedStates.has(contractTxId)) {
       const cache = new SimpleLRUCache<string, EvalStateResult<unknown>>(10);
-      this._json.set(contractTxId, cache);
+      this._uncommittedStates.set(contractTxId, cache);
     }
-    this._json.get(contractTxId).set(sortKey, state);
+    this._uncommittedStates.get(contractTxId).set(sortKey, state);
   }
 
   async updateKV(contractTxId: string, key: CacheKey, value: unknown): Promise<void> {
@@ -127,12 +125,12 @@ export class ContractInteractionState implements InteractionState {
   }
 
   reset(): void {
-    this._json.clear();
-    this._initialJson.clear();
+    this._uncommittedStates.clear();
+    this._rollbackStates.clear();
     this._kv.clear();
   }
 
-  private async doStoreJson(
+  private async doStoreStates(
     states: Map<string, SortKeyCacheResult<EvalStateResult<unknown>>>,
     interaction: GQLNodeInterface,
     forceStore = false

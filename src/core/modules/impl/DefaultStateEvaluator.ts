@@ -91,7 +91,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       currentSortKey = missingInteraction.sortKey;
       contract
         .interactionState()
-        .setInitial(contract.txId(), new EvalStateResult(currentState, validity, errorMessages), currentSortKey);
+        .update(contract.txId(), new EvalStateResult(currentState, validity, errorMessages), currentSortKey);
       const singleInteractionBenchmark = Benchmark.measure();
 
       if (missingInteraction.vrf) {
@@ -165,12 +165,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         if (newState !== null && writingContractState !== null) {
           const parentValidity = writingContractState.cachedValue.validity[missingInteraction.id];
-          if (parentValidity) {
-            currentState = newState.state as State;
-          }
-          // we need to update the state in the wasm module
-          // TODO: opt - reuse wasm handlers...
-          executionContext?.handler.initState(currentState);
 
           if (parentValidity) {
             validity[missingInteraction.id] = newState.validity[missingInteraction.id];
@@ -182,6 +176,13 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
             errorMessages[missingInteraction.id] = writingContractState.cachedValue.errorMessages[
               missingInteraction.id
             ]?.slice(0, 10_000);
+          }
+
+          if (validity[missingInteraction.id]) {
+            currentState = newState.state as State;
+            // we need to update the state in the wasm module
+            // TODO: opt - reuse wasm handlers...
+            executionContext?.handler.initState(currentState);
           }
         } else {
           validity[missingInteraction.id] = false;
@@ -250,7 +251,9 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         }
 
         validity[missingInteraction.id] = result.type === 'ok';
-        currentState = result.state;
+        if (validity[missingInteraction.id]) {
+          currentState = result.state;
+        }
       }
 
       if (progressPlugin) {
@@ -283,8 +286,11 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       const forceStateStoreToCache =
         executionContext.evaluationOptions.cacheEveryNInteractions > 0 &&
         i % executionContext.evaluationOptions.cacheEveryNInteractions === 0;
-      const interactionState = new EvalStateResult(currentState, validity, errorMessages);
-      contract.interactionState().update(contract.txId(), interactionState, currentSortKey);
+      const evalStateResult = new EvalStateResult(currentState, validity, errorMessages);
+      contract.interactionState().update(contract.txId(), evalStateResult, currentSortKey);
+      if (!validity[missingInteraction.id]) {
+        contract.interactionState().setRollbackState(contract.txId(), evalStateResult, currentSortKey);
+      }
       if (contract.isRoot()) {
         this.logger.debug(`End of interaction ${missingInteraction.sortKey}.`);
         contract.clearChildren();
