@@ -98,7 +98,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       }]`
     );
 
-    await this.putInCache(contractTxId, transaction, state);
+    await this.putInCache(contractTxId, transaction.dry, state, transaction.sortKey);
   }
 
   async onStateUpdate<State>(
@@ -116,7 +116,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
           sortKey: transaction.sortKey
         }
       );
-      await this.putInCache(executionContext.contractDefinition.txId, transaction, state);
+      await this.putInCache(executionContext.contractDefinition.txId, transaction.dry, state, transaction.sortKey);
     }
   }
 
@@ -149,7 +149,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       contractTxId,
       state: state.state
     });
-    await this.putInCache(contractTxId, transaction, state);
+    await this.putInCache(contractTxId, transaction.dry, state, transaction.sortKey);
   }
 
   async onContractCall<State>(
@@ -166,18 +166,19 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     }
     await this.putInCache(
       executionContext.contractDefinition.txId,
-      executionContext.sortedInteractions[txIndex - 1],
-      state
+      executionContext.sortedInteractions[txIndex - 1].dry,
+      state,
+      executionContext.sortedInteractions[txIndex - 1].sortKey
     );
   }
 
   public async putInCache<State>(
     contractTxId: string,
-    transaction: GQLNodeInterface,
+    dry: boolean,
     state: EvalStateResult<State>,
-    sortKey?: string
+    sortKey: string
   ): Promise<void> {
-    if (transaction.dry) {
+    if (dry) {
       return;
     }
     /* if (transaction.confirmationStatus !== undefined && transaction.confirmationStatus !== 'confirmed') {
@@ -187,12 +188,11 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
 
     this.cLogger.debug('Putting into cache', {
       contractTxId,
-      transaction: transaction.id,
-      sortKey: sortKey || transaction.sortKey,
-      dry: transaction.dry
+      sortKey: sortKey,
+      dry: dry
     });
 
-    await this.cache.put(new CacheKey(contractTxId, sortKey || transaction.sortKey), stateToCache);
+    await this.cache.put(new CacheKey(contractTxId, sortKey), stateToCache);
   }
 
   async syncState<State>(

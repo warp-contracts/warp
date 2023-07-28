@@ -369,9 +369,9 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
   abstract putInCache<State>(
     contractTxId: string,
-    transaction: GQLNodeInterface,
+    dry: boolean,
     state: EvalStateResult<State>,
-    sortKey?: string
+    sortKey: string
   ): Promise<void>;
 
   abstract syncState<State>(

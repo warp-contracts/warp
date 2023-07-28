@@ -139,7 +139,7 @@ export class ContractInteractionState implements InteractionState {
   ) {
     if (states.size > 1 || forceStore) {
       for (const [k, v] of states) {
-        await this._warp.stateEvaluator.putInCache(k, interaction, v.cachedValue, v.sortKey);
+        await this._warp.stateEvaluator.putInCache(k, interaction.dry, v.cachedValue, v.sortKey);
       }
     }
   }
