@@ -286,10 +286,13 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       const interactionState = new EvalStateResult(currentState, validity, errorMessages);
       contract.interactionState().update(contract.txId(), interactionState, currentSortKey);
       if (contract.isRoot()) {
+        this.logger.debug(`End of interaction ${missingInteraction.sortKey}.`);
         contract.clearChildren();
         if (validity[missingInteraction.id]) {
+          this.logger.debug(`Commit for contract ${contract.txId()}`);
           await contract.interactionState().commit(missingInteraction, forceStateStoreToCache);
         } else {
+          this.logger.debug(`Rollback for contract ${contract.txId()}`);
           await contract.interactionState().rollback(missingInteraction, forceStateStoreToCache);
         }
       }
