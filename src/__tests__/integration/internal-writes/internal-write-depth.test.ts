@@ -313,9 +313,9 @@ describe('Testing internal writes', () => {
       expect((await contractC.readState()).cachedValue.state.counter).toEqual(231);
     });
 
-    it('should throw when evaluating ContractC state for maxDepth = 2', async () => {
+    it('should throw when evaluating ContractC state for maxDepth = 1', async () => {
       contractC.setEvaluationOptions({
-        maxCallDepth: 2,
+        maxCallDepth: 1,
         ignoreExceptions: false
       });
 

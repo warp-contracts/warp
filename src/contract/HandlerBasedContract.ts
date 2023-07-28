@@ -792,12 +792,25 @@ export class HandlerBasedContract<State> implements Contract<State> {
     interactionType: InteractionType
   ): Promise<InteractionResult<State, View>> {
     this.maybeResetRootContract();
+
     const executionContext = await this.createExecutionContextFromTx(this._contractTxId, interactionTx);
-    const evalStateResult = await this.warp.stateEvaluator.eval<State>(executionContext);
-    this.interactionState().update(this.txId(), evalStateResult.cachedValue, interactionTx.sortKey);
+    // needs comment...
+    if (
+      executionContext.sortedInteractions.length &&
+      executionContext.sortedInteractions[executionContext.sortedInteractions.length - 1].sortKey ==
+        interactionTx.sortKey
+    ) {
+      executionContext.sortedInteractions.splice(-1);
+    }
+
+    const evalStateResult = this.interactionState().has(this._contractTxId, interactionTx.sortKey)
+      ? this.interactionState().get(this._contractTxId, interactionTx.sortKey)
+      : (await this.warp.stateEvaluator.eval<State>(executionContext)).cachedValue;
+
+    this.interactionState().update(this.txId(), evalStateResult, interactionTx.sortKey);
 
     this.logger.debug('callContractForTx - evalStateResult', {
-      result: evalStateResult.cachedValue.state,
+      result: evalStateResult.state,
       txId: this._contractTxId
     });
 
@@ -815,10 +828,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const result = await this.evalInteraction<Input, View>(
       interactionData,
       executionContext,
-      evalStateResult.cachedValue
+      evalStateResult as EvalStateResult<State>
     );
-    result.originalValidity = evalStateResult.cachedValue.validity;
-    result.originalErrorMessages = evalStateResult.cachedValue.errorMessages;
+    result.originalValidity = evalStateResult.validity;
+    result.originalErrorMessages = evalStateResult.errorMessages;
 
     return result;
   }
