@@ -661,12 +661,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   private async createExecutionContextFromTx(
     contractTxId: string,
-    transaction: GQLNodeInterface
+    transaction: GQLNodeInterface,
+    interactions?: GQLNodeInterface[]
   ): Promise<ExecutionContext<State, HandlerApi<State>>> {
     const caller = transaction.owner.address;
     const sortKey = transaction.sortKey;
 
-    const baseContext = await this.createExecutionContext(contractTxId, sortKey, true);
+    const baseContext = await this.createExecutionContext(contractTxId, sortKey, true, interactions);
 
     return {
       ...baseContext,
@@ -793,21 +794,20 @@ export class HandlerBasedContract<State> implements Contract<State> {
   ): Promise<InteractionResult<State, View>> {
     this.maybeResetRootContract();
 
+    let evalStateResult = this.interactionState().get(this._contractTxId, interactionTx.sortKey);
     const executionContext = await this.createExecutionContextFromTx(this._contractTxId, interactionTx);
-    // needs comment...
-    if (
-      executionContext.sortedInteractions.length &&
-      executionContext.sortedInteractions[executionContext.sortedInteractions.length - 1].sortKey ==
-        interactionTx.sortKey
-    ) {
-      executionContext.sortedInteractions.splice(-1);
+    if (!evalStateResult) {
+      // needs comment...
+      if (
+        executionContext.sortedInteractions.length &&
+        executionContext.sortedInteractions[executionContext.sortedInteractions.length - 1].sortKey ==
+          interactionTx.sortKey
+      ) {
+        executionContext.sortedInteractions.splice(-1);
+      }
+      evalStateResult = (await this.warp.stateEvaluator.eval<State>(executionContext)).cachedValue;
+      this.interactionState().update(this.txId(), evalStateResult, interactionTx.sortKey);
     }
-
-    const evalStateResult = this.interactionState().has(this._contractTxId, interactionTx.sortKey)
-      ? this.interactionState().get(this._contractTxId, interactionTx.sortKey)
-      : (await this.warp.stateEvaluator.eval<State>(executionContext)).cachedValue;
-
-    this.interactionState().update(this.txId(), evalStateResult, interactionTx.sortKey);
 
     this.logger.debug('callContractForTx - evalStateResult', {
       result: evalStateResult.state,

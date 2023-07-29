@@ -165,19 +165,17 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         if (newState !== null && writingContractState !== null) {
           const parentValidity = writingContractState.cachedValue.validity[missingInteraction.id];
+          this.logger.warn('Parent validity not set', {
+            txId: missingInteraction.id,
+            contract: contract.txId()
+          });
 
-          if (parentValidity) {
-            validity[missingInteraction.id] = newState.validity[missingInteraction.id];
-            if (newState.errorMessages?.[missingInteraction.id]) {
-              errorMessages[missingInteraction.id] = newState.errorMessages[missingInteraction.id]?.slice(0, 10_000);
-            }
-          } else {
-            validity[missingInteraction.id] = false;
-            errorMessages[missingInteraction.id] = writingContractState.cachedValue.errorMessages[
-              missingInteraction.id
-            ]?.slice(0, 10_000);
+          validity[missingInteraction.id] = parentValidity === true;
+          if (!parentValidity) {
+            errorMessages[missingInteraction.id] =
+              writingContractState.cachedValue.errorMessages[missingInteraction.id]?.slice(0, 10_000) ||
+              'Parent errorMessage not set';
           }
-
           if (validity[missingInteraction.id]) {
             currentState = newState.state as State;
             // we need to update the state in the wasm module
@@ -186,6 +184,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           }
         } else {
           validity[missingInteraction.id] = false;
+          errorMessages[missingInteraction.id] =
+            'New state or writing contract state not available after internal write';
         }
 
         interactionCall.update({
