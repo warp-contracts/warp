@@ -6,6 +6,8 @@ import { getJsonResponse, stripTrailingSlash } from '../../../utils/utils';
 import { GW_TYPE, InteractionsLoader } from '../InteractionsLoader';
 import { EvaluationOptions } from '../StateEvaluator';
 import { Warp } from '../../Warp';
+import Database from 'better-sqlite3';
+import fs from 'fs';
 
 export type ConfirmationStatus =
   | {
@@ -50,6 +52,7 @@ type InteractionsResult = {
  */
 export class WarpGatewayInteractionsLoader implements InteractionsLoader {
   private _warp: Warp;
+  private _db: Database;
 
   constructor(
     private readonly confirmationStatus: ConfirmationStatus = null,
@@ -57,6 +60,50 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
   ) {
     Object.assign(this, confirmationStatus);
     this.source = source;
+  }
+
+  private get db() {
+    if (!this._db) {
+      const dbLocation = './cache/sqlite/interactions/interactions';
+      if (!fs.existsSync(dbLocation)) {
+        fs.mkdirSync(dbLocation, { recursive: true });
+      }
+      this._db = new Database(dbLocation + '.db');
+      this._db.pragma('journal_mode = WAL');
+      if (this.firstRun()) {
+        // Incremental auto-vacuum. Reuses space marked as deleted.
+        this._db.pragma('auto_vacuum = 2');
+        this._db.exec('VACUUM');
+      }
+      this.sortKeyTable();
+    }
+    return this._db;
+  }
+
+  private firstRun(): boolean {
+    const result = this._db
+      .prepare(
+        `SELECT name
+         FROM sqlite_master
+         WHERE type = 'table'
+           AND tbl_name = 'interactions_cache';`
+      )
+      .pluck()
+      .get();
+    return !result;
+  }
+
+  private sortKeyTable() {
+    this._db.exec(
+      `CREATE TABLE IF NOT EXISTS interactions_cache
+       (
+           id       INTEGER PRIMARY KEY,
+           key      TEXT,
+           value    TEXT,
+           UNIQUE (key)
+       )
+      `
+    );
   }
 
   private readonly logger = LoggerFactory.INST.create('WarpGatewayInteractionsLoader');
@@ -83,30 +130,36 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
 
       const url = `${baseUrl}/gateway/v2/interactions-sort-key`;
 
-      const response = await getJsonResponse<InteractionsResult>(
-        fetch(
-          `${url}?${new URLSearchParams({
-            contractId: contractId,
-            ...(this._warp.whoAmI ? { client: this._warp.whoAmI } : ''),
-            ...(fromSortKey ? { from: fromSortKey } : ''),
-            ...(toSortKey ? { to: toSortKey } : ''),
-            page: (++page).toString(),
-            fromSdk: 'true',
-            ...(this.confirmationStatus && this.confirmationStatus.confirmed
-              ? { confirmationStatus: 'confirmed' }
-              : ''),
-            ...(this.confirmationStatus && this.confirmationStatus.notCorrupted
-              ? { confirmationStatus: 'not_corrupted' }
-              : ''),
-            ...(effectiveSourceType == SourceType.BOTH ? '' : { source: effectiveSourceType })
-          })}`
-        )
-      );
-      this.logger.debug(`Loading interactions: page ${page} loaded in ${benchmarkRequestTime.elapsed()}`);
+      const params = new URLSearchParams({
+        contractId: contractId,
+        ...(this._warp.whoAmI ? { client: this._warp.whoAmI } : ''),
+        ...(fromSortKey ? { from: fromSortKey } : ''),
+        ...(toSortKey ? { to: toSortKey } : ''),
+        page: (++page).toString(),
+        fromSdk: 'true',
+        ...(this.confirmationStatus && this.confirmationStatus.confirmed ? { confirmationStatus: 'confirmed' } : ''),
+        ...(this.confirmationStatus && this.confirmationStatus.notCorrupted
+          ? { confirmationStatus: 'not_corrupted' }
+          : ''),
+        ...(effectiveSourceType == SourceType.BOTH ? '' : { source: effectiveSourceType })
+      });
 
-      interactions.push(...response.interactions);
-      limit = response.paging.limit;
-      items = response.paging.items;
+      const cacheKey = params.toString();
+      let pageInteractions: InteractionsResult = this.getFromCache(cacheKey);
+      if (!pageInteractions) {
+        pageInteractions = await getJsonResponse<InteractionsResult>(fetch(`${url}?${params}`));
+        this.logger.debug(`Loading interactions: page ${page} loaded in ${benchmarkRequestTime.elapsed()}`);
+        if (items == limit) {
+          this.logger.debug(`Putting interactions into cache`);
+          this.putInCache(cacheKey, pageInteractions);
+        }
+      } else {
+        this.logger.debug(`Interactions cache hit for`, cacheKey);
+      }
+
+      interactions.push(...pageInteractions.interactions);
+      limit = pageInteractions.paging.limit;
+      items = pageInteractions.paging.items;
 
       this.logger.debug(`Loaded interactions length: ${interactions.length}, from: ${fromSortKey}, to: ${toSortKey}`);
     } while (items == limit); // note: items < limit means that we're on the last page
@@ -119,6 +172,30 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
     });
 
     return interactions;
+  }
+
+  private getFromCache(cacheKey: string): InteractionsResult | null {
+    const result = this.db
+      .prepare(
+        `SELECT value
+         FROM interactions_cache
+         WHERE key = ?;`
+      )
+      .pluck()
+      .get(cacheKey);
+
+    if (result) {
+      return JSON.parse(result);
+    }
+    return null;
+  }
+
+  private putInCache(cacheKey: string, pageInteractions: InteractionsResult) {
+    const strVal = JSON.stringify(pageInteractions);
+    this.db.prepare('INSERT OR REPLACE INTO interactions_cache (key, value) VALUES (@key, @value)').run({
+      key: cacheKey,
+      value: strVal
+    });
   }
 
   type(): GW_TYPE {
