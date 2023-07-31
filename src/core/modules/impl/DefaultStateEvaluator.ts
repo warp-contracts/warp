@@ -1,6 +1,6 @@
 import Arweave from 'arweave';
 
-import { SortKeyCacheResult } from '../../../cache/SortKeyCache';
+import { CacheKey, SortKeyCacheResult } from '../../../cache/SortKeyCache';
 import { InteractionCall } from '../../ContractCallRecord';
 import { ExecutionContext } from '../../../core/ExecutionContext';
 import { ExecutionContextModifier } from '../../../core/ExecutionContextModifier';
@@ -11,7 +11,7 @@ import { indent } from '../../../utils/utils';
 import { EvalStateResult, StateEvaluator } from '../StateEvaluator';
 import { ContractInteraction, HandlerApi, InteractionResult } from './HandlerExecutorFactory';
 import { TagsParser } from './TagsParser';
-import { VrfPluginFunctions } from '../../WarpPlugin';
+import { VrfPluginFunctions, WarpPlugin } from '../../WarpPlugin';
 import { BasicSortKeyCache } from '../../../cache/BasicSortKeyCache';
 
 type EvaluationProgressInput = {
@@ -89,31 +89,31 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
       const missingInteraction = missingInteractions[i];
       currentSortKey = missingInteraction.sortKey;
-      contract
-        .interactionState()
-        .update(contract.txId(), new EvalStateResult(currentState, validity, errorMessages), currentSortKey);
+      if (i > 0) {
+        // note: we cannot 'update' interaction state at this point at the missingInteraction.sortKey - if we do so,
+        // in case of a flow like:
+        // ContractA reads ContractB and Contract A writes to Contract B
+        // - when we start to read Contract A state from the Contract B -
+        // we will simply get the interactionState set here and the write itself
+        // will not be performed
+
+        contract
+          .interactionState()
+          .update(
+            contract.txId(),
+            new EvalStateResult(currentState, validity, errorMessages),
+            missingInteractions[i - 1].sortKey
+          );
+      }
       const singleInteractionBenchmark = Benchmark.measure();
 
-      if (missingInteraction.vrf) {
-        if (!vrfPlugin) {
-          this.logger.warn('Cannot verify vrf for interaction - no "warp-contracts-plugin-vrf" attached!');
-        } else {
-          if (!vrfPlugin.process().verify(missingInteraction.vrf, missingInteraction.sortKey)) {
-            throw new Error('Vrf verification failed.');
-          }
-        }
-      }
+      // note: this throws if verification fails
+      this.maybeCheckVrf(missingInteraction, vrfPlugin);
 
-      if (evmSignatureVerificationPlugin && this.tagsParser.isEvmSigned(missingInteraction)) {
-        try {
-          if (!(await evmSignatureVerificationPlugin.process(missingInteraction))) {
-            this.logger.warn(`Interaction ${missingInteraction.id} was not verified, skipping.`);
-            continue;
-          }
-        } catch (e) {
-          this.logger.error(e);
-          continue;
-        }
+      const verified = await this.maybeVerifyEvmSig(evmSignatureVerificationPlugin, missingInteraction);
+      if (!verified) {
+        // hmm, why aren't we setting here 'false' validity and proper error message - instead of 'continue'?
+        continue;
       }
 
       this.logger.debug(
@@ -133,59 +133,84 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           .getCallStack()
           .addInteractionData({ interaction: null, interactionTx: missingInteraction });
 
-        // creating a Contract instance for the "writing" contract
-        const writingContract = warp.contract(writingContractTxId, executionContext.contract, {
-          callingInteraction: missingInteraction,
-          callType: 'read'
-        });
-
         this.logger.debug(`${indent(depth)}Reading state of the calling contract at`, missingInteraction.sortKey);
-        /**
-         Reading the state of the writing contract.
-         This in turn will cause the state of THIS contract to be
-         updated in 'interaction state'
-         */
-        let newState: EvalStateResult<unknown> = null;
-        let writingContractState: SortKeyCacheResult<EvalStateResult<unknown>> = null;
-        try {
-          writingContractState = await writingContract.readState(missingInteraction.sortKey);
-          newState = contract.interactionState().get(contract.txId(), missingInteraction.sortKey);
-        } catch (e) {
-          // ppe: not sure why we're not handling all ContractErrors here...
-          if (
-            e.name == 'ContractError' &&
-            (e.subtype == 'unsafeClientSkip' || e.subtype == 'constructor' || e.subtype == 'blacklistedSkip')
-          ) {
-            this.logger.warn(`Skipping contract in internal write, reason ${e.subtype}`);
-            errorMessages[missingInteraction.id] = e.message?.slice(0, 10_000);
-          } else {
-            throw e;
-          }
-        }
+        let newState;
+        const lastCached = await this.latestAvailableState(contract.txId(), missingInteraction.sortKey);
+        if (lastCached?.sortKey == missingInteraction.sortKey) {
+          this.logger.debug('Exact cache hit for internal write', {
+            contract: contract.txId(),
+            sortKey: missingInteraction.sortKey,
+            writingContract: writingContractTxId
+          });
+          newState = lastCached.cachedValue;
+          validity[missingInteraction.id] = newState.validity[missingInteraction.id];
+          errorMessages[missingInteraction.id] = newState.errorMessages[missingInteraction.id];
+        } else {
+          /**
+           Reading the state of the writing contract.
+           This in turn will cause the state of THIS contract to be
+           updated in 'interaction state'
+           */
 
-        if (newState !== null && writingContractState !== null) {
-          const parentValidity = writingContractState.cachedValue.validity[missingInteraction.id];
-          this.logger.warn('Parent validity not set', {
-            txId: missingInteraction.id,
-            contract: contract.txId()
+          // creating a Contract instance for the "writing" contract
+          const writingContract = warp.contract(writingContractTxId, executionContext.contract, {
+            callingInteraction: missingInteraction,
+            callType: 'read'
           });
 
-          validity[missingInteraction.id] = parentValidity === true;
+          let writingContractState: SortKeyCacheResult<EvalStateResult<unknown>> = null;
+          try {
+            writingContractState = await writingContract.readState(missingInteraction.sortKey, undefined, [], false);
+            if (writingContractState == null) {
+              throw new Error('No writing contract state after internal write');
+            }
+            if (writingContractState.sortKey != missingInteraction.sortKey) {
+              throw new Error(`No state available for ${missingInteraction.sortKey} after internal write`);
+            }
+            newState =
+              contract.interactionState().get(contract.txId(), missingInteraction.sortKey) ||
+              this.getCache().get(new CacheKey(contract.txId(), missingInteraction.sortKey));
+            if (newState == null) {
+              throw new Error('No callee contract state after internal write');
+            }
+          } catch (e) {
+            // ppe: not sure why we're not handling all ContractErrors here...
+            if (
+              e.name == 'ContractError' &&
+              (e.subtype == 'unsafeClientSkip' || e.subtype == 'constructor' || e.subtype == 'blacklistedSkip')
+            ) {
+              this.logger.warn(`Skipping contract in internal write, reason ${e.subtype}`);
+              errorMessages[missingInteraction.id] = e.message?.slice(0, 10_000);
+            } else {
+              throw e;
+            }
+          }
+          // eslint-disable-next-line no-prototype-builtins
+          if (!writingContractState.cachedValue.validity.hasOwnProperty(missingInteraction.id)) {
+            this.logger.error('Parent validity not set', {
+              txId: missingInteraction.id,
+              contract: contract.txId(),
+              tags: JSON.stringify(missingInteraction.tags)
+            });
+
+            throw new Error('Parent validity not set');
+          }
+
+          const parentValidity = writingContractState.cachedValue.validity[missingInteraction.id];
+
+          validity[missingInteraction.id] = parentValidity;
           if (!parentValidity) {
             errorMessages[missingInteraction.id] =
               writingContractState.cachedValue.errorMessages[missingInteraction.id]?.slice(0, 10_000) ||
               'Parent errorMessage not set';
           }
-          if (validity[missingInteraction.id]) {
-            currentState = newState.state as State;
-            // we need to update the state in the wasm module
-            // TODO: opt - reuse wasm handlers...
-            executionContext?.handler.initState(currentState);
-          }
-        } else {
-          validity[missingInteraction.id] = false;
-          errorMessages[missingInteraction.id] =
-            'New state or writing contract state not available after internal write';
+        }
+
+        if (validity[missingInteraction.id]) {
+          currentState = newState.state as State;
+          // we need to update the state in the wasm module
+          // TODO: opt - reuse wasm handlers...
+          executionContext?.handler.initState(currentState);
         }
 
         interactionCall.update({
@@ -318,6 +343,39 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     return new SortKeyCacheResult(currentSortKey, evalStateResult);
   }
 
+  private async maybeVerifyEvmSig(
+    evmSignatureVerificationPlugin: WarpPlugin<GQLNodeInterface, Promise<boolean>>,
+    missingInteraction: GQLNodeInterface
+  ): Promise<boolean> {
+    let verified = true;
+    if (evmSignatureVerificationPlugin && this.tagsParser.isEvmSigned(missingInteraction)) {
+      try {
+        if (!(await evmSignatureVerificationPlugin.process(missingInteraction))) {
+          this.logger.warn(`Interaction ${missingInteraction.id} was not verified, skipping.`);
+          // TODO: we should probably set validity and errorMessages here
+          verified = false;
+        }
+      } catch (e) {
+        // TODO: we should probably set validity and errorMessages here
+        this.logger.error(e);
+        verified = false;
+      }
+    }
+    return verified;
+  }
+
+  private maybeCheckVrf(missingInteraction: GQLNodeInterface, vrfPlugin: WarpPlugin<void, VrfPluginFunctions>) {
+    if (missingInteraction.vrf) {
+      if (!vrfPlugin) {
+        this.logger.warn('Cannot verify vrf for interaction - no "warp-contracts-plugin-vrf" attached!');
+      } else {
+        if (!vrfPlugin.process().verify(missingInteraction.vrf, missingInteraction.sortKey)) {
+          throw new Error('Vrf verification failed.');
+        }
+      }
+    }
+  }
+
   private logResult<State>(
     result: InteractionResult<State, unknown>,
     currentTx: GQLNodeInterface,
@@ -404,7 +462,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
   abstract setCache(cache: BasicSortKeyCache<EvalStateResult<unknown>>): void;
 
-  abstract getCache(): BasicSortKeyCache<EvalStateResult<unknown>>;
+  abstract getCache<State>(): BasicSortKeyCache<EvalStateResult<State>>;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

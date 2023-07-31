@@ -76,7 +76,7 @@ describe('Testing internal writes', () => {
     // with another files has to have ArLocal set to a different port!)
     arlocal = new ArLocal(port, false);
     await arlocal.start();
-    LoggerFactory.INST.logLevel('error');
+    LoggerFactory.INST.logLevel('debug');
   });
 
   afterAll(async () => {
@@ -176,6 +176,9 @@ describe('Testing internal writes', () => {
     });
 
     it('should write direct interactions', async () => {
+      LoggerFactory.INST.logLevel("none");
+      LoggerFactory.INST.logLevel("debug", "CacheableStateEvaluator");
+      LoggerFactory.INST.logLevel("trace", "LevelDBCache");
       await calleeContract.writeInteraction({ function: 'add' });
       await mineBlock(warp);
       await callingContract.writeInteraction({
@@ -198,6 +201,11 @@ describe('Testing internal writes', () => {
         amount: 300
       });
       await mineBlock(warp);
+
+      LoggerFactory.INST.logLevel("debug");
+      LoggerFactory.INST.logLevel("trace", "LevelDBCache");
+      console.log("======= READ STATE =====");
+
       expect((await callingContract.readState()).cachedValue.state.counter).toEqual(1912 + 556);
       expect((await calleeContract.readState()).cachedValue.state.counter).toEqual(856 - 300);
     });

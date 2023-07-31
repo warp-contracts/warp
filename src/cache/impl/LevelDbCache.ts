@@ -114,6 +114,20 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
     return null;
   }
 
+  async getLess(key: string, sortKey: string): Promise<SortKeyCacheResult<V> | null> {
+    const contractCache = this.db.sublevel<string, ClientValueWrapper<V>>(key, this.subLevelOptions);
+    // manually opening to fix https://github.com/Level/level/issues/221
+    await contractCache.open();
+    const keys = await contractCache.keys({ reverse: true, lt: sortKey, limit: 1 }).all();
+    if (keys.length) {
+      const subLevelValue = await this.getValueFromLevel(keys[0], contractCache);
+      if (subLevelValue) {
+        return new SortKeyCacheResult<V>(keys[0], subLevelValue);
+      }
+    }
+    return null;
+  }
+
   private async getValueFromLevel(
     key: string,
     level: AbstractSublevel<
@@ -141,6 +155,7 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
   }
 
   async put(stateCacheKey: CacheKey, value: V): Promise<void> {
+    this.logger.trace('Putting into cache', stateCacheKey);
     await this.setClientValue(stateCacheKey, new ClientValueWrapper(value));
   }
 

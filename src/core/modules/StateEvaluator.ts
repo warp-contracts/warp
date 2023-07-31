@@ -90,7 +90,7 @@ export interface StateEvaluator {
 
   setCache(cache: BasicSortKeyCache<EvalStateResult<unknown>>): void;
 
-  getCache(): BasicSortKeyCache<EvalStateResult<unknown>>;
+  getCache<State>(): BasicSortKeyCache<EvalStateResult<State>>;
 }
 
 export class EvalStateResult<State> {

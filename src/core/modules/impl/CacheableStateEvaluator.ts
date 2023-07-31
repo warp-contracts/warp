@@ -226,7 +226,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     this.cache = cache;
   }
 
-  getCache(): BasicSortKeyCache<EvalStateResult<unknown>> {
-    return this.cache;
+  getCache<State>(): BasicSortKeyCache<EvalStateResult<State>> {
+    return this.cache as BasicSortKeyCache<EvalStateResult<State>>;
   }
 }

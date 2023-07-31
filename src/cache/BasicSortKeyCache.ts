@@ -11,6 +11,8 @@ import { CacheKey, PruneStats, SortKeyCacheResult } from './SortKeyCache';
 export interface BasicSortKeyCache<V> {
   getLessOrEqual(key: string, sortKey: string): Promise<SortKeyCacheResult<V> | null>;
 
+  getLess(key: string, sortKey: string): Promise<SortKeyCacheResult<V> | null>;
+
   /**
    * returns value stored for a given key and last sortKey
    */

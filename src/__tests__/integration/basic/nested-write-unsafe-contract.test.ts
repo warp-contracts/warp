@@ -9,7 +9,6 @@ import { PstContract, PstState } from '../../../contract/PstContract';
 import { Warp } from '../../../core/Warp';
 import { WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
-import exp from 'constants';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 
 describe('Testing unsafe client in nested contracts with "skip" option', () => {

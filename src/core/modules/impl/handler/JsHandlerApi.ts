@@ -183,7 +183,7 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
               'constructor'
             );
           }
-        // any network-based error should result in immediately stop contract evaluation
+        // any network-based error should result in immediate contract evaluation termination
         case KnownErrors.NetworkCommunicationError:
           throw err;
         default:

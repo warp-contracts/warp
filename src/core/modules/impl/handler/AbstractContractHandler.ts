@@ -137,7 +137,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         callType: 'read'
       });
 
-      const stateWithValidity = await childContract.readState(interactionTx.sortKey);
+      const stateWithValidity = await childContract.readState(interactionTx.sortKey, undefined, undefined, true);
 
       if (stateWithValidity?.cachedValue?.errorMessages) {
         const errorKeys = Reflect.ownKeys(stateWithValidity?.cachedValue?.errorMessages);

@@ -2553,7 +2553,7 @@ bech32@1.1.4:
   resolved "https://registry.yarnpkg.com/bech32/-/bech32-1.1.4.tgz#e38c9f37bf179b8eb16ae3a772b40c356d4832e9"
   integrity sha512-s0IrSOzLlbvX7yp4WBfPITzpAU8sqQcpsmwXDiKwrG4r491vwCO/XpejasRNl0piBMe/DvP4Tz0mIS/X1DPJBQ==
 
-better-sqlite3@^8.3.0, better-sqlite3@^8.5.0:
+better-sqlite3@^8.5.0:
   version "8.5.0"
   resolved "https://registry.yarnpkg.com/better-sqlite3/-/better-sqlite3-8.5.0.tgz#b13d12d0e477be69191a39628fc8b723ee1c79d4"
   integrity sha512-vbPcv/Hx5WYdyNg/NbcfyaBZyv9s/NVbxb7yCeC5Bq1pVocNxeL2tZmSu3Rlm4IEOTjYdGyzWQgyx0OSdORBzw==
@@ -7658,12 +7658,12 @@ warp-contracts-plugin-vrf@^1.0.3:
     "@idena/vrf-js" "^1.0.1"
     elliptic "^6.5.4"
 
-warp-contracts-sqlite@^1.0.3-beta.1:
-  version "1.0.3-beta.1"
-  resolved "https://registry.yarnpkg.com/warp-contracts-sqlite/-/warp-contracts-sqlite-1.0.3-beta.1.tgz#dbacb6dd5ff1c1b5e0647d3ae79f20d49214e364"
-  integrity sha512-0YDO60LIau8D9UQzSKLkLSAlSpMyi9vEo7x72/Rt7vMMvVHp8J9af3eG7LZ+yT+29LJlWzCWkMTTYE3koYViCA==
+warp-contracts-sqlite@^1.0.3-beta.6:
+  version "1.0.3-beta.6"
+  resolved "https://registry.yarnpkg.com/warp-contracts-sqlite/-/warp-contracts-sqlite-1.0.3-beta.6.tgz#e56950ea9f9b05a01a1482fe3f4e01e111711ce3"
+  integrity sha512-6GeofzNj9Mceuiv3fJ2Vs01NM74dCKfpSYIfvH4t66ctk1OM2WGprHK+v/k2LvPP5eaiyUoDxZHhOOW+zMHMRg==
   dependencies:
-    better-sqlite3 "^8.3.0"
+    better-sqlite3 "^8.5.0"
     safe-stable-stringify "^2.4.3"
 
 warp-isomorphic@1.0.0:

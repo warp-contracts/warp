@@ -135,7 +135,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
   async readState(
     sortKeyOrBlockHeight?: string | number,
     caller?: string,
-    interactions?: GQLNodeInterface[]
+    interactions?: GQLNodeInterface[],
+    skipLastInteraction?: boolean
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
     this.logger.info('Read state for', {
       contractTxId: this._contractTxId,
@@ -151,6 +152,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
         : sortKeyOrBlockHeight;
 
     if (sortKey && !this.isRoot() && this.interactionState().has(this.txId(), sortKey)) {
+      this.logger.debug('readState: Hit from interactionState!', {
+        contract: this.txId(),
+        sortKey
+      });
       const result = this.interactionState().get(this.txId(), sortKey);
       return new SortKeyCacheResult<EvalStateResult<State>>(sortKey, result as EvalStateResult<State>);
     }
@@ -162,7 +167,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
       const initBenchmark = Benchmark.measure();
       this.maybeResetRootContract();
 
-      const executionContext = await this.createExecutionContext(this._contractTxId, sortKey, false, interactions);
+      const executionContext = await this.createExecutionContext(
+        this._contractTxId,
+        sortKey,
+        false,
+        interactions,
+        skipLastInteraction
+      );
       this.logger.info('Execution Context', {
         srcTxId: executionContext.contractDefinition?.srcTxId,
         missingInteractions: executionContext.sortedInteractions?.length,
@@ -506,7 +517,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     contractTxId: string,
     upToSortKey?: string,
     forceDefinitionLoad = false,
-    interactions?: GQLNodeInterface[]
+    interactions?: GQLNodeInterface[],
+    skipLastInteraction?: boolean
   ): Promise<ExecutionContext<State, HandlerApi<State>>> {
     const { definitionLoader, interactionsLoader, stateEvaluator } = this.warp;
     let cachedState: SortKeyCacheResult<EvalStateResult<State>>;
@@ -517,7 +529,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
         EvalStateResult<State>
       >;
     }
-    cachedState = cachedState || (await stateEvaluator.latestAvailableState<State>(contractTxId, upToSortKey));
+    if (cachedState) {
+      this.logger.debug('Cached state from interaction state');
+    }
+    cachedState =
+      cachedState || skipLastInteraction
+        ? await stateEvaluator.getCache<State>().getLess(contractTxId, upToSortKey)
+        : await stateEvaluator.latestAvailableState(contractTxId, upToSortKey);
 
     this.logger.debug('cache lookup', benchmark.elapsed());
     benchmark.reset();
@@ -526,7 +544,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     let handler, contractDefinition, contractEvaluationOptions, remoteState;
     let sortedInteractions = interactions || [];
 
-    this.logger.debug('Cached state', cachedState, upToSortKey);
+    this.logger.debug('Cached state', JSON.stringify(cachedState), upToSortKey);
 
     if (cachedState && cachedState.sortKey == upToSortKey) {
       this.logger.debug('State fully cached, not loading interactions.');
@@ -551,6 +569,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
       if (contractEvaluationOptions.remoteStateSyncEnabled && !contractEvaluationOptions.useKVStorage) {
         remoteState = await this.getRemoteContractState(contractTxId);
+        // TODO
         cachedState = await this.maybeSyncStateWithRemoteSource(remoteState, upToSortKey, cachedState);
         const maybeEvolvedSrcTxId = Evolve.evolvedSrcTxId(cachedState?.cachedValue?.state);
         if (maybeEvolvedSrcTxId && maybeEvolvedSrcTxId !== contractDefinition.srcTxId) {
@@ -569,16 +588,14 @@ export class HandlerBasedContract<State> implements Contract<State> {
           upToSortKey,
           contractEvaluationOptions
         );
+        if (
+          skipLastInteraction &&
+          sortedInteractions?.length &&
+          sortedInteractions[sortedInteractions.length - 1].sortKey == upToSortKey
+        ) {
+          sortedInteractions.splice(-1);
+        }
       }
-
-      // we still need to return only interactions up to original "upToSortKey"
-      // if (cachedState?.sortKey) {
-      //   sortedInteractions = sortedInteractions.filter((i) => i.sortKey.localeCompare(cachedState?.sortKey) > 0);
-      // }
-
-      // if (upToSortKey) {
-      //   sortedInteractions = sortedInteractions.filter((i) => i.sortKey.localeCompare(upToSortKey) <= 0);
-      // }
 
       this.logger.debug('contract and interactions load', benchmark.elapsed());
       if (this.isRoot() && sortedInteractions.length) {
