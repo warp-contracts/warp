@@ -127,13 +127,12 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       if (isInteractWrite && internalWrites) {
         // evaluating txId of the contract that is writing on THIS contract
         const writingContractTxId = this.tagsParser.getContractTag(missingInteraction);
-        this.logger.debug(`${indent(depth)}Internal Write - Loading writing contract`, writingContractTxId);
+        this.logger.debug(`${indent(depth)}Internal Write - Writing contract`, writingContractTxId);
 
         const interactionCall: InteractionCall = contract
           .getCallStack()
           .addInteractionData({ interaction: null, interactionTx: missingInteraction });
 
-        this.logger.debug(`${indent(depth)}Reading state of the calling contract at`, missingInteraction.sortKey);
         let newState;
         const lastCached = await this.latestAvailableState(contract.txId(), missingInteraction.sortKey);
         if (lastCached?.sortKey == missingInteraction.sortKey) {
@@ -151,6 +150,10 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
            This in turn will cause the state of THIS contract to be
            updated in 'interaction state'
            */
+          this.logger.debug(
+            `${indent(depth)}Reading state of the calling contract ${writingContractTxId} at`,
+            missingInteraction.sortKey
+          );
 
           // creating a Contract instance for the "writing" contract
           const writingContract = warp.contract(writingContractTxId, executionContext.contract, {
@@ -176,7 +179,9 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
             this.logger.debug('New state after IW', {
               contract: contract.txId(),
               txId: missingInteraction.id,
-              newState: JSON.stringify(newState)
+              newState: JSON.stringify(newState),
+              newStateIs: JSON.stringify(contract.interactionState().get(contract.txId(), missingInteraction.sortKey)),
+              newStateCache: this.getCache().get(new CacheKey(contract.txId(), missingInteraction.sortKey))
             });
           } catch (e) {
             // ppe: not sure why we're not handling all ContractErrors here...
