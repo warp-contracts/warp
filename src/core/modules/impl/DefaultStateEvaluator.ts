@@ -173,6 +173,11 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
             if (newState == null) {
               throw new Error('No callee contract state after internal write');
             }
+            this.logger.debug('New state after IW', {
+              contract: contract.txId(),
+              txId: missingInteraction.id,
+              newState: JSON.stringify(newState)
+            });
           } catch (e) {
             // ppe: not sure why we're not handling all ContractErrors here...
             if (
@@ -247,6 +252,12 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         const interactionCall: InteractionCall = contract.getCallStack().addInteractionData(interactionData);
 
+        if (!currentState) {
+          this.logger.error('Current state not set', {
+            contract: contract.txId(),
+            txId: missingInteraction.id
+          });
+        }
         const result = await executionContext.handler.handle(
           executionContext,
           new EvalStateResult(currentState, validity, errorMessages),
