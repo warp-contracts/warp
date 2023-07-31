@@ -176,9 +176,9 @@ describe('Testing internal writes', () => {
     });
 
     it('should write direct interactions', async () => {
-      LoggerFactory.INST.logLevel("none");
-      LoggerFactory.INST.logLevel("debug", "CacheableStateEvaluator");
-      LoggerFactory.INST.logLevel("trace", "LevelDBCache");
+      LoggerFactory.INST.logLevel('none');
+      LoggerFactory.INST.logLevel('debug', 'CacheableStateEvaluator');
+      LoggerFactory.INST.logLevel('trace', 'LevelDBCache');
       await calleeContract.writeInteraction({ function: 'add' });
       await mineBlock(warp);
       await callingContract.writeInteraction({
@@ -202,9 +202,9 @@ describe('Testing internal writes', () => {
       });
       await mineBlock(warp);
 
-      LoggerFactory.INST.logLevel("debug");
-      LoggerFactory.INST.logLevel("trace", "LevelDBCache");
-      console.log("======= READ STATE =====");
+      LoggerFactory.INST.logLevel('debug');
+      LoggerFactory.INST.logLevel('trace', 'LevelDBCache');
+      console.log('======= READ STATE =====');
 
       expect((await callingContract.readState()).cachedValue.state.counter).toEqual(1912 + 556);
       expect((await calleeContract.readState()).cachedValue.state.counter).toEqual(856 - 300);
