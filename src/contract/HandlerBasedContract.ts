@@ -152,11 +152,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
         : sortKeyOrBlockHeight;
 
     if (sortKey && !this.isRoot() && this.interactionState().has(this.txId(), sortKey)) {
+      const result = this.interactionState().get(this.txId(), sortKey);
       this.logger.debug('readState: Hit from interactionState!', {
         contract: this.txId(),
-        sortKey
+        sortKey,
+        result: JSON.stringify(result)
       });
-      const result = this.interactionState().get(this.txId(), sortKey);
       return new SortKeyCacheResult<EvalStateResult<State>>(sortKey, result as EvalStateResult<State>);
     }
 
@@ -543,8 +544,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const evolvedSrcTxId = Evolve.evolvedSrcTxId(cachedState?.cachedValue?.state);
     let handler, contractDefinition, contractEvaluationOptions, remoteState;
     let sortedInteractions = interactions || [];
-
-    this.logger.debug('Cached state', JSON.stringify(cachedState), upToSortKey);
 
     if (cachedState && cachedState.sortKey == upToSortKey) {
       this.logger.debug('State fully cached, not loading interactions.');
