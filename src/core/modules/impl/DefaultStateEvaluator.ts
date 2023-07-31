@@ -172,7 +172,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
             }
             newState =
               contract.interactionState().get(contract.txId(), missingInteraction.sortKey) ||
-              await this.getCache().get(new CacheKey(contract.txId(), missingInteraction.sortKey));
+              (await this.getCache().get(new CacheKey(contract.txId(), missingInteraction.sortKey)));
             if (newState == null) {
               throw new Error('No callee contract state after internal write');
             }
