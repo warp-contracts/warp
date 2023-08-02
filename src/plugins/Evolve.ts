@@ -4,6 +4,7 @@ import { ExecutionContext } from '../core/ExecutionContext';
 import { ExecutionContextModifier } from '../core/ExecutionContextModifier';
 import { SmartWeaveError, SmartWeaveErrorType } from '../legacy/errors';
 import { HandlerApi } from '../core/modules/impl/HandlerExecutorFactory';
+import { KnownErrors } from '../core/modules/impl/handler/JsHandlerApi';
 
 function isEvolveCompatible(state: unknown): state is EvolveState {
   if (!state) {
@@ -58,7 +59,10 @@ export class Evolve implements ExecutionContextModifier {
 
           return executionContext;
         } catch (e) {
-          if (e.name === 'ContractError' && e.subtype === 'unsafeClientSkip') {
+          if (
+            (e.name === KnownErrors.ContractError && e.subtype === 'unsafeClientSkip') ||
+            e.name == KnownErrors.NonWhitelistedSourceError
+          ) {
             throw e;
           } else {
             throw new SmartWeaveError(SmartWeaveErrorType.CONTRACT_NOT_FOUND, {
