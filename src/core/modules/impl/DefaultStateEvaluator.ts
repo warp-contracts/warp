@@ -13,6 +13,7 @@ import { ContractInteraction, HandlerApi, InteractionResult } from './HandlerExe
 import { TagsParser } from './TagsParser';
 import { VrfPluginFunctions } from '../../WarpPlugin';
 import { BasicSortKeyCache } from '../../../cache/BasicSortKeyCache';
+import { KnownErrors } from './handler/JsHandlerApi';
 
 type EvaluationProgressInput = {
   contractTxId: string;
@@ -155,8 +156,9 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         } catch (e) {
           // ppe: not sure why we're not handling all ContractErrors here...
           if (
-            e.name == 'ContractError' &&
-            (e.subtype == 'unsafeClientSkip' || e.subtype == 'constructor' || e.subtype == 'blacklistedSkip')
+            (e.name == KnownErrors.ContractError &&
+              (e.subtype == 'unsafeClientSkip' || e.subtype == 'constructor' || e.subtype == 'blacklistedSkip')) ||
+            e.name == KnownErrors.NonWhitelistedSourceError
           ) {
             this.logger.warn(`Skipping contract in internal write, reason ${e.subtype}`);
             errorMessages[missingInteraction.id] = e;
@@ -282,7 +284,10 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           executionContext = await modify<State>(currentState, executionContext);
         }
       } catch (e) {
-        if (e.name == 'ContractError' && e.subtype == 'unsafeClientSkip') {
+        if (
+          (e.name == KnownErrors.ContractError && e.subtype == 'unsafeClientSkip') ||
+          e.name == KnownErrors.NonWhitelistedSourceError
+        ) {
           validity[missingInteraction.id] = false;
           errorMessages[missingInteraction.id] = e.message;
           shouldBreakAfterEvolve = true;

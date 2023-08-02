@@ -150,6 +150,8 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   remoteStateSyncSource = 'https://dre-1.warp.cc/contract';
 
   useConstructor = false;
+
+  whitelistSources = [];
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some features.
@@ -238,4 +240,6 @@ export interface EvaluationOptions {
 
   // remote source for fetching most recent contract state, only applicable if remoteStateSyncEnabled is set to true
   remoteStateSyncSource: string;
+
+  whitelistSources: string[];
 }
