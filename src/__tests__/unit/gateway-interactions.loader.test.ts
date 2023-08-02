@@ -19,54 +19,46 @@ const responseData = {
   },
   interactions: [
     {
-      status: 'confirmed',
-      confirming_peers: '94.130.135.178,159.203.49.13,95.217.114.57',
-      confirmations: '172044,172044,172044',
-      interaction: {
-        id: 'XyJm1OERe__Q-YcwTQrCeYsI14_ylASey6eYdPg-HYg',
-        fee: {
-          winston: '48173811033'
-        },
-        tags: [],
-        block: {
-          id: 'w8y2bxCQd3-26lvvy2NOt6Qz0kVooN9h4rwy6UIeC5mEfVnbftqcnWEavZfT14vY',
-          height: 655393,
-          timestamp: 1617060107
-        },
-        owner: {
-          address: 'oZjQWwcTYbEvnwr6zkxFqpEoDTPvWkaL3zO3-SFq2g0'
-        },
-        parent: null,
-        quantity: {
-          winston: '0'
-        },
-        recipient: ''
-      }
+      id: 'XyJm1OERe__Q-YcwTQrCeYsI14_ylASey6eYdPg-HYg',
+      fee: {
+        winston: '48173811033'
+      },
+      tags: [],
+      block: {
+        id: 'w8y2bxCQd3-26lvvy2NOt6Qz0kVooN9h4rwy6UIeC5mEfVnbftqcnWEavZfT14vY',
+        height: 655393,
+        timestamp: 1617060107
+      },
+      owner: {
+        address: 'oZjQWwcTYbEvnwr6zkxFqpEoDTPvWkaL3zO3-SFq2g0'
+      },
+      parent: null,
+      quantity: {
+        winston: '0'
+      },
+      recipient: '',
+      sortKey: '000000645844,0000000000000,4e49e10a3c76445b00501b704e9caab118c14ad56694a16e7e4c43c2c142e006'
     },
     {
-      status: 'confirmed',
-      confirming_peers: '94.130.135.178,159.203.49.13,95.217.114.57',
-      confirmations: '172044,172044,172044',
-      interaction: {
-        id: 'XyJm1OERe__Q-YcwTQrCeYsI14_ylASey6eYdPg-HYg',
-        fee: {
-          winston: '48173811033'
-        },
-        tags: [],
-        block: {
-          id: 'w8y2bxCQd3-26lvvy2NOt6Qz0kVooN9h4rwy6UIeC5mEfVnbftqcnWEavZfT14vY',
-          height: 655393,
-          timestamp: 1617060107
-        },
-        owner: {
-          address: 'oZjQWwcTYbEvnwr6zkxFqpEoDTPvWkaL3zO3-SFq2g0'
-        },
-        parent: null,
-        quantity: {
-          winston: '0'
-        },
-        recipient: ''
-      }
+      id: 'XyJm1OERe__Q-YcwTQrCeYsI14_ylASey6eYdPg-HYg',
+      fee: {
+        winston: '48173811033'
+      },
+      tags: [],
+      block: {
+        id: 'w8y2bxCQd3-26lvvy2NOt6Qz0kVooN9h4rwy6UIeC5mEfVnbftqcnWEavZfT14vY',
+        height: 655393,
+        timestamp: 1617060107
+      },
+      owner: {
+        address: 'oZjQWwcTYbEvnwr6zkxFqpEoDTPvWkaL3zO3-SFq2g0'
+      },
+      parent: null,
+      quantity: {
+        winston: '0'
+      },
+      recipient: '',
+      sortKey: '000000662481,0000000000000,82ef246cdc8be74447260bcbf44c21239f8ee7a36af51b29c3dc714bcefb0509'
     }
   ]
 };
