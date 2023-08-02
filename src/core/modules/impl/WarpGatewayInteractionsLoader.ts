@@ -159,6 +159,7 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
         this.logger.debug(`Interactions cache hit for`, cacheKey);
         limit = pageInteractions.paging.limit;
         items = pageInteractions.paging.items;
+        pageInteractions.interactions.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
       }
 
       interactions.push(...pageInteractions.interactions);

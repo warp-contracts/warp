@@ -106,7 +106,8 @@ export class EvaluationOptionsEvaluator {
     remoteStateSyncEnabled: () => this.rootOptions['remoteStateSyncEnabled'],
     remoteStateSyncSource: () => this.rootOptions['remoteStateSyncSource'],
     useKVStorage: (foreignOptions) => foreignOptions['useKVStorage'],
-    useConstructor: (foreignOptions) => foreignOptions['useConstructor']
+    useConstructor: (foreignOptions) => foreignOptions['useConstructor'],
+    whitelistSources: () => this.rootOptions['whitelistSources']
   };
 
   private readonly notConflictingEvaluationOptions: (keyof EvaluationOptions)[] = [

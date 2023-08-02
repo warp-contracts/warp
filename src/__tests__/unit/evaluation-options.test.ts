@@ -32,7 +32,8 @@ describe('Evaluation options evaluator', () => {
       useKVStorage: false,
       waitForConfirmation: false,
       useConstructor: false,
-      walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/'
+      walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/',
+      whitelistSources: []
     });
 
     contract.setEvaluationOptions({
@@ -69,7 +70,8 @@ describe('Evaluation options evaluator', () => {
       useKVStorage: false,
       waitForConfirmation: false,
       useConstructor: false,
-      walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/'
+      walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/',
+      whitelistSources: []
     });
 
     const contract2 = warp.contract(null).setEvaluationOptions({
@@ -101,7 +103,8 @@ describe('Evaluation options evaluator', () => {
       useKVStorage: false,
       waitForConfirmation: false,
       useConstructor: false,
-      walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/'
+      walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/',
+      whitelistSources: []
     });
 
     expect(
@@ -130,7 +133,8 @@ describe('Evaluation options evaluator', () => {
       useKVStorage: false,
       waitForConfirmation: false,
       useConstructor: false,
-      walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/'
+      walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/',
+      whitelistSources: []
     });
 
     expect(
@@ -159,7 +163,8 @@ describe('Evaluation options evaluator', () => {
       useKVStorage: false,
       waitForConfirmation: false,
       useConstructor: false,
-      walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/'
+      walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/',
+      whitelistSources: []
     });
 
     expect(
@@ -188,7 +193,8 @@ describe('Evaluation options evaluator', () => {
       useKVStorage: false,
       waitForConfirmation: false,
       useConstructor: false,
-      walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/'
+      walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/',
+      whitelistSources: []
     });
 
     const contract3 = warp.contract(null).setEvaluationOptions({
