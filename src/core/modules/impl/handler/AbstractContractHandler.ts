@@ -146,7 +146,12 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
           const lastErrorMessage = stateWithValidity?.cachedValue?.errorMessages[lastErrorKey]?.slice(0, 10_000);
           // don't judge me..
           // FIXME: also - '?' is stinky...
-          if (lastErrorMessage && lastErrorMessage.startsWith && lastErrorMessage.startsWith('[SkipUnsafeError]')) {
+          if (
+            lastErrorMessage &&
+            lastErrorMessage.startsWith &&
+            (lastErrorMessage.startsWith('[SkipUnsafeError]') ||
+              lastErrorMessage.startsWith('[NonWhitelistedSourceError]'))
+          ) {
             throw new ContractError(lastErrorMessage);
           }
         }

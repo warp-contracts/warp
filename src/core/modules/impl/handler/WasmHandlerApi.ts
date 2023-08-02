@@ -3,7 +3,13 @@ import { ContractDefinition } from '../../../../core/ContractDefinition';
 import { ExecutionContext } from '../../../../core/ExecutionContext';
 import { EvalStateResult } from '../../../../core/modules/StateEvaluator';
 import { SmartWeaveGlobal } from '../../../../legacy/smartweave-global';
-import { ContractError, ContractInteraction, InteractionData, InteractionResult } from '../HandlerExecutorFactory';
+import {
+  ContractError,
+  ContractInteraction,
+  InteractionData,
+  InteractionResult,
+  NonWhitelistedSourceError
+} from '../HandlerExecutorFactory';
 import { AbstractContractHandler } from './AbstractContractHandler';
 import { NetworkCommunicationError } from '../../../../utils/utils';
 
@@ -58,7 +64,7 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
         state: currentResult.state,
         result: null
       };
-      if (e instanceof ContractError) {
+      if (e instanceof ContractError || e instanceof NonWhitelistedSourceError) {
         return {
           ...result,
           error: e.error,

@@ -17,7 +17,8 @@ const throwErrorWithName = (name: string, message: string) => {
 export enum KnownErrors {
   ContractError = 'ContractError',
   ConstructorError = 'ConstructorError',
-  NetworkCommunicationError = 'NetworkCommunicationError'
+  NetworkCommunicationError = 'NetworkCommunicationError',
+  NonWhitelistedSourceError = 'NonWhitelistedSourceError'
 }
 
 export class JsHandlerApi<State> extends AbstractContractHandler<State> {
@@ -186,6 +187,13 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
         // any network-based error should result in immediately stop contract evaluation
         case KnownErrors.NetworkCommunicationError:
           throw err;
+        case KnownErrors.NonWhitelistedSourceError:
+          return {
+            type: 'error' as const,
+            errorMessage: err.message,
+            state: state,
+            result: null
+          };
         default:
           return {
             type: 'exception' as const,

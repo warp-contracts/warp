@@ -8,7 +8,7 @@ import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { ExecutorFactory } from '../ExecutorFactory';
 import { EvalStateResult, EvaluationOptions } from '../StateEvaluator';
-import { JsHandlerApi } from './handler/JsHandlerApi';
+import { JsHandlerApi, KnownErrors } from './handler/JsHandlerApi';
 import { WasmHandlerApi } from './handler/WasmHandlerApi';
 import { normalizeContractSource } from './normalize-source';
 import { Warp } from '../../Warp';
@@ -25,7 +25,14 @@ const BigNumber = require('bignumber.js');
 export class ContractError<T> extends Error {
   constructor(readonly error: T, readonly subtype?: string) {
     super(error.toString());
-    this.name = 'ContractError';
+    this.name = KnownErrors.ContractError;
+  }
+}
+
+export class NonWhitelistedSourceError<T> extends Error {
+  constructor(readonly error: T) {
+    super(error.toString());
+    this.name = KnownErrors.NonWhitelistedSourceError;
   }
 }
 
@@ -45,20 +52,18 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
     interactionState: InteractionState
   ): Promise<HandlerApi<State>> {
     if (warp.hasPlugin('contract-blacklist')) {
-      const blacklistPlugin = warp.loadPlugin<string, Promise<boolean>>('contract-blacklist');
-      let blacklisted = false;
-      try {
-        blacklisted = await blacklistPlugin.process(contractDefinition.txId);
-      } catch (e) {
-        this.logger.error(e);
-      }
-      if (blacklisted == true) {
-        throw new ContractError(
-          `[SkipUnsafeError] Skipping evaluation of the blacklisted contract ${contractDefinition.txId}.`,
-          `blacklistedSkip`
-        );
-      }
+      await this.blacklistContracts<State>(warp, contractDefinition);
     }
+
+    if (
+      evaluationOptions.whitelistSources.length > 0 &&
+      !evaluationOptions.whitelistSources.includes(contractDefinition.srcTxId)
+    ) {
+      throw new NonWhitelistedSourceError(
+        `[NonWhitelistedSourceError] Contract source not part of whitelisted sources list: ${contractDefinition.srcTxId}.`
+      );
+    }
+
     let kvStorage = null;
 
     if (evaluationOptions.useKVStorage) {
@@ -211,6 +216,22 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
           : contractFunction(swGlobal, BigNumber, LoggerFactory.INST.create(swGlobal.contract.id));
         return new JsHandlerApi(swGlobal, contractDefinition, handler);
       }
+    }
+  }
+
+  private async blacklistContracts<State>(warp: Warp, contractDefinition: ContractDefinition<State>) {
+    const blacklistPlugin = warp.loadPlugin<string, Promise<boolean>>('contract-blacklist');
+    let blacklisted = false;
+    try {
+      blacklisted = await blacklistPlugin.process(contractDefinition.txId);
+    } catch (e) {
+      this.logger.error(e);
+    }
+    if (blacklisted == true) {
+      throw new ContractError(
+        `[SkipUnsafeError] Skipping evaluation of the blacklisted contract ${contractDefinition.txId}.`,
+        `blacklistedSkip`
+      );
     }
   }
 }
