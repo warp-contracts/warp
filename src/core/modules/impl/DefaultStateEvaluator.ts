@@ -158,7 +158,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
               (e.subtype == 'unsafeClientSkip' || e.subtype == 'constructor' || e.subtype == 'blacklistedSkip')) ||
             e.name == KnownErrors.NonWhitelistedSourceError
           ) {
-            this.logger.warn(`Skipping contract in internal write, reason ${e.subtype}`);
+            this.logger.warn(`Skipping contract in internal write, reason ${e.subtype || e.name}`);
             errorMessages[missingInteraction.id] = e.message?.slice(0, 10_000);
           } else {
             throw e;
