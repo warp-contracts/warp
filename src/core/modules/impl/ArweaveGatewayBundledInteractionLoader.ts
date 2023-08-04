@@ -295,4 +295,8 @@ export class ArweaveGatewayBundledInteractionLoader implements InteractionsLoade
     this.arweaveFetcher = new ArweaveGQLTxsFetcher(warp);
     this._warp = warp;
   }
+
+  close(): Promise<void> {
+    return Promise.resolve(undefined);
+  }
 }

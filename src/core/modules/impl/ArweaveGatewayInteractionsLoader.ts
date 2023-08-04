@@ -149,4 +149,8 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
     this.arweaveTransactionQuery = new ArweaveGQLTxsFetcher(warp);
     this._warp = warp;
   }
+
+  close(): Promise<void> {
+    return Promise.resolve(undefined);
+  }
 }

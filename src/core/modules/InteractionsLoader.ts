@@ -31,4 +31,6 @@ export interface InteractionsLoader extends GwTypeAware, WarpAware {
   ): Promise<GQLNodeInterface[]>;
 
   clearCache(): void;
+
+  close(): Promise<void>;
 }

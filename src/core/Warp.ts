@@ -189,7 +189,8 @@ export class Warp {
     return Promise.all([
       this.definitionLoader.getSrcCache().close(),
       this.definitionLoader.getCache().close(),
-      this.stateEvaluator.getCache().close()
+      this.stateEvaluator.getCache().close(),
+      this.interactionsLoader.close()
     ]).then();
   }
 

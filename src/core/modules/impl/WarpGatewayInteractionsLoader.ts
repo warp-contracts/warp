@@ -62,6 +62,13 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
     this.source = source;
   }
 
+  close(): Promise<void> {
+    if (this._db) {
+      this._db.close();
+    }
+    return;
+  }
+
   private get db() {
     if (!this._db) {
       const dbLocation = './cache/warp/sqlite/interactions/interactions';

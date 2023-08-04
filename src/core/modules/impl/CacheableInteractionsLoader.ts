@@ -60,4 +60,8 @@ export class CacheableInteractionsLoader implements InteractionsLoader {
   set warp(warp: Warp) {
     this.delegate.warp = warp;
   }
+
+  close(): Promise<void> {
+    return Promise.resolve(undefined);
+  }
 }
