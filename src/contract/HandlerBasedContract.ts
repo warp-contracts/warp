@@ -630,14 +630,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
   }
 
   private async fetchRemoteContractState(contractId: string): Promise<DREContractStatusResponse<State> | null> {
-    return this._warpFetchWrapper
-      .fetch(`${this._evaluationOptions.remoteStateSyncSource}?id=${contractId}&events=false`)
-      .then((res) => {
-        return res.ok ? res.json() : Promise.reject(res);
-      })
-      .catch((error) => {
-        throw new Error(`Unable to read contract state from DRE. ${error.status}. ${error.body?.message}`);
-      });
+    return getJsonResponse(
+      this._warpFetchWrapper.fetch(`${this._evaluationOptions.remoteStateSyncSource}?id=${contractId}&events=false`)
+    );
   }
 
   private getToSortKey(upToSortKey?: string) {
