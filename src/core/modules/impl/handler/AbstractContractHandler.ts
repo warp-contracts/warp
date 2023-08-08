@@ -75,6 +75,11 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         ? `Internal write auto error for call [${JSON.stringify(debugData)}]: ${result.errorMessage}`
         : result.errorMessage;
 
+      this.logger.warn('Error from internal write', {
+        ...debugData,
+        effectiveErrorMessage
+      });
+
       const resultErrorMessages = effectiveErrorMessage
         ? {
             ...result.originalErrorMessages,
@@ -97,6 +102,13 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
       if (shouldAutoThrow) {
         throw new ContractError(result.type === 'error' && result.error ? result.error : effectiveErrorMessage);
       }
+
+      this.logger.debug('IW Result', {
+        state: result.state,
+        type: result.type,
+        error: result.error,
+        errorMessage: result.errorMessage
+      });
 
       return result;
     };
