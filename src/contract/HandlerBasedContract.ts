@@ -580,13 +580,15 @@ export class HandlerBasedContract<State> implements Contract<State> {
       //   sortedInteractions = sortedInteractions.filter((i) => i.sortKey.localeCompare(upToSortKey) <= 0);
       // }
 
-      this.logger.debug('contract and interactions load', benchmark.elapsed());
       if (this.isRoot() && sortedInteractions.length) {
         // note: if the root contract has zero interactions, it still should be safe
         // - as no other contracts will be called.
         this._rootSortKey = sortedInteractions[sortedInteractions.length - 1].sortKey;
       }
     }
+
+    this.logger.info('Contract and interactions load', benchmark.elapsed());
+    benchmark.reset();
 
     if (contractDefinition) {
       if (!contractEvaluationOptions) {
@@ -601,6 +603,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
         this.warp,
         this.interactionState()
       )) as HandlerApi<State>;
+
+      this.logger.info('Handler creation', benchmark.elapsed());
     }
 
     return {

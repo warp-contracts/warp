@@ -236,7 +236,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         this.logResult<State>(result, missingInteraction, executionContext);
 
-        this.logger.debug(`${indent(depth)}Interaction evaluation`, singleInteractionBenchmark.elapsed());
+        this.logger.info(`${indent(depth)}Interaction evaluation`, singleInteractionBenchmark.elapsed());
 
         interactionCall.update({
           cacheHit: false,
@@ -264,6 +264,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         });
       }
 
+      singleInteractionBenchmark.reset();
+
       try {
         for (const { modify } of this.executionContextModifiers) {
           executionContext = await modify<State>(currentState, executionContext);
@@ -285,6 +287,9 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         throw new Error('Validity not set after interaction evaluation');
       }
 
+      this.logger.info(`${indent(depth)}Execution Context Modifiers evaluation`, singleInteractionBenchmark.elapsed());
+      singleInteractionBenchmark.reset();
+
       const forceStateStoreToCache =
         executionContext.evaluationOptions.cacheEveryNInteractions > 0 &&
         i % executionContext.evaluationOptions.cacheEveryNInteractions === 0;
@@ -301,9 +306,12 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           await contract.interactionState().rollback(missingInteraction, forceStateStoreToCache);
         }
       }
+
+      this.logger.info(`${indent(depth)}Commit/Rollback state`, singleInteractionBenchmark.elapsed());
     }
     const evalStateResult = new EvalStateResult<State>(currentState, validity, errorMessages);
 
+    const benchmark = Benchmark.measure();
     // state could have been fully retrieved from cache
     // or there were no interactions below requested sort key
     if (missingInteractionsLength > 0) {
@@ -313,6 +321,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         evalStateResult
       );
     }
+
+    this.logger.info(`${indent(depth)}Storing final result in cache`, benchmark.elapsed());
 
     return new SortKeyCacheResult(currentSortKey, evalStateResult);
   }
