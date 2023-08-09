@@ -89,8 +89,8 @@
     "safe-stable-stringify": "2.4.1",
     "stream-buffers": "^3.0.2",
     "unzipit": "^1.4.0",
-    "warp-arbundles": "1.0.1",
-    "warp-isomorphic": "1.0.4",
+    "warp-arbundles": "^1.0.4",
+    "warp-isomorphic": "^1.0.7",
     "warp-wasm-metering": "1.0.1"
   },
   "devDependencies": {
