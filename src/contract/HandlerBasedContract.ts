@@ -533,8 +533,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
     if (cachedState && cachedState.sortKey == upToSortKey) {
       this.logger.debug('State fully cached, not loading interactions.');
       if (forceDefinitionLoad || evolvedSrcTxId || interactions?.length) {
+        const defBenchmark = Benchmark.measure();
         contractDefinition = await definitionLoader.load<State>(contractTxId, evolvedSrcTxId);
-        if (interactions?.length) {
+        this.logger.debug('Definition load', defBenchmark.elapsed());
+        if (interactions?.length > 1) {
           sortedInteractions = (await this._sorter.sort(interactions.map((i) => ({ node: i, cursor: null })))).map(
             (i) => i.node
           );
