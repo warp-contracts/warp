@@ -521,14 +521,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
     cachedState = cachedState || (await stateEvaluator.latestAvailableState<State>(contractTxId, upToSortKey));
 
-    this.logger.debug('cache lookup', benchmark.elapsed());
-    benchmark.reset();
-
     const evolvedSrcTxId = Evolve.evolvedSrcTxId(cachedState?.cachedValue?.state);
     let handler, contractDefinition, contractEvaluationOptions, remoteState;
     let sortedInteractions = interactions || [];
 
-    this.logger.debug('Cached state', cachedState, upToSortKey);
+    this.logger.debug('cache lookup', benchmark.elapsed());
+    benchmark.reset();
+    //this.logger.debug('Cached state', cachedState, upToSortKey);
 
     if (cachedState && cachedState.sortKey == upToSortKey) {
       this.logger.debug('State fully cached, not loading interactions.');
