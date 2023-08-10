@@ -161,6 +161,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     try {
       const initBenchmark = Benchmark.measure();
       this.maybeResetRootContract();
+      this.logger.info('Root contract reset', initBenchmark.elapsed());
+      initBenchmark.reset();
 
       const executionContext = await this.createExecutionContext(this._contractTxId, sortKey, false, interactions);
       this.logger.info('Execution Context', {
@@ -603,9 +605,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
         this.warp,
         this.interactionState()
       )) as HandlerApi<State>;
-
-      this.logger.info('Handler creation', benchmark.elapsed());
     }
+
+    this.logger.info('Handler creation', benchmark.elapsed());
 
     return {
       warp: this.warp,
