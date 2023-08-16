@@ -1,25 +1,11 @@
 /* eslint-disable */
 import Arweave from 'arweave';
 import {
-  ArweaveGatewayInteractionsLoader,
-  BlockHeightInteractionsSorter,
-  Contract, DefaultEvaluationOptions, LexicographicalInteractionsSorter,
-  LoggerFactory, RedstoneGatewayInteractionsLoader,
-  Warp,
-  WarpNodeFactory
+  LexicographicalInteractionsSorter,
+  LoggerFactory,
 } from '../src';
-import {TsLogFactory} from '../src/logging/node/TsLogFactory';
-import fs from 'fs';
-import path from 'path';
-import ArLocal from 'arlocal';
-import {JWKInterface} from 'arweave/node/lib/wallet';
 
 async function main() {
-  LoggerFactory.use(new TsLogFactory());
-  LoggerFactory.INST.logLevel('error');
-  LoggerFactory.INST.logLevel('info', 'sorting');
-  const logger = LoggerFactory.INST.create('sorting');
-
   const arweave = Arweave.init({
     host: 'arweave.net',
     port: 443,
@@ -27,15 +13,13 @@ async function main() {
   });
 
 
-    const interactionsLoader = new RedstoneGatewayInteractionsLoader("https://gateway.redstone.finance/", {confirmed: true});
 
-    const lexSorting = new LexicographicalInteractionsSorter(arweave);
-    const interactions = await interactionsLoader.load("KT45jaf8n9UwgkEareWxPgLJk4oMWpI5NODgYVIF1fY", 0, 903341);
-    const sorted = await lexSorting.sort([...interactions]);
-    logger.info("\n\nLexicographical");
-    sorted.forEach(v => {
-      logger.info(`${v.node.block.height}:${v.node.id}: [${v.node.sortKey}]`);
-    });
+  const lexSorting = new LexicographicalInteractionsSorter(arweave);
+
+  const sortKey = await lexSorting.createSortKey("cYHg6-C08kC7gNFlYleYOzEs2USbNe0-U4z3pXVmC8lIyN558PDp5_EHJMkBB2E4", "GqC7NKb_QXjFqE0NMU5DUfD4dP72k78s7LoxVImKwS4", 1241222);
+
+  console.log(sortKey);
+
 }
 
 main().catch((e) => console.error(e));
