@@ -526,7 +526,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     let handler, contractDefinition, contractEvaluationOptions, remoteState;
     let sortedInteractions = interactions || [];
 
-    this.logger.debug('Cached state', cachedState, upToSortKey);
+    // this.logger.debug('Cached state', cachedState, upToSortKey);
 
     if (cachedState && cachedState.sortKey == upToSortKey) {
       this.logger.debug('State fully cached, not loading interactions.');
