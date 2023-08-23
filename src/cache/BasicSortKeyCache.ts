@@ -1,5 +1,10 @@
 import { CacheKey, PruneStats, SortKeyCacheResult } from './SortKeyCache';
 
+export interface SignatureWise {
+  hash?: string;
+  signature?: string;
+}
+
 /**
  * A cache that stores its values per dedicated key and sort key.
  * A sort key is a value that the SmartWeave protocol is using
@@ -68,4 +73,6 @@ export interface BasicSortKeyCache<V> {
    * @retun PruneStats if getting them doesn't introduce a delay, null otherwise
    */
   prune(entriesStored: number): Promise<PruneStats | null>;
+
+  setSignature(cacheKey: CacheKey, hash: string, signature: string): Promise<void>;
 }

@@ -23,6 +23,8 @@ export class SrcCache {
   src: string | null;
   srcBinary: Buffer | null;
   srcWasmLang: string | null;
+  hash?: string;
+  signature?: string;
 
   constructor(value: ContractDefinition<unknown>) {
     this.src = value.src;
@@ -43,6 +45,8 @@ export class ContractCache<State> {
   contractTx: any; // eslint-disable-line @typescript-eslint/no-explicit-any
   srcTx: any; // eslint-disable-line @typescript-eslint/no-explicit-any
   testnet: string | null;
+  hash?: string;
+  signature?: string;
 
   constructor(value: ContractDefinition<State>) {
     this.txId = value.txId;

@@ -7,6 +7,7 @@ import { SortKeyCacheRangeOptions } from '../SortKeyCacheRangeOptions';
 import { AbstractSublevel, AbstractSublevelOptions } from 'abstract-level/types/abstract-sublevel';
 import { AbstractChainedBatch } from 'abstract-level/types/abstract-chained-batch';
 import { AbstractKeyIteratorOptions } from 'abstract-level/types/abstract-iterator';
+import { SignatureWise } from '../BasicSortKeyCache';
 
 /**
  * The LevelDB is a lexicographically sorted key-value database - so it's ideal for this use case
@@ -23,7 +24,7 @@ class ClientValueWrapper<V> {
   constructor(readonly value: V, readonly tomb: boolean = false) {}
 }
 
-export class LevelDbCache<V> implements SortKeyCache<V> {
+export class LevelDbCache<V extends SignatureWise> implements SortKeyCache<V> {
   private readonly ongoingTransactionMark = '$$warp-internal-transaction$$';
 
   private readonly logger = LoggerFactory.INST.create('LevelDbCache');
@@ -126,7 +127,7 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
     try {
       const wrappedValue = await level.get(key);
       if (wrappedValue && wrappedValue.tomb === undefined && wrappedValue.value === undefined) {
-        return wrappedValue as V;
+        return wrappedValue as undefined as V;
       }
       if (wrappedValue && wrappedValue.tomb === false && wrappedValue.value != null) {
         return wrappedValue.value;
@@ -377,6 +378,14 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
     }
 
     return null;
+  }
+
+  async setSignature(cacheKey: CacheKey, stateHash: string, signature: string): Promise<void> {
+    const value = await this.get(cacheKey);
+    value.cachedValue.signature = signature;
+    value.cachedValue.hash = stateHash;
+
+    await this.put(cacheKey, value.cachedValue);
   }
 
   private async allKeys(): Promise<string[]> {

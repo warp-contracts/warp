@@ -2,7 +2,7 @@ import { SortKeyCacheResult } from '../../cache/SortKeyCache';
 import { ExecutionContext } from '../ExecutionContext';
 import { GQLNodeInterface } from '../../legacy/gqlResult';
 import { SourceType } from './impl/WarpGatewayInteractionsLoader';
-import { BasicSortKeyCache } from '../../cache/BasicSortKeyCache';
+import { BasicSortKeyCache, SignatureWise } from '../../cache/BasicSortKeyCache';
 
 /**
  * Implementors of this class are responsible for evaluating contract's state
@@ -93,7 +93,10 @@ export interface StateEvaluator {
   getCache(): BasicSortKeyCache<EvalStateResult<unknown>>;
 }
 
-export class EvalStateResult<State> {
+export class EvalStateResult<State> implements SignatureWise {
+  hash?: string;
+  signature?: string;
+
   constructor(
     readonly state: State,
     readonly validity: Record<string, boolean>,
