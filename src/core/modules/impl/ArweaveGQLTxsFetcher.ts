@@ -4,6 +4,7 @@ import { ArweaveWrapper } from '../../../utils/ArweaveWrapper';
 import { sleep } from '../../../utils/utils';
 import { Benchmark } from '../../../logging/Benchmark';
 import { Warp } from '../../Warp';
+import { WARP_TAGS } from '../../KnownTags';
 
 const TRANSACTIONS_QUERY = `query Transactions($tags: [TagFilter!]!, $blockFilter: BlockFilter!, $first: Int!, $after: String) {
     transactions(tags: $tags, block: $blockFilter, first: $first, sort: HEIGHT_ASC, after: $after) {
@@ -56,6 +57,33 @@ const TRANSACTION_QUERY = `query Transaction($id: ID!) {
         }
 }`;
 
+// this is a query for old/legacy bundler format
+const TRANSACTION_QUERY_USING_TAG = `query Transactions($tags: [TagFilter!]!) {
+  transactions(tags: $tags) {
+      edges {
+        node {
+          id
+          owner { address, key }
+          recipient
+          tags {
+            name
+            value
+          }
+          block {
+            height
+            id
+            timestamp
+          }
+          fee { winston, ar }
+          quantity { winston, ar }
+          parent { id }
+          bundledIn { id }
+          signature
+        }
+      }
+  }
+}`;
+
 interface TagFilter {
   name: string;
   values: string[];
@@ -91,6 +119,23 @@ export class ArweaveGQLTxsFetcher {
     const response = await this.fetch<GQLTransactionResponse>(TRANSACTION_QUERY, { id: transactionId });
 
     return response.transaction;
+  }
+
+  /**
+   * Fetches transaction stored using legacy bundling format.
+   */
+  async transactionUsingUploaderTag(transactionId: string): Promise<GQLTransaction> {
+    const txTag: TagFilter = {
+      name: WARP_TAGS.UPLOADER_TX_ID,
+      values: [transactionId]
+    };
+    const response = (await this.fetch<GQLResultInterface['data']>(TRANSACTION_QUERY_USING_TAG, { tags: [txTag] }))
+      .transactions;
+
+    if (response.edges.length < 1) {
+      throw new Error(`No interaction with tag ${WARP_TAGS.UPLOADER_TX_ID}:${transactionId}`);
+    }
+    return response.edges[0].node;
   }
 
   async transactions(variables: ArweaveTransactionQuery): Promise<GQLEdgeInterface[]> {
