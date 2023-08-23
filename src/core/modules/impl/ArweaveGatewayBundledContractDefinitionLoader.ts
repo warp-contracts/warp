@@ -17,6 +17,7 @@ import { DefinitionLoader } from '../DefinitionLoader';
 import { GW_TYPE } from '../InteractionsLoader';
 import { ArweaveGQLTxsFetcher } from './ArweaveGQLTxsFetcher';
 import { WasmSrc } from './wasm/WasmSrc';
+import Arweave from 'arweave';
 
 function getTagValue(tags: GQLTagInterface[], tagName: string, orDefault = undefined) {
   const tag = tags.find(({ name }) => name === tagName);
@@ -32,7 +33,7 @@ export class ArweaveGatewayBundledContractDefinitionLoader implements Definition
 
   async load<State>(contractTxId: string, evolvedSrcTxId?: string): Promise<ContractDefinition<State>> {
     const benchmark = Benchmark.measure();
-    const contractTx = await this.arweaveTransactions.transaction(contractTxId);
+    const contractTx: GQLTransaction = await this.fetchContractTx(contractTxId);
     this.logger.debug('Contract tx fetch time', benchmark.elapsed());
     const owner = contractTx.owner.address;
 
@@ -85,6 +86,14 @@ export class ArweaveGatewayBundledContractDefinitionLoader implements Definition
     return contractDefinition;
   }
 
+  async fetchContractTx(contractTxId: string): Promise<GQLTransaction | null> {
+    const txUsingId = await this.arweaveTransactions.transaction(contractTxId);
+    if (txUsingId == null) {
+      return await this.arweaveTransactions.transactionUsingUploaderTag(contractTxId);
+    }
+    return txUsingId;
+  }
+
   private async convertToWarpCompatibleContractTx(gqlTransaction: GQLTransaction) {
     const tags = gqlTransaction.tags.map(({ name, value }) => ({
       name: Buffer.from(name).toString('base64url'),
@@ -103,7 +112,7 @@ export class ArweaveGatewayBundledContractDefinitionLoader implements Definition
   async loadContractSource(srcTxId: string): Promise<ContractSource> {
     const benchmark = Benchmark.measure();
 
-    const contractSrcTx = await this.arweaveTransactions.transaction(srcTxId);
+    const contractSrcTx = await this.fetchContractTx(srcTxId);
     const srcContentType = getTagValue(contractSrcTx.tags, SMART_WEAVE_TAGS.CONTENT_TYPE);
 
     if (!SUPPORTED_SRC_CONTENT_TYPES.includes(srcContentType)) {
@@ -112,10 +121,7 @@ export class ArweaveGatewayBundledContractDefinitionLoader implements Definition
 
     const contractType: ContractType = srcContentType === 'application/javascript' ? 'js' : 'wasm';
 
-    const src =
-      contractType === 'js'
-        ? await this.arweaveWrapper.txDataString(srcTxId)
-        : await this.arweaveWrapper.txData(srcTxId);
+    const src = await this.contractSource(contractSrcTx, contractType);
 
     let srcWasmLang: string | undefined;
     let wasmSrc: WasmSrc;
@@ -124,7 +130,7 @@ export class ArweaveGatewayBundledContractDefinitionLoader implements Definition
       wasmSrc = new WasmSrc(src as Buffer);
       srcWasmLang = getTagValue(contractSrcTx.tags, WARP_TAGS.WASM_LANG);
       if (!srcWasmLang) {
-        throw new Error(`Wasm lang not set for wasm contract src ${srcTxId}`);
+        throw new Error(`Wasm lang not set for wasm contract src ${contractSrcTx.id}`);
       }
       srcMetaData = JSON.parse(getTagValue(contractSrcTx.tags, WARP_TAGS.WASM_META));
     }
@@ -140,6 +146,22 @@ export class ArweaveGatewayBundledContractDefinitionLoader implements Definition
       metadata: srcMetaData,
       srcTx: contractSrcTx
     };
+  }
+
+  private async contractSource(contractSrcTx: GQLTransaction, contractType: ContractType): Promise<string | Buffer> {
+    const uploaderId = getTagValue(contractSrcTx.tags, WARP_TAGS.UPLOADER_TX_ID);
+
+    if (uploaderId != null) {
+      const txString = await this.arweaveWrapper.txDataString(contractSrcTx.id);
+      if (contractType === 'wasm') {
+        throw new Error('WASM contracts in legacy format are not supported using AR GW');
+      }
+      return Arweave.utils.b64UrlToString(JSON.parse(txString).data);
+    }
+
+    return contractType === 'js'
+      ? await this.arweaveWrapper.txDataString(contractSrcTx.id)
+      : await this.arweaveWrapper.txData(contractSrcTx.id);
   }
 
   private async evalInitialState(contractTx: GQLTransaction): Promise<string> {

@@ -36,6 +36,7 @@ export const WARP_TAGS = {
   WASM_META: 'Wasm-Meta',
   REQUEST_VRF: 'Request-Vrf',
   SIGNATURE_TYPE: 'Signature-Type',
+  UPLOADER_TX_ID: 'Uploader-Tx-Id',
   WARP_TESTNET: 'Warp-Testnet',
   MANIFEST: 'Contract-Manifest',
   NONCE: 'Nonce'
