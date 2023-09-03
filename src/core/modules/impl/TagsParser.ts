@@ -2,6 +2,7 @@ import { SMART_WEAVE_TAGS, WARP_TAGS } from '../../KnownTags';
 import { GQLNodeInterface, GQLTagInterface } from '../../../legacy/gqlResult';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { Transaction } from '../../../utils/types/arweave-types';
+import { InternalWriteEvalResult } from '../StateEvaluator';
 
 /**
  * A class that is responsible for retrieving "input" tag from the interaction transaction.
@@ -56,6 +57,22 @@ export class TagsParser {
 
   getContractTag(interactionTransaction: GQLNodeInterface): string {
     return interactionTransaction.tags.find((tag) => tag.name === SMART_WEAVE_TAGS.CONTRACT_TX_ID)?.value;
+  }
+
+  getInternalWritesSigTags(interactionTransaction: GQLNodeInterface): InternalWriteEvalResult | null {
+    const iwSigTag = this.findTag(interactionTransaction, WARP_TAGS.INTERACT_WRITE_SIG);
+    if (iwSigTag) {
+      const iwSignerTag = this.findTag(interactionTransaction, WARP_TAGS.INTERACT_WRITE_SIGNER);
+      const iwSigDataTag = this.findTag(interactionTransaction, WARP_TAGS.INTERACT_WRITE_SIG_DATA);
+      return {
+        contracts: JSON.parse(iwSigDataTag),
+        signature: iwSigTag,
+        publicModulus: iwSignerTag,
+        errorMessage: null
+      };
+    } else {
+      return null;
+    }
   }
 
   getContractsWithInputs(interactionTransaction: GQLNodeInterface): Map<string, GQLTagInterface> {
@@ -117,5 +134,9 @@ export class TagsParser {
     return interaction.tags.some((t) => {
       return t.name == WARP_TAGS.REQUEST_VRF && t.value === 'true';
     });
+  }
+
+  private findTag(interactionTransaction: GQLNodeInterface, tagName: string): string | undefined {
+    return interactionTransaction.tags.find((tag) => tag.name === tagName)?.value;
   }
 }

@@ -103,6 +103,13 @@ export class EvalStateResult<State> {
 
 export type UnsafeClientOptions = 'allow' | 'skip' | 'throw';
 
+export type InternalWriteEvalResult = {
+  contracts: string[];
+  signature: string;
+  publicModulus: string;
+  errorMessage: string;
+};
+
 export class DefaultEvaluationOptions implements EvaluationOptions {
   // default = true - still cannot decide whether true or false should be the default.
   // "false" may lead to some fairly simple attacks on contract, if the contract
@@ -150,6 +157,8 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   remoteStateSyncSource = 'https://dre-1.warp.cc/contract';
 
   useConstructor = false;
+
+  remoteInternalWrite = false;
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some features.
@@ -238,4 +247,8 @@ export interface EvaluationOptions {
 
   // remote source for fetching most recent contract state, only applicable if remoteStateSyncEnabled is set to true
   remoteStateSyncSource: string;
+
+  // whether the internal writes discovery should evaluate locally - or by the trusted D.R.E. node.
+  // if set to 'true', the D.R.E. from the 'remoteStateSyncSource' will be used.
+  remoteInternalWrite: boolean;
 }

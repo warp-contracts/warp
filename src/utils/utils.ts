@@ -92,7 +92,7 @@ export async function getJsonResponse<T>(response: Promise<Response>): Promise<T
   try {
     r = await response;
   } catch (e) {
-    throw new Error(`Error while communicating with gateway: ${JSON.stringify(e)}`);
+    throw new Error(`Error while communicating with server: ${JSON.stringify(e)}`);
   }
 
   if (!r?.ok) {
