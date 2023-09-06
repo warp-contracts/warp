@@ -74,7 +74,7 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
       cleanUpSwGlobal();
       if (result.type !== 'ok') {
         if (executionContext.contract.isRoot()) {
-          throw Error(`ConstructorError: ${result.errorMessage}`);
+          throw new Error(`ConstructorError: ${result.errorMessage}`);
         } else {
           // note: see comments in 'catch' in 'runContractFunction'
           throw new ContractError(
