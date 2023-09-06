@@ -11,7 +11,7 @@ import {
   NonWhitelistedSourceError
 } from '../HandlerExecutorFactory';
 import { AbstractContractHandler } from './AbstractContractHandler';
-import { NetworkCommunicationError } from "../../../../utils/utils";
+import { NetworkCommunicationError } from '../../../../utils/utils';
 
 export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
   constructor(
