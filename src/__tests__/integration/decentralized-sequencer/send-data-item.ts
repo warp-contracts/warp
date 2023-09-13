@@ -64,7 +64,7 @@ describe('Testing a decentralized sequencer', () => {
 
     expect(decentralizedSequencer.sendDataItem(dataItem, true))
       .rejects
-      .toThrowError('failed to broadcast transaction');
+      .toThrowError('broadcast transaction error');
   });
 
   it('should return an unconfirmed result', async () => {
@@ -82,7 +82,7 @@ describe('Testing a decentralized sequencer', () => {
     const dataItem = await createDataItem(signer, nonce);
     const result = await decentralizedSequencer.sendDataItem(dataItem, false);
 
-    expect(result.confirmed).toBeUndefined();
+    expect(result.confirmed).toEqual(false);
   });
 
 });

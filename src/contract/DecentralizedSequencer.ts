@@ -9,13 +9,18 @@ type NonceResponse = {
 };
 
 type DataItemResponse = {
-  sequencer_tx_hash: string;
   data_item_id: string;
+  nonce: number;
+  sender: string;
 };
 
 export type SendDataItemResponse = {
-  sequencer_tx_hash: string;
-  confirmed?: boolean;
+  sequencer_tx_hash?: string;
+  confirmed: boolean;
+};
+
+type TxResponse = {
+  tx_hash: string;
 };
 
 /**
@@ -31,7 +36,7 @@ export class DecentralizedSequencer {
   constructor(sequencerUrl: string) {
     this._nonceUrl = `${sequencerUrl}/api/v1/nonce`;
     this._sendDataItemUrl = `${sequencerUrl}/api/v1/dataitem`;
-    this._getTxUrl = `${sequencerUrl}/cosmos/tx/v1beta1/txs/`;
+    this._getTxUrl = `${sequencerUrl}/api/v1/tx`;
   }
 
   /**
@@ -83,36 +88,53 @@ export class DecentralizedSequencer {
 
     const dataItemResponse = await getJsonResponse<DataItemResponse>(response);
     this.logger.info('Send data item response', dataItemResponse);
-    const result: SendDataItemResponse = {
-      sequencer_tx_hash: dataItemResponse.sequencer_tx_hash
-    };
 
     if (waitForConfirmation) {
-      result.confirmed = await this.confirmTx(dataItemResponse.sequencer_tx_hash, numberOfTries);
+      return this.confirmTx(dataItemResponse.sender, dataItemResponse.nonce, numberOfTries);
     }
 
-    return result;
+    return {
+      confirmed: false
+    };
   }
 
-  private async confirmTx(txHash: string, numberOfTries: number): Promise<boolean> {
+  private async confirmTx(sender: string, nonce: number, numberOfTries: number): Promise<SendDataItemResponse> {
     if (numberOfTries <= 0) {
-      return false;
+      return {
+        confirmed: false
+      };
     }
 
     await sleep(1000);
 
-    return (await this.getTx(txHash)) || this.confirmTx(txHash, numberOfTries - 1);
+    const txResponse = await this.getTx(sender, nonce);
+    if (txResponse.confirmed) {
+      return txResponse;
+    }
+    return this.confirmTx(sender, nonce, numberOfTries - 1);
   }
 
-  private async getTx(txHash: string): Promise<boolean> {
-    const response = await fetch(this._getTxUrl + txHash);
+  private async getTx(sender: string, nonce: number): Promise<SendDataItemResponse> {
+    const response = await fetch(this._getTxUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ sender, nonce })
+    });
 
     if (response.ok) {
-      this.logger.info(`The transaction with hash ${txHash} confirmed.`);
-      return true;
+      const txResponse = (await response.json()) as TxResponse;
+      this.logger.info(`The transaction with hash ${txResponse.tx_hash} confirmed.`);
+      return {
+        sequencer_tx_hash: txResponse.tx_hash,
+        confirmed: true
+      };
     } else if (response.status == 404) {
-      this.logger.debug(`The transaction with hash ${txHash} not confirmed yet.`);
-      return false;
+      this.logger.debug(`The transaction with sender ${sender} and nonce ${nonce} not confirmed yet.`);
+      return {
+        confirmed: false
+      };
     }
 
     const text = await response.text();
