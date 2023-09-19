@@ -15,6 +15,7 @@ import { CacheKey, SortKeyCacheResult } from '../../../cache/SortKeyCache';
 import { Transaction } from '../../../utils/types/arweave-types';
 import { getJsonResponse, stripTrailingSlash } from '../../../utils/utils';
 import { BasicSortKeyCache } from '../../../cache/BasicSortKeyCache';
+import { EnvVerifier } from './verify/EnvVerifier';
 
 /**
  * An extension to {@link ContractDefinitionLoader} that makes use of
@@ -29,6 +30,7 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
   private contractDefinitionLoader: ContractDefinitionLoader;
   private arweaveWrapper: ArweaveWrapper;
   private readonly tagsParser: TagsParser;
+  private readonly envVerifier: EnvVerifier;
   private _warp: Warp;
 
   constructor(
@@ -39,6 +41,7 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
   ) {
     this.contractDefinitionLoader = new ContractDefinitionLoader(arweave, env);
     this.tagsParser = new TagsParser();
+    this.envVerifier = new EnvVerifier(this.env);
   }
 
   async load<State>(contractTxId: string, evolvedSrcTxId?: string): Promise<ContractDefinition<State>> {
@@ -51,13 +54,13 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         result.srcBinary = Buffer.from((result.srcBinary as any).data);
       }
-      this.verifyEnv(result);
+      this.envVerifier.verify(result);
       return result;
     }
     const benchmark = Benchmark.measure();
     const contract = await this.doLoad<State>(contractTxId, evolvedSrcTxId);
     this.rLogger.info(`Contract definition loaded in: ${benchmark.elapsed()}`);
-    this.verifyEnv(contract);
+    this.envVerifier.verify(contract);
 
     await this.putToCache(contractTxId, contract, evolvedSrcTxId);
 
@@ -119,13 +122,8 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
     return this.srcCache;
   }
 
-  private verifyEnv(def: ContractDefinition<unknown>): void {
-    if (def.testnet && this.env !== 'testnet') {
-      throw new Error('Trying to use testnet contract in a non-testnet env. Use the "forTestnet" factory method.');
-    }
-    if (!def.testnet && this.env === 'testnet') {
-      throw new Error('Trying to use non-testnet contract in a testnet env.');
-    }
+  async verifyEnv(contractTxId: string): Promise<void> {
+    this.envVerifier.verify(await this.getFromCache(contractTxId));
   }
 
   // Gets ContractDefinition and ContractSource from two caches and returns a combined structure
@@ -133,15 +131,28 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
     const contract = (await this.definitionCache.get(new CacheKey(contractTxId, 'cd'))) as SortKeyCacheResult<
       ContractCache<State>
     >;
+
     if (!contract) {
       return null;
     }
 
-    const src = await this.srcCache.get(new CacheKey(srcTxId || contract.cachedValue.srcTxId, 'src'));
+    // If not originalSrcTxId set update cache
+    const contractCache = contract.cachedValue;
+    if (!contractCache.originalSrcTxId) {
+      return null;
+    }
+
+    // If no evolved src tx id provided we assume that the original tx is needed and it the definition loaded should be updated
+    if (!srcTxId && contractCache.srcTxId != contractCache.originalSrcTxId) {
+      return null;
+    }
+
+    const effectiveSrcTxId = srcTxId || contractCache.srcTxId;
+    const src = await this.srcCache.get(new CacheKey(effectiveSrcTxId, 'src'));
     if (!src) {
       return null;
     }
-    return { ...contract.cachedValue, ...src.cachedValue };
+    return { ...contractCache, ...src.cachedValue, srcTxId: effectiveSrcTxId };
   }
 
   // Divides ContractDefinition into entries in two caches to avoid duplicates

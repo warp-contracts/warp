@@ -18,6 +18,7 @@ import { GW_TYPE } from '../InteractionsLoader';
 import { ArweaveGQLTxsFetcher } from './ArweaveGQLTxsFetcher';
 import { WasmSrc } from './wasm/WasmSrc';
 import Arweave from 'arweave';
+import { EnvVerifier } from './verify/EnvVerifier';
 
 function getTagValue(tags: GQLTagInterface[], tagName: string, orDefault = undefined) {
   const tag = tags.find(({ name }) => name === tagName);
@@ -37,9 +38,8 @@ export class ArweaveGatewayBundledContractDefinitionLoader implements Definition
     this.logger.debug('Contract tx fetch time', benchmark.elapsed());
     const owner = contractTx.owner.address;
 
-    const contractSrcTxId = evolvedSrcTxId
-      ? evolvedSrcTxId
-      : getTagValue(contractTx.tags, SMART_WEAVE_TAGS.CONTRACT_SRC_TX_ID);
+    const originalSrcTxId = getTagValue(contractTx.tags, SMART_WEAVE_TAGS.CONTRACT_SRC_TX_ID);
+    const contractSrcTxId = evolvedSrcTxId ? evolvedSrcTxId : originalSrcTxId;
     const testnet = getTagValue(contractTx.tags, WARP_TAGS.WARP_TESTNET) || null;
 
     if (testnet && this.env !== 'testnet') {
@@ -67,6 +67,7 @@ export class ArweaveGatewayBundledContractDefinitionLoader implements Definition
     const contractDefinition: ContractDefinition<State> = {
       txId: contractTxId,
       srcTxId: contractSrcTxId,
+      originalSrcTxId,
       src,
       srcBinary,
       srcWasmLang,
@@ -84,6 +85,11 @@ export class ArweaveGatewayBundledContractDefinitionLoader implements Definition
     this.logger.info(`Contract definition loaded in: ${benchmark.elapsed()}`);
 
     return contractDefinition;
+  }
+
+  async verifyEnv(contractTxId: string): Promise<void> {
+    const cd = await this.load(contractTxId);
+    new EnvVerifier(this.env).verify(cd);
   }
 
   async fetchContractTx(contractTxId: string): Promise<GQLTransaction | null> {

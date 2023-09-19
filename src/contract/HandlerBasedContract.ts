@@ -251,7 +251,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     // we're calling this to verify whether proper env is used for this contract
     // (e.g. test env for test contract)
-    await this.warp.definitionLoader.load(this._contractTxId);
+    await this.warp.definitionLoader.verifyEnv(this._contractTxId);
 
     const effectiveTags = options?.tags || [];
     const effectiveTransfer = options?.transfer || emptyTransfer;

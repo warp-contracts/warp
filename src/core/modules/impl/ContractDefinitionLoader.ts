@@ -18,6 +18,7 @@ import { WasmSrc } from './wasm/WasmSrc';
 import { Warp, WarpEnvironment } from '../../Warp';
 import { Transaction } from '../../../utils/types/arweave-types';
 import { BasicSortKeyCache } from '../../../cache/BasicSortKeyCache';
+import { EnvVerifier } from './verify/EnvVerifier';
 
 export class ContractDefinitionLoader implements DefinitionLoader {
   private readonly logger = LoggerFactory.INST.create('ContractDefinitionLoader');
@@ -45,9 +46,8 @@ export class ContractDefinitionLoader implements DefinitionLoader {
     this.logger.debug('Contract tx and owner', benchmark.elapsed());
     benchmark.reset();
 
-    const contractSrcTxId = forcedSrcTxId
-      ? forcedSrcTxId
-      : this.tagsParser.getTag(contractTx, SMART_WEAVE_TAGS.CONTRACT_SRC_TX_ID);
+    const originalSrcTxId = this.tagsParser.getTag(contractTx, SMART_WEAVE_TAGS.CONTRACT_SRC_TX_ID);
+    const contractSrcTxId = forcedSrcTxId ? forcedSrcTxId : originalSrcTxId;
     const testnet = this.tagsParser.getTag(contractTx, WARP_TAGS.WARP_TESTNET) || null;
     if (testnet && this.env !== 'testnet') {
       throw new Error('Trying to use testnet contract in a non-testnet env. Use the "forTestnet" factory method.');
@@ -77,6 +77,7 @@ export class ContractDefinitionLoader implements DefinitionLoader {
       txId: contractTxId,
       srcTxId: contractSrcTxId,
       src,
+      originalSrcTxId,
       srcBinary,
       srcWasmLang,
       initState,
@@ -89,6 +90,11 @@ export class ContractDefinitionLoader implements DefinitionLoader {
       srcTx,
       testnet
     };
+  }
+
+  async verifyEnv(contractTxId: string): Promise<void> {
+    const cd = await this.load(contractTxId);
+    new EnvVerifier(this.env).verify(cd);
   }
 
   async loadContractSource(contractSrcTxId: string): Promise<ContractSource> {

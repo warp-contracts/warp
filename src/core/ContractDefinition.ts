@@ -34,6 +34,7 @@ export class SrcCache {
 export class ContractCache<State> {
   txId: string;
   srcTxId: string;
+  originalSrcTxId: string;
   initState: State;
   minFee: string;
   owner: string;
@@ -47,6 +48,7 @@ export class ContractCache<State> {
   constructor(value: ContractDefinition<State>) {
     this.txId = value.txId;
     this.srcTxId = value.srcTxId;
+    this.originalSrcTxId = value.originalSrcTxId;
     this.initState = value.initState;
     this.manifest = value.manifest;
     this.minFee = value.minFee;

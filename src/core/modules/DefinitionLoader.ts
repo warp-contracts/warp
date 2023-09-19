@@ -21,4 +21,9 @@ export interface DefinitionLoader extends GwTypeAware, WarpAware {
   getCache(): BasicSortKeyCache<ContractCache<unknown>>;
 
   getSrcCache(): BasicSortKeyCache<SrcCache>;
+
+  /**
+   * @throws {InvalidEnvError}
+   */
+  verifyEnv(contractTxId: string): Promise<void>;
 }
