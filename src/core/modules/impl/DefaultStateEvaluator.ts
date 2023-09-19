@@ -303,7 +303,9 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         contract.clearChildren();
         // update the uncommitted state of the root contract
         if (lastConfirmedTxState) {
-          contract.interactionState().update(contract.txId(), lastConfirmedTxState.state, lastConfirmedTxState.tx.sortKey);
+          contract
+            .interactionState()
+            .update(contract.txId(), lastConfirmedTxState.state, lastConfirmedTxState.tx.sortKey);
           if (validity[missingInteraction.id]) {
             await contract.interactionState().commit(missingInteraction, forceStateStoreToCache);
           } else {
