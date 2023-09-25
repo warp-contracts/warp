@@ -456,7 +456,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
     vrf: boolean
   ) {
     const { arweave } = this.warp;
-    const caller = this._signature.type == 'arweave' ? await arweave.wallets.ownerToAddress(owner) : owner;
+    const caller =
+      this._signature.type == 'arweave'
+        ? await arweave.wallets.ownerToAddress(owner)
+        : await this._signature.getAddress();
     const handlerResult = await this.callContract(input, 'write', caller, undefined, tags, transfer, strict, vrf);
     if (handlerResult.type !== 'ok') {
       throw Error('Cannot create interaction: ' + JSON.stringify(handlerResult.error || handlerResult.errorMessage));
