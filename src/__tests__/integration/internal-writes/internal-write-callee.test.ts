@@ -11,7 +11,7 @@ import { WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 import { VM2Plugin } from 'warp-contracts-plugin-vm2';
-import { MemoryLevel } from "memory-level";
+import { MemoryLevel } from 'memory-level';
 
 interface ExampleContractState {
   counter: number;
@@ -221,7 +221,7 @@ describe('Testing internal writes', () => {
 
     async function currentContractEntries(contractTxId: string): Promise<[[string, string]]> {
       const storage: MemoryLevel<string, any> = await warp.stateEvaluator.getCache().storage();
-      const sub = storage.sublevel(contractTxId, { valueEncoding: "json" });
+      const sub = storage.sublevel(contractTxId, { valueEncoding: 'json' });
       return await sub.iterator().all();
     }
 
@@ -290,7 +290,6 @@ describe('Testing internal writes', () => {
       const entries2 = await currentContractEntries(calleeContract.txId());
       expect(entries2.length).toEqual(7);
     });
-
   });
 
   describe('with read state at the end', () => {
