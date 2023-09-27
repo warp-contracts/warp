@@ -221,7 +221,7 @@ describe('Testing internal writes', () => {
 
     async function currentContractEntries(contractTxId: string): Promise<[[string, string]]> {
       const storage: MemoryLevel<string, any> = await warp.stateEvaluator.getCache().storage();
-      const sub = storage.sublevel(contractTxId, { valueEncoding: "json" });
+      const sub = storage.sublevel(contractTxId, { valueEncoding: 'json' });
       return await sub.iterator().all();
     }
 
@@ -271,7 +271,9 @@ describe('Testing internal writes', () => {
       expect(entries2.length).toEqual(5);
       const lastCacheValue = await warp.stateEvaluator.getCache().getLast(calleeContract.txId());
       expect(lastCacheValue.cachedValue.state).toEqual(result1.cachedValue.state);
-      expect(Object.keys(result1.cachedValue.errorMessages).length + 1).toEqual(Object.keys(lastCacheValue.cachedValue.errorMessages).length);
+      expect(Object.keys(result1.cachedValue.errorMessages).length + 1).toEqual(
+        Object.keys(lastCacheValue.cachedValue.errorMessages).length
+      );
 
       const blockHeight = (await warp.arweave.network.getInfo()).height;
       expect(lastCacheValue.sortKey).toContain(`${blockHeight}`.padStart(12, '0'));
@@ -290,7 +292,6 @@ describe('Testing internal writes', () => {
       const entries2 = await currentContractEntries(calleeContract.txId());
       expect(entries2.length).toEqual(7);
     });
-
   });
 
   describe('with read state at the end', () => {
