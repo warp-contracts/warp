@@ -8,7 +8,7 @@ import { GQLNodeInterface, GQLTagInterface } from '../../../legacy/gqlResult';
 import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { indent } from '../../../utils/utils';
-import { EvalStateResult, StateEvaluator } from '../StateEvaluator';
+import { EvalStateResult, StateEvaluator, CustomEvent } from '../StateEvaluator';
 import { ContractInteraction, HandlerApi, InteractionResult } from './HandlerExecutorFactory';
 import { TagsParser } from './TagsParser';
 import { VrfPluginFunctions } from '../../WarpPlugin';
@@ -267,7 +267,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           throw new Error(`Exception while processing ${JSON.stringify(interaction)}:\n${result.errorMessage}`);
         }
 
-        validity[missingInteraction.id] = result.type === 'ok';
+        const isValidInteraction = result.type === 'ok';
+        validity[missingInteraction.id] = isValidInteraction;
         currentState = result.state;
 
         const toCache = new EvalStateResult(currentState, validity, errorMessages);
@@ -276,6 +277,13 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
             tx: missingInteraction,
             state: toCache
           };
+        }
+
+        const event = result.event;
+        if (event) {
+          warp.eventTarget.dispatchEvent(
+            new CustomEvent(isValidInteraction ? 'interactionCompleted' : 'interactionFailed', { detail: event })
+          );
         }
       }
 
@@ -358,7 +366,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     }
   }
 
-  private parseInput(inputTag: GQLTagInterface): unknown | null {
+  private parseInput(inputTag: GQLTagInterface): { function: string } | null {
     try {
       return JSON.parse(inputTag.value);
     } catch (e) {

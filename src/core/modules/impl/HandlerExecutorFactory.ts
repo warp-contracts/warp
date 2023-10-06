@@ -7,7 +7,7 @@ import { SmartWeaveGlobal } from '../../../legacy/smartweave-global';
 import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { ExecutorFactory } from '../ExecutorFactory';
-import { EvalStateResult, EvaluationOptions } from '../StateEvaluator';
+import { EvalStateResult, EvaluationOptions, InteractionCompleteEvent } from '../StateEvaluator';
 import { JsHandlerApi, KnownErrors } from './handler/JsHandlerApi';
 import { WasmHandlerApi } from './handler/WasmHandlerApi';
 import { normalizeContractSource } from './normalize-source';
@@ -269,15 +269,10 @@ export interface HandlerApi<State> {
   maybeCallStateConstructor(initialState: State, executionContext: ExecutionContext<State>): Promise<State>;
 }
 
-export type HandlerFunction<State, Input, Result> = (
-  state: State,
-  interaction: ContractInteraction<Input>
-) => Promise<HandlerResult<State, Result>>;
-
-// TODO: change to XOR between result and state?
 export type HandlerResult<State, Result> = {
   result: Result;
   state: State;
+  event: InteractionCompleteEvent;
   gasUsed?: number;
 };
 

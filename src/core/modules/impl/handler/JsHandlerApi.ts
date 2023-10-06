@@ -1,7 +1,7 @@
 import { GQLNodeInterface } from 'legacy/gqlResult';
 import { ContractDefinition } from '../../../../core/ContractDefinition';
 import { ExecutionContext } from '../../../../core/ExecutionContext';
-import { EvalStateResult } from '../../../../core/modules/StateEvaluator';
+import { EvalStateResult, InteractionCompleteEvent } from '../../../../core/modules/StateEvaluator';
 import { SWBlock, SmartWeaveGlobal, SWTransaction, SWVrf } from '../../../../legacy/smartweave-global';
 import { deepCopy, timeout } from '../../../../utils/utils';
 import { ContractError, ContractInteraction, InteractionData, InteractionResult } from '../HandlerExecutorFactory';
@@ -132,11 +132,11 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
     };
   }
 
-  private async runContractFunction<Input>(
+  private async runContractFunction<Input, Result>(
     executionContext: ExecutionContext<State>,
     interaction: InteractionData<Input>['interaction'],
     state: State
-  ) {
+  ): Promise<InteractionResult<State, Result>> {
     const stateClone = deepCopy(state);
     const { timeoutId, timeoutPromise } = timeout(
       executionContext.evaluationOptions.maxInteractionEvaluationTimeSeconds
@@ -150,10 +150,27 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
 
       if (handlerResult && (handlerResult.state !== undefined || handlerResult.result !== undefined)) {
         await this.swGlobal.kv.commit();
+
+        let interactionEvent: InteractionCompleteEvent = null;
+
+        if (handlerResult.event) {
+          interactionEvent = {
+            contractTxId: this.swGlobal.contract.id,
+            sortKey: this.swGlobal.transaction.sortKey,
+            transactionId: this.swGlobal.transaction.id,
+            caller: interaction.caller,
+            input: interaction.input,
+            blockTimestamp: this.swGlobal.block.timestamp,
+            blockHeight: this.swGlobal.block.height,
+            data: handlerResult.event
+          };
+        }
+
         return {
           type: 'ok' as const,
           result: handlerResult.result,
-          state: handlerResult.state || stateClone
+          state: handlerResult.state || stateClone,
+          event: interactionEvent
         };
       }
 
@@ -167,7 +184,8 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
             type: 'error' as const,
             errorMessage: err.message,
             state: state,
-            result: null
+            result: null,
+            event: null
           };
         case KnownErrors.ConstructorError:
           // if that's the contract that we want to evaluate 'directly' - we need to stop evaluation immediately,
@@ -192,14 +210,16 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
             type: 'error' as const,
             errorMessage: err.message,
             state: state,
-            result: null
+            result: null,
+            event: null
           };
         default:
           return {
             type: 'exception' as const,
             errorMessage: `${(err && err.stack) || (err && err.message) || err}`,
             state: state,
-            result: null
+            result: null,
+            event: null
           };
       }
     } finally {

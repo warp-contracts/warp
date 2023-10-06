@@ -243,3 +243,26 @@ export interface EvaluationOptions {
 
   whitelistSources: string[];
 }
+
+// https://github.com/nodejs/node/issues/40678 duh...
+export class CustomEvent<T = unknown> extends Event {
+  readonly detail: T;
+
+  constructor(message, data) {
+    super(message, data);
+    this.detail = data.detail;
+  }
+}
+
+export class InteractionCompleteEvent<Input = unknown, T = unknown> {
+  constructor(
+    readonly contractTxId: string,
+    readonly sortKey: string,
+    readonly transactionId: string,
+    readonly caller: string,
+    readonly input: Input,
+    readonly blockTimestamp: number,
+    readonly blockHeight: number,
+    readonly data: T // eslint-disable-next-line @typescript-eslint/no-empty-function
+  ) {}
+}

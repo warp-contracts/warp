@@ -279,6 +279,7 @@ describe('Constructor', () => {
         });
 
         expect((await readExternalContract.viewState({ function: 'read' })).result).toEqual({
+          event: null,
           originalErrorMessages: {},
           originalValidity: {},
           result: 100,

@@ -12,6 +12,7 @@ import { WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 import { VM2Plugin } from 'warp-contracts-plugin-vm2';
+import { InteractionCompleteEvent } from '../../../core/modules/StateEvaluator';
 
 describe('Testing the Profit Sharing Token', () => {
   let contractSrc: string;
@@ -114,6 +115,39 @@ describe('Testing the Profit Sharing Token', () => {
     expect(resultVM.ticker).toEqual('EXAMPLE_PST_TOKEN');
     expect(result.target).toEqual('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M');
     expect(resultVM.target).toEqual('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M');
+  });
+
+  it('should properly dispatch en event', async () => {
+    let handlerCalled = false;
+    const interactionResult = await pst.writeInteraction({
+      function: 'dispatchEvent'
+    });
+
+    await mineBlock(warp);
+    warp.eventTarget.addEventListener('interactionCompleted', interactionCompleteHandler);
+    await pst.readState();
+
+    expect(handlerCalled).toBeTruthy();
+
+    function interactionCompleteHandler(event: CustomEvent<InteractionCompleteEvent>) {
+      expect(event.type).toEqual('interactionCompleted');
+      expect(event.detail.contractTxId).toEqual(pst.txId());
+      expect(event.detail.caller).toEqual(walletAddress);
+      expect(event.detail.transactionId).toEqual(interactionResult.originalTxId);
+      expect(event.detail.sortKey).not.toBeNull();
+      expect(event.detail.input).not.toBeNull();
+      expect(event.detail.blockHeight).toBeGreaterThan(0);
+      expect(event.detail.blockTimestamp).toBeGreaterThan(0);
+      expect(event.detail.data).toEqual({
+        value1: 'foo',
+        value2: 'bar'
+      });
+      expect(event.detail.input).toEqual({
+        function: 'dispatchEvent'
+      });
+      handlerCalled = true;
+      warp.eventTarget.removeEventListener('interactionCompleted', interactionCompleteHandler);
+    }
   });
 
   it("should properly evolve contract's source code", async () => {
