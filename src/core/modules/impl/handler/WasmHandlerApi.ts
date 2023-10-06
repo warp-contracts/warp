@@ -55,7 +55,8 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
         type: 'ok',
         result: handlerResult,
         state: this.doGetCurrentState(), // TODO: return only at the end of evaluation and when caching is required
-        gasUsed: this.swGlobal.gasUsed
+        gasUsed: this.swGlobal.gasUsed,
+        event: null
       };
     } catch (e) {
       await this.swGlobal.kv.rollback();
@@ -68,14 +69,16 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
         return {
           ...result,
           error: e.error,
-          type: 'error'
+          type: 'error',
+          event: null
         };
       } else if (e instanceof NetworkCommunicationError) {
         throw e;
       } else {
         return {
           ...result,
-          type: 'exception'
+          type: 'exception',
+          event: null
         };
       }
     } finally {

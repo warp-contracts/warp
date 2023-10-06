@@ -37,6 +37,16 @@ export async function handle(state, action) {
     return {state};
   }
 
+  if (input.function === 'dispatchEvent') {
+    return {
+      state,
+      event: {
+        value1: 'foo',
+        value2: 'bar'
+      }
+    }
+  }
+
   if (input.function === 'balance') {
     const target = input.target;
     const ticker = state.ticker;

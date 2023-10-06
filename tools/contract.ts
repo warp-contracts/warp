@@ -5,14 +5,13 @@ import {JWKInterface} from "arweave/web/lib/wallet";
 import fs from "fs";
 import { ArweaveGQLTxsFetcher } from "../src/core/modules/impl/ArweaveGQLTxsFetcher";
 import { EventEmitter } from "node:events";
-import { EvaluationProgressPlugin } from "warp-contracts-plugin-evaluation-progress";
 
 const logger = LoggerFactory.INST.create('Contract');
 
 //LoggerFactory.use(new TsLogFactory());
 //LoggerFactory.INST.logLevel('error');
 
-LoggerFactory.INST.logLevel('none');
+LoggerFactory.INST.logLevel('debug');
 LoggerFactory.INST.logLevel('info', 'DefaultStateEvaluator');
 
 const eventEmitter = new EventEmitter();
@@ -31,13 +30,12 @@ async function main() {
 
   try {
     const contract = warp
-      .contract("KTzTXT_ANmF84fWEKHzWURD1LWd9QaFR9yfYUwH2Lxw")
+      .contract("BaAP2wyqSiF7Eqw3vcBvVss3C0H8i1NGQFgMY6nGpnk")
       .setEvaluationOptions({
         maxCallDepth: 5,
         maxInteractionEvaluationTimeSeconds: 10000,
         allowBigInt: true,
         unsafeClient: 'skip',
-        internalWrites: true,
       });
     const result = await contract.readState();
     console.dir(result.cachedValue.state, {depth: null});
