@@ -66,6 +66,7 @@ export class Warp {
   readonly testing: Testing;
   kvStorageFactory: KVStorageFactory;
   whoAmI: string;
+  eventTarget: EventTarget;
 
   private readonly plugins: Map<WarpPluginType, WarpPlugin<unknown, unknown>> = new Map();
 
@@ -84,6 +85,7 @@ export class Warp {
         dbLocation: `${DEFAULT_LEVEL_DB_LOCATION}/kv/ldb/${contractTxId}`
       });
     };
+    this.eventTarget = new EventTarget();
   }
 
   static builder(
