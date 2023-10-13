@@ -7,12 +7,12 @@ import path from 'path';
 import { mineBlock } from '../_helpers';
 import { PstState, PstContract } from '../../../contract/PstContract';
 import { InteractionResult } from '../../../core/modules/impl/HandlerExecutorFactory';
-import { Warp } from "../../../core/Warp";
+import { Warp } from '../../../core/Warp';
 import { WarpFactory } from '../../../core/WarpFactory';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 import { VM2Plugin } from 'warp-contracts-plugin-vm2';
-import { InteractionCompleteEvent } from "../../../core/modules/StateEvaluator";
+import { InteractionCompleteEvent } from '../../../core/modules/StateEvaluator';
 
 describe('Testing the Profit Sharing Token', () => {
   let contractSrc: string;
@@ -118,14 +118,13 @@ describe('Testing the Profit Sharing Token', () => {
   });
 
   it('should properly dispatch en event', async () => {
-
     let handlerCalled = false;
     const interactionResult = await pst.writeInteraction({
-      function: 'dispatchEvent',
+      function: 'dispatchEvent'
     });
 
     await mineBlock(warp);
-    warp.eventTarget.addEventListener("interactionCompleted", interactionCompleteHandler);
+    warp.eventTarget.addEventListener('interactionCompleted', interactionCompleteHandler);
     await pst.readState();
 
     expect(handlerCalled).toBeTruthy();
@@ -136,16 +135,14 @@ describe('Testing the Profit Sharing Token', () => {
       expect(event.detail.caller).toEqual(walletAddress);
       expect(event.detail.transactionId).toEqual(interactionResult.originalTxId);
       expect(event.detail.data).toEqual({
-          value1: "foo",
-          value2: "bar"
-        }
-      );
+        value1: 'foo',
+        value2: 'bar'
+      });
       expect(event.detail.input).toEqual({
-          function: 'dispatchEvent'
-        }
-      );
+        function: 'dispatchEvent'
+      });
       handlerCalled = true;
-      warp.eventTarget.removeEventListener("interactionCompleted", interactionCompleteHandler);
+      warp.eventTarget.removeEventListener('interactionCompleted', interactionCompleteHandler);
     }
   });
 
