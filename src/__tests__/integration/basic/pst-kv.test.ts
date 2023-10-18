@@ -147,14 +147,14 @@ describe('Testing the Profit Sharing Token', () => {
 
   it('should properly store false and falsy values in kv', async () => {
     const falsyEntries = {
-      'false': false,
-      'emptyString': '',
-      'zero': 0,
-      'emptyArray': [],
-      'nan': NaN,
-      'null': null,
-      'undefined': undefined,
-      } as const;
+      false: false,
+      emptyString: '',
+      zero: 0,
+      emptyArray: [],
+      nan: NaN,
+      null: null,
+      undefined: undefined
+    } as const;
 
     await pst.writeInteraction({
       function: 'kvPut',
@@ -162,10 +162,12 @@ describe('Testing the Profit Sharing Token', () => {
     });
     await mineBlock(warp);
 
-    const { kvGet } =
-      (await pst.viewState<unknown, { kvGet: typeof falsyEntries }>({
+    const { kvGet } = (
+      await pst.viewState<unknown, { kvGet: typeof falsyEntries }>({
         function: 'kvGet',
-        kvGet: Object.keys(falsyEntries) })).result;
+        kvGet: Object.keys(falsyEntries)
+      })
+    ).result;
 
     expect(kvGet.emptyArray).toEqual([]);
     expect(kvGet.emptyString).toEqual('');
