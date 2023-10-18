@@ -107,7 +107,7 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
     const keys = await contractCache.keys({ reverse: true, lte: sortKey, limit: 1 }).all();
     if (keys.length) {
       const subLevelValue = await this.getValueFromLevel(keys[0], contractCache);
-      if (subLevelValue) {
+      if (subLevelValue != null) {
         return new SortKeyCacheResult<V>(keys[0], subLevelValue);
       }
     }

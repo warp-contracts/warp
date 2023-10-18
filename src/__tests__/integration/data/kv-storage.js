@@ -67,5 +67,23 @@ export async function handle(state, action) {
     return {result: {target, ticker, balance: result ? result : 0}};
   }
 
+  if (input.function === 'kvPut') {
+    for (const [key, value] of Object.entries(input.kvPut)) {
+      await SmartWeave.kv.put(key, value);
+    }
+
+    return {state};
+  }
+
+  if (input.function === 'kvGet') {
+    const kvGet = {};
+
+    for (const key of input.kvGet) {
+      kvGet[key] = await SmartWeave.kv.get(key);
+    }
+
+    return {result: {kvGet}};
+  }
+
   throw new ContractError(`No function supplied or function not recognised: "${input.function}"`);
 }
