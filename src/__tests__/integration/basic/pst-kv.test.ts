@@ -144,4 +144,35 @@ describe('Testing the Profit Sharing Token', () => {
     ).toEqual(23111222);
     expect((await pst.getStorageValues(['foo'])).cachedValue.get('foo')).toBeNull();
   });
+
+  it('should properly store false and falsy values in kv', async () => {
+    const falsyEntries = {
+      'false': false,
+      'emptyString': '',
+      'zero': 0,
+      'emptyArray': [],
+      'nan': NaN,
+      'null': null,
+      'undefined': undefined,
+      } as const;
+
+    await pst.writeInteraction({
+      function: 'kvPut',
+      kvPut: falsyEntries
+    });
+    await mineBlock(warp);
+
+    const { kvGet } =
+      (await pst.viewState<unknown, { kvGet: typeof falsyEntries }>({
+        function: 'kvGet',
+        kvGet: Object.keys(falsyEntries) })).result;
+
+    expect(kvGet.emptyArray).toEqual([]);
+    expect(kvGet.emptyString).toEqual('');
+    expect(kvGet.zero).toEqual(0);
+    expect(kvGet.false).toEqual(false);
+    expect(kvGet.nan).toBeNull();
+    expect(kvGet.null).toBeNull();
+    expect(kvGet.undefined).toBeNull();
+  });
 });

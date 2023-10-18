@@ -293,7 +293,7 @@ export class KV {
     }
 
     const result = await this._storage.getLessOrEqual(key, this._transaction.sortKey);
-    return result?.cachedValue || null;
+    return result?.cachedValue ?? null;
   }
 
   async del(key: string): Promise<void> {
