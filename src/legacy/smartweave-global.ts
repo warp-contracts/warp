@@ -5,7 +5,7 @@ import { GQLNodeInterface, GQLTagInterface, VrfData } from './gqlResult';
 import { CacheKey, SortKeyCache } from '../cache/SortKeyCache';
 import { SortKeyCacheRangeOptions } from '../cache/SortKeyCacheRangeOptions';
 import { InteractionState } from '../contract/states/InteractionState';
-import { safeGet } from "../utils/utils";
+import { safeGet } from '../utils/utils';
 
 /**
  *
