@@ -5,6 +5,7 @@ import { GQLNodeInterface, GQLTagInterface, VrfData } from './gqlResult';
 import { CacheKey, SortKeyCache } from '../cache/SortKeyCache';
 import { SortKeyCacheRangeOptions } from '../cache/SortKeyCacheRangeOptions';
 import { InteractionState } from '../contract/states/InteractionState';
+import { safeGet } from "../utils/utils";
 
 /**
  *
@@ -47,6 +48,7 @@ export class SmartWeaveGlobal {
     owner: string;
   };
   unsafeClient: Arweave;
+  safeGet: (input: RequestInfo | URL, init?: RequestInit) => Promise<unknown>;
 
   contracts: {
     readContractState: (contractId: string) => Promise<any>;
@@ -79,6 +81,7 @@ export class SmartWeaveGlobal {
       wallets: arweave.wallets,
       crypto: arweave.crypto
     };
+    this.safeGet = safeGet;
 
     this.evaluationOptions = evaluationOptions;
 
