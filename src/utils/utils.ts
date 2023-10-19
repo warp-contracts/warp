@@ -115,3 +115,7 @@ export async function getJsonResponse<T>(response: Promise<Response>): Promise<T
     throw new NetworkCommunicationError(`Error while parsing json response: ${JSON.stringify(e)}`);
   }
 }
+
+export async function safeGet<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
+  return getJsonResponse(fetch(input, init));
+}

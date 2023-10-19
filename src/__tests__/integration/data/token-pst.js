@@ -37,6 +37,24 @@ export async function handle(state, action) {
     return {state};
   }
 
+  if (input.function === 'loadBlockData') {
+    const height = input.height;
+    const throwError = input.throwError;
+
+    const blockData = await SmartWeave.safeGet(
+      throwError
+        ? `http://localhost:1820/blockkkk/height/${height}`
+        : `http://localhost:1820/block/height/${height}`
+    );
+
+    if (!state.blocks) {
+      state.blocks = {};
+    }
+
+    state.blocks["" + height] = blockData.indep_hash;
+    return { state };
+  }
+
   if (input.function === 'dispatchEvent') {
     return {
       state,
