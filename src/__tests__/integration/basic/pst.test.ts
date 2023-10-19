@@ -13,7 +13,7 @@ import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
 import { VM2Plugin } from 'warp-contracts-plugin-vm2';
 import { InteractionCompleteEvent } from '../../../core/modules/StateEvaluator';
-import { NetworkCommunicationError } from "../../../utils/utils";
+import { NetworkCommunicationError } from '../../../utils/utils';
 
 describe('Testing the Profit Sharing Token', () => {
   let contractSrc: string;
@@ -151,9 +151,7 @@ describe('Testing the Profit Sharing Token', () => {
     }
   });
 
-
   it('should allow to safe fetch from external api', async () => {
-
     const blockData = await arweave.blocks.getCurrent();
 
     await pst.writeInteraction({
@@ -165,12 +163,10 @@ describe('Testing the Profit Sharing Token', () => {
 
     const result = await pst.readState();
 
-    expect((result.cachedValue.state as any).blocks["" + blockData.height]).toEqual(blockData.indep_hash);
-
+    expect((result.cachedValue.state as any).blocks['' + blockData.height]).toEqual(blockData.indep_hash);
   });
 
   it('should stop evaluation on safe fetch error', async () => {
-
     const blockData = await arweave.blocks.getCurrent();
 
     await pst.writeInteraction({
