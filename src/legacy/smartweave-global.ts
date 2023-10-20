@@ -83,7 +83,7 @@ export class SmartWeaveGlobal {
       crypto: arweave.crypto
     };
     this.baseArweaveUrl = `${arweave.api.config.protocol}://${arweave.api.config.host}:${arweave.api.config.port}`;
-    this.safeArweaveGet = async function(query: string) {
+    this.safeArweaveGet = async function (query: string) {
       return safeGet(`${this.baseArweaveUrl}${query}`);
     };
 
