@@ -210,7 +210,7 @@ describe('Testing the Profit Sharing Token', () => {
     });
   });
 
-  describe("when loading data from Arweave", () => {
+  describe('when loading data from Arweave', () => {
     it('should allow to safe fetch from external api', async () => {
       const blockData = await arweave.blocks.getCurrent();
 
