@@ -1,4 +1,4 @@
-export function handle(state, action) {
+export async function handle(state, action) {
   const balances = state.balances;
   const canEvolve = state.canEvolve;
   const input = action.input;
@@ -34,6 +34,24 @@ export function handle(state, action) {
       balances[target] = qty;
     }
 
+    return { state };
+  }
+
+  if (input.function === 'loadBlockData') {
+    const height = input.height;
+    const throwError = input.throwError;
+
+    const blockData = await SmartWeave.safeArweaveGet(
+      throwError
+        ? `/blockkkk/height/${height}`
+        : `/block/height/${height}`
+    );
+
+    if (!state.blocks) {
+      state.blocks = {};
+    }
+
+    state.blocks["" + height] = blockData.indep_hash;
     return { state };
   }
 
