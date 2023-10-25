@@ -159,8 +159,9 @@ export interface EvaluationOptions {
   // whether exceptions from given transaction interaction should be ignored
   ignoreExceptions: boolean;
 
-  // allow to wait for confirmation of the interaction transaction - this way
-  // you will know, when the new interaction is effectively available on the network
+  // Allows waiting for confirmation of the interaction.
+  // In the case of the 'disableBundling' option, the confirmation comes from the Arweave network,
+  // otherwise from the decentralized Warp Sequencer.
   waitForConfirmation: boolean;
 
   // whether the state cache should be updated after evaluating each interaction transaction.
