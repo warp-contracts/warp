@@ -20,7 +20,7 @@ import { Benchmark } from '../logging/Benchmark';
 import { LoggerFactory } from '../logging/LoggerFactory';
 import { Evolve } from '../plugins/Evolve';
 import { ArweaveWrapper } from '../utils/ArweaveWrapper';
-import { getJsonResponse, isBrowser, sleep, stripTrailingSlash } from '../utils/utils';
+import { getJsonResponse, isBrowser, sleep } from '../utils/utils';
 import {
   BenchmarkStats,
   Contract,
@@ -41,6 +41,7 @@ import { ContractInteractionState } from './states/ContractInteractionState';
 import { Crypto } from 'warp-isomorphic';
 import { VrfPluginFunctions } from '../core/WarpPlugin';
 import { createData, tagsExceedLimit, DataItem, Signer } from 'warp-arbundles';
+import { SequencerClient, createSequencerClient } from './sequencer/SequencerClient';
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -72,6 +73,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   private _children: HandlerBasedContract<unknown>[] = [];
   private _interactionState;
   private _dreStates = new Map<string, SortKeyCacheResult<EvalStateResult<State>>>();
+  private _sequencerClient: SequencerClient;
 
   constructor(
     private readonly _contractTxId: string,
@@ -325,7 +327,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
       tags: Tags;
       strict: boolean;
       vrf: boolean;
-    }
+    },
+    sequencerRedirected = false
   ): Promise<WriteInteractionResponse | null> {
     this.logger.info('Bundle interaction input', input);
 
@@ -337,25 +340,35 @@ export class HandlerBasedContract<State> implements Contract<State> {
       options.vrf
     );
 
-    const response = this._warpFetchWrapper.fetch(
-      `${stripTrailingSlash(this._evaluationOptions.sequencerUrl)}/gateway/v2/sequencer/register`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/octet-stream',
-          Accept: 'application/json'
-        },
-        body: interactionDataItem.getRaw()
-      }
+    const sequencerClient = await this.getSequencerClient();
+    const sendResponse = await sequencerClient.sendDataItem(
+      interactionDataItem,
+      this._evaluationOptions.waitForConfirmation
     );
-
-    const dataItemId = await interactionDataItem.id;
+    if (sendResponse.sequencerMoved) {
+      this.logger.info(
+        `The sequencer at the given address (${this._evaluationOptions.sequencerUrl}) is redirecting to a new sequencer`
+      );
+      if (sequencerRedirected) {
+        throw new Error('Too many sequencer redirects');
+      }
+      this._sequencerClient = null;
+      return this.bundleInteraction(input, options, true);
+    }
 
     return {
-      bundlrResponse: await getJsonResponse(response),
-      originalTxId: dataItemId,
-      interactionTx: interactionDataItem
+      bundlrResponse: sendResponse.bundlrResponse,
+      originalTxId: await interactionDataItem.id,
+      interactionTx: interactionDataItem,
+      sequencerTxHash: sendResponse.sequencerTxHash
     };
+  }
+
+  private async getSequencerClient(): Promise<SequencerClient> {
+    if (!this._sequencerClient) {
+      this._sequencerClient = await createSequencerClient(this._evaluationOptions.sequencerUrl, this._warpFetchWrapper);
+    }
+    return this._sequencerClient;
   }
 
   private async createInteractionDataItem<Input>(
@@ -368,6 +381,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
     if (this._evaluationOptions.internalWrites) {
       // it modifies tags
       await this.discoverInternalWrites<Input>(input, tags, transfer, strict, vrf);
+    }
+
+    const sequencerClient = await this.getSequencerClient();
+    const nonce = await sequencerClient.getNonce(this._signature);
+    if (nonce !== undefined) {
+      tags.push(new Tag(WARP_TAGS.SEQUENCER_NONCE, String(nonce)));
     }
 
     if (vrf) {
@@ -482,6 +501,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
   setEvaluationOptions(options: Partial<EvaluationOptions>): Contract<State> {
     if (!this.isRoot()) {
       throw new Error('Evaluation options can be set only for the root contract');
+    }
+    if (options.sequencerUrl) {
+      this._sequencerClient = null;
     }
     this._evaluationOptions = {
       ...this._evaluationOptions,

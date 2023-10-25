@@ -1,6 +1,5 @@
 /* eslint-disable */
 import copy from 'fast-copy';
-import { Buffer } from 'warp-isomorphic';
 import { KnownErrors } from '../core/modules/impl/handler/JsHandlerApi';
 
 export const sleep = (ms: number): Promise<void> => {
@@ -95,7 +94,7 @@ export class NetworkCommunicationError<T> extends Error {
   }
 }
 
-export async function getJsonResponse<T>(response: Promise<Response>): Promise<T> {
+export async function getJsonResponse<T>(response: Promise<Response>, successCallback?: (result: any) => T, errorCallback?: (response: Response) => Promise<T>): Promise<T> {
   let r: Response;
   try {
     r = await response;
@@ -104,12 +103,18 @@ export async function getJsonResponse<T>(response: Promise<Response>): Promise<T
   }
 
   if (!r?.ok) {
+    if (errorCallback) {
+      return errorCallback(r)
+    }
     const text = await r.text();
     throw new NetworkCommunicationError(`Wrong response code: ${r.status}. ${text}`);
   }
 
   try {
     const result = await r.json();
+    if (successCallback) {
+      return successCallback(result);
+    }
     return result as T;
   } catch (e) {
     throw new NetworkCommunicationError(`Error while parsing json response: ${JSON.stringify(e)}`);
