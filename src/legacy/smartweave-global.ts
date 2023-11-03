@@ -150,6 +150,26 @@ export class SmartWeaveGlobal {
         throw new Error(`Unable to read wallet balance. ${error.status}. ${error.body?.message}`);
       });
   }
+
+  /**
+   * Returns a random but deterministic integer within the inclusive range [1, maxValue]
+   */
+  randomNumber(maxValue: number): number {
+    if (!this._activeTx?.random) {
+      return this.vrf.randomInt(maxValue);
+    }
+    if (!Number.isInteger(maxValue)) {
+      throw new Error('Integer max value required for random integer generation');
+    }
+    if (maxValue < 1 || maxValue > Number.MAX_SAFE_INTEGER) {
+      throw new Error(`Integer max value must be in the range [1, ${Number.MAX_SAFE_INTEGER}]`);
+    }
+    const base64 = this._activeTx.random.replace(/-/g, '+').replace(/_/g, '/');
+    const array = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+    const bigInt = Buffer.from(array).readBigUInt64BE();
+    const result = (bigInt % BigInt(maxValue)) + BigInt(1)
+    return Number(result);
+  }
 }
 
 // tslint:disable-next-line: max-classes-per-file
@@ -260,6 +280,9 @@ export class SWVrf {
 
   // returns a random value in a range from 1 to maxValue
   randomInt(maxValue: number): number {
+    if (this.smartWeaveGlobal._activeTx?.random) {
+      return this.smartWeaveGlobal.randomNumber(maxValue);
+    }
     if (!Number.isInteger(maxValue)) {
       throw new Error('Integer max value required for random integer generation');
     }

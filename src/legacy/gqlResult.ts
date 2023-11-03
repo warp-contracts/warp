@@ -57,6 +57,7 @@ export interface GQLNodeInterface {
   source?: string;
   bundlerTxId?: string;
   vrf?: VrfData;
+  random?: string;
 }
 
 export interface VrfData {
