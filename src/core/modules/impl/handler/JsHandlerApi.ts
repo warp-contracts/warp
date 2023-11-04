@@ -144,12 +144,16 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
 
     try {
       await this.swGlobal.kv.open();
-      await this.swGlobal.kv.begin();
+      if (interaction.interactionType === 'write') {
+        await this.swGlobal.kv.begin();
+      }
 
       const handlerResult = await Promise.race([timeoutPromise, this.contractFunction(stateClone, interaction)]);
 
       if (handlerResult && (handlerResult.state !== undefined || handlerResult.result !== undefined)) {
-        await this.swGlobal.kv.commit();
+        if (interaction.interactionType === 'write') {
+          await this.swGlobal.kv.commit();
+        }
 
         let interactionEvent: InteractionCompleteEvent = null;
 
@@ -177,7 +181,9 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
       // Will be caught below as unexpected exception.
       throw new Error(`Unexpected result from contract: ${JSON.stringify(handlerResult)}`);
     } catch (err) {
-      await this.swGlobal.kv.rollback();
+      if (interaction.interactionType === 'write') {
+        await this.swGlobal.kv.rollback();
+      }
       switch (err.name) {
         case KnownErrors.ContractError:
           return {
