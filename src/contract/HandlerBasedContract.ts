@@ -725,7 +725,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     // eval current state
     const evalStateResult = await stateEvaluator.eval<State>(executionContext);
-    this.logger.info('Current state', evalStateResult.cachedValue.state);
+    this.logger.debug('Current state', evalStateResult.cachedValue.state);
 
     // create interaction transaction
     const interaction: ContractInteraction<Input> = {
