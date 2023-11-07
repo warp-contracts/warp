@@ -6,6 +6,7 @@ import { CacheKey, SortKeyCache } from '../cache/SortKeyCache';
 import { SortKeyCacheRangeOptions } from '../cache/SortKeyCacheRangeOptions';
 import { InteractionState } from '../contract/states/InteractionState';
 import { safeGet } from '../utils/utils';
+import { Buffer } from 'warp-isomorphic';
 
 /**
  *
@@ -266,6 +267,9 @@ export class SWBlock {
   }
 }
 
+/**
+ * @deprecated VRF mechanism will not be used after the decentralized sequencer is launched
+ */
 export class SWVrf {
   constructor(private readonly smartWeaveGlobal: SmartWeaveGlobal) {}
 
@@ -278,7 +282,9 @@ export class SWVrf {
     return this.smartWeaveGlobal._activeTx.vrf.bigint;
   }
 
-  // returns a random value in a range from 1 to maxValue
+  /**
+   * @deprecated use SmartWeave.randomNumber function instead
+   */
   randomInt(maxValue: number): number {
     if (this.smartWeaveGlobal._activeTx?.random) {
       return this.smartWeaveGlobal.randomNumber(maxValue);
