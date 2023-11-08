@@ -122,7 +122,7 @@ export class DecentralizedSequencerClient implements SequencerClient {
   }
 
   private async tryToSendDataItem(dataItem: DataItem): Promise<boolean> {
-    const response = this.warpFetchWrapper.fetch(this.sendDataItemUrl, {
+    const response = await this.warpFetchWrapper.fetch(this.sendDataItemUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/octet-stream'
@@ -130,36 +130,34 @@ export class DecentralizedSequencerClient implements SequencerClient {
       body: dataItem.getRaw()
     });
 
-    return getJsonResponse<boolean>(
-      response,
-      () => true,
-      async (response) => {
-        if (response.status == 503) {
-          return false;
-        }
+    if (response.ok) {
+      return true;
+    }
 
-        if (response.status == 409) {
-          const error = await response.json();
-          throw new Error(
-            `Interaction (id = ${await dataItem.id}) rejected by the sequencer due to an invalid nonce, error message: ${
-              error.message.RawLog
-            }}`
-          );
-        }
+    if (response.status == 503) {
+      return false;
+    }
 
-        if (response.status == 400) {
-          const error = await response.json();
-          throw new Error(
-            `Interaction (id = ${await dataItem.id}) rejected by the sequencer: error type: ${
-              error.type
-            }, error message: ${JSON.stringify(error.message)}`
-          );
-        }
+    if (response.status == 409) {
+      const error = await response.json();
+      throw new Error(
+        `Interaction (id = ${await dataItem.id}) rejected by the sequencer due to an invalid nonce, error message: ${
+          error.message.RawLog
+        }}`
+      );
+    }
 
-        const text = await response.text();
-        throw new NetworkCommunicationError(`Wrong response code: ${response.status}. ${text}`);
-      }
-    );
+    if (response.status == 400) {
+      const error = await response.json();
+      throw new Error(
+        `Interaction (id = ${await dataItem.id}) rejected by the sequencer: error type: ${
+          error.type
+        }, error message: ${JSON.stringify(error.message)}`
+      );
+    }
+
+    const text = await response.text();
+    throw new NetworkCommunicationError(`Wrong response code: ${response.status}. ${text}`);
   }
 
   /**
@@ -183,7 +181,7 @@ export class DecentralizedSequencerClient implements SequencerClient {
   }
 
   private async checkTx(dataItemId: string): Promise<CheckTxResponse> {
-    const response = this.warpFetchWrapper.fetch(this.getTxUrl, {
+    const response = await this.warpFetchWrapper.fetch(this.getTxUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -191,21 +189,18 @@ export class DecentralizedSequencerClient implements SequencerClient {
       body: JSON.stringify({ data_item_id: dataItemId })
     });
 
-    return getJsonResponse<CheckTxResponse>(
-      response,
-      (result) => {
-        this.logger.info(`The transaction with hash ${result.tx_hash} confirmed.`);
-        return { confirmed: true, txHash: result.tx_hash };
-      },
-      async (response) => {
-        if (response.status == 404) {
-          this.logger.debug(`The transaction with data item id (${dataItemId}) not confirmed yet.`);
-          return { confirmed: false };
-        }
+    if (response.ok) {
+      const result = await response.json();
+      this.logger.info(`The transaction with hash ${result.tx_hash} confirmed.`);
+      return { confirmed: true, txHash: result.tx_hash };
+    }
 
-        const text = await response.text();
-        throw new NetworkCommunicationError(`${response.status}: ${text}`);
-      }
-    );
+    if (response.status == 404) {
+      this.logger.debug(`The transaction with data item id (${dataItemId}) not confirmed yet.`);
+      return { confirmed: false };
+    }
+
+    const text = await response.text();
+    throw new NetworkCommunicationError(`${response.status}: ${text}`);
   }
 }
