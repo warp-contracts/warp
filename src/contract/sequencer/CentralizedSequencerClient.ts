@@ -1,6 +1,6 @@
 import { BundlrResponse } from 'contract/Contract';
 import { WarpFetchWrapper } from 'core/WarpFetchWrapper';
-import { NetworkCommunicationError, getJsonResponse } from '../../utils/utils';
+import { NetworkCommunicationError } from '../../utils/utils';
 import { DataItem } from 'warp-arbundles';
 import { SendDataItemResponse, SequencerClient } from './SequencerClient';
 
@@ -28,7 +28,7 @@ export class CentralizedSequencerClient implements SequencerClient {
    * It sends an interaction to the sequencer and checks if the response has a status of 301 (Moved Permanently).
    */
   async sendDataItem(dataItem: DataItem): Promise<SendDataItemResponse> {
-    const result = this.warpFetchWrapper.fetch(this.registerUrl, {
+    const response = await this.warpFetchWrapper.fetch(this.registerUrl, {
       redirect: 'manual',
       method: 'POST',
       headers: {
@@ -37,25 +37,23 @@ export class CentralizedSequencerClient implements SequencerClient {
       },
       body: dataItem.getRaw()
     });
-    return getJsonResponse<SendDataItemResponse>(
-      result,
-      (result) => {
-        return {
-          bundlrResponse: result as BundlrResponse,
-          sequencerMoved: false
-        };
-      },
-      async (response) => {
-        if (response.status == 301) {
-          return {
-            bundlrResponse: undefined,
-            sequencerMoved: true
-          };
-        }
 
-        const text = await response.text();
-        throw new NetworkCommunicationError(`Wrong response code: ${response.status}. ${text}`);
-      }
-    );
+    if (response.ok) {
+      const bundlrResponse = (await response.json()) as BundlrResponse;
+      return {
+        bundlrResponse,
+        sequencerMoved: false
+      };
+    }
+
+    if (response.status == 301) {
+      return {
+        bundlrResponse: undefined,
+        sequencerMoved: true
+      };
+    }
+
+    const text = await response.text();
+    throw new NetworkCommunicationError(`Wrong response code: ${response.status}. ${text}`);
   }
 }
