@@ -144,15 +144,16 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
 
     try {
       await this.swGlobal.kv.open();
-      if (interaction.interactionType === 'write') {
-        await this.swGlobal.kv.begin();
-      }
+      await this.swGlobal.kv.begin();
 
       const handlerResult = await Promise.race([timeoutPromise, this.contractFunction(stateClone, interaction)]);
 
       if (handlerResult && (handlerResult.state !== undefined || handlerResult.result !== undefined)) {
         if (interaction.interactionType === 'write') {
           await this.swGlobal.kv.commit();
+        } else {
+          // view state function should not change anything in the kv storage
+          await this.swGlobal.kv.rollback();
         }
 
         let interactionEvent: InteractionCompleteEvent = null;
@@ -181,9 +182,7 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
       // Will be caught below as unexpected exception.
       throw new Error(`Unexpected result from contract: ${JSON.stringify(handlerResult)}`);
     } catch (err) {
-      if (interaction.interactionType === 'write') {
-        await this.swGlobal.kv.rollback();
-      }
+      await this.swGlobal.kv.rollback();
       switch (err.name) {
         case KnownErrors.ContractError:
           return {
@@ -238,6 +237,7 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
 
   private setupSwGlobal<Input>({ interaction, interactionTx }: InteractionData<Input>) {
     this.swGlobal._activeTx = interactionTx;
+    this.swGlobal.interactionType = interaction.interactionType;
     this.swGlobal.caller = interaction.caller; // either contract tx id (for internal writes) or transaction.owner
   }
 

@@ -6,6 +6,7 @@ import { CacheKey, SortKeyCache } from '../cache/SortKeyCache';
 import { SortKeyCacheRangeOptions } from '../cache/SortKeyCacheRangeOptions';
 import { InteractionState } from '../contract/states/InteractionState';
 import { safeGet } from '../utils/utils';
+import { ContractError, InteractionType } from "../core/modules/impl/HandlerExecutorFactory";
 
 /**
  *
@@ -65,6 +66,8 @@ export class SmartWeaveGlobal {
   caller?: string;
 
   kv: KV;
+
+  interactionType: InteractionType;
 
   constructor(
     arweave: Arweave,
@@ -218,6 +221,13 @@ export class SWTransaction {
     }
     return this.smartWeaveGlobal._activeTx.source === 'redstone-sequencer' ? 'L2' : 'L1';
   }
+
+  get interactionType(): InteractionType {
+    if (!this.smartWeaveGlobal._activeTx) {
+      throw new Error('No current Tx');
+    }
+    return this.smartWeaveGlobal.interactionType;
+  }
 }
 
 // tslint:disable-next-line: max-classes-per-file
@@ -282,7 +292,13 @@ export class KV {
   ) {}
 
   async put(key: string, value: any): Promise<void> {
+    if (this._transaction.interactionType === 'view') {
+      throw new ContractError('Forbidden write operation for "view" function: "KV.put"');
+    }
+
     this.checkStorageAvailable();
+
+
     await this._storage.put(new CacheKey(key, this._transaction.sortKey), value);
   }
 
@@ -304,6 +320,10 @@ export class KV {
   }
 
   async del(key: string): Promise<void> {
+    if (this._transaction.interactionType === 'view') {
+      throw new ContractError('Forbidden write operation for "view" function: "KV.del"');
+    }
+
     this.checkStorageAvailable();
     const sortKey = this._transaction.sortKey;
 

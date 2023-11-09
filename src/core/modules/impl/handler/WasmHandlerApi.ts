@@ -33,6 +33,7 @@ export class WasmHandlerApi<State> extends AbstractContractHandler<State> {
 
       this.swGlobal._activeTx = interactionTx;
       this.swGlobal.caller = interaction.caller; // either contract tx id (for internal writes) or transaction.owner
+      this.swGlobal.interactionType = interaction.interactionType;
       this.swGlobal.gasLimit = executionContext.evaluationOptions.gasLimit;
       this.swGlobal.gasUsed = 0;
 
