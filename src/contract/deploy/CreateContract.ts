@@ -27,8 +27,8 @@ export type EvaluationManifest = {
   plugins?: WarpPluginType[];
 };
 
-export const BUNDLR_NODES = ['node1', 'node2'] as const;
-export type BundlrNodeType = (typeof BUNDLR_NODES)[number];
+export const REGISTER_PROVIDER = ['node1', 'node2', 'arweave'] as const;
+export type RegisterProviderType = (typeof REGISTER_PROVIDER)[number];
 
 export interface CommonContractData {
   wallet: ArWallet | CustomSignature | Signer;
@@ -92,10 +92,13 @@ export interface CreateContract extends Source {
   deployBundled(rawDataItem: Buffer): Promise<ContractDeploy>;
 
   /**
-   * Registers Bundlr transaction in Warp Gateway. One needs to upload contract transaction to Bundlr and pass its id in the method along
-   * with {@link BundlrNodeType}. For now, only AtomicNFTs contracts are accepted (dedicated tags are verified in the gateway).
-   * @param id - Bunldr's id of the uploaded contract transaction
-   * @param bundlrNode - {@link BundlrNodeType}
+   * Registers contract transaction in Warp Gateway. One needs to upload contract transaction using e.g. Irys, Turbo
+   * or arbundles and pass its id in the method along with {@link RegisterProviderType} - 'node1' and 'node2' for contracts
+   * deployed using Irys and 'arweave' for contracts deployed through other providers (contracts metadata is then queried
+   * from Arweave gql).
+   * Contract dedicated tags are verified in the gateway.
+   * @param id - id of the uploaded contract transaction
+   * @param registerProvider - {@link RegisterProviderType}
    */
-  register(id: string, bundlrNode: BundlrNodeType): Promise<ContractDeploy>;
+  register(id: string, registerProvider: RegisterProviderType): Promise<ContractDeploy>;
 }
