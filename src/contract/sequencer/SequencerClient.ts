@@ -1,4 +1,3 @@
-import { BundlrResponse } from 'contract/Contract';
 import { Signature } from 'contract/Signature';
 import { getJsonResponse, stripTrailingSlash } from '../../utils/utils';
 import { DataItem } from 'warp-arbundles';
@@ -14,14 +13,6 @@ export type SendDataItemResponse = {
    * Whether the sequencer returned a "Moved Permanently" status with the address of the new sequencer
    */
   sequencerMoved: boolean;
-  /**
-   * The response from the bundler if the sequencer sends an interaction there
-   */
-  bundlrResponse?: BundlrResponse;
-  /**
-   * The transaction hash in the decentralized sequencer blockchain containing the data item
-   */
-  sequencerTxHash?: string;
 };
 
 /**
@@ -33,6 +24,11 @@ export interface SequencerClient {
    * If the sequencer does not support nonces, it returns undefined.
    */
   getNonce(signature: Signature): Promise<number>;
+
+  /**
+   * Clears the stored nonce value.
+   */
+  clearNonce(): void;
 
   /**
    * It sends an interaction in the form of a data item to the sequencer.
@@ -62,14 +58,15 @@ type SequencerAddress = {
  * It queries an endpoint with an address and sequencer type, and returns a client for that sequencer.
  *
  * @param sequencerUrl URL address with an endpoint that returns the sequencer's address
+ * @param gatewayUrl Warp gateway URL
  * @param warpFetchWrapper wrapper for fetch operation
  * @returns client for the sequencer
  */
 export const createSequencerClient = async (
-  sequencerUrl: string,
+  gatewayUrl: string,
   warpFetchWrapper: WarpFetchWrapper
 ): Promise<SequencerClient> => {
-  const response = warpFetchWrapper.fetch(`${stripTrailingSlash(sequencerUrl)}/gateway/sequencer/address`);
+  const response = warpFetchWrapper.fetch(`${stripTrailingSlash(gatewayUrl)}/gateway/sequencer/address`);
   const address = await getJsonResponse<SequencerAddress>(response);
 
   if (address.type == 'centralized') {
@@ -77,7 +74,7 @@ export const createSequencerClient = async (
   }
 
   if (address.type == 'decentralized') {
-    return new DecentralizedSequencerClient(address.url, warpFetchWrapper);
+    return new DecentralizedSequencerClient(address.url, gatewayUrl, warpFetchWrapper);
   }
 
   throw new Error('Unknown sequencer type: ' + address.type);

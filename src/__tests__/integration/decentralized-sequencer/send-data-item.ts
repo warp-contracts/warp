@@ -7,17 +7,18 @@ import { Tag } from '../../../utils/types/arweave-types';
 import { WarpFactory } from '../../../core/WarpFactory';
 import { WarpFetchWrapper } from '../../../core/WarpFetchWrapper';
 import { Signature } from '../../../contract/Signature';
+import { SequencerClient } from '../../../contract/sequencer/SequencerClient';
 
 // FIXME: change to the address of the sequencer on dev
 const SEQUENCER_URL = 'http://sequencer-0.warp.cc:1317';
+const GW_URL = 'http://34.141.17.15:5666/';
 
 describe('Testing a decentralized sequencer client', () => {
-  let client: DecentralizedSequencerClient;
 
-  beforeAll(async () => {
+  const createClient = (): SequencerClient => {
     const warpFetchWrapper = new WarpFetchWrapper(WarpFactory.forLocal())
-    client = new DecentralizedSequencerClient(SEQUENCER_URL, warpFetchWrapper);
-  });
+    return new DecentralizedSequencerClient(SEQUENCER_URL, GW_URL, warpFetchWrapper);
+  }
 
   const createSignature = async (): Promise<Signature> => {
     const wallet = await Arweave.crypto.generateJWK();
@@ -42,7 +43,8 @@ describe('Testing a decentralized sequencer client', () => {
   }
 
   it('should return consecutive nonces for a given signature', async () => {
-    const signature = await createSignature()
+    const client = createClient();
+    const signature = await createSignature();
     let nonce = await client.getNonce(signature);
     expect(nonce).toEqual(0);
 
@@ -51,7 +53,8 @@ describe('Testing a decentralized sequencer client', () => {
   });
 
   it('should reject a data item with an invalid nonce', async () => {
-    const signature = await createSignature()
+    const client = createClient();
+    const signature = await createSignature();
     const dataItem = await createDataItem(signature, 13);
 
     expect(client.sendDataItem(dataItem, false))
@@ -60,7 +63,8 @@ describe('Testing a decentralized sequencer client', () => {
   });
 
   it('should reject a data item without nonce', async () => {
-    const signature = await createSignature()
+    const client = createClient();
+    const signature = await createSignature();
     const dataItem = await createDataItem(signature, 0, false);
 
     expect(client.sendDataItem(dataItem, true))
@@ -69,7 +73,8 @@ describe('Testing a decentralized sequencer client', () => {
   });
 
   it('should reject a data item without contract', async () => {
-    const signature = await createSignature()
+    const client = createClient();
+    const signature = await createSignature();
     const dataItem = await createDataItem(signature, 0, true, false);
 
     expect(client.sendDataItem(dataItem, true))
@@ -78,7 +83,8 @@ describe('Testing a decentralized sequencer client', () => {
   });
 
   it('should reject an unsigned data item', async () => {
-    const signature = await createSignature()
+    const client = createClient();
+    const signature = await createSignature();
     const dataItem = await createDataItem(signature, 0, true, true, false);
 
     expect(client.sendDataItem(dataItem, true))
@@ -86,25 +92,13 @@ describe('Testing a decentralized sequencer client', () => {
       .toThrowError('data item verification error');
   });
 
-  it('should return a confirmed result', async () => {
-    const signature = await createSignature();
-    const nonce = await client.getNonce(signature);
-    const dataItem = await createDataItem(signature, nonce);
-    const result = await client.sendDataItem(dataItem, true);
-
-    expect(result.sequencerMoved).toEqual(false);
-    expect(result.bundlrResponse).toBeUndefined();
-    expect(result.sequencerTxHash).toBeDefined();
-  });
-
   it('should return an unconfirmed result', async () => {
+    const client = createClient();
     const signature = await createSignature();
     const nonce = await client.getNonce(signature);
     const dataItem = await createDataItem(signature, nonce);
     const result = await client.sendDataItem(dataItem, false);
   
     expect(result.sequencerMoved).toEqual(false);
-    expect(result.bundlrResponse).toBeUndefined();
-    expect(result.sequencerTxHash).toBeUndefined();
   });
 });

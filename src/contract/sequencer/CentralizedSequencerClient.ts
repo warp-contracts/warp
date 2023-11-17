@@ -1,19 +1,22 @@
-import { BundlrResponse } from 'contract/Contract';
 import { WarpFetchWrapper } from 'core/WarpFetchWrapper';
 import { NetworkCommunicationError } from '../../utils/utils';
 import { DataItem } from 'warp-arbundles';
 import { SendDataItemResponse, SequencerClient } from './SequencerClient';
+import { LoggerFactory } from '../../logging/LoggerFactory';
 
 /**
  * Client for a centralized sequencer.
  */
 export class CentralizedSequencerClient implements SequencerClient {
+  private readonly logger = LoggerFactory.INST.create('CentralizedSequencerClient');
+
   private registerUrl: string;
   private warpFetchWrapper: WarpFetchWrapper;
 
   constructor(sequencerUrl: string, warpFetchWrapper: WarpFetchWrapper) {
     this.registerUrl = `${sequencerUrl}/gateway/v2/sequencer/register`;
     this.warpFetchWrapper = warpFetchWrapper;
+    this.logger.info('The interactions will be sent to the centralized sequencer at the address', sequencerUrl);
   }
 
   /**
@@ -22,6 +25,13 @@ export class CentralizedSequencerClient implements SequencerClient {
    */
   getNonce(): Promise<number> {
     return Promise.resolve(undefined);
+  }
+
+  /**
+   * The sequencer does not have a nonce mechanism.
+   */
+  clearNonce(): void {
+    // do nothing
   }
 
   /**
@@ -39,16 +49,13 @@ export class CentralizedSequencerClient implements SequencerClient {
     });
 
     if (response.ok) {
-      const bundlrResponse = (await response.json()) as BundlrResponse;
       return {
-        bundlrResponse,
         sequencerMoved: false
       };
     }
 
     if (response.status == 301) {
       return {
-        bundlrResponse: undefined,
         sequencerMoved: true
       };
     }

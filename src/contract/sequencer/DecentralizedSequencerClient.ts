@@ -5,15 +5,11 @@ import { LoggerFactory } from '../../logging/LoggerFactory';
 import { WarpFetchWrapper } from '../../core/WarpFetchWrapper';
 import { SendDataItemResponse, SequencerClient } from './SequencerClient';
 import { Signature } from 'contract/Signature';
+import { Benchmark } from '../../logging/Benchmark';
 
 type NonceResponse = {
   address: string;
   nonce: number;
-};
-
-type CheckTxResponse = {
-  confirmed: boolean;
-  txHash?: string;
 };
 
 /**
@@ -26,12 +22,15 @@ export class DecentralizedSequencerClient implements SequencerClient {
   private sendDataItemUrl: string;
   private getTxUrl: string;
   private warpFetchWrapper: WarpFetchWrapper;
+  private nonce: number | undefined;
 
-  constructor(sequencerUrl: string, warpFetchWrapper: WarpFetchWrapper) {
+  constructor(sequencerUrl: string, gatewayUrl: string, warpFetchWrapper: WarpFetchWrapper) {
     this.nonceUrl = `${sequencerUrl}/api/v1/nonce`;
     this.sendDataItemUrl = `${sequencerUrl}/api/v1/dataitem`;
-    this.getTxUrl = `${sequencerUrl}/api/v1/tx-data-item-id`;
+    this.getTxUrl = `${gatewayUrl}/gateway/interactions/`;
     this.warpFetchWrapper = warpFetchWrapper;
+    this.nonce = undefined;
+    this.logger.info('The interactions will be sent to the decentralized sequencer at the address', sequencerUrl);
   }
 
   /**
@@ -42,13 +41,12 @@ export class DecentralizedSequencerClient implements SequencerClient {
    * @returns nonce
    */
   async getNonce(signature: Signature): Promise<number> {
-    const nonce = signature.sequencerNonce;
-    if (nonce !== undefined) {
-      signature.sequencerNonce = nonce + 1;
-      return nonce;
+    if (this.nonce === undefined) {
+      this.nonce = await this.fetchNonce(signature);
+    } else {
+      this.nonce = this.nonce + 1;
     }
-
-    return this.fetchNonce(signature);
+    return this.nonce;
   }
 
   /**
@@ -75,8 +73,15 @@ export class DecentralizedSequencerClient implements SequencerClient {
 
     const nonceResponse = await getJsonResponse<NonceResponse>(response);
     this.logger.info('Nonce for owner', { owner, nonceResponse });
-    signature.sequencerNonce = nonceResponse.nonce + 1;
+    this.nonce = nonceResponse.nonce + 1;
     return nonceResponse.nonce;
+  }
+
+  /**
+   * Clears the stored nonce value. The next call to {@link getNonce} will request a new value from the sequencer.
+   */
+  clearNonce(): void {
+    this.nonce = undefined;
   }
 
   /**
@@ -90,13 +95,19 @@ export class DecentralizedSequencerClient implements SequencerClient {
    * @returns hash of the sequencer transaction if wait for confirmation is selected
    */
   async sendDataItem(dataItem: DataItem, waitForConfirmation: boolean): Promise<SendDataItemResponse> {
-    const response = await this.sendDataItemWithRetry(dataItem);
+    await this.sendDataItemWithRetry(dataItem);
 
     if (waitForConfirmation) {
-      response.sequencerTxHash = await this.confirmTx(await dataItem.id);
+      const dataItemId = await dataItem.id;
+      this.logger.info('Waiting for confirmation of', dataItemId);
+      const benchmark = Benchmark.measure();
+      await this.confirmTx(dataItemId);
+      this.logger.info('Transaction confirmed after', benchmark.elapsed());
     }
 
-    return response;
+    return {
+      sequencerMoved: false
+    };
   }
 
   /**
@@ -106,16 +117,15 @@ export class DecentralizedSequencerClient implements SequencerClient {
    * @param dataItem data item to be sent
    * @param numberOfTries the number of retries
    */
-  private async sendDataItemWithRetry(dataItem: DataItem, numberOfTries = 20): Promise<SendDataItemResponse> {
+  private async sendDataItemWithRetry(dataItem: DataItem, numberOfTries = 20): Promise<void> {
     if (numberOfTries <= 0) {
       throw new Error(
         `Failed to send the interaction (id = ${await dataItem.id}) to the sequencer despite multiple retries`
       );
     }
 
-    if (await this.tryToSendDataItem(dataItem)) {
-      return { sequencerMoved: false };
-    } else {
+    const dataItemSent = await this.tryToSendDataItem(dataItem);
+    if (!dataItemSent) {
       await sleep(1000);
       return this.sendDataItemWithRetry(dataItem, numberOfTries - 1);
     }
@@ -166,38 +176,30 @@ export class DecentralizedSequencerClient implements SequencerClient {
    * @param dataItem data item to be sent
    * @param numberOfTries the number of retries
    */
-  private async confirmTx(dataItemId: string, numberOfTries = 20): Promise<string> {
+  private async confirmTx(dataItemId: string, numberOfTries = 20): Promise<void> {
     if (numberOfTries <= 0) {
-      throw new Error(`Failed to confirm of the interaction with id = ${dataItemId} in the sequencer network`);
+      throw new Error(`Failed to confirm of the interaction with id = ${dataItemId}`);
     }
 
-    await sleep(1000);
-
-    const result = await this.checkTx(dataItemId);
-    if (!result.confirmed) {
+    await sleep(500);
+    const confirmed = await this.checkTx(dataItemId);
+    if (!confirmed) {
       return this.confirmTx(dataItemId, numberOfTries - 1);
     }
-    return result.txHash;
   }
 
-  private async checkTx(dataItemId: string): Promise<CheckTxResponse> {
-    const response = await this.warpFetchWrapper.fetch(this.getTxUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ data_item_id: dataItemId })
-    });
+  private async checkTx(dataItemId: string): Promise<boolean> {
+    const response = await this.warpFetchWrapper.fetch(this.getTxUrl + dataItemId);
 
-    if (response.ok) {
-      const result = await response.json();
-      this.logger.info(`The transaction with hash ${result.tx_hash} confirmed.`);
-      return { confirmed: true, txHash: result.tx_hash };
+    if (response.status == 200) {
+      const result = await response.text();
+      this.logger.info(`The interaction confirmed: ${result}!`);
+      return true;
     }
 
-    if (response.status == 404) {
+    if (response.status == 204) {
       this.logger.debug(`The transaction with data item id (${dataItemId}) not confirmed yet.`);
-      return { confirmed: false };
+      return false;
     }
 
     const text = await response.text();
