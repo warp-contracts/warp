@@ -20,10 +20,8 @@ export interface BundlrResponse {
 }
 
 export interface WriteInteractionResponse {
-  bundlrResponse?: BundlrResponse;
   originalTxId: string;
   interactionTx: Transaction | DataItem;
-  sequencerTxHash?: string;
 }
 
 export interface DREContractStatusResponse<State> {

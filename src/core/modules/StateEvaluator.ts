@@ -111,7 +111,8 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   // (e.g. when using unsafe client and Arweave does not respond properly for a while)
   ignoreExceptions = true;
 
-  waitForConfirmation = false;
+  // by default, the option is not set, which will result in confirming L2 interactions but not L1
+  waitForConfirmation = undefined;
 
   updateCacheForEachInteraction = false;
 
@@ -125,7 +126,7 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
     saveState: false
   };
 
-  sequencerUrl = `https://d1o5nlqr4okus2.cloudfront.net/`;
+  sequencerUrl = undefined;
 
   gasLimit = Number.MAX_SAFE_INTEGER;
 
@@ -161,7 +162,7 @@ export interface EvaluationOptions {
 
   // Allows waiting for confirmation of the interaction.
   // In the case of the 'disableBundling' option, the confirmation comes from the Arweave network,
-  // otherwise from the decentralized Warp Sequencer.
+  // otherwise from the Warp Gateway.
   waitForConfirmation: boolean;
 
   // whether the state cache should be updated after evaluating each interaction transaction.
@@ -197,6 +198,9 @@ export interface EvaluationOptions {
     saveState: boolean;
   };
 
+  // Sequencer URL.
+  // During the transitional stage between the centralized and decentralized sequencers,
+  // this value will not be used, and the SDK will query the Warp Gateway for the address.
   sequencerUrl: string;
 
   gasLimit: number;

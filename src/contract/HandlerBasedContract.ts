@@ -341,14 +341,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
     );
 
     const sequencerClient = await this.getSequencerClient();
+    const confirmInteraction = this._evaluationOptions.waitForConfirmation;
     const sendResponse = await sequencerClient.sendDataItem(
       interactionDataItem,
-      this._evaluationOptions.waitForConfirmation
+      confirmInteraction === undefined || confirmInteraction === true // by default, we wait for confirmation
     );
     if (sendResponse.sequencerMoved) {
-      this.logger.info(
-        `The sequencer at the given address (${this._evaluationOptions.sequencerUrl}) is redirecting to a new sequencer`
-      );
+      this.logger.info(`The sequencer is redirecting to a new sequencer`);
       if (sequencerRedirected) {
         throw new Error('Too many sequencer redirects');
       }
@@ -357,16 +356,14 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
 
     return {
-      bundlrResponse: sendResponse.bundlrResponse,
       originalTxId: await interactionDataItem.id,
-      interactionTx: interactionDataItem,
-      sequencerTxHash: sendResponse.sequencerTxHash
+      interactionTx: interactionDataItem
     };
   }
 
   private async getSequencerClient(): Promise<SequencerClient> {
     if (!this._sequencerClient) {
-      this._sequencerClient = await createSequencerClient(this._evaluationOptions.sequencerUrl, this._warpFetchWrapper);
+      this._sequencerClient = await createSequencerClient(this.warp.gwUrl(), this._warpFetchWrapper);
     }
     return this._sequencerClient;
   }
@@ -495,6 +492,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   connect(signature: ArWallet | CustomSignature | Signer): Contract<State> {
     this._signature = new Signature(this.warp, signature);
+    if (this._sequencerClient) {
+      this._sequencerClient.clearNonce();
+    }
     return this;
   }
 

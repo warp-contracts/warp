@@ -29,7 +29,6 @@ export class Signature {
   private readonly signatureProviderType: 'CustomSignature' | 'ArWallet' | 'BundlerSigner';
   private readonly wallet;
   private cachedAddress?: string;
-  sequencerNonce: number;
 
   constructor(warp: Warp, walletOrSignature: SignatureProvider) {
     this.warp = warp;
