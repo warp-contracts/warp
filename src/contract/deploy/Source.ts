@@ -1,4 +1,4 @@
-import { ArWallet } from './CreateContract';
+import { ArWallet, Tags } from './CreateContract';
 import { CustomSignature } from '../../contract/Signature';
 import { Transaction } from '../../utils/types/arweave-types';
 import { Signer, DataItem } from 'warp-arbundles';
@@ -7,6 +7,7 @@ export interface SourceData {
   src: string | Buffer;
   wasmSrcCodeDir?: string;
   wasmGlueCode?: string;
+  tags?: Tags;
 }
 
 export interface Source {
