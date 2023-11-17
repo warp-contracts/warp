@@ -565,6 +565,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
         }
       }
 
+      this.warp.executorFactory.checkWhiteListContractSources(contractDefinition, contractEvaluationOptions);
+
       if (!remoteState && sortedInteractions.length == 0) {
         sortedInteractions = await interactionsLoader.load(
           contractTxId,

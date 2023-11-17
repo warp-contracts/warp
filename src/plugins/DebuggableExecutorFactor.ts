@@ -1,4 +1,4 @@
-import { ContractDefinition } from '../core/ContractDefinition';
+import { ContractCache, ContractDefinition, SrcCache } from '../core/ContractDefinition';
 import { ExecutorFactory } from '../core/modules/ExecutorFactory';
 import { EvaluationOptions } from '../core/modules/StateEvaluator';
 import { Warp } from '../core/Warp';
@@ -32,5 +32,12 @@ export class DebuggableExecutorFactory<Api> implements ExecutorFactory<Api> {
     }
 
     return await this.baseImplementation.create(contractDefinition, evaluationOptions, warp, interactionState);
+  }
+
+  checkWhiteListContractSources<State>(
+    contractDefinition: SrcCache & ContractCache<State>,
+    evaluationOptions: EvaluationOptions
+  ): void {
+    return this.baseImplementation.checkWhiteListContractSources(contractDefinition, evaluationOptions);
   }
 }
