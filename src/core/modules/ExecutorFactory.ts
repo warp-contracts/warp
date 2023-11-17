@@ -1,4 +1,4 @@
-import { ContractDefinition } from '../../core/ContractDefinition';
+import { ContractCache, ContractDefinition, SrcCache } from '../../core/ContractDefinition';
 import { EvaluationOptions } from './StateEvaluator';
 import { Warp } from '../Warp';
 import { InteractionState } from '../../contract/states/InteractionState';
@@ -17,4 +17,9 @@ export interface ExecutorFactory<Api> {
     warp: Warp,
     interactionState: InteractionState
   ): Promise<Api>;
+
+  checkWhiteListContractSources<State>(
+    contractDefinition: SrcCache & ContractCache<State>,
+    evaluationOptions: EvaluationOptions
+  ): void;
 }

@@ -1,6 +1,6 @@
 import Arweave from 'arweave';
 import { rustWasmImports, WarpContractsCrateVersion } from './wasm/rust-wasm-imports';
-import { ContractDefinition } from '../../../core/ContractDefinition';
+import { ContractCache, ContractDefinition, SrcCache } from '../../../core/ContractDefinition';
 import { ExecutionContext } from '../../../core/ExecutionContext';
 import { GQLNodeInterface } from '../../../legacy/gqlResult';
 import { SmartWeaveGlobal } from '../../../legacy/smartweave-global';
@@ -54,15 +54,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
     if (warp.hasPlugin('contract-blacklist')) {
       await this.blacklistContracts<State>(warp, contractDefinition);
     }
-
-    if (
-      evaluationOptions.whitelistSources.length > 0 &&
-      !evaluationOptions.whitelistSources.includes(contractDefinition.srcTxId)
-    ) {
-      throw new NonWhitelistedSourceError(
-        `[NonWhitelistedSourceError] Contract source not part of whitelisted sources list: ${contractDefinition.srcTxId}.`
-      );
-    }
+    this.checkWhiteListContractSources(contractDefinition, evaluationOptions);
 
     let kvStorage = null;
 
@@ -216,6 +208,21 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
           : contractFunction(swGlobal, BigNumber, LoggerFactory.INST.create(swGlobal.contract.id));
         return new JsHandlerApi(swGlobal, contractDefinition, handler);
       }
+    }
+  }
+
+  checkWhiteListContractSources<State>(
+    contractDefinition: SrcCache & ContractCache<State>,
+    evaluationOptions: EvaluationOptions
+  ) {
+    if (
+      evaluationOptions &&
+      evaluationOptions.whitelistSources.length > 0 &&
+      !evaluationOptions.whitelistSources.includes(contractDefinition.srcTxId)
+    ) {
+      throw new NonWhitelistedSourceError(
+        `[NonWhitelistedSourceError] Contract source not part of whitelisted sources list: ${contractDefinition.srcTxId}.`
+      );
     }
   }
 
