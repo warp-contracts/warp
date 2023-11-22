@@ -39,7 +39,8 @@ export const WARP_TAGS = {
   UPLOADER_TX_ID: 'Uploader-Tx-Id',
   WARP_TESTNET: 'Warp-Testnet',
   MANIFEST: 'Contract-Manifest',
-  NONCE: 'Nonce'
+  NONCE: 'Nonce',
+  INPUT_FORMAT: 'Input-Format'
 } as const;
 
 export type WarpTags = ObjectValues<typeof WARP_TAGS>;
