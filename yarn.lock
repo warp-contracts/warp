@@ -7700,6 +7700,9 @@ warp-contracts-plugin-vrf@^1.0.3:
     "@idena/vrf-js" "^1.0.1"
     elliptic "^6.5.4"
 
+"warp-contracts@file:lib/cjs":
+  version "0.0.0"
+
 warp-isomorphic@1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/warp-isomorphic/-/warp-isomorphic-1.0.0.tgz#dccccfc046bc6ac77919f8be1024ced1385c70ea"

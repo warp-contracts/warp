@@ -125,7 +125,8 @@
     "warp-contracts-plugin-deploy": "1.0.8",
     "warp-contracts-plugin-vm2": "1.0.1",
     "warp-contracts-plugin-vrf": "^1.0.3",
-    "ws": "^8.11.0"
+    "ws": "^8.11.0",
+    "warp-contracts": "file:lib/cjs"
   },
   "resolutions": {
     "bn.js": "5.2.1",
