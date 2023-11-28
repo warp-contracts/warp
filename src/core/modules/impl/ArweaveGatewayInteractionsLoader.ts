@@ -93,9 +93,18 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
      * - we're removing all the interactions, that have null block data.
      */
     interactions = interactions.filter((i) => i.node.block && i.node.block.id && i.node.block.height);
+    // dedeuplicate any interactions that may have been provided twice 
+    const dedeuplicatedInteractions = []
+    for(const i of dedeuplicatedInteractions){
+        const interactonTxId = i.node.id;
+        const existingInteraction = dedeuplicatedInteractions.find((int) => int.node.id === interactonTxId);
+        if(!existingInteraction){
+            dedeuplicatedInteractions.push(i);
+        }
+    }
 
     // note: this operation adds the "sortKey" to the interactions
-    let sortedInteractions = await this.sorter.sort(interactions);
+    let sortedInteractions = await this.sorter.sort(dedeuplicatedInteractions);
 
     if (fromSortKey && toSortKey) {
       sortedInteractions = sortedInteractions.filter((i) => {
