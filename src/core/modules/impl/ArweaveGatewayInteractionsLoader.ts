@@ -94,25 +94,13 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
      */
     interactions = interactions.filter((i) => i.node.block && i.node.block.id && i.node.block.height);
     // deduplicate any interactions that may have been provided twice 
-    const deduplicatedInteractions = [];
-    // used to store block specific interactions 
-    let tempInteractions = [];
-    let currentBlockHeight;
-    for(const i of interactions){
-        // flush interactions to deduplicated
-        if(currentBlockHeight != i.node.block.height){
-            deduplicatedInteractions.push(...tempInteractions);
-            tempInteractions = [];
-            currentBlockHeight = i.node.block.height;
-        }
-        const interactonTxId = i.node.id;
-        const existingInteraction = temp.find((int) => int.node.id === interactonTxId);
-        if(!existingInteraction){
-            temp.push(i);
+    const interactionMap = new Map();
+    for (const interaction of interactions) {
+        if (!interactionMap.has(interaction.node.id)) {
+            interactionMap.set(interaction.node.id, interaction);
         }
     }
-    // flush remaining interactions to deduplicatedInteractions array
-    deduplicatedInteractions.push(...tempInteractions);
+    const deduplicatedInteractions = Array.from(interactionMap.values());
 
     // note: this operation adds the "sortKey" to the interactions
     let sortedInteractions = await this.sorter.sort(deduplicatedInteractions);
