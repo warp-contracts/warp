@@ -124,6 +124,7 @@
     "json-schema-to-typescript": "^11.0.1",
     "node-stdlib-browser": "^1.2.0",
     "prettier": "^2.3.2",
+    "quickjs-emscripten": "^0.26.0",
     "rimraf": "^3.0.2",
     "smartweave": "0.4.48",
     "ts-jest": "^28.0.7",
