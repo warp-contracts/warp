@@ -707,7 +707,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
     let executionContext = await this.createExecutionContext(this._contractTxId, sortKey, true);
 
     const currentBlockData =
-      this.warp.environment == 'mainnet' ? await this._arweaveWrapper.warpGwBlock() : await arweave.blocks.getCurrent();
+      this.warp.environment == 'mainnet' && !(this.warp.interactionsLoader.type() === 'arweave')
+        ? await this._arweaveWrapper.warpGwBlock()
+        : await arweave.blocks.getCurrent();
 
     // add caller info to execution context
     let effectiveCaller;
