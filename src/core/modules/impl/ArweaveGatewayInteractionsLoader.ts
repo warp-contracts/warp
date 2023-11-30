@@ -93,12 +93,12 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
      * - we're removing all the interactions, that have null block data.
      */
     interactions = interactions.filter((i) => i.node.block && i.node.block.id && i.node.block.height);
-    // deduplicate any interactions that may have been provided twice 
+    // deduplicate any interactions that may have been provided twice
     const interactionMap = new Map();
     for (const interaction of interactions) {
-        if (!interactionMap.has(interaction.node.id)) {
-            interactionMap.set(interaction.node.id, interaction);
-        }
+      if (!interactionMap.has(interaction.node.id)) {
+        interactionMap.set(interaction.node.id, interaction);
+      }
     }
     const deduplicatedInteractions = Array.from(interactionMap.values());
 
