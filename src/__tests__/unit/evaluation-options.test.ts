@@ -21,7 +21,7 @@ describe('Evaluation options evaluator', () => {
       mineArLocalBlocks: true,
       remoteStateSyncEnabled: false,
       remoteStateSyncSource: 'https://dre-1.warp.cc/contract',
-      sequencerUrl: 'https://d1o5nlqr4okus2.cloudfront.net/',
+      sequencerUrl: undefined,
       sourceType: SourceType.BOTH,
       stackTrace: {
         saveState: false
@@ -30,7 +30,7 @@ describe('Evaluation options evaluator', () => {
       unsafeClient: 'throw',
       updateCacheForEachInteraction: false,
       useKVStorage: false,
-      waitForConfirmation: false,
+      waitForConfirmation: undefined,
       useConstructor: false,
       walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/',
       whitelistSources: []
@@ -59,7 +59,7 @@ describe('Evaluation options evaluator', () => {
       mineArLocalBlocks: true,
       remoteStateSyncEnabled: false,
       remoteStateSyncSource: 'https://dre-1.warp.cc/contract',
-      sequencerUrl: 'https://d1o5nlqr4okus2.cloudfront.net/',
+      sequencerUrl: undefined,
       sourceType: SourceType.BOTH,
       stackTrace: {
         saveState: false
@@ -68,7 +68,7 @@ describe('Evaluation options evaluator', () => {
       unsafeClient: 'throw',
       updateCacheForEachInteraction: false,
       useKVStorage: false,
-      waitForConfirmation: false,
+      waitForConfirmation: undefined,
       useConstructor: false,
       walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/',
       whitelistSources: []
@@ -92,7 +92,7 @@ describe('Evaluation options evaluator', () => {
       mineArLocalBlocks: true,
       remoteStateSyncEnabled: false,
       remoteStateSyncSource: 'https://dre-1.warp.cc/contract',
-      sequencerUrl: 'https://d1o5nlqr4okus2.cloudfront.net/',
+      sequencerUrl: undefined,
       sourceType: 'both',
       stackTrace: {
         saveState: false
@@ -101,7 +101,7 @@ describe('Evaluation options evaluator', () => {
       unsafeClient: 'allow',
       updateCacheForEachInteraction: false,
       useKVStorage: false,
-      waitForConfirmation: false,
+      waitForConfirmation: undefined,
       useConstructor: false,
       walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/',
       whitelistSources: []
@@ -122,7 +122,7 @@ describe('Evaluation options evaluator', () => {
       mineArLocalBlocks: true,
       remoteStateSyncEnabled: false,
       remoteStateSyncSource: 'https://dre-1.warp.cc/contract',
-      sequencerUrl: 'https://d1o5nlqr4okus2.cloudfront.net/',
+      sequencerUrl: undefined,
       sourceType: 'both',
       stackTrace: {
         saveState: false
@@ -131,7 +131,7 @@ describe('Evaluation options evaluator', () => {
       unsafeClient: 'allow',
       updateCacheForEachInteraction: false,
       useKVStorage: false,
-      waitForConfirmation: false,
+      waitForConfirmation: undefined,
       useConstructor: false,
       walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/',
       whitelistSources: []
@@ -152,7 +152,7 @@ describe('Evaluation options evaluator', () => {
       mineArLocalBlocks: true,
       remoteStateSyncEnabled: false,
       remoteStateSyncSource: 'https://dre-1.warp.cc/contract',
-      sequencerUrl: 'https://d1o5nlqr4okus2.cloudfront.net/',
+      sequencerUrl: undefined,
       sourceType: 'both',
       stackTrace: {
         saveState: false
@@ -161,7 +161,7 @@ describe('Evaluation options evaluator', () => {
       unsafeClient: 'throw',
       updateCacheForEachInteraction: false,
       useKVStorage: false,
-      waitForConfirmation: false,
+      waitForConfirmation: undefined,
       useConstructor: false,
       walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/',
       whitelistSources: []
@@ -182,7 +182,7 @@ describe('Evaluation options evaluator', () => {
       mineArLocalBlocks: true,
       remoteStateSyncEnabled: false,
       remoteStateSyncSource: 'https://dre-1.warp.cc/contract',
-      sequencerUrl: 'https://d1o5nlqr4okus2.cloudfront.net/',
+      sequencerUrl: undefined,
       sourceType: 'both',
       stackTrace: {
         saveState: false
@@ -191,7 +191,7 @@ describe('Evaluation options evaluator', () => {
       unsafeClient: 'skip',
       updateCacheForEachInteraction: false,
       useKVStorage: false,
-      waitForConfirmation: false,
+      waitForConfirmation: undefined,
       useConstructor: false,
       walletBalanceUrl: 'http://nyc-1.dev.arweave.net:1984/',
       whitelistSources: []

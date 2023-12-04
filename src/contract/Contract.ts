@@ -12,7 +12,7 @@ import { Transaction } from '../utils/types/arweave-types';
 
 export type BenchmarkStats = { gatewayCommunication: number; stateEvaluation: number; total: number };
 
-interface BundlrResponse {
+export interface BundlrResponse {
   id: string;
   public: string;
   signature: string;
@@ -20,7 +20,6 @@ interface BundlrResponse {
 }
 
 export interface WriteInteractionResponse {
-  bundlrResponse?: BundlrResponse;
   originalTxId: string;
   interactionTx: Transaction | DataItem;
 }
