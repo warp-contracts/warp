@@ -45,9 +45,9 @@ export interface SequencerClient {
  */
 type SequencerAddress = {
   /**
-   * The URL address of the sequencer
+   * Sequencer URLs
    */
-  url: string;
+  urls: [string];
   /**
    * The type of sequencer
    */
@@ -68,13 +68,16 @@ export const createSequencerClient = async (
 ): Promise<SequencerClient> => {
   const response = warpFetchWrapper.fetch(`${stripTrailingSlash(gatewayUrl)}/gateway/sequencer/address`);
   const address = await getJsonResponse<SequencerAddress>(response);
+  // if there are several sequencer nodes to choose from, we randomly select one
+  const sequencerAddress =
+    address.urls.length > 1 ? address.urls[Math.floor(Math.random() * address.urls.length)] : address.urls[0];
 
   if (address.type == 'centralized') {
-    return new CentralizedSequencerClient(address.url, warpFetchWrapper);
+    return new CentralizedSequencerClient(sequencerAddress, warpFetchWrapper);
   }
 
   if (address.type == 'decentralized') {
-    return new DecentralizedSequencerClient(address.url, gatewayUrl, warpFetchWrapper);
+    return new DecentralizedSequencerClient(sequencerAddress, gatewayUrl, warpFetchWrapper);
   }
 
   throw new Error('Unknown sequencer type: ' + address.type);
