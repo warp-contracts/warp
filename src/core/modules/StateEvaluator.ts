@@ -152,6 +152,8 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   useConstructor = false;
 
   whitelistSources = [];
+
+  transactionsPagesPerBatch = null;
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some features.
@@ -242,6 +244,8 @@ export interface EvaluationOptions {
   remoteStateSyncSource: string;
 
   whitelistSources: string[];
+
+  transactionsPagesPerBatch: number;
 }
 
 // https://github.com/nodejs/node/issues/40678 duh...

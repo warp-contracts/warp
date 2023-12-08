@@ -6,6 +6,7 @@ import { getJsonResponse, stripTrailingSlash } from '../../../utils/utils';
 import { GW_TYPE, InteractionsLoader } from '../InteractionsLoader';
 import { EvaluationOptions } from '../StateEvaluator';
 import { Warp } from '../../Warp';
+import { AbortError } from './HandlerExecutorFactory';
 
 export type ConfirmationStatus =
   | {
@@ -65,7 +66,8 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
     contractId: string,
     fromSortKey?: string,
     toSortKey?: string,
-    evaluationOptions?: EvaluationOptions
+    evaluationOptions?: EvaluationOptions,
+    signal?: AbortSignal
   ): Promise<GQLNodeInterface[]> {
     this.logger.debug('Loading interactions: for ', { contractId, fromSortKey, toSortKey });
 
@@ -73,6 +75,8 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
     let page = 0;
     let limit = 0;
     let items = 0;
+    const pagesPerBatch = evaluationOptions?.transactionsPagesPerBatch || Number.MAX_SAFE_INTEGER;
+    this.logger.debug('Pages per batch:', pagesPerBatch);
 
     const effectiveSourceType = evaluationOptions ? evaluationOptions.sourceType : this.source;
     const benchmarkTotalTime = Benchmark.measure();
@@ -80,6 +84,9 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
 
     do {
       const benchmarkRequestTime = Benchmark.measure();
+      if (signal?.aborted) {
+        throw new AbortError(`Abort signal in ${WarpGatewayInteractionsLoader.name}`);
+      }
 
       const url = `${baseUrl}/gateway/v2/interactions-sort-key`;
 
@@ -109,7 +116,7 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
       items = response.paging.items;
 
       this.logger.debug(`Loaded interactions length: ${interactions.length}, from: ${fromSortKey}, to: ${toSortKey}`);
-    } while (items == limit); // note: items < limit means that we're on the last page
+    } while (items == limit && page < pagesPerBatch); // note: items < limit means that we're on the last page
 
     this.logger.debug('All loaded interactions:', {
       from: fromSortKey,
