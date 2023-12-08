@@ -18,7 +18,8 @@ export enum KnownErrors {
   ContractError = 'ContractError',
   ConstructorError = 'ConstructorError',
   NetworkCommunicationError = 'NetworkCommunicationError',
-  NonWhitelistedSourceError = 'NonWhitelistedSourceError'
+  NonWhitelistedSourceError = 'NonWhitelistedSourceError',
+  AbortError = 'AbortError'
 }
 
 export class JsHandlerApi<State> extends AbstractContractHandler<State> {

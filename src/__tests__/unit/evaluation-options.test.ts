@@ -27,6 +27,7 @@ describe('Evaluation options evaluator', () => {
         saveState: false
       },
       throwOnInternalWriteError: true,
+      transactionsPagesPerBatch: null,
       unsafeClient: 'throw',
       updateCacheForEachInteraction: false,
       useKVStorage: false,
@@ -65,6 +66,7 @@ describe('Evaluation options evaluator', () => {
         saveState: false
       },
       throwOnInternalWriteError: true,
+      transactionsPagesPerBatch: null,
       unsafeClient: 'throw',
       updateCacheForEachInteraction: false,
       useKVStorage: false,
@@ -98,6 +100,7 @@ describe('Evaluation options evaluator', () => {
         saveState: false
       },
       throwOnInternalWriteError: true,
+      transactionsPagesPerBatch: null,
       unsafeClient: 'allow',
       updateCacheForEachInteraction: false,
       useKVStorage: false,
@@ -128,6 +131,7 @@ describe('Evaluation options evaluator', () => {
         saveState: false
       },
       throwOnInternalWriteError: true,
+      transactionsPagesPerBatch: null,
       unsafeClient: 'allow',
       updateCacheForEachInteraction: false,
       useKVStorage: false,
@@ -158,6 +162,7 @@ describe('Evaluation options evaluator', () => {
         saveState: false
       },
       throwOnInternalWriteError: true,
+      transactionsPagesPerBatch: null,
       unsafeClient: 'throw',
       updateCacheForEachInteraction: false,
       useKVStorage: false,
@@ -188,6 +193,7 @@ describe('Evaluation options evaluator', () => {
         saveState: false
       },
       throwOnInternalWriteError: true,
+      transactionsPagesPerBatch: null,
       unsafeClient: 'skip',
       updateCacheForEachInteraction: false,
       useKVStorage: false,

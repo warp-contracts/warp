@@ -34,12 +34,15 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
     contractId: string,
     fromSortKey?: string,
     toSortKey?: string,
-    evaluationOptions?: EvaluationOptions
+    evaluationOptions?: EvaluationOptions,
+    signal?: AbortSignal
   ): Promise<GQLNodeInterface[]> {
     this.logger.debug('Loading interactions for', { contractId, fromSortKey, toSortKey });
 
     const fromBlockHeight = this.sorter.extractBlockHeight(fromSortKey);
-    const toBlockHeight = this.sorter.extractBlockHeight(toSortKey);
+    let toBlockHeight = this.sorter.extractBlockHeight(toSortKey);
+    const pagesPerBatch = evaluationOptions?.transactionsPagesPerBatch || Number.MAX_SAFE_INTEGER;
+    this.logger.debug('Pages per batch', pagesPerBatch);
 
     const mainTransactionsQuery: ArweaveTransactionQuery = {
       tags: [
@@ -60,12 +63,29 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
     };
 
     const loadingBenchmark = Benchmark.measure();
-    let interactions = (await this.arweaveTransactionQuery.transactions(mainTransactionsQuery)).filter(
-      bundledTxsFilter
-    );
+    let interactions = (
+      await this.arweaveTransactionQuery.transactions(mainTransactionsQuery, pagesPerBatch, signal)
+    ).filter(bundledTxsFilter);
     loadingBenchmark.stop();
+    if (evaluationOptions?.transactionsPagesPerBatch && interactions.length > 0) {
+      interactions = await this.sorter.sort(interactions);
+      toBlockHeight = interactions[interactions.length - 1].node.block.height;
+    }
 
     if (evaluationOptions.internalWrites) {
+      const pagesPerBatchIw = (function () {
+        if (evaluationOptions?.transactionsPagesPerBatch) {
+          if (interactions.length > 0) {
+            // note: the limit in this case is the block height of the last 'direct' interaction
+            return Number.MAX_SAFE_INTEGER;
+          } else {
+            return evaluationOptions?.transactionsPagesPerBatch;
+          }
+        } else {
+          return Number.MAX_SAFE_INTEGER;
+        }
+      })();
+
       const innerWritesVariables: ArweaveTransactionQuery = {
         tags: [
           {
@@ -79,9 +99,9 @@ export class ArweaveGatewayInteractionsLoader implements InteractionsLoader {
         },
         first: MAX_REQUEST
       };
-      const innerWritesInteractions = (await this.arweaveTransactionQuery.transactions(innerWritesVariables)).filter(
-        bundledTxsFilter
-      );
+      const innerWritesInteractions = (
+        await this.arweaveTransactionQuery.transactions(innerWritesVariables, pagesPerBatchIw, signal)
+      ).filter(bundledTxsFilter);
 
       this.logger.debug('Inner writes interactions length:', innerWritesInteractions.length);
       interactions = interactions.concat(innerWritesInteractions);
