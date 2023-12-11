@@ -9,9 +9,8 @@ import { WarpFetchWrapper } from '../../../core/WarpFetchWrapper';
 import { Signature } from '../../../contract/Signature';
 import { SequencerClient } from '../../../contract/sequencer/SequencerClient';
 
-// FIXME: change to the address of the sequencer on dev
-const SEQUENCER_URL = 'http://sequencer-0.warp.cc:1317';
-const GW_URL = 'http://34.141.17.15:5666/';
+const SEQUENCER_URL = 'http://sequencer-0.testnet.warp.cc:1317';
+const GW_URL = 'https://gw-testnet.warp.cc';
 
 describe('Testing a decentralized sequencer client', () => {
 
