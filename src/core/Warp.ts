@@ -35,7 +35,7 @@ import { SourceData } from '../contract/deploy/Source';
 import { Signer, DataItem } from 'warp-arbundles';
 import { BasicSortKeyCache } from '../cache/BasicSortKeyCache';
 
-export type WarpEnvironment = 'local' | 'testnet' | 'seqtestnet' | 'mainnet' | 'custom';
+export type WarpEnvironment = 'local' | 'testnet' | 'mainnet' | 'custom';
 export type KVStorageFactory = (contractTxId: string) => SortKeyCache<unknown>;
 
 /**

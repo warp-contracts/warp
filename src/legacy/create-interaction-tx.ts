@@ -1,5 +1,5 @@
 import Arweave from 'arweave';
-import { SMART_WEAVE_TAGS, WARP_TAGS } from '../core/KnownTags';
+import { SMART_WEAVE_TAGS } from '../core/KnownTags';
 import { GQLNodeInterface } from './gqlResult';
 import { TagsParser } from '../core/modules/impl/TagsParser';
 import { SigningFunction } from '../contract/Signature';
@@ -15,7 +15,6 @@ export async function createInteractionTx<Input>(
   target = '',
   winstonQty = '0',
   dummy = false,
-  isTestnet: boolean,
   reward?: string
 ): Promise<Transaction> {
   const options: Partial<CreateTransactionInterface> = {
@@ -43,7 +42,7 @@ export async function createInteractionTx<Input>(
 
   const interactionTx = await arweave.createTransaction(options);
 
-  const interactionTags = createInteractionTagsList(contractId, input, isTestnet, tags);
+  const interactionTags = createInteractionTagsList(contractId, input, tags);
   interactionTags.forEach((t) => interactionTx.addTag(t.name, t.value));
 
   if (signer) {
@@ -100,12 +99,7 @@ export function createDummyTx(tx: Transaction, from: string, block: BlockData): 
   };
 }
 
-export function createInteractionTagsList<Input>(
-  contractId: string,
-  input: Input,
-  isTestnet: boolean,
-  customTags?: Tags
-) {
+export function createInteractionTagsList<Input>(contractId: string, input: Input, customTags?: Tags) {
   const interactionTags: Tags = [];
 
   if (customTags && customTags.length) {
@@ -120,9 +114,6 @@ export function createInteractionTagsList<Input>(
   interactionTags.push(new Tag(SMART_WEAVE_TAGS.SDK, 'Warp'));
   interactionTags.push(new Tag(SMART_WEAVE_TAGS.CONTRACT_TX_ID, contractId));
   interactionTags.push(new Tag(SMART_WEAVE_TAGS.INPUT, JSON.stringify(input)));
-  if (isTestnet) {
-    interactionTags.push(new Tag(WARP_TAGS.WARP_TESTNET, '1.0.0'));
-  }
 
   return interactionTags;
 }

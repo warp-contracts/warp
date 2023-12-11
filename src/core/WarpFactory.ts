@@ -68,8 +68,8 @@ export class WarpFactory {
   }
 
   /**
-   * creates a Warp instance suitable for testing
-   * with Warp testnet (https://testnet.redstone.tools/)
+   * creates a Warp instance suitable for testing with Warp testnet and the decentralized Warp Sequencer
+   * (https://github.com/warp-contracts/sequencer)
    */
   static forTestnet(
     cacheOptions = defaultCacheOptions,
@@ -83,27 +83,7 @@ export class WarpFactory {
     if (useArweaveGw) {
       return this.customArweaveGw(arweave, cacheOptions, 'testnet');
     } else {
-      return this.customWarpGw(arweave, defaultWarpGwOptions, cacheOptions, 'testnet');
-    }
-  }
-
-  /**
-   * creates a Warp instance suitable for testing the decentralized Warp Sequencer
-   * (https://github.com/warp-contracts/sequencer)
-   */
-  static forSeqTestnet(
-    cacheOptions = defaultCacheOptions,
-    useArweaveGw = false,
-    arweave = Arweave.init({
-      host: 'arweave.net',
-      port: 443,
-      protocol: 'https'
-    })
-  ): Warp {
-    if (useArweaveGw) {
-      return this.customArweaveGw(arweave, cacheOptions, 'seqtestnet');
-    } else {
-      return this.customWarpGw(arweave, defaultWarpGwOptions, cacheOptions, 'seqtestnet').useGwUrl(WARP_GW_TESTNET_URL);
+      return this.customWarpGw(arweave, defaultWarpGwOptions, cacheOptions, 'testnet').useGwUrl(WARP_GW_TESTNET_URL);
     }
   }
 

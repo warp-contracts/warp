@@ -40,14 +40,6 @@ export class ArweaveGatewayBundledContractDefinitionLoader implements Definition
     const contractSrcTxId = evolvedSrcTxId
       ? evolvedSrcTxId
       : getTagValue(contractTx.tags, SMART_WEAVE_TAGS.CONTRACT_SRC_TX_ID);
-    const testnet = getTagValue(contractTx.tags, WARP_TAGS.WARP_TESTNET) || null;
-
-    if (testnet && this.env !== 'testnet') {
-      throw new Error('Trying to use testnet contract in a non-testnet env. Use the "forTestnet" factory method.');
-    }
-    if (!testnet && this.env === 'testnet') {
-      throw new Error('Trying to use non-testnet contract in a testnet env.');
-    }
 
     const minFee = getTagValue(contractTx.tags, SMART_WEAVE_TAGS.MIN_FEE);
     const manifest = getTagValue(contractTx.tags, WARP_TAGS.MANIFEST)
@@ -77,8 +69,7 @@ export class ArweaveGatewayBundledContractDefinitionLoader implements Definition
       metadata,
       manifest,
       contractTx: await this.convertToWarpCompatibleContractTx(contractTx),
-      srcTx: await this.convertToWarpCompatibleContractTx(srcTx),
-      testnet
+      srcTx: await this.convertToWarpCompatibleContractTx(srcTx)
     };
 
     this.logger.info(`Contract definition loaded in: ${benchmark.elapsed()}`);
