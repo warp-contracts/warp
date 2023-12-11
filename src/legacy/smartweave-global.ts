@@ -166,9 +166,9 @@ export class SmartWeaveGlobal {
       throw new Error(`Integer max value must be in the range [1, ${Number.MAX_SAFE_INTEGER}]`);
     }
     const base64 = this._activeTx.random.replace(/-/g, '+').replace(/_/g, '/');
-    const array = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+    const array = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
     const bigInt = Buffer.from(array).readBigUInt64BE();
-    const result = (bigInt % BigInt(maxValue)) + BigInt(1)
+    const result = (bigInt % BigInt(maxValue)) + BigInt(1);
     return Number(result);
   }
 }
