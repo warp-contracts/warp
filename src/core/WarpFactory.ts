@@ -25,9 +25,14 @@ export const defaultWarpGwOptions: GatewayOptions = {
 };
 
 /**
- * @Deprecated - will be removed soon, left for backwards compatibility with deploy plugin
+ * Default Warp Gateway URL
  */
 export const WARP_GW_URL = 'https://gw.warp.cc';
+
+/**
+ * The URL of the Warp Gateway that works with a test network of decentralized sequencers
+ */
+export const WARP_GW_TESTNET_URL = 'https://gw-testnet.warp.cc';
 
 export const DEFAULT_LEVEL_DB_LOCATION = './cache/warp';
 
@@ -79,6 +84,26 @@ export class WarpFactory {
       return this.customArweaveGw(arweave, cacheOptions, 'testnet');
     } else {
       return this.customWarpGw(arweave, defaultWarpGwOptions, cacheOptions, 'testnet');
+    }
+  }
+
+  /**
+   * creates a Warp instance suitable for testing the decentralized Warp Sequencer
+   * (https://github.com/warp-contracts/sequencer)
+   */
+  static forSeqTestnet(
+    cacheOptions = defaultCacheOptions,
+    useArweaveGw = false,
+    arweave = Arweave.init({
+      host: 'arweave.net',
+      port: 443,
+      protocol: 'https'
+    })
+  ): Warp {
+    if (useArweaveGw) {
+      return this.customArweaveGw(arweave, cacheOptions, 'seqtestnet');
+    } else {
+      return this.customWarpGw(arweave, defaultWarpGwOptions, cacheOptions, 'seqtestnet').useGwUrl(WARP_GW_TESTNET_URL);
     }
   }
 

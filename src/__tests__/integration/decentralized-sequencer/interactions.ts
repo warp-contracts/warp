@@ -17,9 +17,10 @@ interface ExampleContractState {
     counter: number;
 }
 
-// FIXME: change to the address of the sequencer on dev
-const DECENTRALIZED_SEQUENCER_URL = 'http://sequencer-0.warp.cc:1317';
-const GW_URL = 'http://34.141.17.15:5666/';
+const DECENTRALIZED_SEQUENCER_URLS = ['http://sequencer-0.testnet.warp.cc:1317', 
+                                      'http://sequencer-1.testnet.warp.cc:1317',
+                                      'http://sequencer-2.testnet.warp.cc:1317'];
+const GW_URL = 'http://35.242.203.146:5666/';
 
 describe('Testing sending of interactions to a decentralized sequencer', () => {
     let contractSrc: string;
@@ -42,13 +43,13 @@ describe('Testing sending of interactions to a decentralized sequencer', () => {
             if (req.url === '/gateway/sequencer/address') {
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({
-                    url: centralizedSequencerType ? mockGwUrl : DECENTRALIZED_SEQUENCER_URL,
+                    urls: centralizedSequencerType ? [mockGwUrl] : DECENTRALIZED_SEQUENCER_URLS,
                     type: centralizedSequencerType ? 'centralized' : 'decentralized'
                 }));
                 return;
             } else if (req.url === '/gateway/v2/sequencer/register') {
                 centralizedSequencerType = false;
-                res.writeHead(301, { Location: DECENTRALIZED_SEQUENCER_URL });
+                res.writeHead(301, { Location: DECENTRALIZED_SEQUENCER_URLS[0] });
                 res.end();
                 return;
             } else if (req.url?.startsWith('/gateway/interactions/')) {
