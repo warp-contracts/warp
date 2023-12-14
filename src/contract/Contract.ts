@@ -40,6 +40,7 @@ export interface DREContractStatusResponse<State> {
 export type WarpOptions = {
   vrf?: boolean;
   disableBundling?: boolean;
+  manifestData?: { [path: string]: string };
 };
 
 export type ArweaveOptions = {

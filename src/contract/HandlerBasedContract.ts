@@ -16,7 +16,7 @@ import {
 } from '../core/modules/impl/LexicographicalInteractionsSorter';
 import { InteractionsSorter } from '../core/modules/InteractionsSorter';
 import { DefaultEvaluationOptions, EvalStateResult, EvaluationOptions } from '../core/modules/StateEvaluator';
-import { WARP_TAGS } from '../core/KnownTags';
+import { SMART_WEAVE_TAGS, WARP_TAGS } from '../core/KnownTags';
 import { Warp } from '../core/Warp';
 import { createDummyTx, createInteractionTagsList, createInteractionTx } from '../legacy/create-interaction-tx';
 import { GQLNodeInterface } from '../legacy/gqlResult';
@@ -24,7 +24,7 @@ import { Benchmark } from '../logging/Benchmark';
 import { LoggerFactory } from '../logging/LoggerFactory';
 import { Evolve } from '../plugins/Evolve';
 import { ArweaveWrapper } from '../utils/ArweaveWrapper';
-import { getJsonResponse, isBrowser, sleep, stripTrailingSlash } from '../utils/utils';
+import { getJsonResponse, isBrowser, isTxIdValid, sleep, stripTrailingSlash } from '../utils/utils';
 import {
   BenchmarkStats,
   Contract,
@@ -45,6 +45,15 @@ import { ContractInteractionState } from './states/ContractInteractionState';
 import { Buffer, Crypto } from 'warp-isomorphic';
 import { VrfPluginFunctions } from '../core/WarpPlugin';
 import { createData, DataItem, Signer, tagsExceedLimit } from 'warp-arbundles';
+
+interface InteractionManifestData {
+  [path: string]: string;
+}
+
+interface InteractionDataField<Input> {
+  input?: Input;
+  manifest?: InteractionManifestData;
+}
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -76,6 +85,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   private _children: HandlerBasedContract<unknown>[] = [];
   private _interactionState;
   private _dreStates = new Map<string, SortKeyCacheResult<EvalStateResult<State>>>();
+  private maxInteractionDataItemSizeBytes: number;
 
   constructor(
     private readonly _contractTxId: string,
@@ -332,6 +342,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const effectiveVrf = options?.vrf === true;
     const effectiveDisableBundling = options?.disableBundling === true;
     const effectiveReward = options?.reward;
+    const effectiveManifestData = options?.manifestData;
 
     const bundleInteraction = interactionsLoader.type() == 'warp' && !effectiveDisableBundling;
 
@@ -358,7 +369,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
       return await this.bundleInteraction(input, {
         tags: effectiveTags,
         strict: effectiveStrict,
-        vrf: effectiveVrf
+        vrf: effectiveVrf,
+        manifestData: effectiveManifestData
       });
     } else {
       const interactionTx = await this.createInteraction(
@@ -398,16 +410,25 @@ export class HandlerBasedContract<State> implements Contract<State> {
       tags: Tags;
       strict: boolean;
       vrf: boolean;
+      manifestData: InteractionManifestData;
     }
   ): Promise<WriteInteractionResponse | null> {
     this.logger.info('Bundle interaction input', input);
+
+    if (!this.maxInteractionDataItemSizeBytes) {
+      const response = fetch(`${stripTrailingSlash(this.warp.gwUrl())}`);
+      this.maxInteractionDataItemSizeBytes = (
+        await getJsonResponse<{ maxInteractionDataItemSizeBytes: number }>(response)
+      ).maxInteractionDataItemSizeBytes;
+    }
 
     const interactionDataItem = await this.createInteractionDataItem(
       input,
       options.tags,
       emptyTransfer,
       options.strict,
-      options.vrf
+      options.vrf,
+      options.manifestData
     );
 
     const response = this._warpFetchWrapper.fetch(
@@ -436,7 +457,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     tags: Tags,
     transfer: ArTransfer,
     strict: boolean,
-    vrf = false
+    vrf = false,
+    manifestData: InteractionManifestData
   ) {
     if (this._evaluationOptions.internalWrites) {
       // it modifies tags
@@ -447,18 +469,33 @@ export class HandlerBasedContract<State> implements Contract<State> {
       tags.push(new Tag(WARP_TAGS.REQUEST_VRF, 'true'));
     }
 
-    const interactionTags = createInteractionTagsList(
+    let interactionTags = createInteractionTagsList(
       this._contractTxId,
       input,
       this.warp.environment === 'testnet',
       tags
     );
 
+    let data: InteractionDataField<Input> | string;
     if (tagsExceedLimit(interactionTags)) {
-      throw new Error(`Interaction tags exceed limit of 4096 bytes.`);
+      interactionTags = [
+        ...interactionTags.filter((t) => t.name != SMART_WEAVE_TAGS.INPUT && t.name != WARP_TAGS.INPUT_FORMAT),
+        new Tag(WARP_TAGS.INPUT_FORMAT, 'data')
+      ];
+      data = {
+        input
+      };
     }
 
-    const data = Math.random().toString().slice(-4);
+    if (manifestData) {
+      data = {
+        ...(data as InteractionData<Input>),
+        manifest: this.createManifest(manifestData)
+      };
+    }
+
+    data = data ? JSON.stringify(data) : Math.random().toString().slice(-4);
+
     const bundlerSigner = this._signature.bundlerSigner;
 
     if (!bundlerSigner) {
@@ -473,6 +510,14 @@ export class HandlerBasedContract<State> implements Contract<State> {
     } else {
       interactionDataItem = createData(data, bundlerSigner, { tags: interactionTags });
       await interactionDataItem.sign(bundlerSigner);
+    }
+
+    if (interactionDataItem.getRaw().length > this.maxInteractionDataItemSizeBytes) {
+      throw new Error(
+        `Interaction data item size: ${interactionDataItem.getRaw().length} exceeds maximum interactions size limit: ${
+          this.maxInteractionDataItemSizeBytes
+        }.`
+      );
     }
 
     if (!this._evaluationOptions.internalWrites && strict) {
@@ -1141,5 +1186,23 @@ export class HandlerBasedContract<State> implements Contract<State> {
       child.clearChildren();
     }
     this._children = [];
+  }
+
+  private createManifest(manifestData: InteractionManifestData) {
+    const paths = {};
+    Object.keys(manifestData).forEach((m) => {
+      const id = manifestData[m];
+      if (typeof m != 'string') {
+        throw new Error(`Incorrect manifest data. Manifest key should be of type 'string'`);
+      } else if (typeof id != 'string') {
+        throw new Error(`Incorrect manifest data. Manifest value should be of type 'string'`);
+      } else if (!isTxIdValid(id)) {
+        throw new Error(`Incorrect manifest data. Transaction id: ${id} is not valid.`);
+      }
+
+      paths[m] = manifestData[m];
+    });
+
+    return paths;
   }
 }

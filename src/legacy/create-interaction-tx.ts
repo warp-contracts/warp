@@ -120,6 +120,7 @@ export function createInteractionTagsList<Input>(
   interactionTags.push(new Tag(SMART_WEAVE_TAGS.SDK, 'Warp'));
   interactionTags.push(new Tag(SMART_WEAVE_TAGS.CONTRACT_TX_ID, contractId));
   interactionTags.push(new Tag(SMART_WEAVE_TAGS.INPUT, JSON.stringify(input)));
+  interactionTags.push(new Tag(WARP_TAGS.INPUT_FORMAT, 'tag'));
   if (isTestnet) {
     interactionTags.push(new Tag(WARP_TAGS.WARP_TESTNET, '1.0.0'));
   }
