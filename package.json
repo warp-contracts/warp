@@ -18,7 +18,8 @@
       "types": "./lib/types/index.d.ts"
     },
     ".": {
-      "import": "./lib/cjs/index.js",
+      "import": "./lib/mjs/index.js",
+      "require": "./lib/cjs/index.js",
       "types": "./lib/types/index.d.ts"
     }
   },
