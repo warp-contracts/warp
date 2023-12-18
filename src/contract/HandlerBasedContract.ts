@@ -226,14 +226,18 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return this.readState(sortKey, interactions, signal);
   }
 
-  async readStateBatch(pagesPerBatch = 1, signal: AbortSignal): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
+  async readStateBatch(
+    pagesPerBatch = 1,
+    sortKey?: string,
+    signal?: AbortSignal
+  ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
     if (!this.isRoot()) {
       throw new Error('readStateBatch is only allowed for root contract calls');
     }
     if (pagesPerBatch < 1) {
       throw new Error('At least one page per batch is required');
     }
-    if (signal.aborted) {
+    if (signal?.aborted) {
       throw new AbortError('readStateBatch aborted');
     }
 
@@ -251,8 +255,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     do {
       const batchBenchmark = Benchmark.measure();
       this.logger.debug(`Loading ${++batchesLoaded}`, evaluationOptions);
-      interactions = await interactionsLoader.load(contractTxId, cachedState?.sortKey, undefined, evaluationOptions);
-      if (signal.aborted) {
+      interactions = await interactionsLoader.load(contractTxId, cachedState?.sortKey, sortKey, evaluationOptions);
+      if (signal?.aborted) {
         throw new AbortError('readStateBatch aborted');
       }
       if (interactions.length == 0) {
@@ -260,7 +264,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       }
       this.logger.debug(`Evaluating ${interactions.length} in ${batchesLoaded}`);
       cachedState = await this.readStateFor(cachedState?.sortKey || genesisSortKey, interactions, signal);
-      if (signal.aborted) {
+      if (signal?.aborted) {
         throw new AbortError('readStateBatch aborted');
       }
       this.logger.debug(

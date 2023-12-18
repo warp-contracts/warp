@@ -122,7 +122,11 @@ export interface Contract<State = unknown> {
    *
    * Consider this as an experimental feature
    */
-  readStateBatch(pagesPerBatch: number, signal: AbortSignal): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
+  readStateBatch(
+    pagesPerBatch: number,
+    sortKey?: string,
+    signal?: AbortSignal
+  ): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
 
   readStateFor(
     sortKey: string,
