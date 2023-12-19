@@ -390,12 +390,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       tags.push(new Tag(WARP_TAGS.REQUEST_VRF, 'true'));
     }
 
-    const interactionTags = createInteractionTagsList(
-      this._contractTxId,
-      input,
-      this.warp.environment === 'testnet',
-      tags
-    );
+    const interactionTags = createInteractionTagsList(this._contractTxId, input, tags);
 
     if (tagsExceedLimit(interactionTags)) {
       throw new Error(`Interaction tags exceed limit of 4096 bytes.`);
@@ -452,7 +447,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
       transfer.target,
       transfer.winstonQty,
       bundle,
-      this.warp.environment === 'testnet',
       reward
     );
 
@@ -767,8 +761,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
       tags,
       transfer.target,
       transfer.winstonQty,
-      true,
-      this.warp.environment === 'testnet'
+      true
     );
     const dummyTx = createDummyTx(tx, executionContext.caller, currentBlockData);
 

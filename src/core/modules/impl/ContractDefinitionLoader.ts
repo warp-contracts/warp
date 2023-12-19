@@ -48,13 +48,6 @@ export class ContractDefinitionLoader implements DefinitionLoader {
     const contractSrcTxId = forcedSrcTxId
       ? forcedSrcTxId
       : this.tagsParser.getTag(contractTx, SMART_WEAVE_TAGS.CONTRACT_SRC_TX_ID);
-    const testnet = this.tagsParser.getTag(contractTx, WARP_TAGS.WARP_TESTNET) || null;
-    if (testnet && this.env !== 'testnet') {
-      throw new Error('Trying to use testnet contract in a non-testnet env. Use the "forTestnet" factory method.');
-    }
-    if (!testnet && this.env === 'testnet') {
-      throw new Error('Trying to use non-testnet contract in a testnet env.');
-    }
     const minFee = this.tagsParser.getTag(contractTx, SMART_WEAVE_TAGS.MIN_FEE);
     let manifest = null;
     const rawManifest = this.tagsParser.getTag(contractTx, WARP_TAGS.MANIFEST);
@@ -86,8 +79,7 @@ export class ContractDefinitionLoader implements DefinitionLoader {
       metadata,
       manifest,
       contractTx: contractTx.toJSON(),
-      srcTx,
-      testnet
+      srcTx
     };
   }
 

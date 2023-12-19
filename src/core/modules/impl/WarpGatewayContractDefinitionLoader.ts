@@ -51,13 +51,11 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         result.srcBinary = Buffer.from((result.srcBinary as any).data);
       }
-      this.verifyEnv(result);
       return result;
     }
     const benchmark = Benchmark.measure();
     const contract = await this.doLoad<State>(contractTxId, evolvedSrcTxId);
     this.rLogger.info(`Contract definition loaded in: ${benchmark.elapsed()}`);
-    this.verifyEnv(contract);
 
     await this.putToCache(contractTxId, contract, evolvedSrcTxId);
 
@@ -117,15 +115,6 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
 
   getSrcCache(): BasicSortKeyCache<SrcCache> {
     return this.srcCache;
-  }
-
-  private verifyEnv(def: ContractDefinition<unknown>): void {
-    if (def.testnet && this.env !== 'testnet') {
-      throw new Error('Trying to use testnet contract in a non-testnet env. Use the "forTestnet" factory method.');
-    }
-    if (!def.testnet && this.env === 'testnet') {
-      throw new Error('Trying to use non-testnet contract in a testnet env.');
-    }
   }
 
   // Gets ContractDefinition and ContractSource from two caches and returns a combined structure

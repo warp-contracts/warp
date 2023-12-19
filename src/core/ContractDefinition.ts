@@ -42,7 +42,6 @@ export class ContractCache<State> {
   manifest?: EvaluationManifest;
   contractTx: any; // eslint-disable-line @typescript-eslint/no-explicit-any
   srcTx: any; // eslint-disable-line @typescript-eslint/no-explicit-any
-  testnet: string | null;
 
   constructor(value: ContractDefinition<State>) {
     this.txId = value.txId;
@@ -55,7 +54,6 @@ export class ContractCache<State> {
     this.metadata = value.metadata;
     this.contractTx = value.contractTx;
     this.srcTx = value.srcTx;
-    this.testnet = value.testnet;
   }
 }
 
