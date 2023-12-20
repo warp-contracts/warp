@@ -70,6 +70,7 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
     signal?: AbortSignal
   ): Promise<GQLNodeInterface[]> {
     this.logger.debug('Loading interactions: for ', { contractId, fromSortKey, toSortKey });
+    const originalFromSortKey = fromSortKey;
 
     const interactions: GQLNodeInterface[] = [];
     let page = 0;
@@ -88,8 +89,9 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
         throw new AbortError(`Abort signal in ${WarpGatewayInteractionsLoader.name}`);
       }
 
-      const url = `${baseUrl}/gateway/v2/interactions-sort-key`;
+      const url = `${baseUrl}/gateway/v3/interactions-sort-key`;
 
+      page++;
       const response = await getJsonResponse<InteractionsResult>(
         fetch(
           `${url}?${new URLSearchParams({
@@ -97,7 +99,6 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
             ...(this._warp.whoAmI ? { client: this._warp.whoAmI } : ''),
             ...(fromSortKey ? { from: fromSortKey } : ''),
             ...(toSortKey ? { to: toSortKey } : ''),
-            page: (++page).toString(),
             fromSdk: 'true',
             ...(this.confirmationStatus && this.confirmationStatus.confirmed
               ? { confirmationStatus: 'confirmed' }
@@ -114,12 +115,13 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
       interactions.push(...response.interactions);
       limit = response.paging.limit;
       items = response.paging.items;
+      fromSortKey = interactions[interactions.length - 1]?.sortKey;
 
       this.logger.debug(`Loaded interactions length: ${interactions.length}, from: ${fromSortKey}, to: ${toSortKey}`);
     } while (items == limit && page < pagesPerBatch); // note: items < limit means that we're on the last page
 
     this.logger.debug('All loaded interactions:', {
-      from: fromSortKey,
+      from: originalFromSortKey,
       to: toSortKey,
       loaded: interactions.length,
       time: benchmarkTotalTime.elapsed()
