@@ -259,9 +259,6 @@ export class HandlerBasedContract<State> implements Contract<State> {
       if (signal?.aborted) {
         throw new AbortError('readStateBatch aborted');
       }
-      if (interactions.length == 0) {
-        break;
-      }
       this.logger.debug(`Evaluating ${interactions.length} in ${batchesLoaded}`);
       cachedState = await this.readStateFor(cachedState?.sortKey || genesisSortKey, interactions, signal);
       if (signal?.aborted) {
