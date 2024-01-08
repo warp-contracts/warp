@@ -254,22 +254,23 @@ export class HandlerBasedContract<State> implements Contract<State> {
     let batchesLoaded = 0;
     do {
       const batchBenchmark = Benchmark.measure();
-      this.logger.debug(`Loading ${++batchesLoaded}`, evaluationOptions);
+      this.logger.debug(`Loading ${batchesLoaded + 1} batch`, evaluationOptions);
       interactions = await interactionsLoader.load(contractTxId, cachedState?.sortKey, sortKey, evaluationOptions);
       if (signal?.aborted) {
         throw new AbortError('readStateBatch aborted');
       }
-      if (interactions.length == 0) {
+      if (interactions.length == 0 && batchesLoaded > 0) {
         break;
       }
-      this.logger.debug(`Evaluating ${interactions.length} in ${batchesLoaded}`);
+      this.logger.debug(`Evaluating ${interactions.length} in ${batchesLoaded + 1} batch`);
       cachedState = await this.readStateFor(cachedState?.sortKey || genesisSortKey, interactions, signal);
       if (signal?.aborted) {
         throw new AbortError('readStateBatch aborted');
       }
       this.logger.debug(
-        `Batch ${batchesLoaded} evaluated in ${batchBenchmark.elapsed()} at sortKey ${cachedState.sortKey}`
+        `Batch ${batchesLoaded + 1} evaluated in ${batchBenchmark.elapsed()} at sortKey ${cachedState.sortKey}`
       );
+      batchesLoaded++;
     } while (interactions.length > 0);
 
     return cachedState;
