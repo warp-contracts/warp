@@ -18,7 +18,7 @@ async function main() {
 
   try {
 
-    const signal = AbortSignal.timeout(2000);
+    const signal = AbortSignal.timeout(10000);
     const contract = warp
       .contract("Daj-MNSnH55TDfxqC7v4eq0lKzVIwh98srUaWqyuZtY")
       .setEvaluationOptions({
@@ -27,7 +27,7 @@ async function main() {
         allowBigInt: true,
         unsafeClient: 'skip',
       });
-    const result = await contract.readStateBatch(1, signal);
+    const result = await contract.readStateBatch(1, undefined, signal);
     console.dir(result.cachedValue.state, {depth: null});
   } catch (e) {
     console.error(e);
