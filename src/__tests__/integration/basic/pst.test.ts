@@ -129,7 +129,9 @@ describe('Testing the Profit Sharing Token', () => {
     const result = await pst.readState();
 
     expect(result.cachedValue.validity[interaction.originalTxId]).toBeFalsy();
-    expect(result.cachedValue.errorMessages[interaction.originalTxId]).toContain('Trying to call "view" function from a "write" action');
+    expect(result.cachedValue.errorMessages[interaction.originalTxId]).toContain(
+      'Trying to call "view" function from a "write" action'
+    );
   });
 
   it('should properly dispatch an event', async () => {
