@@ -1,10 +1,10 @@
 import Arweave from 'arweave';
 import { DebuggableExecutorFactory } from '../plugins/DebuggableExecutorFactor';
-import { DefinitionLoader } from './modules/DefinitionLoader';
+import { CacheableDefinitionLoader } from './modules/DefinitionLoader';
 import { ExecutorFactory } from './modules/ExecutorFactory';
 import { ArweaveGatewayInteractionsLoader } from './modules/impl/ArweaveGatewayInteractionsLoader';
 import { CacheableInteractionsLoader } from './modules/impl/CacheableInteractionsLoader';
-import { ContractDefinitionLoader } from './modules/impl/ContractDefinitionLoader';
+import { ArweaveContractDefinitionLoader } from './modules/impl/ArweaveContractDefinitionLoader';
 import { HandlerApi } from './modules/impl/HandlerExecutorFactory';
 import { WarpGatewayContractDefinitionLoader } from './modules/impl/WarpGatewayContractDefinitionLoader';
 import { WarpGatewayInteractionsLoader } from './modules/impl/WarpGatewayInteractionsLoader';
@@ -12,12 +12,11 @@ import { InteractionsLoader } from './modules/InteractionsLoader';
 import { StateEvaluator, EvalStateResult } from './modules/StateEvaluator';
 import { WarpEnvironment, Warp } from './Warp';
 import { CacheOptions, GatewayOptions } from './WarpFactory';
-import { LevelDbCache } from '../cache/impl/LevelDbCache';
-import { ContractCache, SrcCache } from './ContractDefinition';
 import { BasicSortKeyCache } from '../cache/BasicSortKeyCache';
+import { CacheableContractDefinitionLoader } from './modules/impl/CacheableContractDefinitionLoader';
 
 export class WarpBuilder {
-  private _definitionLoader?: DefinitionLoader;
+  private _definitionLoader?: CacheableDefinitionLoader;
   private _interactionsLoader?: InteractionsLoader;
   private _executorFactory?: ExecutorFactory<HandlerApi<unknown>>;
   private _stateEvaluator?: StateEvaluator;
@@ -28,7 +27,7 @@ export class WarpBuilder {
     private readonly _environment: WarpEnvironment = 'custom'
   ) {}
 
-  public setDefinitionLoader(value: DefinitionLoader): WarpBuilder {
+  public setDefinitionLoader(value: CacheableDefinitionLoader): WarpBuilder {
     this._definitionLoader = value;
     return this;
   }
@@ -61,30 +60,23 @@ export class WarpBuilder {
       new WarpGatewayInteractionsLoader(gatewayOptions.confirmationStatus, gatewayOptions.source)
     );
 
-    const contractsCache = new LevelDbCache<ContractCache<unknown>>({
-      ...cacheOptions,
-      dbLocation: `${cacheOptions.dbLocation}/contracts`
-    });
-
-    // Separate cache for sources to minimize duplicates
-    const sourceCache = new LevelDbCache<SrcCache>({
-      ...cacheOptions,
-      dbLocation: `${cacheOptions.dbLocation}/source`
-    });
-
-    this._definitionLoader = new WarpGatewayContractDefinitionLoader(
-      this._arweave,
-      contractsCache,
-      sourceCache,
-      this._environment
+    this._definitionLoader = new CacheableContractDefinitionLoader(
+      new WarpGatewayContractDefinitionLoader(this._arweave, this._environment),
+      this._environment,
+      cacheOptions
     );
     return this;
   }
 
-  public useArweaveGateway(): WarpBuilder {
-    this._definitionLoader = new ContractDefinitionLoader(this._arweave, this._environment);
+  public useArweaveGateway(cacheOptions: CacheOptions): WarpBuilder {
     this._interactionsLoader = new CacheableInteractionsLoader(
       new ArweaveGatewayInteractionsLoader(this._arweave, this._environment)
+    );
+
+    this._definitionLoader = new CacheableContractDefinitionLoader(
+      new ArweaveContractDefinitionLoader(this._arweave, this._environment),
+      this._environment,
+      cacheOptions
     );
     return this;
   }

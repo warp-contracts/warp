@@ -17,7 +17,7 @@ export * from './core/modules/InteractionsLoader';
 export * from './core/modules/InteractionsSorter';
 export * from './core/modules/StateEvaluator';
 
-export * from './core/modules/impl/ContractDefinitionLoader';
+export * from './core/modules/impl/ArweaveContractDefinitionLoader';
 export * from './core/modules/impl/WarpGatewayContractDefinitionLoader';
 export * from './core/modules/impl/ArweaveGatewayInteractionsLoader';
 export * from './core/modules/impl/WarpGatewayInteractionsLoader';

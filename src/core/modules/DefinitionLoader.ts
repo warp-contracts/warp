@@ -12,7 +12,9 @@ export interface DefinitionLoader extends GwTypeAware, WarpAware {
   load<State>(contractTxId: string, evolvedSrcTxId?: string): Promise<ContractDefinition<State>>;
 
   loadContractSource(srcTxId: string): Promise<ContractSource>;
+}
 
+export interface CacheableDefinitionLoader extends DefinitionLoader {
   setCache(cache: BasicSortKeyCache<ContractCache<unknown>>): void;
 
   // Cache for storing common source code or binaries
