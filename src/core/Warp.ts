@@ -12,7 +12,7 @@ import { HandlerBasedContract } from '../contract/HandlerBasedContract';
 import { PstContract } from '../contract/PstContract';
 import { PstContractImpl } from '../contract/PstContractImpl';
 import { Testing, Wallet } from '../contract/testing/Testing';
-import { DefinitionLoader } from './modules/DefinitionLoader';
+import { CacheableDefinitionLoader } from './modules/DefinitionLoader';
 import { ExecutorFactory } from './modules/ExecutorFactory';
 import { HandlerApi } from './modules/impl/HandlerExecutorFactory';
 import { InteractionsLoader } from './modules/InteractionsLoader';
@@ -72,7 +72,7 @@ export class Warp {
 
   constructor(
     readonly arweave: Arweave,
-    readonly definitionLoader: DefinitionLoader,
+    readonly definitionLoader: CacheableDefinitionLoader,
     readonly interactionsLoader: InteractionsLoader,
     readonly executorFactory: ExecutorFactory<HandlerApi<unknown>>,
     readonly stateEvaluator: StateEvaluator,

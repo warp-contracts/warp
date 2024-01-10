@@ -134,7 +134,7 @@ export class WarpFactory {
     cacheOptions: CacheOptions = defaultCacheOptions,
     environment: WarpEnvironment
   ): Warp {
-    return this.custom(arweave, cacheOptions, environment).useArweaveGateway().build();
+    return this.custom(arweave, cacheOptions, environment).useArweaveGateway(cacheOptions).build();
   }
 
   private static customWarpGw(

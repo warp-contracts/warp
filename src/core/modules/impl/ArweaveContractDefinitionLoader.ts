@@ -1,12 +1,6 @@
 import Arweave from 'arweave';
 import { ContractType } from '../../../contract/deploy/CreateContract';
-import {
-  ContractDefinition,
-  ContractSource,
-  ContractCache,
-  SrcCache,
-  SUPPORTED_SRC_CONTENT_TYPES
-} from '../../../core/ContractDefinition';
+import { ContractDefinition, ContractSource, SUPPORTED_SRC_CONTENT_TYPES } from '../../../core/ContractDefinition';
 import { SMART_WEAVE_TAGS, WARP_TAGS } from '../../KnownTags';
 import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
@@ -17,11 +11,9 @@ import { TagsParser } from './TagsParser';
 import { WasmSrc } from './wasm/WasmSrc';
 import { Warp, WarpEnvironment } from '../../Warp';
 import { Transaction } from '../../../utils/types/arweave-types';
-import { BasicSortKeyCache } from '../../../cache/BasicSortKeyCache';
 
-export class ContractDefinitionLoader implements DefinitionLoader {
+export class ArweaveContractDefinitionLoader implements DefinitionLoader {
   private readonly logger = LoggerFactory.INST.create('ContractDefinitionLoader');
-
   protected arweaveWrapper: ArweaveWrapper;
   private readonly tagsParser: TagsParser;
 
@@ -144,24 +136,6 @@ export class ContractDefinitionLoader implements DefinitionLoader {
 
   type(): GW_TYPE {
     return 'arweave';
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  setCache(cache: BasicSortKeyCache<ContractDefinition<unknown>>): void {
-    throw new Error('No cache implemented for this loader');
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  setSrcCache(cache: BasicSortKeyCache<SrcCache>): void {
-    throw new Error('No cache implemented for this loader');
-  }
-
-  getCache(): BasicSortKeyCache<ContractCache<unknown>> {
-    throw new Error('No cache implemented for this loader');
-  }
-
-  getSrcCache(): BasicSortKeyCache<SrcCache> {
-    throw new Error('No cache implemented for this loader');
   }
 
   set warp(warp: Warp) {

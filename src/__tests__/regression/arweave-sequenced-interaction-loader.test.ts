@@ -2,13 +2,12 @@ import { ArweaveGatewayBundledContractDefinitionLoader } from '../../core/module
 import { ArweaveGatewayBundledInteractionLoader } from '../../core/modules/impl/ArweaveGatewayBundledInteractionLoader';
 import { SourceType, WarpGatewayInteractionsLoader } from '../../core/modules/impl/WarpGatewayInteractionsLoader';
 import { EvaluationOptions } from '../../core/modules/StateEvaluator';
-import { WarpFactory } from '../../core/WarpFactory';
+import { defaultCacheOptions, WarpFactory } from "../../core/WarpFactory";
 import { LoggerFactory } from '../../logging/LoggerFactory';
 import { WarpGatewayContractDefinitionLoader } from '../../core/modules/impl/WarpGatewayContractDefinitionLoader';
-import { LevelDbCache } from '../../cache/impl/LevelDbCache';
-import { ContractCache, SrcCache } from '../../core/ContractDefinition';
 import stringify from 'safe-stable-stringify';
 import Arweave from 'arweave/node/common';
+import { CacheableContractDefinitionLoader } from "../../core/modules/impl/CacheableContractDefinitionLoader";
 
 const EXAMPLE_CONTRACT_TX_ID = 'T8Fakv0Sol6ALQ4Mt6FTxEJVDJWT-HDUmcI3qIA49U4';
 const EXAMPLE_CONTRACT_SRC_TX_ID = 'QEIweYIpdMSer_E33VreYzmuTIx33FQ4Sq32XJqlLQw';
@@ -33,23 +32,7 @@ describe('Arweave Gateway interaction loader', () => {
       it('should load contract definition', async () => {
         const warp = WarpFactory.forMainnet();
 
-        const contractsCache = new LevelDbCache<ContractCache<unknown>>({
-          inMemory: true,
-          dbLocation: ''
-        });
-
-        // Separate cache for sources to minimize duplicates
-        const sourceCache = new LevelDbCache<SrcCache>({
-          inMemory: true,
-          dbLocation: ''
-        });
-
-        const wrLoader = new WarpGatewayContractDefinitionLoader(
-          warp.arweave,
-          contractsCache,
-          sourceCache,
-          warp.environment
-        );
+        const wrLoader = new CacheableContractDefinitionLoader(new WarpGatewayContractDefinitionLoader(warp.arweave, 'local'), 'local', { ...defaultCacheOptions, inMemory: true })
         wrLoader.warp = warp;
 
         const arLoader = new ArweaveGatewayBundledContractDefinitionLoader(warp.environment);
@@ -100,21 +83,10 @@ describe('Arweave Gateway interaction loader', () => {
       });
 
       it('warp interaction loader and arweave interaction loader evaluates to same state', async () => {
-        const contractsCache = new LevelDbCache<ContractCache<unknown>>({
-          inMemory: true,
-          dbLocation: ''
-        });
-
-        // Separate cache for sources to minimize duplicates
-        const sourceCache = new LevelDbCache<SrcCache>({
-          inMemory: true,
-          dbLocation: ''
-        });
-
         const arweave = Arweave.init({ host: 'arweave.net', port: 443, protocol: 'https' });
 
         const arLoader = new ArweaveGatewayBundledInteractionLoader(arweave, 'mainnet');
-        const wrLoader = new WarpGatewayContractDefinitionLoader(arweave, contractsCache, sourceCache, 'mainnet');
+        const wrLoader = new CacheableContractDefinitionLoader(new WarpGatewayContractDefinitionLoader(arweave, 'local'), 'local', { ...defaultCacheOptions, inMemory: true });
         const withArLoader = WarpFactory.custom(arweave, { inMemory: true, dbLocation: '' }, 'mainnet')
           .setInteractionsLoader(arLoader)
           .setDefinitionLoader(wrLoader)

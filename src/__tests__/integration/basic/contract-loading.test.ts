@@ -12,8 +12,8 @@ import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { WarpGatewayContractDefinitionLoader } from '../../../core/modules/impl/WarpGatewayContractDefinitionLoader';
 import { DefaultEvaluationOptions } from '../../../core/modules/StateEvaluator';
 import { LexicographicalInteractionsSorter } from '../../../core/modules/impl/LexicographicalInteractionsSorter';
-import { LevelDbCache } from '../../../cache/impl/LevelDbCache';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
+import { CacheableContractDefinitionLoader } from "../../../core/modules/impl/CacheableContractDefinitionLoader";
 
 interface ExampleContractState {
   counter: number;
@@ -22,7 +22,7 @@ interface ExampleContractState {
 describe('Testing WarpGatewayContractDefinitionLoader', () => {
   let contractSrc: string;
   let wallet: JWKInterface;
-  let loader: WarpGatewayContractDefinitionLoader;
+  let loader: CacheableContractDefinitionLoader;
 
   const evalOptions = new DefaultEvaluationOptions();
   let sorter: LexicographicalInteractionsSorter;
@@ -44,10 +44,7 @@ describe('Testing WarpGatewayContractDefinitionLoader', () => {
 
     const { arweave } = warp;
 
-    const contractCache = new LevelDbCache<any>({ ...defaultCacheOptions, inMemory: true });
-    const srcCache = new LevelDbCache<any>({ ...defaultCacheOptions, inMemory: true });
-
-    loader = new WarpGatewayContractDefinitionLoader(arweave, contractCache, srcCache, 'local');
+    loader = new CacheableContractDefinitionLoader(new WarpGatewayContractDefinitionLoader(arweave, 'local'), 'local', { ...defaultCacheOptions, inMemory: true });
     loader.warp = warp;
     sorter = new LexicographicalInteractionsSorter(arweave);
 
