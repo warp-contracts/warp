@@ -64,6 +64,9 @@ export class Evolve implements ExecutionContextModifier {
             e.name == KnownErrors.NonWhitelistedSourceError
           ) {
             throw e;
+          } else if (e.name === KnownErrors.NetworkCommunicationError) {
+            this.logger.warn(`Error while evolving ${contractTxId} from ${currentSrcTxId} to ${evolvedSrcTxId}: ${e}`);
+            return executionContext;
           } else {
             throw new SmartWeaveError(SmartWeaveErrorType.CONTRACT_NOT_FOUND, {
               message: `Error while evolving ${contractTxId} from ${currentSrcTxId} to ${evolvedSrcTxId}: ${e}`,
