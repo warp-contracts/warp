@@ -156,6 +156,8 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   transactionsPagesPerBatch = null;
 
   strictSortKey = false;
+
+  strictEvolve = true;
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some features.
@@ -255,6 +257,9 @@ export interface EvaluationOptions {
   // - if it is, then we're requiring the SDK to have the state cached at this exact sortKey
   // - so that SDK won't load and evaluated missing interactions
   strictSortKey: boolean;
+
+  // whether NetworkCommunicationErrors during loading evolved sources are stopping contract evaluation
+  strictEvolve: boolean;
 }
 
 // https://github.com/nodejs/node/issues/40678 duh...

@@ -31,6 +31,7 @@ export class Evolve implements ExecutionContextModifier {
     const contractTxId = executionContext.contractDefinition.txId;
     const evolvedSrcTxId = Evolve.evolvedSrcTxId(state);
     const currentSrcTxId = executionContext.contractDefinition.srcTxId;
+    const evaluationOptions = executionContext.evaluationOptions;
 
     if (evolvedSrcTxId) {
       if (currentSrcTxId !== evolvedSrcTxId) {
@@ -65,10 +66,17 @@ export class Evolve implements ExecutionContextModifier {
           ) {
             throw e;
           } else {
-            throw new SmartWeaveError(SmartWeaveErrorType.CONTRACT_NOT_FOUND, {
-              message: `Error while evolving ${contractTxId} from ${currentSrcTxId} to ${evolvedSrcTxId}: ${e}`,
-              requestedTxId: contractTxId
-            });
+            if (e.name === KnownErrors.NetworkCommunicationError && !evaluationOptions.strictEvolve) {
+              this.logger.warn(
+                `Error while evolving ${contractTxId} from ${currentSrcTxId} to ${evolvedSrcTxId}: ${e}`
+              );
+              return executionContext;
+            } else {
+              throw new SmartWeaveError(SmartWeaveErrorType.CONTRACT_NOT_FOUND, {
+                message: `Error while evolving ${contractTxId} from ${currentSrcTxId} to ${evolvedSrcTxId}: ${e}`,
+                requestedTxId: contractTxId
+              });
+            }
           }
         }
       }
