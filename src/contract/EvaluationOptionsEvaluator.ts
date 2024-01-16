@@ -109,7 +109,8 @@ export class EvaluationOptionsEvaluator {
     useConstructor: (foreignOptions) => foreignOptions['useConstructor'],
     whitelistSources: () => this.rootOptions['whitelistSources'],
     transactionsPagesPerBatch: () => this.rootOptions['transactionsPagesPerBatch'],
-    strictSortKey: () => this.rootOptions['strictSortKey']
+    strictSortKey: () => this.rootOptions['strictSortKey'],
+    strictEvolve: () => this.rootOptions['strictEvolve']
   };
 
   private readonly notConflictingEvaluationOptions: (keyof EvaluationOptions)[] = [
