@@ -81,8 +81,24 @@ export class WarpBuilder {
     return this;
   }
 
-  public useArweaveGateway(): WarpBuilder {
-    this._definitionLoader = new ContractDefinitionLoader(this._arweave, this._environment);
+  public useArweaveGateway(cacheOptions: CacheOptions): WarpBuilder {
+    const contractsCache = new LevelDbCache<ContractCache<unknown>>({
+      ...cacheOptions,
+      dbLocation: `${cacheOptions.dbLocation}/contracts`
+    });
+
+    // Separate cache for sources to minimize duplicates
+    const sourceCache = new LevelDbCache<SrcCache>({
+      ...cacheOptions,
+      dbLocation: `${cacheOptions.dbLocation}/source`
+    });
+
+    this._definitionLoader = new ContractDefinitionLoader(
+      this._arweave,
+      this._environment,
+      contractsCache,
+      sourceCache
+    );
     this._interactionsLoader = new CacheableInteractionsLoader(
       new ArweaveGatewayInteractionsLoader(this._arweave, this._environment)
     );

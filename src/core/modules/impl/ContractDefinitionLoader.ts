@@ -25,7 +25,12 @@ export class ContractDefinitionLoader implements DefinitionLoader {
   protected arweaveWrapper: ArweaveWrapper;
   private readonly tagsParser: TagsParser;
 
-  constructor(private readonly arweave: Arweave, private readonly env: WarpEnvironment) {
+  constructor(
+    private readonly arweave: Arweave,
+    private readonly env: WarpEnvironment,
+    private definitionCache: BasicSortKeyCache<ContractCache<unknown>>,
+    private srcCache: BasicSortKeyCache<SrcCache>
+  ) {
     this.tagsParser = new TagsParser();
   }
 
@@ -146,22 +151,20 @@ export class ContractDefinitionLoader implements DefinitionLoader {
     return 'arweave';
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  setCache(cache: BasicSortKeyCache<ContractDefinition<unknown>>): void {
-    throw new Error('No cache implemented for this loader');
+  setCache(cache: BasicSortKeyCache<ContractCache<unknown>>): void {
+    this.definitionCache = cache;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  setSrcCache(cache: BasicSortKeyCache<SrcCache>): void {
-    throw new Error('No cache implemented for this loader');
+  setSrcCache(cacheSrc: BasicSortKeyCache<SrcCache>): void {
+    this.srcCache = cacheSrc;
   }
 
   getCache(): BasicSortKeyCache<ContractCache<unknown>> {
-    throw new Error('No cache implemented for this loader');
+    return this.definitionCache;
   }
 
   getSrcCache(): BasicSortKeyCache<SrcCache> {
-    throw new Error('No cache implemented for this loader');
+    return this.srcCache;
   }
 
   set warp(warp: Warp) {

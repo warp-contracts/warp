@@ -37,7 +37,7 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
     private srcCache: BasicSortKeyCache<SrcCache>,
     private readonly env: WarpEnvironment
   ) {
-    this.contractDefinitionLoader = new ContractDefinitionLoader(arweave, env);
+    this.contractDefinitionLoader = new ContractDefinitionLoader(arweave, env, definitionCache, srcCache);
     this.tagsParser = new TagsParser();
   }
 
