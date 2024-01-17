@@ -18,6 +18,7 @@ import { GW_TYPE } from '../InteractionsLoader';
 import { ArweaveGQLTxsFetcher } from './ArweaveGQLTxsFetcher';
 import { WasmSrc } from './wasm/WasmSrc';
 import Arweave from 'arweave';
+import { BasicSortKeyCache } from '../../../cache/BasicSortKeyCache';
 
 function getTagValue(tags: GQLTagInterface[], tagName: string, orDefault = undefined) {
   const tag = tags.find(({ name }) => name === tagName);
@@ -29,7 +30,11 @@ export class ArweaveGatewayBundledContractDefinitionLoader implements Definition
   private arweaveTransactions: ArweaveGQLTxsFetcher;
   private readonly logger = LoggerFactory.INST.create(ArweaveGatewayBundledContractDefinitionLoader.name);
 
-  constructor(private readonly env: WarpEnvironment) {}
+  constructor(
+    private readonly env: WarpEnvironment,
+    private definitionCache: BasicSortKeyCache<ContractCache<unknown>>,
+    private srcCache: BasicSortKeyCache<SrcCache>
+  ) {}
 
   async load<State>(contractTxId: string, evolvedSrcTxId?: string): Promise<ContractDefinition<State>> {
     const benchmark = Benchmark.measure();
@@ -175,17 +180,20 @@ export class ArweaveGatewayBundledContractDefinitionLoader implements Definition
     }
   }
 
-  setCache(): void {
-    throw new Error('Method not implemented.');
+  setCache(cache: BasicSortKeyCache<ContractCache<unknown>>): void {
+    this.definitionCache = cache;
   }
-  setSrcCache(): void {
-    throw new Error('Method not implemented.');
+
+  setSrcCache(cacheSrc: BasicSortKeyCache<SrcCache>): void {
+    this.srcCache = cacheSrc;
   }
-  getCache(): SortKeyCache<ContractCache<unknown>> {
-    throw new Error('Method not implemented.');
+
+  getCache(): BasicSortKeyCache<ContractCache<unknown>> {
+    return this.definitionCache;
   }
-  getSrcCache(): SortKeyCache<SrcCache> {
-    throw new Error('Method not implemented.');
+
+  getSrcCache(): BasicSortKeyCache<SrcCache> {
+    return this.srcCache;
   }
 
   type(): GW_TYPE {
