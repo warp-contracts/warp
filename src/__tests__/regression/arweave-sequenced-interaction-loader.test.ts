@@ -23,7 +23,23 @@ describe('Arweave Gateway interaction loader', () => {
       it('should load contract source', async () => {
         const warp = WarpFactory.forMainnet();
 
-        const arLoader = new ArweaveGatewayBundledContractDefinitionLoader(warp.environment);
+        const contractsCache = new LevelDbCache<ContractCache<unknown>>({
+          inMemory: true,
+          dbLocation: ''
+        });
+
+        // Separate cache for sources to minimize duplicates
+        const sourceCache = new LevelDbCache<SrcCache>({
+          inMemory: true,
+          dbLocation: ''
+        });
+
+
+        const arLoader = new ArweaveGatewayBundledContractDefinitionLoader(
+          contractsCache,
+          sourceCache,
+          warp.environment
+        );
         arLoader.warp = warp;
 
         const arSrc = await arLoader.loadContractSource(EXAMPLE_CONTRACT_SRC_TX_ID);
@@ -52,7 +68,11 @@ describe('Arweave Gateway interaction loader', () => {
         );
         wrLoader.warp = warp;
 
-        const arLoader = new ArweaveGatewayBundledContractDefinitionLoader(warp.environment);
+        const arLoader = new ArweaveGatewayBundledContractDefinitionLoader(
+          contractsCache,
+          sourceCache,
+          warp.environment
+        );
         arLoader.warp = warp;
 
         const arContract = await arLoader.load(EXAMPLE_CONTRACT_TX_ID);
@@ -138,10 +158,25 @@ describe('Arweave Gateway interaction loader', () => {
       });
 
       it('warp interaction, contract definition loader and arweave interaction, contract definition loader evaluates to same state ', async () => {
+        const contractsCache = new LevelDbCache<ContractCache<unknown>>({
+          inMemory: true,
+          dbLocation: ''
+        });
+
+        // Separate cache for sources to minimize duplicates
+        const sourceCache = new LevelDbCache<SrcCache>({
+          inMemory: true,
+          dbLocation: ''
+        });
+
         const arweave = Arweave.init({ host: 'arweave.net', port: 443, protocol: 'https' });
 
         const arInteractionsLoader = new ArweaveGatewayBundledInteractionLoader(arweave, 'mainnet');
-        const arContractLoader = new ArweaveGatewayBundledContractDefinitionLoader('mainnet');
+        const arContractLoader = new ArweaveGatewayBundledContractDefinitionLoader(
+          contractsCache,
+          sourceCache,
+          'mainnet'
+        );
 
         const withArLoader = WarpFactory.custom(arweave, { inMemory: true, dbLocation: '' }, 'mainnet')
           .setInteractionsLoader(arInteractionsLoader)

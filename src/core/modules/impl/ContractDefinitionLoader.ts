@@ -27,9 +27,9 @@ export class ContractDefinitionLoader implements DefinitionLoader {
 
   constructor(
     private readonly arweave: Arweave,
-    private readonly env: WarpEnvironment,
     private definitionCache: BasicSortKeyCache<ContractCache<unknown>>,
-    private srcCache: BasicSortKeyCache<SrcCache>
+    private srcCache: BasicSortKeyCache<SrcCache>,
+    private readonly env: WarpEnvironment
   ) {
     this.tagsParser = new TagsParser();
   }

@@ -95,9 +95,9 @@ export class WarpBuilder {
 
     this._definitionLoader = new ContractDefinitionLoader(
       this._arweave,
-      this._environment,
       contractsCache,
-      sourceCache
+      sourceCache,
+      this._environment
     );
     this._interactionsLoader = new CacheableInteractionsLoader(
       new ArweaveGatewayInteractionsLoader(this._arweave, this._environment)

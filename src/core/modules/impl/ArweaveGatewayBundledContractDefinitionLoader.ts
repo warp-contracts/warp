@@ -31,9 +31,9 @@ export class ArweaveGatewayBundledContractDefinitionLoader implements Definition
   private readonly logger = LoggerFactory.INST.create(ArweaveGatewayBundledContractDefinitionLoader.name);
 
   constructor(
-    private readonly env: WarpEnvironment,
     private definitionCache: BasicSortKeyCache<ContractCache<unknown>>,
-    private srcCache: BasicSortKeyCache<SrcCache>
+    private srcCache: BasicSortKeyCache<SrcCache>,
+    private readonly env: WarpEnvironment
   ) {}
 
   async load<State>(contractTxId: string, evolvedSrcTxId?: string): Promise<ContractDefinition<State>> {

@@ -63,7 +63,7 @@ describe('Testing the Profit Sharing Token', () => {
       },
       'local'
     )
-      .useArweaveGateway()
+      .useArweaveGateway(defaultCacheOptions)
       .setInteractionsLoader(loader)
       .build()
       .use(new DeployPlugin())
