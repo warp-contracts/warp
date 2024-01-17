@@ -119,3 +119,8 @@ export async function getJsonResponse<T>(response: Promise<Response>): Promise<T
 export async function safeGet<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
   return getJsonResponse(fetch(input, init));
 }
+
+export function isTxIdValid(txId: string): boolean {
+  const validTxIdRegex = /[a-z0-9_-]{43}/i;
+  return validTxIdRegex.test(txId);
+}

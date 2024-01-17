@@ -3,16 +3,20 @@ import { SortKeyCacheResult } from '../cache/SortKeyCache';
 import { ContractCallRecord, InteractionCall } from '../core/ContractCallRecord';
 import { ExecutionContext } from '../core/ExecutionContext';
 import {
+  AbortError,
   ContractInteraction,
   HandlerApi,
   InteractionData,
   InteractionResult,
   InteractionType
 } from '../core/modules/impl/HandlerExecutorFactory';
-import { LexicographicalInteractionsSorter } from '../core/modules/impl/LexicographicalInteractionsSorter';
+import {
+  genesisSortKey,
+  LexicographicalInteractionsSorter
+} from '../core/modules/impl/LexicographicalInteractionsSorter';
 import { InteractionsSorter } from '../core/modules/InteractionsSorter';
 import { DefaultEvaluationOptions, EvalStateResult, EvaluationOptions } from '../core/modules/StateEvaluator';
-import { WARP_TAGS } from '../core/KnownTags';
+import { SMART_WEAVE_TAGS, WARP_TAGS } from '../core/KnownTags';
 import { Warp } from '../core/Warp';
 import { createDummyTx, createInteractionTagsList, createInteractionTx } from '../legacy/create-interaction-tx';
 import { GQLNodeInterface } from '../legacy/gqlResult';
@@ -20,7 +24,7 @@ import { Benchmark } from '../logging/Benchmark';
 import { LoggerFactory } from '../logging/LoggerFactory';
 import { Evolve } from '../plugins/Evolve';
 import { ArweaveWrapper } from '../utils/ArweaveWrapper';
-import { getJsonResponse, isBrowser, sleep, stripTrailingSlash } from '../utils/utils';
+import { getJsonResponse, isBrowser, isTxIdValid, sleep, stripTrailingSlash } from '../utils/utils';
 import {
   BenchmarkStats,
   Contract,
@@ -38,9 +42,18 @@ import { Mutex } from 'async-mutex';
 import { Tag, Transaction, TransactionStatusResponse } from '../utils/types/arweave-types';
 import { InteractionState } from './states/InteractionState';
 import { ContractInteractionState } from './states/ContractInteractionState';
-import { Crypto } from 'warp-isomorphic';
+import { Buffer, Crypto } from 'warp-isomorphic';
 import { VrfPluginFunctions } from '../core/WarpPlugin';
-import { createData, tagsExceedLimit, DataItem, Signer } from 'warp-arbundles';
+import { createData, DataItem, Signer, tagsExceedLimit } from 'warp-arbundles';
+
+interface InteractionManifestData {
+  [path: string]: string;
+}
+
+interface InteractionDataField<Input> {
+  input?: Input;
+  manifest?: InteractionManifestData;
+}
 
 /**
  * An implementation of {@link Contract} that is backwards compatible with current style
@@ -72,6 +85,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   private _children: HandlerBasedContract<unknown>[] = [];
   private _interactionState;
   private _dreStates = new Map<string, SortKeyCacheResult<EvalStateResult<State>>>();
+  private maxInteractionDataItemSizeBytes: number;
 
   constructor(
     private readonly _contractTxId: string,
@@ -134,8 +148,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   async readState(
     sortKeyOrBlockHeight?: string | number,
-    caller?: string,
-    interactions?: GQLNodeInterface[]
+    interactions?: GQLNodeInterface[],
+    signal?: AbortSignal
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
     this.logger.info('Read state for', {
       contractTxId: this._contractTxId,
@@ -162,7 +176,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
       const initBenchmark = Benchmark.measure();
       this.maybeResetRootContract();
 
-      const executionContext = await this.createExecutionContext(this._contractTxId, sortKey, false, interactions);
+      const executionContext = await this.createExecutionContext(
+        this._contractTxId,
+        sortKey,
+        false,
+        interactions,
+        signal
+      );
       this.logger.info('Execution Context', {
         srcTxId: executionContext.contractDefinition?.srcTxId,
         missingInteractions: executionContext.sortedInteractions?.length,
@@ -200,27 +220,91 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   async readStateFor(
     sortKey: string,
-    interactions: GQLNodeInterface[]
+    interactions: GQLNodeInterface[],
+    signal?: AbortSignal
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
-    return this.readState(sortKey, undefined, interactions);
+    return this.readState(sortKey, interactions, signal);
+  }
+
+  async readStateBatch(
+    pagesPerBatch = 1,
+    sortKey?: string,
+    signal?: AbortSignal
+  ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
+    if (!this.isRoot()) {
+      throw new Error('readStateBatch is only allowed for root contract calls');
+    }
+    if (pagesPerBatch < 1) {
+      throw new Error('At least one page per batch is required');
+    }
+    if (signal?.aborted) {
+      throw new AbortError('readStateBatch aborted');
+    }
+
+    const contractTxId = this._contractTxId;
+    const { interactionsLoader, stateEvaluator } = this.warp;
+    let cachedState = await stateEvaluator.latestAvailableState<State>(contractTxId);
+
+    const evaluationOptions = {
+      ...this._evaluationOptions,
+      transactionsPagesPerBatch: pagesPerBatch
+    };
+
+    let interactions: GQLNodeInterface[];
+    let batchesLoaded = 0;
+    do {
+      const batchBenchmark = Benchmark.measure();
+      this.logger.debug(`Loading ${batchesLoaded + 1} batch`, evaluationOptions);
+      interactions = await interactionsLoader.load(contractTxId, cachedState?.sortKey, sortKey, evaluationOptions);
+      if (signal?.aborted) {
+        throw new AbortError('readStateBatch aborted');
+      }
+      if (interactions.length == 0 && batchesLoaded > 0) {
+        break;
+      }
+      this.logger.debug(`Evaluating ${interactions.length} in ${batchesLoaded + 1} batch`);
+      cachedState = await this.readStateFor(cachedState?.sortKey || genesisSortKey, interactions, signal);
+      if (signal?.aborted) {
+        throw new AbortError('readStateBatch aborted');
+      }
+      this.logger.debug(
+        `Batch ${batchesLoaded + 1} evaluated in ${batchBenchmark.elapsed()} at sortKey ${cachedState.sortKey}`
+      );
+      batchesLoaded++;
+    } while (interactions.length > 0);
+
+    return cachedState;
   }
 
   async viewState<Input, View>(
     input: Input,
     tags: Tags = [],
     transfer: ArTransfer = emptyTransfer,
-    caller?: string
+    caller?: string,
+    signal?: AbortSignal
   ): Promise<InteractionResult<State, View>> {
     this.logger.info('View state for', this._contractTxId);
-    return await this.callContract<Input, View>(input, 'view', caller, undefined, tags, transfer);
+    return await this.callContract<Input, View>(
+      input,
+      'view',
+      caller,
+      undefined,
+      tags,
+      transfer,
+      false,
+      false,
+      true,
+      signal
+    );
   }
 
   async viewStateForTx<Input, View>(
     input: Input,
-    interactionTx: GQLNodeInterface
+    interactionTx: GQLNodeInterface,
+    signal?: AbortSignal
   ): Promise<InteractionResult<State, View>> {
     this.logger.info(`View state for ${this._contractTxId}`);
-    return await this.doApplyInputOnTx<Input, View>(input, interactionTx, 'view');
+    return await this.doApplyInputOnTx<Input, View>(input, interactionTx, 'view', signal);
   }
 
   async dryWrite<Input>(
@@ -234,9 +318,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
     return await this.callContract<Input>(input, 'write', caller, undefined, tags, transfer, undefined, vrf);
   }
 
-  async applyInput<Input>(input: Input, transaction: GQLNodeInterface): Promise<InteractionResult<State, unknown>> {
+  async applyInput<Input>(
+    input: Input,
+    transaction: GQLNodeInterface,
+    signal?: AbortSignal
+  ): Promise<InteractionResult<State, unknown>> {
     this.logger.info(`Apply-input from transaction ${transaction.id} for ${this._contractTxId}`);
-    return await this.doApplyInputOnTx<Input>(input, transaction, 'write');
+    return await this.doApplyInputOnTx<Input>(input, transaction, 'write', signal);
   }
 
   async writeInteraction<Input>(
@@ -259,6 +347,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const effectiveVrf = options?.vrf === true;
     const effectiveDisableBundling = options?.disableBundling === true;
     const effectiveReward = options?.reward;
+    const effectiveManifestData = options?.manifestData;
 
     const bundleInteraction = interactionsLoader.type() == 'warp' && !effectiveDisableBundling;
 
@@ -285,7 +374,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
       return await this.bundleInteraction(input, {
         tags: effectiveTags,
         strict: effectiveStrict,
-        vrf: effectiveVrf
+        vrf: effectiveVrf,
+        manifestData: effectiveManifestData
       });
     } else {
       const interactionTx = await this.createInteraction(
@@ -325,16 +415,25 @@ export class HandlerBasedContract<State> implements Contract<State> {
       tags: Tags;
       strict: boolean;
       vrf: boolean;
+      manifestData: InteractionManifestData;
     }
   ): Promise<WriteInteractionResponse | null> {
     this.logger.info('Bundle interaction input', input);
+
+    if (!this.maxInteractionDataItemSizeBytes) {
+      const response = fetch(`${stripTrailingSlash(this.warp.gwUrl())}`);
+      this.maxInteractionDataItemSizeBytes = (
+        await getJsonResponse<{ maxInteractionDataItemSizeBytes: number }>(response)
+      ).maxInteractionDataItemSizeBytes;
+    }
 
     const interactionDataItem = await this.createInteractionDataItem(
       input,
       options.tags,
       emptyTransfer,
       options.strict,
-      options.vrf
+      options.vrf,
+      options.manifestData
     );
 
     const response = this._warpFetchWrapper.fetch(
@@ -363,7 +462,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     tags: Tags,
     transfer: ArTransfer,
     strict: boolean,
-    vrf = false
+    vrf = false,
+    manifestData: InteractionManifestData
   ) {
     if (this._evaluationOptions.internalWrites) {
       // it modifies tags
@@ -374,18 +474,33 @@ export class HandlerBasedContract<State> implements Contract<State> {
       tags.push(new Tag(WARP_TAGS.REQUEST_VRF, 'true'));
     }
 
-    const interactionTags = createInteractionTagsList(
+    let interactionTags = createInteractionTagsList(
       this._contractTxId,
       input,
       this.warp.environment === 'testnet',
       tags
     );
 
+    let data: InteractionDataField<Input> | string;
     if (tagsExceedLimit(interactionTags)) {
-      throw new Error(`Interaction tags exceed limit of 4096 bytes.`);
+      interactionTags = [
+        ...interactionTags.filter((t) => t.name != SMART_WEAVE_TAGS.INPUT && t.name != WARP_TAGS.INPUT_FORMAT),
+        new Tag(WARP_TAGS.INPUT_FORMAT, 'data')
+      ];
+      data = {
+        input
+      };
     }
 
-    const data = Math.random().toString().slice(-4);
+    if (manifestData) {
+      data = {
+        ...(data as InteractionData<Input>),
+        manifest: this.createManifest(manifestData)
+      };
+    }
+
+    data = data ? JSON.stringify(data) : Math.random().toString().slice(-4);
+
     const bundlerSigner = this._signature.bundlerSigner;
 
     if (!bundlerSigner) {
@@ -400,6 +515,14 @@ export class HandlerBasedContract<State> implements Contract<State> {
     } else {
       interactionDataItem = createData(data, bundlerSigner, { tags: interactionTags });
       await interactionDataItem.sign(bundlerSigner);
+    }
+
+    if (interactionDataItem.getRaw().length > this.maxInteractionDataItemSizeBytes) {
+      throw new Error(
+        `Interaction data item size: ${interactionDataItem.getRaw().length} exceeds maximum interactions size limit: ${
+          this.maxInteractionDataItemSizeBytes
+        }.`
+      );
     }
 
     if (!this._evaluationOptions.internalWrites && strict) {
@@ -509,7 +632,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     contractTxId: string,
     upToSortKey?: string,
     forceDefinitionLoad = false,
-    interactions?: GQLNodeInterface[]
+    interactions?: GQLNodeInterface[],
+    signal?: AbortSignal
   ): Promise<ExecutionContext<State, HandlerApi<State>>> {
     const { definitionLoader, interactionsLoader, stateEvaluator } = this.warp;
     let cachedState: SortKeyCacheResult<EvalStateResult<State>>;
@@ -531,14 +655,17 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     this.logger.debug('Cached state', cachedState, upToSortKey);
 
-    if (cachedState && cachedState.sortKey == upToSortKey) {
+    if (
+      (cachedState && cachedState.sortKey == upToSortKey) ||
+      (upToSortKey == genesisSortKey && interactions?.length)
+    ) {
       this.logger.debug('State fully cached, not loading interactions.');
       if (forceDefinitionLoad || evolvedSrcTxId || interactions?.length) {
         contractDefinition = await definitionLoader.load<State>(contractTxId, evolvedSrcTxId);
+        contractEvaluationOptions = this.resolveEvaluationOptions(contractDefinition.manifest?.evaluationOptions);
+        this.warp.executorFactory.checkWhiteListContractSources(contractDefinition, contractEvaluationOptions);
         if (interactions?.length) {
-          sortedInteractions = (await this._sorter.sort(interactions.map((i) => ({ node: i, cursor: null })))).map(
-            (i) => i.node
-          );
+          sortedInteractions = await this.getSortedInteractions(interactions);
         }
       }
     } else {
@@ -616,8 +743,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
       evaluationOptions: contractEvaluationOptions || this.evaluationOptions(),
       handler,
       cachedState,
-      requestedSortKey: upToSortKey
+      requestedSortKey: upToSortKey,
+      signal
     };
+  }
+
+  private async getSortedInteractions(interactions: GQLNodeInterface[]) {
+    return (await this._sorter.sort(interactions.map((i) => ({ node: i, cursor: null })))).map((i) => i.node);
   }
 
   private resolveEvaluationOptions(rootManifestEvalOptions: EvaluationOptions) {
@@ -661,12 +793,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   private async createExecutionContextFromTx(
     contractTxId: string,
-    transaction: GQLNodeInterface
+    transaction: GQLNodeInterface,
+    signal?: AbortSignal
   ): Promise<ExecutionContext<State, HandlerApi<State>>> {
     const caller = transaction.owner.address;
     const sortKey = transaction.sortKey;
 
-    const baseContext = await this.createExecutionContext(contractTxId, sortKey, true);
+    const baseContext = await this.createExecutionContext(contractTxId, sortKey, true, undefined, signal);
 
     return {
       ...baseContext,
@@ -695,7 +828,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     transfer: ArTransfer = emptyTransfer,
     strict = false,
     vrf = false,
-    sign = true
+    sign = true,
+    signal?: AbortSignal
   ): Promise<InteractionResult<State, View>> {
     this.logger.info('Call contract input', input);
     this.maybeResetRootContract();
@@ -704,10 +838,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
     }
     const { arweave, stateEvaluator } = this.warp;
     // create execution context
-    let executionContext = await this.createExecutionContext(this._contractTxId, sortKey, true);
+    let executionContext = await this.createExecutionContext(this._contractTxId, sortKey, true, undefined, signal);
 
     const currentBlockData =
-      this.warp.environment == 'mainnet' ? await this._arweaveWrapper.warpGwBlock() : await arweave.blocks.getCurrent();
+      this.warp.environment == 'mainnet' && !(this.warp.interactionsLoader.type() === 'arweave')
+        ? await this._arweaveWrapper.warpGwBlock()
+        : await arweave.blocks.getCurrent();
 
     // add caller info to execution context
     let effectiveCaller;
@@ -789,12 +925,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
   private async doApplyInputOnTx<Input, View = unknown>(
     input: Input,
     interactionTx: GQLNodeInterface,
-    interactionType: InteractionType
+    interactionType: InteractionType,
+    signal?: AbortSignal
   ): Promise<InteractionResult<State, View>> {
     this.maybeResetRootContract();
     let evalStateResult: SortKeyCacheResult<EvalStateResult<State>>;
 
-    const executionContext = await this.createExecutionContextFromTx(this._contractTxId, interactionTx);
+    const executionContext = await this.createExecutionContextFromTx(this._contractTxId, interactionTx, signal);
 
     if (!this.isRoot() && this.interactionState().has(this.txId(), interactionTx.sortKey)) {
       evalStateResult = new SortKeyCacheResult<EvalStateResult<State>>(
@@ -1054,5 +1191,23 @@ export class HandlerBasedContract<State> implements Contract<State> {
       child.clearChildren();
     }
     this._children = [];
+  }
+
+  private createManifest(manifestData: InteractionManifestData) {
+    const paths = {};
+    Object.keys(manifestData).forEach((m) => {
+      const id = manifestData[m];
+      if (typeof m != 'string') {
+        throw new Error(`Incorrect manifest data. Manifest key should be of type 'string'`);
+      } else if (typeof id != 'string') {
+        throw new Error(`Incorrect manifest data. Manifest value should be of type 'string'`);
+      } else if (!isTxIdValid(id)) {
+        throw new Error(`Incorrect manifest data. Transaction id: ${id} is not valid.`);
+      }
+
+      paths[m] = manifestData[m];
+    });
+
+    return paths;
   }
 }

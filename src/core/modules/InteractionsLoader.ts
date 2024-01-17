@@ -27,7 +27,8 @@ export interface InteractionsLoader extends GwTypeAware, WarpAware {
     contractTxId: string,
     fromSortKey?: string,
     toSortKey?: string,
-    evaluationOptions?: EvaluationOptions
+    evaluationOptions?: EvaluationOptions,
+    signal?: AbortSignal
   ): Promise<GQLNodeInterface[]>;
 
   clearCache(): void;

@@ -3,6 +3,7 @@ export async function handle(state, action) {
   const canEvolve = state.canEvolve;
   const input = action.input;
   const caller = action.caller;
+  const interactionType = action.interactionType;
 
   if (input.function === 'transfer') {
     const target = input.target;
@@ -66,6 +67,10 @@ export async function handle(state, action) {
   }
 
   if (input.function === 'balance') {
+    if (interactionType !== 'view') {
+      throw new ContractError('Trying to call "view" function from a "write" action.');
+    }
+
     const target = input.target;
     const ticker = state.ticker;
 

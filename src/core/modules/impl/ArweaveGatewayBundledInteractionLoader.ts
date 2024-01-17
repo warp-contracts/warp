@@ -59,9 +59,13 @@ export class ArweaveGatewayBundledInteractionLoader implements InteractionsLoade
     contractId: string,
     fromSortKey?: string,
     toSortKey?: string,
-    evaluationOptions?: EvaluationOptions
+    evaluationOptions?: EvaluationOptions,
+    signal?: AbortSignal
   ): Promise<GQLNodeInterface[]> {
     this.logger.debug('Loading interactions for', { contractId, fromSortKey, toSortKey });
+    if (evaluationOptions?.transactionsPagesPerBatch) {
+      throw new Error(`Loading in batches not yet implemented for ${ArweaveGatewayBundledInteractionLoader.name}`);
+    }
 
     const fromBlockHeight = this.sorter.extractBlockHeight(fromSortKey) || 0;
     const toBlockHeight = this.sorter.extractBlockHeight(toSortKey) || (await this.currentBlockHeight());
@@ -89,14 +93,15 @@ export class ArweaveGatewayBundledInteractionLoader implements InteractionsLoade
     };
 
     const loadingBenchmark = Benchmark.measure();
-    let interactions = await this.arweaveFetcher.transactions(mainTransactionsQuery);
+    let interactions = await this.arweaveFetcher.transactions(mainTransactionsQuery, Number.MAX_SAFE_INTEGER, signal);
 
     if (evaluationOptions.internalWrites) {
       interactions = await this.appendInternalWriteInteractions(
         contractId,
         fromBlockHeight,
         toBlockHeight,
-        interactions
+        interactions,
+        signal
       );
     }
     loadingBenchmark.stop();
@@ -227,7 +232,8 @@ export class ArweaveGatewayBundledInteractionLoader implements InteractionsLoade
     contractId: string,
     fromBlockHeight: number,
     toBlockHeight: number,
-    interactions: GQLEdgeInterface[]
+    interactions: GQLEdgeInterface[],
+    signal: AbortSignal
   ) {
     const innerWritesVariables: GqlReqVariables = {
       tags: [
@@ -242,7 +248,11 @@ export class ArweaveGatewayBundledInteractionLoader implements InteractionsLoade
       },
       first: MAX_REQUEST
     };
-    const innerWritesInteractions = await this.arweaveFetcher.transactions(innerWritesVariables);
+    const innerWritesInteractions = await this.arweaveFetcher.transactions(
+      innerWritesVariables,
+      Number.MAX_SAFE_INTEGER,
+      signal
+    );
     this.logger.debug('Inner writes interactions length:', innerWritesInteractions.length);
     interactions = interactions.concat(innerWritesInteractions);
     return interactions;

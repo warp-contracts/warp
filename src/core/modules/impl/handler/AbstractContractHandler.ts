@@ -63,7 +63,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         callingInteraction: this.swGlobal._activeTx,
         callType: 'write'
       });
-      const result = await calleeContract.applyInput<Input>(input, this.swGlobal._activeTx);
+      const result = await calleeContract.applyInput<Input>(input, this.swGlobal._activeTx, executionContext.signal);
 
       this.logger.debug('Cache result?:', !this.swGlobal._activeTx.dry);
       const shouldAutoThrow =
@@ -117,7 +117,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         callType: 'view'
       });
 
-      return await childContract.viewStateForTx<Input, View>(input, this.swGlobal._activeTx);
+      return await childContract.viewStateForTx<Input, View>(input, this.swGlobal._activeTx, executionContext.signal);
     };
   }
 
@@ -130,14 +130,14 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         transaction: this.swGlobal.transaction.id
       });
 
-      const { contract, warp } = executionContext;
+      const { contract, warp, signal } = executionContext;
 
       const childContract = warp.contract(contractTxId, contract, {
         callingInteraction: interactionTx,
         callType: 'read'
       });
 
-      const stateWithValidity = await childContract.readState(interactionTx.sortKey);
+      const stateWithValidity = await childContract.readState(interactionTx.sortKey, undefined, signal);
 
       if (stateWithValidity?.cachedValue?.errorMessages) {
         const errorKeys = Reflect.ownKeys(stateWithValidity?.cachedValue?.errorMessages);

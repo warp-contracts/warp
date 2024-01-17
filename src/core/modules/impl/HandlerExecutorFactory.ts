@@ -36,6 +36,13 @@ export class NonWhitelistedSourceError<T> extends Error {
   }
 }
 
+export class AbortError<T> extends Error {
+  constructor(readonly error: T) {
+    super(error.toString());
+    this.name = KnownErrors.AbortError;
+  }
+}
+
 /**
  * A factory that produces handlers that are compatible with the "current" style of
  * writing SW contracts (i.e. using "handle" function).

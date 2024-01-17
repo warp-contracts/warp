@@ -1,19 +1,27 @@
 {
   "name": "warp-contracts",
-  "version": "1.4.25",
+  "version": "1.4.32",
   "description": "An implementation of the SmartWeave smart contract protocol.",
   "types": "./lib/types/index.d.ts",
   "main": "./lib/cjs/index.js",
   "browser": {
-    "./lib/cjs/index.js": "./bundles/web.bundle.min.js"
+    "./lib/cjs/index.js": "./bundles/web.bundle.min.js",
+    "types": "./lib/types/index.d.ts"
   },
   "exports": {
-    "./web": "./bundles/web.bundle.min.js",
+    "./web": {
+      "import": "./bundles/web.bundle.min.js",
+      "types": "./lib/types/index.d.ts"
+    },
     "./mjs": {
       "import": "./lib/mjs/index.js",
       "types": "./lib/types/index.d.ts"
     },
-    ".": "./lib/cjs/index.js"
+    ".": {
+      "import": "./lib/mjs/index.js",
+      "require": "./lib/cjs/index.js",
+      "types": "./lib/types/index.d.ts"
+    }
   },
   "sideEffects": false,
   "engines": {

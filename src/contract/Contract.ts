@@ -40,6 +40,7 @@ export interface DREContractStatusResponse<State> {
 export type WarpOptions = {
   vrf?: boolean;
   disableBundling?: boolean;
+  manifestData?: { [path: string]: string };
 };
 
 export type ArweaveOptions = {
@@ -112,11 +113,26 @@ export interface Contract<State = unknown> {
    */
   readState(
     sortKeyOrBlockHeight?: string | number,
-    caller?: string,
-    interactions?: GQLNodeInterface[]
+    interactions?: GQLNodeInterface[],
+    signal?: AbortSignal
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
 
-  readStateFor(sortKey: string, interactions: GQLNodeInterface[]): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
+  /**
+   * Reads state in batches - i.e. it first loads max. 5k interactions, evaluates them, then reads another 5k..and so on.
+   *
+   * Consider this as an experimental feature
+   */
+  readStateBatch(
+    pagesPerBatch: number,
+    sortKey?: string,
+    signal?: AbortSignal
+  ): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
+
+  readStateFor(
+    sortKey: string,
+    interactions: GQLNodeInterface[],
+    signal?: AbortSignal
+  ): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
 
   /**
    * Returns the "view" of the state, computed by the SWC -
@@ -138,7 +154,8 @@ export interface Contract<State = unknown> {
     input: Input,
     tags?: Tags,
     transfer?: ArTransfer,
-    caller?: string
+    caller?: string,
+    signal?: AbortSignal
   ): Promise<InteractionResult<State, View>>;
 
   /**
@@ -155,7 +172,8 @@ export interface Contract<State = unknown> {
    */
   viewStateForTx<Input = unknown, View = unknown>(
     input: Input,
-    transaction: GQLNodeInterface
+    transaction: GQLNodeInterface,
+    signal?: AbortSignal
   ): Promise<InteractionResult<State, View>>;
 
   /**
@@ -177,7 +195,11 @@ export interface Contract<State = unknown> {
     vrf?: boolean
   ): Promise<InteractionResult<State, unknown>>;
 
-  applyInput<Input>(input: Input, transaction: GQLNodeInterface): Promise<InteractionResult<State, unknown>>;
+  applyInput<Input>(
+    input: Input,
+    transaction: GQLNodeInterface,
+    signal?: AbortSignal
+  ): Promise<InteractionResult<State, unknown>>;
 
   /**
    * Writes a new "interaction" transaction - i.e. such transaction that stores input for the contract.
@@ -189,7 +211,7 @@ export interface Contract<State = unknown> {
 
   /**
    * Returns the full call tree report the last
-   * interaction with contract (eg. after reading state)
+   * interaction with contract (e.g. after reading state)
    */
   getCallStack(): ContractCallRecord;
 

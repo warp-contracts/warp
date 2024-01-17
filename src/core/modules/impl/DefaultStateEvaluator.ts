@@ -9,7 +9,7 @@ import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { indent } from '../../../utils/utils';
 import { EvalStateResult, StateEvaluator, CustomEvent } from '../StateEvaluator';
-import { ContractInteraction, HandlerApi, InteractionResult } from './HandlerExecutorFactory';
+import { AbortError, ContractInteraction, HandlerApi, InteractionResult } from './HandlerExecutorFactory';
 import { TagsParser } from './TagsParser';
 import { VrfPluginFunctions } from '../../WarpPlugin';
 import { BasicSortKeyCache } from '../../../cache/BasicSortKeyCache';
@@ -55,7 +55,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     executionContext: ExecutionContext<State, HandlerApi<State>>
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
     const { ignoreExceptions, stackTrace, internalWrites } = executionContext.evaluationOptions;
-    const { contract, contractDefinition, sortedInteractions, warp } = executionContext;
+    const { contract, contractDefinition, sortedInteractions, warp, signal } = executionContext;
 
     let currentState = baseState.state;
     let currentSortKey = null;
@@ -88,6 +88,9 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     for (let i = 0; i < missingInteractionsLength; i++) {
       if (shouldBreakAfterEvolve) {
         break;
+      }
+      if (signal?.aborted) {
+        throw new AbortError(`Abort signal in ${DefaultStateEvaluator.name}`);
       }
 
       const missingInteraction = missingInteractions[i];
@@ -151,7 +154,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         let newState: EvalStateResult<unknown> = null;
         let writingContractState: SortKeyCacheResult<EvalStateResult<unknown>> = null;
         try {
-          writingContractState = await writingContract.readState(missingInteraction.sortKey);
+          writingContractState = await writingContract.readState(missingInteraction.sortKey, undefined, signal);
           newState = contract.interactionState().get(contract.txId(), missingInteraction.sortKey);
         } catch (e) {
           // ppe: not sure why we're not handling all ContractErrors here...

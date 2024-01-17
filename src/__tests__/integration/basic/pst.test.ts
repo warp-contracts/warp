@@ -118,6 +118,22 @@ describe('Testing the Profit Sharing Token', () => {
     expect(resultVM.target).toEqual('uhE-QeYS8i4pmUtnxQyHD7dzXFNaJ9oMK-IM-QPNY6M');
   });
 
+  // note that this requires a check inside contract code!
+  it('should not eval interaction that calls view function', async () => {
+    const interaction = await pst.writeInteraction({
+      function: 'balance'
+    });
+
+    await mineBlock(warp);
+
+    const result = await pst.readState();
+
+    expect(result.cachedValue.validity[interaction.originalTxId]).toBeFalsy();
+    expect(result.cachedValue.errorMessages[interaction.originalTxId]).toContain(
+      'Trying to call "view" function from a "write" action'
+    );
+  });
+
   it('should properly dispatch an event', async () => {
     let handlerCalled = false;
     const interactionResult = await pst.writeInteraction({

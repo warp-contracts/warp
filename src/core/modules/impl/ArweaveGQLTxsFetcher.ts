@@ -5,6 +5,7 @@ import { sleep } from '../../../utils/utils';
 import { Benchmark } from '../../../logging/Benchmark';
 import { Warp } from '../../Warp';
 import { WARP_TAGS } from '../../KnownTags';
+import { AbortError } from './HandlerExecutorFactory';
 
 const TRANSACTIONS_QUERY = `query Transactions($tags: [TagFilter!]!, $blockFilter: BlockFilter!, $first: Int!, $after: String) {
     transactions(tags: $tags, block: $blockFilter, first: $first, sort: HEIGHT_ASC, after: $after) {
@@ -117,7 +118,6 @@ export class ArweaveGQLTxsFetcher {
 
   async transaction(transactionId: string): Promise<GQLTransaction> {
     const response = await this.fetch<GQLTransactionResponse>(TRANSACTION_QUERY, { id: transactionId });
-
     return response.transaction;
   }
 
@@ -138,10 +138,26 @@ export class ArweaveGQLTxsFetcher {
     return response.edges[0].node;
   }
 
-  async transactions(variables: ArweaveTransactionQuery): Promise<GQLEdgeInterface[]> {
+  async transactions(
+    variables: ArweaveTransactionQuery,
+    pagesPerBatch: number,
+    signal?: AbortSignal
+  ): Promise<GQLEdgeInterface[]> {
     let pageResult = (await this.fetch<GQLResultInterface['data']>(TRANSACTIONS_QUERY, variables)).transactions;
     const edges: GQLEdgeInterface[] = [...pageResult.edges];
-    while (pageResult.pageInfo.hasNextPage) {
+    let pagesLoaded = 1;
+    if (pagesLoaded >= pagesPerBatch) {
+      return edges;
+    }
+    if (signal?.aborted) {
+      throw new AbortError(`Abort signal in ${ArweaveGQLTxsFetcher.name}`);
+    }
+
+    while (pageResult.pageInfo.hasNextPage && pagesLoaded < pagesPerBatch) {
+      if (signal?.aborted) {
+        throw new AbortError(`Abort signal in ${ArweaveGQLTxsFetcher.name}`);
+      }
+
       const cursor = pageResult.edges[MAX_REQUEST - 1].cursor;
 
       const newVariables = {
@@ -151,6 +167,7 @@ export class ArweaveGQLTxsFetcher {
 
       pageResult = (await this.fetch<GQLResultInterface['data']>(TRANSACTIONS_QUERY, newVariables)).transactions;
       edges.push(...pageResult.edges);
+      pagesLoaded++;
     }
     return edges;
   }

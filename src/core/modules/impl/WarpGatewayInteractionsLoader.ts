@@ -6,6 +6,7 @@ import { getJsonResponse, stripTrailingSlash } from '../../../utils/utils';
 import { GW_TYPE, InteractionsLoader } from '../InteractionsLoader';
 import { EvaluationOptions } from '../StateEvaluator';
 import { Warp } from '../../Warp';
+import { AbortError } from './HandlerExecutorFactory';
 
 export type ConfirmationStatus =
   | {
@@ -65,14 +66,18 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
     contractId: string,
     fromSortKey?: string,
     toSortKey?: string,
-    evaluationOptions?: EvaluationOptions
+    evaluationOptions?: EvaluationOptions,
+    signal?: AbortSignal
   ): Promise<GQLNodeInterface[]> {
     this.logger.debug('Loading interactions: for ', { contractId, fromSortKey, toSortKey });
+    const originalFromSortKey = fromSortKey;
 
     const interactions: GQLNodeInterface[] = [];
     let page = 0;
     let limit = 0;
     let items = 0;
+    const pagesPerBatch = evaluationOptions?.transactionsPagesPerBatch || Number.MAX_SAFE_INTEGER;
+    this.logger.debug('Pages per batch:', pagesPerBatch);
 
     const effectiveSourceType = evaluationOptions ? evaluationOptions.sourceType : this.source;
     const benchmarkTotalTime = Benchmark.measure();
@@ -80,9 +85,13 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
 
     do {
       const benchmarkRequestTime = Benchmark.measure();
+      if (signal?.aborted) {
+        throw new AbortError(`Abort signal in ${WarpGatewayInteractionsLoader.name}`);
+      }
 
-      const url = `${baseUrl}/gateway/v2/interactions-sort-key`;
+      const url = `${baseUrl}/gateway/v3/interactions-sort-key`;
 
+      page++;
       const response = await getJsonResponse<InteractionsResult>(
         fetch(
           `${url}?${new URLSearchParams({
@@ -90,7 +99,6 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
             ...(this._warp.whoAmI ? { client: this._warp.whoAmI } : ''),
             ...(fromSortKey ? { from: fromSortKey } : ''),
             ...(toSortKey ? { to: toSortKey } : ''),
-            page: (++page).toString(),
             fromSdk: 'true',
             ...(this.confirmationStatus && this.confirmationStatus.confirmed
               ? { confirmationStatus: 'confirmed' }
@@ -107,12 +115,13 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
       interactions.push(...response.interactions);
       limit = response.paging.limit;
       items = response.paging.items;
+      fromSortKey = interactions[interactions.length - 1]?.sortKey;
 
       this.logger.debug(`Loaded interactions length: ${interactions.length}, from: ${fromSortKey}, to: ${toSortKey}`);
-    } while (items == limit); // note: items < limit means that we're on the last page
+    } while (items == limit && page < pagesPerBatch); // note: items < limit means that we're on the last page
 
     this.logger.debug('All loaded interactions:', {
-      from: fromSortKey,
+      from: originalFromSortKey,
       to: toSortKey,
       loaded: interactions.length,
       time: benchmarkTotalTime.elapsed()
