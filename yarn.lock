@@ -2360,16 +2360,18 @@ argparse@^2.0.1:
   resolved "https://registry.yarnpkg.com/argparse/-/argparse-2.0.1.tgz#246f50f3ca78a3240f6c997e8a9bd1eac49e4b38"
   integrity sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==
 
-arlocal@1.1.42:
-  version "1.1.42"
-  resolved "https://registry.yarnpkg.com/arlocal/-/arlocal-1.1.42.tgz#807e24d447a642d81848094ad35c04aea3deecd9"
-  integrity sha512-nDj/adr3kQZGjoMUgr6Yhrc+WZAigJBKxf0Nf4BvgUf6SBej7J1Dx/ZSXz4eeplFB89iSE1zgaJBMiKMPMznmw==
+arlocal@1.1.65:
+  version "1.1.65"
+  resolved "https://registry.yarnpkg.com/arlocal/-/arlocal-1.1.65.tgz#3ff3df5aae8ce2f343d7fb4835d26f9cd8976e58"
+  integrity sha512-miD+h5H+Z4cS6dihHdrs9LS6OxvdwdIcZ285v36y7nfrFwSrdTvoC9V52P7FIt1fF78+HNyHSi11BaVi6ZwO+w==
   dependencies:
     "@koa/cors" "^3.1.0"
     apollo-server-koa "^3.6.2"
     arbundles "^0.6.19"
     arweave-bundles "^1.0.3"
+    asn1.js "5.4.1"
     bignumber.js "^9.0.2"
+    bytes "^3.1.2"
     graphql "^16.2.0"
     knex "^0.95.6"
     koa "^2.13.4"
