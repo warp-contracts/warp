@@ -13,7 +13,7 @@ import { WarpGatewayContractDefinitionLoader } from '../../../core/modules/impl/
 import { DefaultEvaluationOptions } from '../../../core/modules/StateEvaluator';
 import { LexicographicalInteractionsSorter } from '../../../core/modules/impl/LexicographicalInteractionsSorter';
 import { DeployPlugin } from 'warp-contracts-plugin-deploy';
-import { CacheableContractDefinitionLoader } from "../../../core/modules/impl/CacheableContractDefinitionLoader";
+import { CacheableContractDefinitionLoader } from '../../../core/modules/impl/CacheableContractDefinitionLoader';
 
 interface ExampleContractState {
   counter: number;
@@ -44,7 +44,10 @@ describe('Testing WarpGatewayContractDefinitionLoader', () => {
 
     const { arweave } = warp;
 
-    loader = new CacheableContractDefinitionLoader(new WarpGatewayContractDefinitionLoader(arweave, 'local'), 'local', { ...defaultCacheOptions, inMemory: true });
+    loader = new CacheableContractDefinitionLoader(new WarpGatewayContractDefinitionLoader(arweave, 'local'), 'local', {
+      ...defaultCacheOptions,
+      inMemory: true
+    });
     loader.warp = warp;
     sorter = new LexicographicalInteractionsSorter(arweave);
 
