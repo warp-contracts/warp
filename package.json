@@ -111,7 +111,7 @@
     "@types/node": "^18.0.6",
     "@typescript-eslint/eslint-plugin": "^5.30.7",
     "@typescript-eslint/parser": "^5.30.7",
-    "arlocal": "1.1.42",
+    "arlocal": "1.1.65",
     "cheerio": "^1.0.0-rc.10",
     "colors": "^1.4.0",
     "elliptic": "^6.5.4",
