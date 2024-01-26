@@ -252,6 +252,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         if (result.type !== 'ok') {
           errorMessages[missingInteraction.id] = errorMessage;
         }
+        const isValidInteraction = result.type === 'ok';
+        validity[missingInteraction.id] = isValidInteraction;
 
         this.logResult<State>(result, missingInteraction, executionContext);
 
@@ -270,8 +272,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           throw new Error(`Exception while processing ${JSON.stringify(interaction)}:\n${result.errorMessage}`);
         }
 
-        const isValidInteraction = result.type === 'ok';
-        validity[missingInteraction.id] = isValidInteraction;
         currentState = result.state;
 
         const toCache = new EvalStateResult(currentState, validity, errorMessages);
