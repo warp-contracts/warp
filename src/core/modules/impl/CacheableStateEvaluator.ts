@@ -182,7 +182,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     if (transaction.confirmationStatus !== undefined && transaction.confirmationStatus !== 'confirmed') {
       return;
     }
-    const stateToCache = new EvalStateResult(state.state, state.validity, state.errorMessages || {});
+    const stateToCache = new EvalStateResult(state.state, state.validity || {}, state.errorMessages || {});
 
     this.cLogger.debug('Putting into cache', {
       contractTxId,
