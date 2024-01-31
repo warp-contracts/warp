@@ -312,10 +312,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
     caller?: string,
     tags?: Tags,
     transfer?: ArTransfer,
-    vrf?: boolean
+    vrf?: boolean,
+    sortKey?: string
   ): Promise<InteractionResult<State, unknown>> {
     this.logger.info('Dry-write for', this._contractTxId);
-    return await this.callContract<Input>(input, 'write', caller, undefined, tags, transfer, undefined, vrf);
+    return await this.callContract<Input>(input, 'write', caller, sortKey, tags, transfer, undefined, vrf);
   }
 
   async applyInput<Input>(
