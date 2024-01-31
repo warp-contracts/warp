@@ -281,14 +281,15 @@ export class HandlerBasedContract<State> implements Contract<State> {
     tags: Tags = [],
     transfer: ArTransfer = emptyTransfer,
     caller?: string,
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    sortKey?: string
   ): Promise<InteractionResult<State, View>> {
     this.logger.info('View state for', this._contractTxId);
     return await this.callContract<Input, View>(
       input,
       'view',
       caller,
-      undefined,
+      sortKey,
       tags,
       transfer,
       false,

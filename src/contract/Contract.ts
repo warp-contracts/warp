@@ -155,7 +155,8 @@ export interface Contract<State = unknown> {
     tags?: Tags,
     transfer?: ArTransfer,
     caller?: string,
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    sortKey?: string
   ): Promise<InteractionResult<State, View>>;
 
   /**
