@@ -186,13 +186,15 @@ export interface Contract<State = unknown> {
    * @param caller - an option to override the caller - if available, this value will overwrite the caller evaluated
    * from the wallet connected to this contract.
    * @param vrf - whether a mock VRF data should be generated
+   * @param sortKey - sortKey at which the state will be loaded prior to applying input
    */
   dryWrite<Input>(
     input: Input,
     caller?: string,
     tags?: Tags,
     transfer?: ArTransfer,
-    vrf?: boolean
+    vrf?: boolean,
+    sortKey?: string
   ): Promise<InteractionResult<State, unknown>>;
 
   applyInput<Input>(
