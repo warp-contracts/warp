@@ -647,6 +647,9 @@ export class HandlerBasedContract<State> implements Contract<State> {
       >;
     }
     cachedState = cachedState || (await stateEvaluator.latestAvailableState<State>(contractTxId, upToSortKey));
+    if (upToSortKey && this.evaluationOptions().strictSortKey && cachedState?.sortKey != upToSortKey) {
+      throw new Error(`State not cached at the exact required ${upToSortKey} sortKey`);
+    }
 
     this.logger.debug('cache lookup', benchmark.elapsed());
     benchmark.reset();
