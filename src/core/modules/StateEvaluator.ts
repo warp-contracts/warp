@@ -154,6 +154,8 @@ export class DefaultEvaluationOptions implements EvaluationOptions {
   whitelistSources = [];
 
   transactionsPagesPerBatch = null;
+
+  strictSortKey = false;
 }
 
 // an interface for the contract EvaluationOptions - can be used to change the behaviour of some features.
@@ -243,9 +245,16 @@ export interface EvaluationOptions {
   // remote source for fetching most recent contract state, only applicable if remoteStateSyncEnabled is set to true
   remoteStateSyncSource: string;
 
+  // an array of source tx ids that are allowed to be evaluated by the SDK
   whitelistSources: string[];
 
+  // how many interactions pages are evaluated in a single evaluation batch
   transactionsPagesPerBatch: number;
+
+  // whether passing sortKey to some functions like viewState or readStateFor is strict
+  // - if it is, then we're requiring the SDK to have the state cached at this exact sortKey
+  // - so that SDK won't load and evaluated missing interactions
+  strictSortKey: boolean;
 }
 
 // https://github.com/nodejs/node/issues/40678 duh...
