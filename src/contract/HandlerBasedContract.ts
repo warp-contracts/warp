@@ -646,6 +646,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     const benchmark = Benchmark.measure();
     if (!this.isRoot()) {
+      // przekazać nasz gotowiec
       cachedState = this.interactionState().getLessOrEqual(this.txId(), upToSortKey) as SortKeyCacheResult<
         EvalStateResult<State>
       >;

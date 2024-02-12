@@ -16,6 +16,7 @@ import { isBrowser } from '../../../utils/utils';
 import { Buffer } from 'warp-isomorphic';
 import { InteractionState } from '../../../contract/states/InteractionState';
 import { WarpLogger } from '../../../logging/WarpLogger';
+import { XOR } from 'utils/types/mutually-exclusive';
 
 // 'require' to fix esbuild adding same lib in both cjs and esm format
 // https://github.com/evanw/esbuild/issues/1950
@@ -208,6 +209,14 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
           swGlobal: swGlobal,
           contractDefinition
         });
+      } else if (warp.hasPlugin('quickjs')) {
+        const quickJsPlugin = warp.loadPlugin<QuickJsPluginInput, HandlerApi<State>>('quickjs');
+        return await quickJsPlugin.process({
+          contractSource: contractDefinition.src,
+          evaluationOptions,
+          swGlobal: swGlobal,
+          contractDefinition
+        });
       } else {
         const contractFunction = new Function(normalizedSource);
         const handler = isBrowser()
@@ -286,17 +295,36 @@ export interface HandlerApi<State> {
 export type HandlerResult<State, Result> = {
   result: Result;
   state: State;
-  event: InteractionCompleteEvent;
+  event?: InteractionCompleteEvent;
   gasUsed?: number;
 };
 
-export type InteractionResult<State, Result> = HandlerResult<State, Result> & {
+type WarpInteractionResult<State, Result> = HandlerResult<State, Result> & {
   type: InteractionResultType;
   errorMessage?: string;
   error?: unknown;
   originalValidity?: Record<string, boolean>;
   originalErrorMessages?: Record<string, string>;
 };
+
+export type AoInteractionResult<Result> = {
+  Memory: string;
+  Error: string;
+  Messages: {
+    target: string;
+    data: string;
+    anchor: string;
+    tags: { name: string; value: string }[];
+  }[];
+  Spawns: {
+    data: string;
+    anchor: string;
+    tags: { name: string; value: string }[];
+  }[];
+  Output: Result;
+};
+
+export type InteractionResult<State, Result> = XOR<WarpInteractionResult<State, Result>, AoInteractionResult<Result>>;
 
 export type InteractionType = 'view' | 'write';
 
@@ -329,4 +357,19 @@ export interface VM2PluginInput {
   swGlobal: SmartWeaveGlobal;
   logger: WarpLogger;
   contractDefinition: ContractDefinition<unknown>;
+}
+
+export interface QuickJsPluginInput {
+  contractSource: string;
+  evaluationOptions: EvaluationOptions;
+  swGlobal: SmartWeaveGlobal;
+  contractDefinition: ContractDefinition<unknown>;
+  wasmMemory?: WebAssembly.Memory;
+}
+
+export interface QuickJsOptions {
+  memoryLimit?: number;
+  maxStackSize?: number;
+  interruptCycles?: number;
+  timeout?: number;
 }

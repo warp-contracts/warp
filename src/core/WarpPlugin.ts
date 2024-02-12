@@ -10,7 +10,8 @@ export const knownWarpPlugins = [
   'deploy',
   'contract-blacklist',
   'vm2',
-  'vrf'
+  'vrf',
+  'quickjs'
 ] as const;
 type WarpPluginPartialType = `smartweave-extension-${string}`;
 export type WarpKnownPluginType = (typeof knownWarpPlugins)[number];
