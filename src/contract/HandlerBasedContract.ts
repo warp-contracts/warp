@@ -646,13 +646,11 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     const benchmark = Benchmark.measure();
     if (!this.isRoot()) {
-      cachedState =
-        state ||
-        (this.interactionState().getLessOrEqual(this.txId(), upToSortKey) as SortKeyCacheResult<
-          EvalStateResult<State>
-        >);
+      cachedState = this.interactionState().getLessOrEqual(this.txId(), upToSortKey) as SortKeyCacheResult<
+        EvalStateResult<State>
+      >;
     }
-    cachedState = cachedState || (await stateEvaluator.latestAvailableState<State>(contractTxId, upToSortKey));
+    cachedState = state || cachedState || (await stateEvaluator.latestAvailableState<State>(contractTxId, upToSortKey));
     if (upToSortKey && this.evaluationOptions().strictSortKey && cachedState?.sortKey != upToSortKey) {
       throw new Error(`State not cached at the exact required ${upToSortKey} sortKey`);
     }
