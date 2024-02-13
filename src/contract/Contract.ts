@@ -106,15 +106,15 @@ export interface Contract<State = unknown> {
    * Returns state of the contract at required sortKey or blockHeight.
    *
    * @param sortKeyOrBlockHeight - either a sortKey or block height at which the contract should be read
-   *
-   * @param currentTx - a set of currently evaluating interactions, that should
-   * be skipped during contract inner calls - to prevent the infinite call loop issue
-   * (mostly related to contract that use the Foreign Call Protocol)
+   * @param interactions - optional interactions to be applied on state
+   * @param signal - allows to communicate with a DOM request (such as Fetch) and abort it
+   * @param state - uses specified state to read contract state (overrides reading state from the cache)
    */
   readState(
     sortKeyOrBlockHeight?: string | number,
     interactions?: GQLNodeInterface[],
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    state?: SortKeyCacheResult<EvalStateResult<State>>
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
 
   /**
@@ -128,10 +128,18 @@ export interface Contract<State = unknown> {
     signal?: AbortSignal
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
 
+  /**
+   * Reads state at a specified sortKey and applies indicated interactions
+   * @param sortKey - sortKey at which the contract should be read
+   * @param interactions - optional interactions to be applied on state
+   * @param signal - allows to communicate with a DOM request (such as Fetch) and abort it
+   * @param state -  uses specified state to read contract state (overrides reading state from the cache)
+   */
   readStateFor(
     sortKey: string,
     interactions: GQLNodeInterface[],
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    state?: SortKeyCacheResult<EvalStateResult<State>>
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>>;
 
   /**

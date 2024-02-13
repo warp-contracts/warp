@@ -149,7 +149,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
   async readState(
     sortKeyOrBlockHeight?: string | number,
     interactions?: GQLNodeInterface[],
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    state?: SortKeyCacheResult<EvalStateResult<State>>
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
     this.logger.info('Read state for', {
       contractTxId: this._contractTxId,
@@ -181,7 +182,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
         sortKey,
         false,
         interactions,
-        signal
+        signal,
+        state
       );
       this.logger.info('Execution Context', {
         srcTxId: executionContext.contractDefinition?.srcTxId,
@@ -221,9 +223,10 @@ export class HandlerBasedContract<State> implements Contract<State> {
   async readStateFor(
     sortKey: string,
     interactions: GQLNodeInterface[],
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    state?: SortKeyCacheResult<EvalStateResult<State>>
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
-    return this.readState(sortKey, interactions, signal);
+    return this.readState(sortKey, interactions, signal, state);
   }
 
   async readStateBatch(
@@ -635,16 +638,19 @@ export class HandlerBasedContract<State> implements Contract<State> {
     upToSortKey?: string,
     forceDefinitionLoad = false,
     interactions?: GQLNodeInterface[],
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    state?: SortKeyCacheResult<EvalStateResult<State>>
   ): Promise<ExecutionContext<State, HandlerApi<State>>> {
     const { definitionLoader, interactionsLoader, stateEvaluator } = this.warp;
     let cachedState: SortKeyCacheResult<EvalStateResult<State>>;
 
     const benchmark = Benchmark.measure();
     if (!this.isRoot()) {
-      cachedState = this.interactionState().getLessOrEqual(this.txId(), upToSortKey) as SortKeyCacheResult<
-        EvalStateResult<State>
-      >;
+      cachedState =
+        state ||
+        (this.interactionState().getLessOrEqual(this.txId(), upToSortKey) as SortKeyCacheResult<
+          EvalStateResult<State>
+        >);
     }
     cachedState = cachedState || (await stateEvaluator.latestAvailableState<State>(contractTxId, upToSortKey));
     if (upToSortKey && this.evaluationOptions().strictSortKey && cachedState?.sortKey != upToSortKey) {
