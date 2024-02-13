@@ -317,8 +317,9 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       }
 
       const forceStateStoreToCache =
-        executionContext.evaluationOptions.cacheEveryNInteractions > 0 &&
-        i % executionContext.evaluationOptions.cacheEveryNInteractions === 0;
+        (executionContext.evaluationOptions.cacheEveryNInteractions > 0 &&
+          i % executionContext.evaluationOptions.cacheEveryNInteractions === 0) ||
+        missingInteractions.length == 1;
       // if that's the end of the root contract's interaction - commit all the uncommitted states to cache.
       if (contract.isRoot()) {
         contract.clearChildren();
