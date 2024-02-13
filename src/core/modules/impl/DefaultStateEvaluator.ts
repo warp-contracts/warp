@@ -343,7 +343,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
     // state could have been fully retrieved from cache
     // or there were no interactions below requested sort key
-    if (lastConfirmedTxState !== null) {
+    if (lastConfirmedTxState !== null && !(contract.isRoot() && missingInteractions.length == 1)) {
       await this.onStateEvaluated(lastConfirmedTxState.tx, executionContext, lastConfirmedTxState.state);
     }
 
