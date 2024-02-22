@@ -364,7 +364,7 @@ export interface QuickJsPluginInput {
   evaluationOptions: EvaluationOptions;
   swGlobal: SmartWeaveGlobal;
   contractDefinition: ContractDefinition<unknown>;
-  wasmMemory?: WebAssembly.Memory;
+  wasmMemory?: Buffer;
 }
 
 export interface QuickJsOptions {
