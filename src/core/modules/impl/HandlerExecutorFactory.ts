@@ -212,10 +212,7 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
       } else if (warp.hasPlugin('quickjs')) {
         const quickJsPlugin = warp.loadPlugin<QuickJsPluginInput, HandlerApi<State>>('quickjs');
         return await quickJsPlugin.process({
-          contractSource: contractDefinition.src,
-          evaluationOptions,
-          swGlobal: swGlobal,
-          contractDefinition
+          contractSource: contractDefinition.src
         });
       } else {
         const contractFunction = new Function(normalizedSource);
@@ -361,10 +358,7 @@ export interface VM2PluginInput {
 
 export interface QuickJsPluginInput {
   contractSource: string;
-  evaluationOptions: EvaluationOptions;
-  swGlobal: SmartWeaveGlobal;
-  contractDefinition: ContractDefinition<unknown>;
-  wasmMemory?: WebAssembly.Memory;
+  wasmMemory?: Buffer;
 }
 
 export interface QuickJsOptions {
@@ -372,4 +366,23 @@ export interface QuickJsOptions {
   maxStackSize?: number;
   interruptCycles?: number;
   timeout?: number;
+}
+
+export interface QuickJsPluginMessage {
+  cron: boolean;
+  data: string | Buffer;
+  epoch: number;
+  from: string;
+  id: string | undefined;
+  nonce: number;
+  owner: string;
+  signature: string | undefined;
+  tags: {
+    [key: string]: string | undefined;
+  };
+  target: string;
+  timestamp: string;
+  ['Block-Height']: string;
+  ['Forwarded-By']: string;
+  ['Hash-Chain']: string;
 }
