@@ -366,6 +366,7 @@ export interface QuickJsOptions {
   maxStackSize?: number;
   interruptCycles?: number;
   timeout?: number;
+  compress?: boolean;
 }
 
 export interface QuickJsPluginMessage {
