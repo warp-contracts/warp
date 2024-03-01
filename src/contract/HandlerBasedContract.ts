@@ -849,9 +849,12 @@ export class HandlerBasedContract<State> implements Contract<State> {
     // create execution context
     let executionContext = await this.createExecutionContext(this._contractTxId, sortKey, true, undefined, signal);
 
+    const blockHeight = sortKey ? await this._sorter.extractBlockHeight(sortKey) : undefined;
     const currentBlockData =
       this.warp.environment == 'mainnet' && !(this.warp.interactionsLoader.type() === 'arweave')
         ? await this._arweaveWrapper.warpGwBlock()
+        : blockHeight
+        ? await arweave.blocks.getByHeight(blockHeight)
         : await arweave.blocks.getCurrent();
 
     // add caller info to execution context
