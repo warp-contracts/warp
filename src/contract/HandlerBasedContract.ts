@@ -45,6 +45,7 @@ import { ContractInteractionState } from './states/ContractInteractionState';
 import { Buffer, Crypto } from 'warp-isomorphic';
 import { VrfPluginFunctions } from '../core/WarpPlugin';
 import { createData, DataItem, Signer, tagsExceedLimit } from 'warp-arbundles';
+import { BlockData } from 'arweave/node/blocks';
 
 interface InteractionManifestData {
   [path: string]: string;
@@ -850,12 +851,17 @@ export class HandlerBasedContract<State> implements Contract<State> {
     let executionContext = await this.createExecutionContext(this._contractTxId, sortKey, true, undefined, signal);
 
     const blockHeight = sortKey ? await this._sorter.extractBlockHeight(sortKey) : undefined;
-    const currentBlockData =
-      this.warp.environment == 'mainnet' && !(this.warp.interactionsLoader.type() === 'arweave')
-        ? await this._arweaveWrapper.warpGwBlock()
-        : blockHeight
-        ? await arweave.blocks.getByHeight(blockHeight)
-        : await arweave.blocks.getCurrent();
+
+    let currentBlockData: BlockData;
+    if (this.warp.environment == 'mainnet' && !(this.warp.interactionsLoader.type() === 'arweave')) {
+      currentBlockData = await this._arweaveWrapper.warpGwBlock();
+    } else {
+      if (blockHeight) {
+        currentBlockData = await arweave.blocks.getByHeight(blockHeight);
+      } else {
+        currentBlockData = await arweave.blocks.getCurrent();
+      }
+    }
 
     // add caller info to execution context
     let effectiveCaller;
