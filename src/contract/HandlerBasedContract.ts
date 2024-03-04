@@ -45,7 +45,6 @@ import { ContractInteractionState } from './states/ContractInteractionState';
 import { Buffer, Crypto } from 'warp-isomorphic';
 import { VrfPluginFunctions } from '../core/WarpPlugin';
 import { createData, DataItem, Signer, tagsExceedLimit } from 'warp-arbundles';
-import { BlockData } from 'arweave/node/blocks';
 
 interface InteractionManifestData {
   [path: string]: string;
@@ -852,7 +851,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     const blockHeight = sortKey ? await this._sorter.extractBlockHeight(sortKey) : undefined;
 
-    let currentBlockData: BlockData;
+    let currentBlockData;
     if (this.warp.environment == 'mainnet' && !(this.warp.interactionsLoader.type() === 'arweave')) {
       currentBlockData = await this._arweaveWrapper.warpGwBlock();
     } else {
