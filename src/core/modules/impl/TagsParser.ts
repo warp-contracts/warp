@@ -118,4 +118,10 @@ export class TagsParser {
       return t.name == WARP_TAGS.REQUEST_VRF && t.value === 'true';
     });
   }
+
+  hasInteractWriteTag(interaction: GQLNodeInterface, contractTxId: string): boolean {
+    return interaction.tags.some((t) => {
+      return t.name == WARP_TAGS.INTERACT_WRITE && t.value === contractTxId;
+    });
+  }
 }
