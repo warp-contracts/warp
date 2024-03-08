@@ -6,9 +6,12 @@ import { SmartWeaveGlobal } from '../../../../legacy/smartweave-global';
 import { LoggerFactory } from '../../../../logging/LoggerFactory';
 import { deepCopy } from '../../../../utils/utils';
 import { ContractError, HandlerApi, InteractionData, InteractionResult } from '../HandlerExecutorFactory';
+import { TagsParser } from '../TagsParser';
+import { Contract } from '../../../../contract/Contract';
 
 export abstract class AbstractContractHandler<State> implements HandlerApi<State> {
   protected logger = LoggerFactory.INST.create('ContractHandler');
+  private readonly tagsParser = new TagsParser();
 
   protected constructor(
     protected readonly swGlobal: SmartWeaveGlobal,
@@ -46,30 +49,39 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
       if (!executionContext.evaluationOptions.internalWrites) {
         throw new Error("Internal writes feature switched off. Change EvaluationOptions.internalWrites flag to 'true'");
       }
-
-      const effectiveThrowOnError =
-        throwOnError == undefined ? executionContext.evaluationOptions.throwOnInternalWriteError : throwOnError;
-
       const debugData = {
         from: this.contractDefinition.txId,
         to: contractTxId,
         input
       };
 
+      const activeTx = this.swGlobal._activeTx;
+      if (
+        !activeTx.dry &&
+        !this.tagsParser.hasInteractWriteTag(activeTx, contractTxId) &&
+        !this.isWriteBack(executionContext.contract, contractTxId)
+      ) {
+        throw new Error(
+          `No interact write tag for interaction ${activeTx.id}: ${JSON.stringify(debugData)} \n ${JSON.stringify(
+            activeTx
+          )}`
+        );
+      }
+
+      const effectiveThrowOnError =
+        throwOnError == undefined ? executionContext.evaluationOptions.throwOnInternalWriteError : throwOnError;
       this.logger.debug('swGlobal.write call:', debugData);
 
       // The contract that we want to call and modify its state
       const calleeContract = executionContext.warp.contract(contractTxId, executionContext.contract, {
-        callingInteraction: this.swGlobal._activeTx,
+        callingInteraction: activeTx,
         callType: 'write'
       });
-      const result = await calleeContract.applyInput<Input>(input, this.swGlobal._activeTx, executionContext.signal);
+      const result = await calleeContract.applyInput<Input>(input, activeTx, executionContext.signal);
 
-      this.logger.debug('Cache result?:', !this.swGlobal._activeTx.dry);
+      this.logger.debug('Cache result?:', !activeTx.dry);
       const shouldAutoThrow =
-        result.type !== 'ok' &&
-        effectiveThrowOnError &&
-        (!this.swGlobal._activeTx.dry || (this.swGlobal._activeTx.dry && this.swGlobal._activeTx.strict));
+        result.type !== 'ok' && effectiveThrowOnError && (!activeTx.dry || (activeTx.dry && activeTx.strict));
 
       const effectiveErrorMessage = shouldAutoThrow
         ? `Internal write auto error for call [${JSON.stringify(debugData)}]: ${result.errorMessage}`
@@ -78,7 +90,7 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
       const resultErrorMessages = effectiveErrorMessage
         ? {
             ...result.originalErrorMessages,
-            [this.swGlobal._activeTx.id]: effectiveErrorMessage
+            [activeTx.id]: effectiveErrorMessage
           }
         : result.originalErrorMessages;
       calleeContract.interactionState().update(
@@ -87,11 +99,11 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
           state: result.state as State,
           validity: {
             ...result.originalValidity,
-            [this.swGlobal._activeTx.id]: result.type == 'ok'
+            [activeTx.id]: result.type == 'ok'
           },
           errorMessages: resultErrorMessages
         },
-        this.swGlobal._activeTx.sortKey
+        activeTx.sortKey
       );
 
       if (shouldAutoThrow) {
@@ -179,5 +191,17 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
         .interactionState()
         .get(this.swGlobal.contract.id, this.swGlobal._activeTx.sortKey)?.state;
     };
+  }
+
+  private isWriteBack(contract: Contract<State>, target: string): boolean {
+    let current = contract as Contract;
+    while (current.parent()) {
+      current = current.parent();
+      if (current.txId() === target) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }
