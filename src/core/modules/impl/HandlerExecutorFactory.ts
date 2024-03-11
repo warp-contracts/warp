@@ -370,19 +370,19 @@ export interface QuickJsOptions {
 }
 
 export interface QuickJsPluginMessage {
-  cron: boolean;
-  data: string | Buffer;
-  epoch: number;
-  from: string;
-  id: string | undefined;
-  nonce: number;
-  owner: string;
-  signature: string | undefined;
-  tags: {
+  Cron: boolean;
+  Data: string | Buffer;
+  Epoch: number;
+  From: string;
+  Id: string | undefined;
+  Nonce: number;
+  Owner: string;
+  Signature: string | undefined;
+  Tags: {
     [key: string]: string | undefined;
   };
-  target: string;
-  timestamp: string;
+  Target: string;
+  Timestamp: string;
   ['Block-Height']: string;
   ['Forwarded-By']: string;
   ['Hash-Chain']: string;
