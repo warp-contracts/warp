@@ -4,13 +4,12 @@
   "description": "An implementation of the SmartWeave smart contract protocol.",
   "types": "./lib/types/index.d.ts",
   "main": "./lib/cjs/index.js",
-  "browser": {
-    "./lib/cjs/index.js": "./bundles/web.bundle.min.js",
-    "types": "./lib/types/index.d.ts"
-  },
+  "browser": "./bundles/web.bundle.min.js",
   "exports": {
     "./web": {
-      "import": "./bundles/web.bundle.min.js",
+      "import": "./lib/mjs/index.js",
+      "require": "./lib/cjs/index.js",
+      "browser": "./bundles/web.bundle.min.js",
       "types": "./lib/types/index.d.ts"
     },
     "./mjs": {
