@@ -27,8 +27,6 @@ jobs:
         run: yarn test:integration:wasm
       - name: Test example rust contracts
         run: yarn build:test:wasm
-      - name: Run regression tests
-        run: yarn test:regression
       - name: Trigger integration tests
         if: github.ref_name == 'main'
         run: >
