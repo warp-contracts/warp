@@ -376,3 +376,22 @@ export interface QuickJsOptions {
   interruptCycles?: number;
   timeout?: number;
 }
+
+export interface QuickJsPluginMessage {
+  Cron: boolean;
+  Data: string | Buffer;
+  Epoch: number;
+  From: string;
+  Id: string | undefined;
+  Nonce: number;
+  Owner: string;
+  Signature: string | undefined;
+  Tags: {
+    [key: string]: string | undefined;
+  };
+  Target: string;
+  Timestamp: string;
+  ['Block-Height']: string;
+  ['Forwarded-By']: string;
+  ['Hash-Chain']: string;
+}
