@@ -211,11 +211,12 @@ export class HandlerExecutorFactory implements ExecutorFactory<HandlerApi<unknow
         });
       } else if (warp.hasPlugin('quickjs')) {
         const quickJsPlugin = warp.loadPlugin<QuickJsPluginInput, HandlerApi<State>>('quickjs');
-        return await quickJsPlugin.process({
+        return quickJsPlugin.process({
           contractSource: contractDefinition.src,
           evaluationOptions,
           swGlobal: swGlobal,
-          contractDefinition
+          contractDefinition,
+          binaryType: 'release_sync'
         });
       } else {
         const contractFunction = new Function(normalizedSource);
@@ -359,12 +360,14 @@ export interface VM2PluginInput {
   contractDefinition: ContractDefinition<unknown>;
 }
 
+export type BinaryType = 'release_sync' | 'release_async' | 'debug_sync' | 'debug_async';
+
 export interface QuickJsPluginInput {
   contractSource: string;
   evaluationOptions: EvaluationOptions;
   swGlobal: SmartWeaveGlobal;
   contractDefinition: ContractDefinition<unknown>;
-  wasmMemory?: Buffer;
+  binaryType: BinaryType;
 }
 
 export interface QuickJsOptions {
