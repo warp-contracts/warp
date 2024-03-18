@@ -360,14 +360,14 @@ export interface VM2PluginInput {
   contractDefinition: ContractDefinition<unknown>;
 }
 
-export type BinaryType = 'release_sync' | 'release_async' | 'debug_sync' | 'debug_async';
+export type QuickJsBinaryType = 'release_sync' | 'release_async' | 'debug_sync' | 'debug_async';
 
 export interface QuickJsPluginInput {
   contractSource: string;
   evaluationOptions: EvaluationOptions;
   swGlobal: SmartWeaveGlobal;
   contractDefinition: ContractDefinition<unknown>;
-  binaryType: BinaryType;
+  binaryType: QuickJsBinaryType;
 }
 
 export interface QuickJsOptions {
