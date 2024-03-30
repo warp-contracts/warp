@@ -427,6 +427,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
     if (!this.maxInteractionDataItemSizeBytes) {
       const response = fetch(`${stripTrailingSlash(this.warp.gwUrl())}`);
+      this.logger.info('confirm response', response);
       this.maxInteractionDataItemSizeBytes = (
         await getJsonResponse<{ maxInteractionDataItemSizeBytes: number }>(response)
       ).maxInteractionDataItemSizeBytes;
