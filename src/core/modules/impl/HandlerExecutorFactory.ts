@@ -16,7 +16,7 @@ import { isBrowser } from '../../../utils/utils';
 import { Buffer } from 'warp-isomorphic';
 import { InteractionState } from '../../../contract/states/InteractionState';
 import { WarpLogger } from '../../../logging/WarpLogger';
-import { XOR } from 'utils/types/mutually-exclusive';
+import { XOR } from '../../../utils/types/mutually-exclusive';
 
 // 'require' to fix esbuild adding same lib in both cjs and esm format
 // https://github.com/evanw/esbuild/issues/1950
