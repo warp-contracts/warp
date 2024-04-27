@@ -334,7 +334,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   async writeInteraction<Input>(
     input: Input,
-    options?: WriteInteractionOptions
+    options?: WriteInteractionOptions,
+    inputFormatAsData?: boolean
   ): Promise<WriteInteractionResponse | null> {
     this.logger.info('Write interaction', { input, options });
     if (!this._signature) {
@@ -380,7 +381,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
         tags: effectiveTags,
         strict: effectiveStrict,
         vrf: effectiveVrf,
-        manifestData: effectiveManifestData
+        manifestData: effectiveManifestData,
+        inputFormatAsData: inputFormatAsData
       });
     } else {
       const interactionTx = await this.createInteraction(
@@ -421,13 +423,13 @@ export class HandlerBasedContract<State> implements Contract<State> {
       strict: boolean;
       vrf: boolean;
       manifestData: InteractionManifestData;
+      inputFormatAsData?: boolean;
     }
   ): Promise<WriteInteractionResponse | null> {
-    this.logger.info('Bundle interaction input', input);
+    this.logger.info('Bundle interaction input: {}, tag: {}', input, options.tags);
 
     if (!this.maxInteractionDataItemSizeBytes) {
       const response = fetch(`${stripTrailingSlash(this.warp.gwUrl())}`);
-      this.logger.info('confirm response', response);
       this.maxInteractionDataItemSizeBytes = (
         await getJsonResponse<{ maxInteractionDataItemSizeBytes: number }>(response)
       ).maxInteractionDataItemSizeBytes;
@@ -439,7 +441,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
       emptyTransfer,
       options.strict,
       options.vrf,
-      options.manifestData
+      options.manifestData,
+      options.inputFormatAsData
     );
 
     const response = this._warpFetchWrapper.fetch(
@@ -469,7 +472,8 @@ export class HandlerBasedContract<State> implements Contract<State> {
     transfer: ArTransfer,
     strict: boolean,
     vrf = false,
-    manifestData: InteractionManifestData
+    manifestData: InteractionManifestData,
+    inputFormatAsData?: boolean
   ) {
     if (this._evaluationOptions.internalWrites) {
       // it modifies tags
@@ -488,7 +492,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     );
 
     let data: InteractionDataField<Input> | string;
-    if (tagsExceedLimit(interactionTags)) {
+    if (tagsExceedLimit(interactionTags) || inputFormatAsData) {
       interactionTags = [
         ...interactionTags.filter((t) => t.name != SMART_WEAVE_TAGS.INPUT && t.name != WARP_TAGS.INPUT_FORMAT),
         new Tag(WARP_TAGS.INPUT_FORMAT, 'data')
