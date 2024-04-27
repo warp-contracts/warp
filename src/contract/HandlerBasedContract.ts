@@ -334,8 +334,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
 
   async writeInteraction<Input>(
     input: Input,
-    options?: WriteInteractionOptions,
-    inputFormatAsData?: boolean
+    options?: WriteInteractionOptions
   ): Promise<WriteInteractionResponse | null> {
     this.logger.info('Write interaction', { input, options });
     if (!this._signature) {
@@ -354,6 +353,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
     const effectiveDisableBundling = options?.disableBundling === true;
     const effectiveReward = options?.reward;
     const effectiveManifestData = options?.manifestData;
+    const effectiveInputFormatOption = options?.inputFormatAsData;
 
     const bundleInteraction = interactionsLoader.type() == 'warp' && !effectiveDisableBundling;
 
@@ -382,7 +382,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
         strict: effectiveStrict,
         vrf: effectiveVrf,
         manifestData: effectiveManifestData,
-        inputFormatAsData: inputFormatAsData
+        inputFormatAsData: effectiveInputFormatOption
       });
     } else {
       const interactionTx = await this.createInteraction(

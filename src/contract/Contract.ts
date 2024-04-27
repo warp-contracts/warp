@@ -40,6 +40,7 @@ export interface DREContractStatusResponse<State> {
 export type WarpOptions = {
   vrf?: boolean;
   disableBundling?: boolean;
+  inputFormatAsData?: boolean;
   manifestData?: { [path: string]: string };
 };
 
@@ -217,8 +218,7 @@ export interface Contract<State = unknown> {
    */
   writeInteraction<Input = unknown>(
     input: Input,
-    options?: WriteInteractionOptions,
-    inputFormatAsData?: boolean
+    options?: WriteInteractionOptions
   ): Promise<WriteInteractionResponse | null>;
 
   /**
