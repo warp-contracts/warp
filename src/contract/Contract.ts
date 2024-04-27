@@ -217,7 +217,8 @@ export interface Contract<State = unknown> {
    */
   writeInteraction<Input = unknown>(
     input: Input,
-    options?: WriteInteractionOptions
+    options?: WriteInteractionOptions,
+    inputFormatAsData?: boolean
   ): Promise<WriteInteractionResponse | null>;
 
   /**
