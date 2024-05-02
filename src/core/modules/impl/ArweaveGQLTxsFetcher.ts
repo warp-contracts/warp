@@ -1,4 +1,9 @@
-import { GQLEdgeInterface, GQLResultInterface, GQLTransaction, GQLTransactionResponse } from 'legacy/gqlResult';
+import {
+  GQLEdgeInterface,
+  GQLResultInterface,
+  GQLTransaction,
+  GQLTransactionResponse
+} from '../../../legacy/gqlResult';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { ArweaveWrapper } from '../../../utils/ArweaveWrapper';
 import { sleep } from '../../../utils/utils';
