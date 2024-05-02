@@ -1,4 +1,4 @@
-import { GQLNodeInterface } from 'legacy/gqlResult';
+import { GQLNodeInterface } from '../../../../legacy/gqlResult';
 import { ContractDefinition } from '../../../../core/ContractDefinition';
 import { ExecutionContext } from '../../../../core/ExecutionContext';
 import { EvalStateResult, InteractionCompleteEvent } from '../../../../core/modules/StateEvaluator';
