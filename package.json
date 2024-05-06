@@ -17,10 +17,14 @@
     },
     "./mjs": {
       "import": "./lib/mjs/index.js",
+      "require": "./lib/cjs/index.js",
+      "browser": "./bundles/web.bundle.min.js",
       "types": "./lib/types/index.d.ts"
     },
     ".": {
       "import": "./lib/mjs/index.js",
+      "require": "./lib/cjs/index.js",
+      "browser": "./bundles/web.bundle.min.js",
       "types": "./lib/types/index.d.ts"
     }
   },
