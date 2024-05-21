@@ -7,6 +7,7 @@ import { GW_TYPE, InteractionsLoader } from '../InteractionsLoader';
 import { EvaluationOptions } from '../StateEvaluator';
 import { Warp } from '../../Warp';
 import { AbortError } from './HandlerExecutorFactory';
+import { WarpFetchWrapper } from '../../../core/WarpFetchWrapper';
 
 export type ConfirmationStatus =
   | {
@@ -51,6 +52,7 @@ type InteractionsResult = {
  */
 export class WarpGatewayInteractionsLoader implements InteractionsLoader {
   private _warp: Warp;
+  private _warpFetchWrapper: WarpFetchWrapper;
 
   constructor(
     private readonly confirmationStatus: ConfirmationStatus = null,
@@ -93,7 +95,7 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
 
       page++;
       const response = await getJsonResponse<InteractionsResult>(
-        fetch(
+        this._warpFetchWrapper.fetch(
           `${url}?${new URLSearchParams({
             contractId: contractId,
             ...(this._warp.whoAmI ? { client: this._warp.whoAmI } : ''),
@@ -140,5 +142,6 @@ export class WarpGatewayInteractionsLoader implements InteractionsLoader {
 
   set warp(warp: Warp) {
     this._warp = warp;
+    this._warpFetchWrapper = new WarpFetchWrapper(warp);
   }
 }
