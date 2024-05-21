@@ -12,6 +12,7 @@ import { Warp, WarpEnvironment } from '../../Warp';
 import { TagsParser } from './TagsParser';
 import { Transaction } from '../../../utils/types/arweave-types';
 import { getJsonResponse, stripTrailingSlash } from '../../../utils/utils';
+import { WarpFetchWrapper } from '../../../core/WarpFetchWrapper';
 
 /**
  * Makes use of Warp Gateway ({@link https://github.com/redstone-finance/redstone-sw-gateway})
@@ -26,6 +27,7 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
   private arweaveWrapper: ArweaveWrapper;
   private readonly tagsParser: TagsParser;
   private _warp: Warp;
+  private _warpFetchWrapper: WarpFetchWrapper;
 
   constructor(arweave: Arweave, env: WarpEnvironment) {
     this.contractDefinitionLoader = new ArweaveContractDefinitionLoader(arweave, env);
@@ -36,7 +38,9 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
     try {
       const baseUrl = stripTrailingSlash(this._warp.gwUrl());
       const result: ContractDefinition<State> = await getJsonResponse(
-        fetch(`${baseUrl}/gateway/contract?txId=${contractTxId}${evolvedSrcTxId ? `&srcTxId=${evolvedSrcTxId}` : ''}`)
+        this._warpFetchWrapper.fetch(
+          `${baseUrl}/gateway/contract?txId=${contractTxId}${evolvedSrcTxId ? `&srcTxId=${evolvedSrcTxId}` : ''}`
+        )
       );
 
       if (result.srcBinary != null && !(result.srcBinary instanceof Buffer)) {
@@ -75,5 +79,6 @@ export class WarpGatewayContractDefinitionLoader implements DefinitionLoader {
     this._warp = warp;
     this.arweaveWrapper = new ArweaveWrapper(warp);
     this.contractDefinitionLoader.warp = warp;
+    this._warpFetchWrapper = new WarpFetchWrapper(warp);
   }
 }
