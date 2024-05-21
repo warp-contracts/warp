@@ -97,7 +97,7 @@ describe('WarpGatewayInteractionsLoader -> load', () => {
   it('should be called with correct params', async () => {
     const loader = getLoader();
     await loader.load(contractId, fromBlockHeight, toBlockHeight);
-    expect(fetchMock).toBeCalledWith(`${baseUrl}&fromSdk=true`);
+    expect(fetchMock).toBeCalledWith(`${baseUrl}&fromSdk=true`, undefined);
   });
   it('should be called accordingly to the amount of pages', async () => {
     const fetchMock = jest.spyOn(global, 'fetch').mockImplementation(
@@ -110,7 +110,7 @@ describe('WarpGatewayInteractionsLoader -> load', () => {
     );
     const loader = getLoader();
     await loader.load(contractId, fromBlockHeight, toBlockHeight);
-    expect(fetchMock).toBeCalledWith(`${baseUrl}&fromSdk=true`);
+    expect(fetchMock).toBeCalledWith(`${baseUrl}&fromSdk=true`, undefined);
     /*expect(fetchMock).toBeCalledWith(`${baseUrl}&page=2&fromSdk=true`);
     expect(fetchMock).toBeCalledWith(`${baseUrl}&page=3&fromSdk=true`);
     expect(fetchMock).toBeCalledWith(`${baseUrl}&page=4&fromSdk=true`);
@@ -120,12 +120,12 @@ describe('WarpGatewayInteractionsLoader -> load', () => {
   it('should be called with confirmationStatus set to "confirmed"', async () => {
     const loader = getLoader({ confirmed: true });
     await loader.load(contractId, fromBlockHeight, toBlockHeight);
-    expect(fetchMock).toBeCalledWith(`${baseUrl}&fromSdk=true&confirmationStatus=confirmed`);
+    expect(fetchMock).toBeCalledWith(`${baseUrl}&fromSdk=true&confirmationStatus=confirmed`, undefined);
   });
   it('should be called with confirmationStatus set to "not_corrupted"', async () => {
     const loader = getLoader({ notCorrupted: true });
     await loader.load(contractId, fromBlockHeight, toBlockHeight);
-    expect(fetchMock).toBeCalledWith(`${baseUrl}&fromSdk=true&confirmationStatus=not_corrupted`);
+    expect(fetchMock).toBeCalledWith(`${baseUrl}&fromSdk=true&confirmationStatus=not_corrupted`, undefined);
   });
   it('should throw an error in case of timeout', async () => {
     jest.spyOn(global, 'fetch').mockImplementation(() => Promise.reject({ status: 504, ok: false }));
