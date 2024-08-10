@@ -346,15 +346,21 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
             const commitBenchmark = Benchmark.measure();
             await contract.interactionState().commit(missingInteraction, forceStateStoreToCache);
             commitBenchmark.stop();
-            this.logger.info('Update benchmark', commitBenchmark.elapsed());
+            this.logger.info('Commit benchmark', commitBenchmark.elapsed());
           } else {
+            const rollbackBenchmark = Benchmark.measure();
             await contract.interactionState().rollback(missingInteraction, forceStateStoreToCache);
+            rollbackBenchmark.stop();
+            this.logger.info('Rollback benchmark', rollbackBenchmark.elapsed());
           }
         }
       } else {
         // if that's an inner contract call - only update the state in the uncommitted states
         const interactionState = new EvalStateResult(currentState, validity, errorMessages);
+        const innerContractCallBenchmark = Benchmark.measure();
         contract.interactionState().update(contract.txId(), interactionState, currentSortKey);
+        innerContractCallBenchmark.stop();
+        this.logger.info('Inner contract call benchmark', innerContractCallBenchmark.elapsed());
       }
 
       forceStateBenchmark.stop();
