@@ -54,6 +54,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     baseState: EvalStateResult<State>,
     executionContext: ExecutionContext<State, HandlerApi<State>>
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
+    const wholeReadStateBenchmark = Benchmark.measure();
     const { ignoreExceptions, stackTrace, internalWrites } = executionContext.evaluationOptions;
     const { contract, contractDefinition, sortedInteractions, warp, signal } = executionContext;
 
@@ -63,7 +64,10 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     const errorMessages = baseState.errorMessages;
 
     // TODO: opt - reuse wasm handlers
+    const initStateBenchmark = Benchmark.measure();
     executionContext?.handler.initState(currentState);
+    initStateBenchmark.stop();
+    this.logger.info('Benchmark init state', initStateBenchmark.elapsed());
     const depth = executionContext.contract.callDepth();
 
     this.logger.debug(
@@ -242,11 +246,14 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         const interactionCall: InteractionCall = contract.getCallStack().addInteractionData(interactionData);
 
+        const resultBenchmark = Benchmark.measure();
         const result = await executionContext.handler.handle(
           executionContext,
           new EvalStateResult(currentState, validity, errorMessages),
           interactionData
         );
+        resultBenchmark.stop();
+        this.logger.info('Result benchmark', resultBenchmark.elapsed());
 
         errorMessage = result.errorMessage;
         if (result.type !== 'ok') {
@@ -348,6 +355,8 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       await this.onStateEvaluated(lastConfirmedTxState.tx, executionContext, lastConfirmedTxState.state);
     }
 
+    wholeReadStateBenchmark.stop();
+    this.logger.info('Benchmark whole read', wholeReadStateBenchmark.elapsed());
     return new SortKeyCacheResult(currentSortKey, evalStateResult);
   }
 

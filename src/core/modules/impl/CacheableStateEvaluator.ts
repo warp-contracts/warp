@@ -10,6 +10,7 @@ import { DefaultStateEvaluator } from './DefaultStateEvaluator';
 import { HandlerApi } from './HandlerExecutorFactory';
 import { genesisSortKey } from './LexicographicalInteractionsSorter';
 import { BasicSortKeyCache } from '../../../cache/BasicSortKeyCache';
+import { Benchmark } from 'logging/Benchmark';
 
 /**
  * An implementation of DefaultStateEvaluator that adds caching capabilities.
@@ -98,7 +99,10 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       }]`
     );
 
+    const putInCacheBenchmark = Benchmark.measure();
     await this.putInCache(contractTxId, transaction, state);
+    putInCacheBenchmark.stop();
+    this.cLogger.info('Benchmark put in cache', putInCacheBenchmark.elapsed());
   }
 
   async onStateUpdate<State>(
