@@ -244,7 +244,10 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           interactionTx: missingInteraction
         };
 
+        const getCallStackBenchmark = Benchmark.measure();
         const interactionCall: InteractionCall = contract.getCallStack().addInteractionData(interactionData);
+        getCallStackBenchmark.stop();
+        this.logger.info('Benchmark call stack', getCallStackBenchmark.elapsed());
 
         const resultBenchmark = Benchmark.measure();
         const result = await executionContext.handler.handle(
@@ -323,6 +326,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         }
       }
 
+      const forceStateBenchmark = Benchmark.measure();
       const forceStateStoreToCache =
         (executionContext.evaluationOptions.cacheEveryNInteractions > 0 &&
           i % executionContext.evaluationOptions.cacheEveryNInteractions === 0) ||
@@ -332,11 +336,17 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         contract.clearChildren();
         // update the uncommitted state of the root contract
         if (lastConfirmedTxState) {
+          const updateBenchmark = Benchmark.measure();
           contract
             .interactionState()
             .update(contract.txId(), lastConfirmedTxState.state, lastConfirmedTxState.tx.sortKey);
+          updateBenchmark.stop();
+          this.logger.info('Update benchmark', updateBenchmark.elapsed());
           if (validity[missingInteraction.id]) {
+            const commitBenchmark = Benchmark.measure();
             await contract.interactionState().commit(missingInteraction, forceStateStoreToCache);
+            commitBenchmark.stop();
+            this.logger.info('Update benchmark', commitBenchmark.elapsed());
           } else {
             await contract.interactionState().rollback(missingInteraction, forceStateStoreToCache);
           }
@@ -346,14 +356,20 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         const interactionState = new EvalStateResult(currentState, validity, errorMessages);
         contract.interactionState().update(contract.txId(), interactionState, currentSortKey);
       }
+
+      forceStateBenchmark.stop();
+      this.logger.info('Benchmark force state', forceStateBenchmark.elapsed());
     }
     const evalStateResult = new EvalStateResult<State>(currentState, validity, errorMessages);
 
     // state could have been fully retrieved from cache
     // or there were no interactions below requested sort key
+    const onStateEvaluated = Benchmark.measure();
     if (lastConfirmedTxState !== null && !(contract.isRoot() && missingInteractions.length == 1)) {
       await this.onStateEvaluated(lastConfirmedTxState.tx, executionContext, lastConfirmedTxState.state);
     }
+    onStateEvaluated.stop();
+    this.logger.info('On state evaluated benchmark', onStateEvaluated.elapsed());
 
     wholeReadStateBenchmark.stop();
     this.logger.info('Benchmark whole read', wholeReadStateBenchmark.elapsed());
