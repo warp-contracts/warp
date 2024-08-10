@@ -7,6 +7,7 @@ import { deepCopy, timeout } from '../../../../utils/utils';
 import { ContractError, ContractInteraction, InteractionData, InteractionResult } from '../HandlerExecutorFactory';
 import { genesisSortKey } from '../LexicographicalInteractionsSorter';
 import { AbstractContractHandler } from './AbstractContractHandler';
+import { Benchmark } from '../../../../logging/Benchmark';
 
 const INIT_FUNC_NAME = '__init';
 const throwErrorWithName = (name: string, message: string) => {
@@ -39,10 +40,13 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
   ): Promise<InteractionResult<State, Result>> {
     const { interaction, interactionTx } = interactionData;
 
+    const initialHandleBenchmark = Benchmark.measure();
     this.setupSwGlobal(interactionData);
     this.enableInternalWrites(executionContext, interactionTx);
 
     this.assertNotConstructorCall<Input>(interaction);
+    initialHandleBenchmark.stop();
+    this.logger.info('Initial handle benchmark', initialHandleBenchmark.stop());
 
     return await this.runContractFunction(executionContext, interaction, currentResult.state);
   }
@@ -138,20 +142,34 @@ export class JsHandlerApi<State> extends AbstractContractHandler<State> {
     interaction: InteractionData<Input>['interaction'],
     state: State
   ): Promise<InteractionResult<State, Result>> {
+    const stateCloneBenchmark = Benchmark.measure();
     const stateClone = deepCopy(state);
+    stateCloneBenchmark.stop();
+    this.logger.info('State clone benchmark', stateCloneBenchmark.elapsed());
+    const timeoutBenchmark = Benchmark.measure();
     const { timeoutId, timeoutPromise } = timeout(
       executionContext.evaluationOptions.maxInteractionEvaluationTimeSeconds
     );
+    timeoutBenchmark.stop();
+    this.logger.info('timeout benchmark', timeoutBenchmark.elapsed());
 
     try {
+      const openKvBenchmark = Benchmark.measure();
       await this.swGlobal.kv.open();
       await this.swGlobal.kv.begin();
+      openKvBenchmark.stop();
+      this.logger.info('openKvBenchmark', openKvBenchmark.elapsed());
 
+      const handlerResultBenchmark = Benchmark.measure();
       const handlerResult = await Promise.race([timeoutPromise, this.contractFunction(stateClone, interaction)]);
+      handlerResultBenchmark.stop();
+      this.logger.info('handlerResultBenchmark', handlerResultBenchmark.elapsed());
 
       if (handlerResult && (handlerResult.state !== undefined || handlerResult.result !== undefined)) {
+        const kvCommitBenchmark = Benchmark.measure();
         await this.swGlobal.kv.commit();
-
+        kvCommitBenchmark.stop();
+        this.logger.info('kvCommitBenchmark', kvCommitBenchmark.elapsed());
         let interactionEvent: InteractionCompleteEvent = null;
 
         if (handlerResult.event) {
