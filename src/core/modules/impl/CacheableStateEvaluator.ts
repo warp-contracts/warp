@@ -10,7 +10,7 @@ import { DefaultStateEvaluator } from './DefaultStateEvaluator';
 import { HandlerApi } from './HandlerExecutorFactory';
 import { genesisSortKey } from './LexicographicalInteractionsSorter';
 import { BasicSortKeyCache } from '../../../cache/BasicSortKeyCache';
-import { Benchmark } from 'logging/Benchmark';
+import { Benchmark } from '../../../logging/Benchmark';
 
 /**
  * An implementation of DefaultStateEvaluator that adds caching capabilities.
