@@ -77,7 +77,7 @@ export class ContractInteractionState implements InteractionState {
           latestState.set(k, state.cachedValue);
         }
       });
-      await this.doStoreJson(latestState, interaction, forceStore);
+      this.doStoreJson(latestState, interaction, forceStore).then();
       await this.commitKVs();
     } finally {
       this.reset();
@@ -91,7 +91,7 @@ export class ContractInteractionState implements InteractionState {
 
   async rollback(interaction: GQLNodeInterface, forceStateStoreToCache: boolean): Promise<void> {
     try {
-      await this.doStoreJson(this._initialJson, interaction, forceStateStoreToCache);
+      this.doStoreJson(this._initialJson, interaction, forceStateStoreToCache).then();
       await this.rollbackKVs();
     } finally {
       this.reset();
