@@ -81,7 +81,9 @@ export class ContractInteractionState implements InteractionState {
         }
       });
       const doStoreJsonBenchmark = Benchmark.measure();
-      this.doStoreJson(latestState, interaction, forceStore).then();
+      this.doStoreJson(latestState, interaction, forceStore).then(() => {
+        this.logger.info(`json stored`);
+      });
       doStoreJsonBenchmark.stop();
       this.logger.info('doStoreJsonBenchmark', doStoreJsonBenchmark.elapsed());
       const commitKvsBenchmark = Benchmark.measure();
