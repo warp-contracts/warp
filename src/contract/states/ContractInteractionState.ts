@@ -5,11 +5,14 @@ import { GQLNodeInterface } from '../../legacy/gqlResult';
 import { Warp } from '../../core/Warp';
 import { SortKeyCacheRangeOptions } from '../../cache/SortKeyCacheRangeOptions';
 import { SimpleLRUCache } from '../../common/SimpleLRUCache';
+import { Benchmark } from '../../logging/Benchmark';
+import { LoggerFactory } from '../../logging/LoggerFactory';
 
 export class ContractInteractionState implements InteractionState {
   private readonly _json = new Map<string, SimpleLRUCache<string, EvalStateResult<unknown>>>();
   private readonly _initialJson = new Map<string, EvalStateResult<unknown>>();
   private readonly _kv = new Map<string, SortKeyCache<unknown>>();
+  private readonly logger = LoggerFactory.INST.create('ContractInteractionState');
 
   constructor(private readonly _warp: Warp) {}
 
@@ -77,8 +80,14 @@ export class ContractInteractionState implements InteractionState {
           latestState.set(k, state.cachedValue);
         }
       });
-      this.doStoreJson(latestState, interaction, forceStore).then();
+      const doStoreJsonBenchmark = Benchmark.measure();
+      await this.doStoreJson(latestState, interaction, forceStore);
+      doStoreJsonBenchmark.stop();
+      this.logger.info('doStoreJsonBenchmark', doStoreJsonBenchmark.elapsed());
+      const commitKvsBenchmark = Benchmark.measure();
       await this.commitKVs();
+      commitKvsBenchmark.stop();
+      this.logger.info('commitKvs', doStoreJsonBenchmark.elapsed());
     } finally {
       this.reset();
     }
