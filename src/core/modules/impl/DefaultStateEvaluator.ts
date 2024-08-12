@@ -344,9 +344,13 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
           this.logger.info('Update benchmark', updateBenchmark.elapsed());
           if (validity[missingInteraction.id]) {
             const commitBenchmark = Benchmark.measure();
-            await contract.interactionState().commit(missingInteraction, forceStateStoreToCache);
-            commitBenchmark.stop();
-            this.logger.info('Commit benchmark', commitBenchmark.elapsed());
+            contract
+              .interactionState()
+              .commit(missingInteraction, forceStateStoreToCache)
+              .then(() => {
+                commitBenchmark.stop();
+                this.logger.info('Commit benchmark', commitBenchmark.elapsed());
+              });
           } else {
             const rollbackBenchmark = Benchmark.measure();
             await contract.interactionState().rollback(missingInteraction, forceStateStoreToCache);
