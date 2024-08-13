@@ -81,9 +81,7 @@ export class ContractInteractionState implements InteractionState {
         }
       });
       const doStoreJsonBenchmark = Benchmark.measure();
-      this.doStoreJson(latestState, interaction, forceStore).then(() => {
-        this.logger.info(`json stored`);
-      });
+      await this.doStoreJson(latestState, interaction, forceStore);
       doStoreJsonBenchmark.stop();
       this.logger.info('doStoreJsonBenchmark', doStoreJsonBenchmark.elapsed());
       const commitKvsBenchmark = Benchmark.measure();
@@ -102,7 +100,7 @@ export class ContractInteractionState implements InteractionState {
 
   async rollback(interaction: GQLNodeInterface, forceStateStoreToCache: boolean): Promise<void> {
     try {
-      this.doStoreJson(this._initialJson, interaction, forceStateStoreToCache).then();
+      await this.doStoreJson(this._initialJson, interaction, forceStateStoreToCache);
       await this.rollbackKVs();
     } finally {
       this.reset();
@@ -150,7 +148,7 @@ export class ContractInteractionState implements InteractionState {
   ) {
     if (states.size > 1 || forceStore) {
       for (const [k, v] of states) {
-        await this._warp.stateEvaluator.putInCache(k, interaction, v);
+        this._warp.stateEvaluator.putInCache(k, interaction, v).then();
       }
     }
   }
