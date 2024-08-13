@@ -180,6 +180,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     transaction: GQLNodeInterface,
     state: EvalStateResult<State>
   ): Promise<void> {
+    const putInCacheBenchmark = Benchmark.measure();
     if (transaction.dry) {
       return;
     }
@@ -194,8 +195,13 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       sortKey: transaction.sortKey,
       dry: transaction.dry
     });
+    putInCacheBenchmark.stop();
+    this.cLogger.info('putInCacheBenchmark', putInCacheBenchmark.elapsed());
 
-    await this.cache.put(new CacheKey(contractTxId, transaction.sortKey), stateToCache);
+    const putInCacheFunc = Benchmark.measure();
+    this.cache.put(new CacheKey(contractTxId, transaction.sortKey), stateToCache).then();
+    putInCacheFunc.stop();
+    this.cLogger.info('putInCacheFunc', putInCacheFunc.elapsed());
   }
 
   async syncState<State>(

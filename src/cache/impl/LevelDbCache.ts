@@ -7,6 +7,7 @@ import { SortKeyCacheRangeOptions } from '../SortKeyCacheRangeOptions';
 import { AbstractSublevel, AbstractSublevelOptions } from 'abstract-level/types/abstract-sublevel';
 import { AbstractChainedBatch } from 'abstract-level/types/abstract-chained-batch';
 import { AbstractKeyIteratorOptions } from 'abstract-level/types/abstract-iterator';
+import { Benchmark } from '../../logging/Benchmark';
 
 /**
  * The LevelDB is a lexicographically sorted key-value database - so it's ideal for this use case
@@ -141,7 +142,10 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
   }
 
   async put(stateCacheKey: CacheKey, value: V): Promise<void> {
-    await this.setClientValue(stateCacheKey, new ClientValueWrapper(value));
+    const putBenchmark = Benchmark.measure();
+    this.setClientValue(stateCacheKey, new ClientValueWrapper(value)).then();
+    putBenchmark.stop();
+    this.logger.info('putBenchmark', putBenchmark.elapsed());
   }
 
   /**
@@ -158,14 +162,17 @@ export class LevelDbCache<V> implements SortKeyCache<V> {
   }
 
   private async setClientValue(stateCacheKey: CacheKey, valueWrapper: ClientValueWrapper<V>): Promise<void> {
+    const setClientValueBenchmark = Benchmark.measure();
     this.validateKey(stateCacheKey.key);
     const contractCache = this.db.sublevel<string, ClientValueWrapper<V>>(stateCacheKey.key, this.subLevelOptions);
     // manually opening to fix https://github.com/Level/level/issues/221
     await contractCache.open();
-    await contractCache.put(stateCacheKey.sortKey, valueWrapper);
+    contractCache.put(stateCacheKey.sortKey, valueWrapper).then();
     if (this._rollbackBatch) {
       this._rollbackBatch.del(stateCacheKey.sortKey, { sublevel: contractCache });
     }
+    setClientValueBenchmark.stop();
+    this.logger.info('setClientValue', setClientValueBenchmark.elapsed());
   }
 
   async delete(key: string): Promise<void> {

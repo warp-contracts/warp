@@ -147,9 +147,15 @@ export class ContractInteractionState implements InteractionState {
     forceStore = false
   ) {
     if (states.size > 1 || forceStore) {
+      const doStoreJsonLoopBenchmark = Benchmark.measure();
       for (const [k, v] of states) {
+        const doStoreJsonSingularBenchmark = Benchmark.measure();
         this._warp.stateEvaluator.putInCache(k, interaction, v).then();
+        doStoreJsonSingularBenchmark.stop();
+        this.logger.info(`doStoreJsonSingularBenchmark, ${k}`, doStoreJsonSingularBenchmark.elapsed());
       }
+      doStoreJsonLoopBenchmark.stop();
+      this.logger.info('doStoreJsonLoopBenchmark', doStoreJsonLoopBenchmark.elapsed());
     }
   }
 
