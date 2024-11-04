@@ -8,7 +8,7 @@ import { GQLNodeInterface, GQLTagInterface } from '../../../legacy/gqlResult';
 import { Benchmark } from '../../../logging/Benchmark';
 import { LoggerFactory } from '../../../logging/LoggerFactory';
 import { indent } from '../../../utils/utils';
-import { EvalStateResult, StateEvaluator } from '../StateEvaluator';
+import { EvalStateResult, StateEvaluator, CustomEvent } from '../StateEvaluator';
 import { AbortError, ContractInteraction, HandlerApi, InteractionResult } from './HandlerExecutorFactory';
 import { TagsParser } from './TagsParser';
 import { VrfPluginFunctions } from '../../WarpPlugin';
@@ -44,7 +44,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
     return this.doReadState(
       executionContext.sortedInteractions,
-      new EvalStateResult<State>(executionContext.contractDefinition.initState, {}, {}, []),
+      new EvalStateResult<State>(executionContext.contractDefinition.initState, {}, {}),
       executionContext
     );
   }
@@ -61,7 +61,6 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
     let currentSortKey = null;
     const validity = baseState.validity;
     const errorMessages = baseState.errorMessages;
-    const events = [];
 
     // TODO: opt - reuse wasm handlers
     executionContext?.handler.initState(currentState);
@@ -98,11 +97,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
       currentSortKey = missingInteraction.sortKey;
       contract
         .interactionState()
-        .setInitial(
-          contract.txId(),
-          new EvalStateResult(currentState, validity, errorMessages, events),
-          currentSortKey
-        );
+        .setInitial(contract.txId(), new EvalStateResult(currentState, validity, errorMessages), currentSortKey);
       const singleInteractionBenchmark = Benchmark.measure();
 
       if (missingInteraction.vrf) {
@@ -171,7 +166,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
             this.logger.warn(`Skipping contract in internal write, reason ${e.subtype || e.name}`);
             errorMessages[missingInteraction.id] = e;
             if (canBeCached(missingInteraction)) {
-              const toCache = new EvalStateResult(currentState, validity, errorMessages, events);
+              const toCache = new EvalStateResult(currentState, validity, errorMessages);
               lastConfirmedTxState = {
                 tx: missingInteraction,
                 state: toCache
@@ -202,7 +197,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
               writingContractState.cachedValue.errorMessages[missingInteraction.id];
           }
 
-          const toCache = new EvalStateResult(currentState, validity, errorMessages, events);
+          const toCache = new EvalStateResult(currentState, validity, errorMessages);
           if (canBeCached(missingInteraction)) {
             lastConfirmedTxState = {
               tx: missingInteraction,
@@ -249,7 +244,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         const result = await executionContext.handler.handle(
           executionContext,
-          new EvalStateResult(currentState, validity, errorMessages, events),
+          new EvalStateResult(currentState, validity, errorMessages),
           interactionData
         );
 
@@ -279,7 +274,7 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         currentState = result.state;
 
-        const toCache = new EvalStateResult(currentState, validity, errorMessages, events);
+        const toCache = new EvalStateResult(currentState, validity, errorMessages);
         if (canBeCached(missingInteraction)) {
           lastConfirmedTxState = {
             tx: missingInteraction,
@@ -289,7 +284,9 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
 
         const event = result.event;
         if (event) {
-          events.push(event);
+          warp.eventTarget.dispatchEvent(
+            new CustomEvent(isValidInteraction ? 'interactionCompleted' : 'interactionFailed', { detail: event })
+          );
         }
       }
 
@@ -339,11 +336,11 @@ export abstract class DefaultStateEvaluator implements StateEvaluator {
         }
       } else {
         // if that's an inner contract call - only update the state in the uncommitted states
-        const interactionState = new EvalStateResult(currentState, validity, errorMessages, events);
+        const interactionState = new EvalStateResult(currentState, validity, errorMessages);
         contract.interactionState().update(contract.txId(), interactionState, currentSortKey);
       }
     }
-    const evalStateResult = new EvalStateResult<State>(currentState, validity, errorMessages, events);
+    const evalStateResult = new EvalStateResult<State>(currentState, validity, errorMessages);
 
     // state could have been fully retrieved from cache
     // or there were no interactions below requested sort key

@@ -97,8 +97,7 @@ export class EvalStateResult<State> {
   constructor(
     readonly state: State,
     readonly validity: Record<string, boolean>,
-    readonly errorMessages: Record<string, string>,
-    readonly events?: InteractionCompleteEvent[]
+    readonly errorMessages: Record<string, string>
   ) {}
 }
 
@@ -261,6 +260,16 @@ export interface EvaluationOptions {
 
   // whether NetworkCommunicationErrors during loading evolved sources are stopping contract evaluation
   strictEvolve: boolean;
+}
+
+// https://github.com/nodejs/node/issues/40678 duh...
+export class CustomEvent<T = unknown> extends Event {
+  readonly detail: T;
+
+  constructor(message, data) {
+    super(message, data);
+    this.detail = data.detail;
+  }
 }
 
 export class InteractionCompleteEvent<Input = unknown, T = unknown> {
