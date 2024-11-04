@@ -98,7 +98,7 @@ export class EvalStateResult<State> {
     readonly state: State,
     readonly validity: Record<string, boolean>,
     readonly errorMessages: Record<string, string>,
-    readonly events?: InteractionCompleteEvent[]
+    readonly events: InteractionCompleteEvent[]
   ) {}
 }
 

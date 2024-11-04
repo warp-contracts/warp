@@ -101,7 +101,8 @@ export abstract class AbstractContractHandler<State> implements HandlerApi<State
             ...result.originalValidity,
             [activeTx.id]: result.type == 'ok'
           },
-          errorMessages: resultErrorMessages
+          errorMessages: resultErrorMessages,
+          events: []
         },
         activeTx.sortKey
       );

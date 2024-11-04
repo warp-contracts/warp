@@ -68,7 +68,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
       if (isFirstEvaluation) {
         executionContext.handler?.initState(baseState);
         this.cLogger.debug('Inserting initial state into cache');
-        const stateToCache = new EvalStateResult(baseState, {}, {});
+        const stateToCache = new EvalStateResult(baseState, {}, {}, []);
         // no real sort-key - as we're returning the initial state
         await this.cache.put(new CacheKey(contractTxId, genesisSortKey), stateToCache);
 
@@ -81,7 +81,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     // eval state for the missing transactions - starting from the latest value from cache.
     return await this.doReadState(
       missingInteractions,
-      new EvalStateResult(baseState, baseValidity, baseErrorMessages),
+      new EvalStateResult(baseState, baseValidity, baseErrorMessages, []),
       executionContext
     );
   }
@@ -182,7 +182,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     if (transaction.confirmationStatus !== undefined && transaction.confirmationStatus !== 'confirmed') {
       return;
     }
-    const stateToCache = new EvalStateResult(state.state, state.validity || {}, state.errorMessages || {});
+    const stateToCache = new EvalStateResult(state.state, state.validity || {}, state.errorMessages || {}, []);
 
     this.cLogger.debug('Putting into cache', {
       contractTxId,
@@ -200,7 +200,7 @@ export class CacheableStateEvaluator extends DefaultStateEvaluator {
     state: State,
     validity: Record<string, boolean>
   ): Promise<SortKeyCacheResult<EvalStateResult<State>>> {
-    const stateToCache = new EvalStateResult(state, validity, {});
+    const stateToCache = new EvalStateResult(state, validity, {}, []);
     await this.cache.put(new CacheKey(contractTxId, sortKey), stateToCache);
     return new SortKeyCacheResult(sortKey, stateToCache);
   }

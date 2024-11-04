@@ -1154,7 +1154,7 @@ export class HandlerBasedContract<State> implements Contract<State> {
   ): SortKeyCacheResult<EvalStateResult<State>> {
     const dreCachedState = new SortKeyCacheResult(
       result.sortKey,
-      new EvalStateResult(result.state, {}, result.errorMessages)
+      new EvalStateResult(result.state, {}, result.errorMessages, [])
     );
     this.getRoot()._dreStates.set(contractTxId, dreCachedState);
     return dreCachedState;

@@ -135,36 +135,28 @@ describe('Testing the Profit Sharing Token', () => {
   });
 
   it('should properly dispatch an event', async () => {
-    let handlerCalled = false;
     const interactionResult = await pst.writeInteraction({
       function: 'dispatchEvent'
     });
 
     await mineBlock(warp);
-    warp.eventTarget.addEventListener('interactionCompleted', interactionCompleteHandler);
-    await pst.readState();
+    const { cachedValue } = await pst.readState();
+    const event = cachedValue.events[0];
 
-    expect(handlerCalled).toBeTruthy();
-
-    function interactionCompleteHandler(event: CustomEvent<InteractionCompleteEvent>) {
-      expect(event.type).toEqual('interactionCompleted');
-      expect(event.detail.contractTxId).toEqual(pst.txId());
-      expect(event.detail.caller).toEqual(walletAddress);
-      expect(event.detail.transactionId).toEqual(interactionResult.originalTxId);
-      expect(event.detail.sortKey).not.toBeNull();
-      expect(event.detail.input).not.toBeNull();
-      expect(event.detail.blockHeight).toBeGreaterThan(0);
-      expect(event.detail.blockTimestamp).toBeGreaterThan(0);
-      expect(event.detail.data).toEqual({
-        value1: 'foo',
-        value2: 'bar'
-      });
-      expect(event.detail.input).toEqual({
-        function: 'dispatchEvent'
-      });
-      handlerCalled = true;
-      warp.eventTarget.removeEventListener('interactionCompleted', interactionCompleteHandler);
-    }
+    expect(event.contractTxId).toEqual(pst.txId());
+    expect(event.caller).toEqual(walletAddress);
+    expect(event.transactionId).toEqual(interactionResult.originalTxId);
+    expect(event.sortKey).not.toBeNull();
+    expect(event.input).not.toBeNull();
+    expect(event.blockHeight).toBeGreaterThan(0);
+    expect(event.blockTimestamp).toBeGreaterThan(0);
+    expect(event.data).toEqual({
+      value1: 'foo',
+      value2: 'bar'
+    });
+    expect(event.input).toEqual({
+      function: 'dispatchEvent'
+    });
   });
 
   it("should properly evolve contract's source code", async () => {
